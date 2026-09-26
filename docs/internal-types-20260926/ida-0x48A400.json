@@ -1,0 +1,19 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"addr\":\"0x48A400\",\"code\":\"_DWORD *__cdecl sub_48A400(int a1, _DWORD *a2)\\n{\\n  _DWORD *result; // eax\\n\\n  result = a2;\\n  if ( (*a2 & 0x8000000) != 0 )\\n    return (_DWORD *)sub_49C9E0(a1: a2);\\n  return result;\\n}\",\"refs\":[{\"addr\":\"0x49c9e0\",\"name\":\"sub_49C9E0\"}]}"
+    }
+  ],
+  "structuredContent": {
+    "addr": "0x48A400",
+    "code": "_DWORD *__cdecl sub_48A400(int a1, _DWORD *a2)\n{\n  _DWORD *result; // eax\n\n  result = a2;\n  if ( (*a2 & 0x8000000) != 0 )\n    return (_DWORD *)sub_49C9E0(a1: a2);\n  return result;\n}",
+    "refs": [
+      {
+        "addr": "0x49c9e0",
+        "name": "sub_49C9E0"
+      }
+    ]
+  },
+  "isError": false
+}

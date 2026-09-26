@@ -14,7 +14,7 @@
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
-extern "C" void retdec_trace_i32(const char *,int32_t);
+extern "C" void kinoko_trace_i32(const char *,int32_t);
 namespace kinoko::act {
 namespace {
 using native::RecordView;
@@ -132,16 +132,4 @@ int32_t draw_layout_2d(KinokoActLayout *layout,float x,float y) {
     for(int i=0;i<4;++i) device->SetRenderState(types[i],saved[i]);
     return 0; // original ignores submit HRESULT; update belongs to PrepareDraw
 }
-}
-extern "C" int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,int32_t layer) {
-    return kinoko::act::bind_layout_2d(pointer<KinokoActLayout>(layout),pointer<KinokoActLayer>(layer));
-}
-extern "C" int32_t retdec_c2dlayout_update_faithful_impl(int32_t layout) {
-    return kinoko::act::update_layout_2d(pointer<KinokoActLayout>(layout));
-}
-extern "C" int32_t retdec_c2dlayout_draw_impl(int32_t layout,float x,float y) {
-    return kinoko::act::draw_layout_2d(pointer<KinokoActLayout>(layout),x,y);
-}
-extern "C" void retdec_c2dlayout_world_position(int32_t layer,float *x,float *y,float *z) {
-    kinoko_act_layer_world_position(pointer<KinokoActLayer>(layer),nullptr,x,y,z);
 }

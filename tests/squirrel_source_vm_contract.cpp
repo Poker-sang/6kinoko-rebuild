@@ -19,10 +19,10 @@ HSQUIRRELVM machine_at(int32_t value) noexcept {
     return reinterpret_cast<HSQUIRRELVM>(static_cast<uintptr_t>(static_cast<uint32_t>(value)));
 }
 thread_local int32_t current_receiver = 0x12345678;
-int32_t exchange_receiver(int32_t vm) {
+SQVM* exchange_receiver(SQVM* vm) {
     const auto previous = current_receiver;
-    current_receiver = vm;
-    return previous;
+    current_receiver = (int32_t)(intptr_t)vm;
+    return reinterpret_cast<SQVM*>(static_cast<uintptr_t>(previous));
 }
 class ReceiverRegistration final {
 public:
@@ -33,7 +33,7 @@ public:
 };
 class Machine final {
 public:
-    Machine() : vm_(machine_at(kinoko_sq_open(64))) {
+    Machine() : vm_(machine_at(((int32_t)(uintptr_t)kinoko_sq_open(64)))) {
         if (!vm_) throw std::runtime_error("sq_open failed");
     }
     ~Machine() { sq_close(vm_); }
@@ -72,7 +72,7 @@ SQInteger evaluate(HSQUIRRELVM vm, const char* name, const char* source) {
     }
     sq_pushroottable(vm);
     const auto previous_receiver = current_receiver;
-    const auto status = kinoko_sq_call(address(vm), 1, SQTrue, SQFalse);
+    const auto status = kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 1, SQTrue, SQFalse);
     require(current_receiver == previous_receiver, "callback receiver leaked out of call");
     if (SQ_FAILED(status)) {
         report_error(vm);
@@ -107,7 +107,7 @@ void child_lifecycle(HSQUIRRELVM parent) {
     const auto original_top = sq_gettop(parent);
     for (int i = 0; i < 16; ++i) {
         const auto previous_receiver = current_receiver;
-        const auto child_address = kinoko_sq_create_thread(address(parent), 64);
+        const auto child_address = ((int32_t)(uintptr_t)kinoko_sq_create_thread((SQVM*)(uintptr_t)(address(parent)), 64));
         require(child_address != 0, "source child creation");
         auto* child = machine_at(child_address);
         require(current_receiver == previous_receiver, "child creation changed receiver");
@@ -115,7 +115,7 @@ void child_lifecycle(HSQUIRRELVM parent) {
         require(sq_getvmstate(child) == SQ_VMSTATE_IDLE, "new child must be idle");
         int32_t actual_vtable = 0;
         std::memcpy(&actual_vtable, child, sizeof(actual_vtable));
-        require(actual_vtable != 0 && actual_vtable == kinoko_sq_source_vm_vtable(), "collector must recognize source child vtable");
+        require(actual_vtable != 0 && actual_vtable == (int32_t)(intptr_t)kinoko_sq_source_vm_vtable(), "collector must recognize source child vtable");
         require(evaluate(child, "child-shared-root", "return native_twice(21);") == 42, "child must inherit parent root/native bindings");
         sq_pop(parent, 1);
         sq_collectgarbage(parent);
@@ -148,74 +148,74 @@ void legacy_api_contracts(HSQUIRRELVM vm) {
     const auto initial_top = sq_gettop(vm);
 
     int native_object = 42;
-    function_48a5c0(machine, address(&native_object));
-    require(function_48a6f0(machine, -1) == OT_USERPOINTER, "userpointer must not be encoded as an integer");
+    ((int32_t)(uintptr_t)kinoko_sq_push_user_pointer(((SQVM*)(uintptr_t)(uint32_t)((machine))), ((void*)(uintptr_t)(uint32_t)((address(&native_object))))));
+    require(kinoko_sq_get_type(((SQVM*)(uintptr_t)(uint32_t)((machine))), (-1)) == OT_USERPOINTER, "userpointer must not be encoded as an integer");
     int32_t restored = 0;
-    require(SQ_SUCCEEDED(function_48a9e0(machine, -1, &restored)) && restored == address(&native_object), "userpointer round trip");
-    require(SQ_FAILED(function_48a7d0(machine, -1, &restored)), "userpointer is not an integer");
-    function_48aa30(machine, 1);
-    function_48ac70(machine);
+    require(SQ_SUCCEEDED(kinoko_sq_get_user_pointer(((SQVM*)(uintptr_t)(uint32_t)((machine))), (-1), ((void**)((&restored))))) && restored == address(&native_object), "userpointer round trip");
+    require(SQ_FAILED(kinoko_sq_get_integer(((SQVM*)(uintptr_t)(uint32_t)((machine))), (-1), (&restored))), "userpointer is not an integer");
+    ((int32_t)(uintptr_t)kinoko_sq_pop((SQVM*)(uintptr_t)((machine)), (1)));
+    ((int32_t)(uintptr_t)kinoko_sq_reset_error_and_return_vm(((SQVM*)(uintptr_t)(uint32_t)((machine)))));
 
-    function_48a480(machine, address("externally-retained"), -1);
+    ((int32_t)(uintptr_t)kinoko_sq_push_string(((SQVM*)(uintptr_t)(uint32_t)((machine))), ((const char*)(uintptr_t)(uint32_t)((address("externally-retained")))), (-1)));
     HSQOBJECT retained;
-    require(SQ_SUCCEEDED(function_48ab40(machine, -1, reinterpret_cast<int32_t*>(&retained))), "get retained object");
-    function_48a400(machine, address(&retained));
-    function_48aa30(machine, 1);
-    function_48b180(machine, 0, 0);
-    function_48ab90(machine, retained._type, address(retained._unVal.pRefCounted));
+    require(SQ_SUCCEEDED(kinoko_sq_get_stack_object(((SQVM*)(uintptr_t)(uint32_t)((machine))), (-1), ((HSQOBJECT*)((reinterpret_cast<int32_t*>(&retained)))))), "get retained object");
+    ((int32_t)(uintptr_t)kinoko_sq_add_object_reference(((SQVM*)(uintptr_t)(uint32_t)((machine))), ((HSQOBJECT*)(uintptr_t)(uint32_t)((address(&retained))))));
+    ((int32_t)(uintptr_t)kinoko_sq_pop((SQVM*)(uintptr_t)((machine)), (1)));
+    kinoko_sq_collect_garbage(((SQVM*)(uintptr_t)(uint32_t)((machine))), (0), (0));
+    ((int32_t)(uintptr_t)kinoko_sq_push_raw_object(((SQVM*)(uintptr_t)(uint32_t)((machine))), (retained._type), (address(retained._unVal.pRefCounted))));
     const SQChar* string = nullptr;
     require(SQ_SUCCEEDED(sq_getstring(vm, -1, &string)) && std::strcmp(string, "externally-retained") == 0, "external RefTable retains popped object");
-    function_48a430(machine, address(&retained));
-    function_48abe0(address(&retained));
-    function_48aa30(machine, 1);
+    kinoko_sq_release_object_reference(((SQVM*)(uintptr_t)(uint32_t)((machine))), ((HSQOBJECT*)(uintptr_t)(uint32_t)((address(&retained)))));
+    ((int32_t)(uintptr_t)kinoko_sq_reset_object(((HSQOBJECT*)(uintptr_t)(uint32_t)((address(&retained))))));
+    ((int32_t)(uintptr_t)kinoko_sq_pop((SQVM*)(uintptr_t)((machine)), (1)));
 
-    auto* child = machine_at(function_48a230(machine, 32));
+    auto* child = machine_at(((int32_t)(uintptr_t)kinoko_sq_create_thread((SQVM*)(uintptr_t)((machine)), (32))));
     require(child != nullptr, "legacy child creation");
     // Distinct source/destination stack contents expose using the wrong VM
     // when translating a negative source index in sq_move.
     sq_pushinteger(child, 73);
     sq_pushinteger(vm, 19);
-    function_48b870(machine, address(child), -1);
+    ((int32_t)(uintptr_t)kinoko_sq_move_object(((SQVM*)(uintptr_t)(uint32_t)((machine))), ((SQVM*)(uintptr_t)(uint32_t)((address(child)))), (-1)));
     SQInteger moved = 0;
     require(SQ_SUCCEEDED(sq_getinteger(vm, -1, &moved)) && moved == 73, "sq_move negative index uses source VM");
     require(sq_gettop(child) == 1, "sq_move does not pop the source");
-    function_48aa30(machine, 3);
+    ((int32_t)(uintptr_t)kinoko_sq_pop((SQVM*)(uintptr_t)((machine)), (3)));
 
     Bytecode code;
     const char* source = "return 6 * 7;";
-    require(SQ_SUCCEEDED(function_48d0b0(machine, address(source), static_cast<int32_t>(std::strlen(source)), reinterpret_cast<int32_t*>(const_cast<char*>("legacy-bytecode")), 0)), "legacy compilebuffer");
-    require(SQ_SUCCEEDED(function_48afc0(machine, address(reinterpret_cast<const void*>(write_bytecode)), address(&code))), "source closure serialization");
-    function_48aa30(machine, 1);
-    require(SQ_SUCCEEDED(function_48b050(machine, address(reinterpret_cast<const void*>(read_bytecode)), reinterpret_cast<int32_t*>(&code))), "source closure deserialization");
-    function_48a670(machine);
-    require(SQ_SUCCEEDED(function_48ace0(machine, 1, 1, 0)), "deserialized closure call");
+    require(SQ_SUCCEEDED(kinoko_sq_compile_text(((SQVM*)(uintptr_t)(uint32_t)((machine))), (const char*)(uintptr_t)((address(source))), (static_cast<int32_t>(std::strlen(source))), (const char*)(uintptr_t)((reinterpret_cast<int32_t*>(const_cast<char*>("legacy-bytecode")))), (0))), "legacy compilebuffer");
+    require(SQ_SUCCEEDED(kinoko_sq_write_closure(((SQVM*)(uintptr_t)(uint32_t)((machine))), (SQWRITEFUNC)(((void*)(uintptr_t)(uint32_t)((address(reinterpret_cast<const void*>(write_bytecode)))))), ((void*)(uintptr_t)(uint32_t)((address(&code)))))), "source closure serialization");
+    ((int32_t)(uintptr_t)kinoko_sq_pop((SQVM*)(uintptr_t)((machine)), (1)));
+    require(SQ_SUCCEEDED(kinoko_sq_read_closure(((SQVM*)(uintptr_t)(uint32_t)((machine))), (SQREADFUNC)(((void*)(uintptr_t)(uint32_t)((address(reinterpret_cast<const void*>(read_bytecode)))))), (reinterpret_cast<int32_t*>(&code)))), "source closure deserialization");
+    ((int32_t)(uintptr_t)kinoko_sq_push_root_table(((SQVM*)(uintptr_t)(uint32_t)((machine)))));
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)((machine)), (1), (1), (0))), "deserialized closure call");
     require(SQ_SUCCEEDED(sq_getinteger(vm, -1, &moved)) && moved == 42, "deserialized result");
     sq_settop(vm, initial_top);
 
     int type_tag = 0;
-    require(SQ_SUCCEEDED(function_48c350(machine, 0)), "base class creation");
-    require(SQ_SUCCEEDED(function_48c780(machine, -1, address(&type_tag))), "base class tag");
-    require(SQ_SUCCEEDED(function_48c350(machine, 1)), "derived class creation");
-    require(SQ_SUCCEEDED(function_48b490(machine, -1)), "instance creation without constructor");
-    require(SQ_SUCCEEDED(function_48c840(machine, -1, address(&native_object))), "instance native object");
-    require(SQ_SUCCEEDED(function_48c890(machine, -1, &restored, address(&type_tag))) && restored == address(&native_object), "type-tag lookup walks actual class base links");
+    require(SQ_SUCCEEDED(kinoko_sq_new_class(((SQVM*)(uintptr_t)(uint32_t)((machine))), (0))), "base class creation");
+    require(SQ_SUCCEEDED(kinoko_sq_set_type_tag(((SQVM*)(uintptr_t)(uint32_t)((machine))), (-1), ((void*)(uintptr_t)(uint32_t)((address(&type_tag)))))), "base class tag");
+    require(SQ_SUCCEEDED(kinoko_sq_new_class(((SQVM*)(uintptr_t)(uint32_t)((machine))), (1))), "derived class creation");
+    require(SQ_SUCCEEDED(kinoko_sq_create_instance(((SQVM*)(uintptr_t)(uint32_t)((machine))), (-1))), "instance creation without constructor");
+    require(SQ_SUCCEEDED(kinoko_sq_set_instance_pointer(((SQVM*)(uintptr_t)(uint32_t)((machine))), (-1), ((void*)(uintptr_t)(uint32_t)((address(&native_object)))))), "instance native object");
+    require(SQ_SUCCEEDED(kinoko_sq_get_instance_pointer(((SQVM*)(uintptr_t)(uint32_t)((machine))), (-1), ((void**)((&restored))), ((void*)(uintptr_t)(uint32_t)((address(&type_tag)))))) && restored == address(&native_object), "type-tag lookup walks actual class base links");
     sq_settop(vm, initial_top);
 
     const std::string large(8192, 'x');
-    require(SQ_SUCCEEDED(kinoko_sq_raise_formatted_error(machine, "%s:%d", large.c_str(), 17)), "formatted error");
-    function_48acc0(machine);
+    require(SQ_SUCCEEDED(kinoko_sq_raise_formatted_error((SQVM*)(uintptr_t)(machine), "%s:%d", large.c_str(), 17)), "formatted error");
+    ((int32_t)(uintptr_t)kinoko_sq_get_last_error(((SQVM*)(uintptr_t)(uint32_t)((machine)))));
     require(SQ_SUCCEEDED(sq_getstring(vm, -1, &string)) && std::string(string) == large + ":17", "formatted error must not truncate or overrun a fixed buffer");
-    function_48aa30(machine, 1);
-    function_48ac70(machine);
+    ((int32_t)(uintptr_t)kinoko_sq_pop((SQVM*)(uintptr_t)((machine)), (1)));
+    ((int32_t)(uintptr_t)kinoko_sq_reset_error_and_return_vm(((SQVM*)(uintptr_t)(uint32_t)((machine)))));
     require(sq_gettop(vm) == initial_top, "legacy API stack balance");
 }
 void standard_library_contracts(HSQUIRRELVM vm) {
     const auto initial_top = sq_gettop(vm);
     sq_pushroottable(vm);
-    require(SQ_SUCCEEDED(function_4c7c90(address(vm))), "source io registration");
-    require(SQ_SUCCEEDED(function_4c73a0(address(vm))), "source blob registration");
-    require(SQ_SUCCEEDED(function_4c6c20(address(vm))), "source math registration");
-    require(SQ_SUCCEEDED(function_4c6670(address(vm))), "source string/regexp registration");
+    require(SQ_SUCCEEDED(kinoko_sq_register_io_library(((SQVM*)(uintptr_t)(uint32_t)((address(vm)))))), "source io registration");
+    require(SQ_SUCCEEDED(kinoko_sq_register_blob_library(((SQVM*)(uintptr_t)(uint32_t)((address(vm)))))), "source blob registration");
+    require(SQ_SUCCEEDED(kinoko_sq_register_math_library(((SQVM*)(uintptr_t)(uint32_t)((address(vm)))))), "source math registration");
+    require(SQ_SUCCEEDED(kinoko_sq_register_string_library(((SQVM*)(uintptr_t)(uint32_t)((address(vm)))))), "source string/regexp registration");
     sq_pop(vm, 1);
     require(evaluate(vm, "source-standard-library", R"SQ(
         local storage = blob(0);
@@ -316,7 +316,7 @@ void contracts() {
         require(SQ_SUCCEEDED(sq_compilebuffer(vm, source, static_cast<SQInteger>(std::strlen(source)), "failure", SQFalse)), "compile failure contract");
         sq_pushroottable(vm);
         const auto previous_receiver = current_receiver;
-        require(SQ_FAILED(kinoko_sq_call(address(vm), 1, SQTrue, SQFalse)), "uncaught exception must fail");
+        require(SQ_FAILED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 1, SQTrue, SQFalse)), "uncaught exception must fail");
         require(current_receiver == previous_receiver, "receiver leaked after exception");
     }
     require(evaluate(vm, "after-exception", "return 42;") == 42, "VM recovery after exception");

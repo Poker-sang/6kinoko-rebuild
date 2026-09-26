@@ -24,7 +24,7 @@ void require(bool value, const char *message) {
     if (!value) throw std::runtime_error(message);
 }
 uint8_t __fastcall read_document(KinokoActDocument *document, void *, int32_t *reader, int32_t version) {
-    return static_cast<uint8_t>(retdec_act_load(address(document), *reader, version));
+    return static_cast<uint8_t>(kinoko_act_load((KinokoActDocument*)(uintptr_t)(address(document)), (KinokoArchiveReader*)(uintptr_t)(*reader), version));
 }
 void *vtable_identity[2] = {nullptr, reinterpret_cast<void *>(read_document)};
 KinokoActHostSymbols host{};
@@ -154,8 +154,8 @@ void payload_results() {
 }
 }
 extern "C" const KinokoActHostSymbols *kinoko_act_host_symbols() { return &host; }
-extern "C" int32_t retdec_construct_cact_script(int32_t script) {
-    ++script_constructions; last_script = pointer<void>(script);
+extern "C" void* kinoko_construct_cact_script(void* script) {
+    ++script_constructions; last_script = script;
     std::memset(last_script, 0x39, 104); return script;
 }
 extern "C" int32_t kinoko_reader_open(KinokoArchiveReader **slot, const char *path) {
@@ -181,14 +181,14 @@ extern "C" int32_t kinoko_reader_seek_relative(KinokoArchiveReader *reader, uint
     if (!state.seek_ok || offset > archive.data.size() - archive.position) return 0;
     archive.position += offset; return 1;
 }
-extern "C" int32_t retdec_act_load(int32_t document, int32_t reader, int32_t version) {
-    valid_reader(reader); ++state.payloads; state.events += 'P'; state.payload_position = archive.position;
-    require(document == address(state.document) && version == 1, "typed document handed to existing payload parser");
+extern "C" int32_t kinoko_act_load(KinokoActDocument* document, KinokoArchiveReader* reader, int32_t version) {
+    valid_reader(address(reader)); ++state.payloads; state.events += 'P'; state.payload_position = archive.position;
+    require(document == state.document && version == 1, "typed document handed to existing payload parser");
     DocumentView(state.document).set(&DocumentRecord::screen_width, int32_t{777});
     if (state.throw_payload) throw std::runtime_error("injected payload exception");
     return state.result;
 }
-extern "C" void retdec_trace_i32(const char *label, int32_t value) {
+extern "C" void kinoko_trace_i32(const char *label, int32_t value) {
     require(state.live, "reader remains alive through final diagnostic call");
     constexpr const char *labels[] = {"act:header-magic", "act:header-version", "act:header-offset", "act:load-result"};
     require(state.traces < 4 && std::strcmp(label, labels[state.traces]) == 0, "diagnostic call sites preserved");

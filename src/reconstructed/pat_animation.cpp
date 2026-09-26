@@ -81,7 +81,7 @@ bool read_frame(const Reader &reader,KinokoActorManager *manager,KinokoAnimation
 }
 int32_t load_texture(const char *directory,const char *name) {
     char path[260]{};
-    retdec_trace_squirrel_name("actor:pat-texture",address(name));
+    kinoko_trace_squirrel_name("actor:pat-texture",address(name));
     if (strcpy_s(path,sizeof(path),directory)) return 0;
     auto length=std::strlen(path);
     if (length && path[length-1]!='/' && path[length-1]!='\\') {
@@ -143,7 +143,7 @@ extern "C" int32_t kinoko_pat_read_animations(KinokoArchiveReader *stream,Kinoko
         if (auto *source=kinoko_animation_find(receiver,(*alias)[1]))
             if (!kinoko_animation_bind(receiver,(*alias)[0],source)) return 0;
     }
-    retdec_trace_i32("animation:items",item_count);
+    kinoko_trace_i32("animation:items",item_count);
     return 1;
 }
 
@@ -152,8 +152,8 @@ extern "C" int32_t kinoko_pat_load(KinokoActorManager *receiver,const char *file
     const auto trace=++traces;
     if (!receiver || !file_name || !directory) return 0;
     if (trace<=32) {
-        retdec_trace_squirrel_name("actor:pat-path",address(file_name));
-        retdec_trace_squirrel_name("actor:pat-directory",address(directory));
+        kinoko_trace_squirrel_name("actor:pat-path",address(file_name));
+        kinoko_trace_squirrel_name("actor:pat-directory",address(directory));
     }
     KinokoArchiveReader *reader_slot=nullptr;
     if (!kinoko_reader_open(&reader_slot,file_name)) return 0;
@@ -174,11 +174,11 @@ extern "C" int32_t kinoko_pat_load(KinokoActorManager *receiver,const char *file
             kinoko_animation_add_texture(receiver,handle); // preserve missing handle slot
         }
         if (!kinoko_pat_read_animations(owner.get(),receiver,base)) return 0;
-        retdec_trace_i32("animation:header",version);
-        retdec_trace_i32("animation:resources",count);
-        retdec_trace_i32("animation:resource-base",base);
+        kinoko_trace_i32("animation:header",version);
+        kinoko_trace_i32("animation:resources",count);
+        kinoko_trace_i32("animation:resource-base",base);
         return 1;
     }();
-    if (trace<=32) retdec_trace_i32("actor:pat-result",result);
+    if (trace<=32) kinoko_trace_i32("actor:pat-result",result);
     return result;
 }

@@ -4,14 +4,14 @@
 #include "kinoko/squirrel_source_runtime.h"
 #include <windows.h>
 extern "C" {
-extern int32_t g600[3], g601[3], g602[3];
-void retdec_trace(const char *);
-void retdec_trace_i32(const char *, int32_t);
+extern int32_t kinoko_actor_user_key_storage[3], kinoko_actor_step_key_storage[3], kinoko_actor_class_storage[3];
+void kinoko_trace(const char *);
+void kinoko_trace_i32(const char *, int32_t);
 }
 namespace {
-inline auto class_update_method = g602;
-inline auto class_update_name = g601;
-inline auto class_collision_name = g600;
+inline auto class_update_method = kinoko_actor_class_storage;
+inline auto class_update_name = kinoko_actor_step_key_storage;
+inline auto class_collision_name = kinoko_actor_user_key_storage;
 using namespace kinoko::script;
 using namespace kinoko::script::binding;
 using CallbackView = kinoko::native::RecordView<KinokoScriptCallback>;
@@ -33,7 +33,7 @@ class LocalObject {
 public:
     LocalObject() = default;
     explicit LocalObject(const void *source) { copy_from(source); }
-    LocalObject(int32_t vtable,int32_t type,int32_t value) : value_{vtable,type,value} {}
+    LocalObject(const void* vtable,int32_t type,int32_t value) : value_{vtable,type,value} {}
     LocalObject(const LocalObject&) = delete;
     LocalObject& operator=(const LocalObject&) = delete;
     ~LocalObject() { if (!released_) release(); }
@@ -99,12 +99,12 @@ extern "C" int32_t kinoko_actor_clear_script(KinokoActor *actor) {
     }
     return (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(instance)));
 }
-extern "C" int32_t __fastcall kinoko_actor_set_update_callback(KinokoActor *actor,void *,int32_t vtable,int32_t type,int32_t value) {
+extern "C" int32_t __fastcall kinoko_actor_set_update_callback(KinokoActor *actor,void *,const void* vtable,int32_t type,int32_t value) {
     LocalObject incoming(vtable,type,value);
     bind(update(actor),ActorView(actor).bytes(&ActorRecord::script_object),incoming.data());
     return incoming.release();
 }
-extern "C" int32_t __fastcall kinoko_actor_set_collision_callback(KinokoActor *actor,void *,int32_t vtable,int32_t type,int32_t value) {
+extern "C" int32_t __fastcall kinoko_actor_set_collision_callback(KinokoActor *actor,void *,const void* vtable,int32_t type,int32_t value) {
     LocalObject incoming(vtable,type,value);
     {
         LocalObject environment, function;
@@ -117,18 +117,18 @@ extern "C" int32_t __fastcall kinoko_actor_set_collision_callback(KinokoActor *a
     }
     return incoming.release();
 }
-extern "C" int32_t __fastcall kinoko_camera_set_update_callback(KinokoCamera *camera,void *,int32_t vtable,int32_t type,int32_t value) {
+extern "C" int32_t __fastcall kinoko_camera_set_update_callback(KinokoCamera *camera,void *,const void* vtable,int32_t type,int32_t value) {
     if (!camera) return 0;
     LocalObject incoming(vtable,type,value);
-    retdec_trace("4663c0:begin");
-    retdec_trace_i32("4663c0:this",address(camera));
-    retdec_trace_i32("4663c0:argument-type",vtable);
-    retdec_trace_i32("4663c0:argument-data",type);
-    retdec_trace_i32("4663c0:argument-aux",value);
+    kinoko_trace("4663c0:begin");
+    kinoko_trace_i32("4663c0:this",address(camera));
+    kinoko_trace_i32("4663c0:argument-type",address(vtable));
+    kinoko_trace_i32("4663c0:argument-data",type);
+    kinoko_trace_i32("4663c0:argument-aux",value);
     const kinoko::camera::View view(camera);
     bind(reinterpret_cast<KinokoScriptCallback *>(view.bytes(&kinoko::camera::Record::update_vm)),
         view.bytes(&kinoko::camera::Record::script_object),incoming.data());
-    incoming.release(); retdec_trace("4663c0:end"); return 0;
+    incoming.release(); kinoko_trace("4663c0:end"); return 0;
 }
 extern "C" int32_t __fastcall kinoko_camera_update(KinokoCamera *camera,void *) {
     const kinoko::camera::View view(camera);
@@ -140,5 +140,5 @@ extern "C" int32_t __fastcall kinoko_camera_update(KinokoCamera *camera,void *) 
 extern "C" void kinoko_actor_clear_failed_collision_callback(KinokoActor *actor) {
     KinokoOwnedObjectWords empty{};
     kinoko_sqplus_object_initialize((void *)(&empty));
-    kinoko_actor_set_collision_callback(actor,nullptr,empty.vtable,empty.type,empty.value);
+    kinoko_actor_set_collision_callback(actor, nullptr, (const void*)(uintptr_t)(empty.vtable), empty.type, empty.value);
 }

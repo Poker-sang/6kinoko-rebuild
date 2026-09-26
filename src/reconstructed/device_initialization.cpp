@@ -6,14 +6,14 @@
 #include <cstddef>
 static_assert(sizeof(D3DCAPS9)==304 && offsetof(D3DCAPS9,TextureCaps)==60);
 static_assert(sizeof(D3DPRESENT_PARAMETERS)==56);
-extern "C" void retdec_trace_i32(const char *,int32_t);
+extern "C" void kinoko_trace_i32(const char *,int32_t);
 
 // 4011B0: preserve the original HAL/HW -> HAL/SW -> REF/SW fallback order.
 extern "C" int32_t kinoko_graphics_create(HWND window,int32_t width,int32_t height) {
     if (!window) return 0; // inherited invalid-window boundary
     auto &state=kinoko_graphics;
     state.original_window_style=GetWindowLongA(window,GWL_STYLE);
-    retdec_trace("4011b0:pre-d3d-create");
+    kinoko_trace("4011b0:pre-d3d-create");
     state.factory=Direct3DCreate9(D3D_SDK_VERSION);
     if (!state.factory) {
         MessageBoxA(window,"Direct3DCreate9 failed","DirectX-Error",MB_OK);return 0;
@@ -44,8 +44,8 @@ extern "C" int32_t kinoko_graphics_create(HWND window,int32_t width,int32_t heig
     parameters.AutoDepthStencilFormat=D3DFMT_D24S8;
     parameters.Flags=D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL;
     parameters.PresentationInterval=D3DPRESENT_INTERVAL_ONE;
-    retdec_trace_i32("4011b0:client-width",width);
-    retdec_trace_i32("4011b0:client-height",height);
+    kinoko_trace_i32("4011b0:client-width",width);
+    kinoko_trace_i32("4011b0:client-height",height);
     struct Attempt { D3DDEVTYPE type; DWORD behavior; };
     constexpr Attempt attempts[]={
         {D3DDEVTYPE_HAL,D3DCREATE_HARDWARE_VERTEXPROCESSING|D3DCREATE_MULTITHREADED},
@@ -56,7 +56,7 @@ extern "C" int32_t kinoko_graphics_create(HWND window,int32_t width,int32_t heig
     for (const auto attempt:attempts) {
         status=state.factory->CreateDevice(D3DADAPTER_DEFAULT,attempt.type,window,
             attempt.behavior,&parameters,&state.device);
-        retdec_trace_hresult("4011b0:create-device-hr",status);
+        kinoko_trace_hresult("4011b0:create-device-hr",status);
         if (SUCCEEDED(status)) break;
     }
     if (FAILED(status) || !state.device) {
@@ -67,7 +67,7 @@ extern "C" int32_t kinoko_graphics_create(HWND window,int32_t width,int32_t heig
     state.device->GetDeviceCaps(&state.capabilities);
     state.device->GetSwapChain(0,&state.swap_chain);
     state.cooperative_status=D3D_OK;
-    retdec_trace("4011b0:done");
+    kinoko_trace("4011b0:done");
     return 1;
 }
 

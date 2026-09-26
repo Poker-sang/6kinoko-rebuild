@@ -9,7 +9,7 @@
 #include "kinoko/squirrel_source_runtime.h"
 #include <cstdio>
 
-extern "C" void retdec_trace_i32(const char *label, int32_t value);
+extern "C" void kinoko_trace_i32(const char *label, int32_t value);
 
 namespace {
 using namespace kinoko::map;
@@ -45,7 +45,7 @@ int32_t invoke_event(SQVM *vm, HSQOBJECT callback, HSQOBJECT environment,
     sq_pushinteger(vm, top);
     sq_pushinteger(vm, right);
     sq_pushinteger(vm, bottom);
-    return kinoko_sq_call(address(vm), 6, 1, 1);
+    return kinoko_sq_call(vm, 6, 1, 1);
 }
 }
 
@@ -56,7 +56,7 @@ extern "C" int32_t kinoko_map_create_actors(KinokoActorManager *manager,
     if (!layout || !LayoutView(layout).get(&LayoutRecord::owning_layer)) return 0;
     const int32_t count = placement_count(layout);
     int32_t created = 0;
-    retdec_trace_i32("actor:map-records", count);
+    kinoko_trace_i32("actor:map-records", count);
     for (int32_t index = 0; index < count; ++index) {
         const PlacementView record(placement_at(layout, index));
         const auto id = record.get(&Placement::chip_id);
@@ -67,7 +67,7 @@ extern "C" int32_t kinoko_map_create_actors(KinokoActorManager *manager,
         float x = static_cast<float>(record.get(&Placement::left));
         float y = static_cast<float>(record.get(&Placement::top));
         const unsigned char *initialization_data = nullptr;
-        auto *chip = retdec_mcd_find_chip(kinoko_map_layer_chip_data(layout), id);
+        auto *chip = kinoko_mcd_find_chip(kinoko_map_layer_chip_data(layout), id);
         if (chip) {
             const ChipView definition(chip->bytes);
             x = static_cast<float>(static_cast<double>(x) +
@@ -80,7 +80,7 @@ extern "C" int32_t kinoko_map_create_actors(KinokoActorManager *manager,
         if (kinoko_actor_create_map_instance(manager, callback.borrow(), x, y,
             static_cast<int32_t>(id), initialization_data)) ++created;
     }
-    retdec_trace_i32("actor:map-created", created);
+    kinoko_trace_i32("actor:map-created", created);
     return created;
 }
 
@@ -100,11 +100,11 @@ extern "C" int32_t kinoko_map_create_events(KinokoMapManager *manager, SQVM *vm,
         const PlacementView record(placement_at(layout, index));
         const auto id = record.get(&Placement::chip_id);
         const auto left = record.get(&Placement::left), top = record.get(&Placement::top);
-        auto *chip = retdec_mcd_find_chip(kinoko_map_layer_chip_data(layout), id);
+        auto *chip = kinoko_mcd_find_chip(kinoko_map_layer_chip_data(layout), id);
         // Retain R136's defined failure for malformed records; do not invent
         // bounds from the original decompiler's uninitialized temporaries.
         if (!chip) {
-            retdec_trace_i32("map:event-missing-chip", static_cast<int32_t>(id));
+            kinoko_trace_i32("map:event-missing-chip", static_cast<int32_t>(id));
             return -1;
         }
         const ChipView definition(chip->bytes);
@@ -113,6 +113,6 @@ extern "C" int32_t kinoko_map_create_events(KinokoMapManager *manager, SQVM *vm,
             top + definition.get(&ChipDefinition::height)) < 0) return -1;
         ++completed;
     }
-    retdec_trace_i32("map:event-created", completed);
+    kinoko_trace_i32("map:event-created", completed);
     return completed;
 }

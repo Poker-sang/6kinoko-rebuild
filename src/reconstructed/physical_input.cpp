@@ -3,11 +3,11 @@
 #include <cstring>
 
 extern "C" {
-extern unsigned char g_retdec_keyboard_state[256];
+extern unsigned char kinoko_keyboard_state[256];
 }
 
 namespace {
-bool key(int32_t scan) { return (g_retdec_keyboard_state[uint8_t(scan)] & 0x80) != 0; }
+bool key(int32_t scan) { return (kinoko_keyboard_state[uint8_t(scan)] & 0x80) != 0; }
 // INC/DEC in the original wrap, including at signed integer limits.
 int32_t advance(int32_t count, int32_t delta) {
     return static_cast<int32_t>(uint32_t(count) + uint32_t(delta));

@@ -8,8 +8,8 @@
 #include <cstddef>
 #include <cstdint>
 
-struct retdec_mcd_data;
-struct retdec_mcd_texture;
+struct kinoko_mcd_data;
+struct kinoko_mcd_texture;
 
 namespace kinoko::map {
 // Schemas for existing Win32 storage, not objects constructed over its bytes.
@@ -18,7 +18,7 @@ struct Placement {
     uint32_t chip_id;
     int32_t left, top;
     float fractional_left, fractional_top;
-    uint32_t unknown20;
+    uint32_t load_ordinal; // ordinal assigned by the current map read operation
     uint8_t visible;
     std::array<uint8_t, 3> padding25;
     float alpha;
@@ -47,12 +47,12 @@ using ChipDefinitionBuffer=MapRecordBuffer<ChipDefinition>;
 using ChangedChipBuffer=MapRecordBuffer<const ChipDefinition *>;
 using ChipIndexBuffer=MapRecordBuffer<int32_t>;
 using ChipReferenceBuffer=MapRecordBuffer<const ChipDefinition *>;
-using TextureReferenceBuffer=MapRecordBuffer<retdec_mcd_texture *>;
+using TextureReferenceBuffer=MapRecordBuffer<kinoko_mcd_texture *>;
 struct RenderLayerRecord { const void *methods; KinokoActLayout *layout; };
 struct LayoutRecord {
     const unsigned char *methods;
     std::array<uint8_t, 232> sprite_and_base;
-    uint32_t unknown236;
+    int32_t layer_type;
     int32_t max_chip_width, max_chip_height;
     int32_t chip_left, chip_top, chip_right, chip_bottom;
     PlacementBuffer placements;
@@ -99,7 +99,7 @@ struct LayerRecord {
 struct ChipResourceRecord {
     const unsigned char *methods;
     std::array<uint8_t, 60> prefix;
-    retdec_mcd_data *data; // shared MCD; retained by the resource's control
+    kinoko_mcd_data *data; // shared MCD; retained by the resource's control
 };
 using LayoutView = kinoko::native::RecordView<LayoutRecord>;
 using LayerView = kinoko::native::RecordView<LayerRecord>;

@@ -19,7 +19,7 @@ using namespace kinoko::map;
 using namespace kinoko::render;
 using kinoko::legacy::address;
 using kinoko::legacy::pointer;
-struct VisibleChip { retdec_mcd_chip *chip; Placement *placement; int32_t index; };
+struct VisibleChip { kinoko_mcd_chip *chip; Placement *placement; int32_t index; };
 
 Position3 world_position(KinokoActLayer *layer) {
     Position3 result{};
@@ -31,10 +31,6 @@ Position3 world_position(KinokoActLayer *layer) {
     get(layer,&result.x,&result.y,&result.z);
     return result;
 }
-}
-
-extern "C" int32_t retdec_map_sprite_init(int32_t sprite, int32_t handle, const unsigned char *bytes) {
-    return initialize_chip_quad(pointer<QuadRecord>(sprite),handle,reinterpret_cast<const ChipDefinition *>(bytes));
 }
 
 extern "C" int32_t kinoko_map_update_visible(KinokoActLayout *layout,
@@ -53,7 +49,7 @@ extern "C" int32_t kinoko_map_update_visible(KinokoActLayout *layout,
     std::vector<VisibleChip> visible;
     auto cache=map.get(&LayoutRecord::render_scan_cache);
     if (!query_visible(layout,&cache,left,top,right,bottom,
-        [&](retdec_mcd_chip *chip, Placement *record, int32_t index) {
+        [&](kinoko_mcd_chip *chip, Placement *record, int32_t index) {
             visible.push_back({chip,record,index}); return true;
         })) return E_FAIL;
     map.set(&LayoutRecord::render_scan_cache,cache);
@@ -61,8 +57,7 @@ extern "C" int32_t kinoko_map_update_visible(KinokoActLayout *layout,
     if (visible.empty()) return 0;
     if (visible.size() > INT32_MAX/sizeof(QuadRecord)) return E_FAIL;
     auto buffer=map.view(&LayoutRecord::render_quads);
-    if (!kinoko_native_buffer_resize(address(buffer.data()),
-        static_cast<uint32_t>(visible.size()*sizeof(QuadRecord)))) return E_FAIL;
+    if (!kinoko_native_buffer_resize((void*)(buffer.data()), static_cast<uint32_t>(visible.size()*sizeof(QuadRecord)))) return E_FAIL;
     const auto origin=world_position(layer);
     const float scale=map.get(&LayoutRecord::scale);
     auto *output=buffer.get(&QuadBuffer::begin);
@@ -81,7 +76,7 @@ extern "C" int32_t kinoko_map_update_visible(KinokoActLayout *layout,
         } else {
             const auto references=map.get(&LayoutRecord::texture_references);
             auto *texture=references.begin!=references.end ? references.begin[visible[i].index] :
-                retdec_mcd_find_texture(data,chip.texture_id);
+                kinoko_mcd_find_texture(data,chip.texture_id);
             if (!texture || !initialize_chip_quad(output+i,texture->handle,definition)) continue;
         }
         // 434DC7/434DDA store integer subtraction + world origin before translation.
@@ -99,7 +94,7 @@ extern "C" int32_t kinoko_map_update_visible(KinokoActLayout *layout,
         quad.set(&QuadRecord::vertices,vertices);
     }
     map.set(&LayoutRecord::render_count,static_cast<int32_t>(visible.size()));
-    retdec_trace_i32("map:update-draw-records",static_cast<int32_t>(visible.size()));
+    kinoko_trace_i32("map:update-draw-records",static_cast<int32_t>(visible.size()));
     return 0;
 }
 
@@ -135,12 +130,6 @@ extern "C" int32_t kinoko_map_draw_visible(KinokoActLayout *layout,float x,float
     return 0; // original ignores per-quad HRESULT and continues
 }
 
-extern "C" int32_t kinoko_map_update(int32_t layout,int32_t left,int32_t top,int32_t right,int32_t bottom) {
-    return kinoko_map_update_visible(pointer<KinokoActLayout>(layout),left,top,right,bottom);
-}
-extern "C" int32_t kinoko_map_draw(int32_t layout,float x,float y) {
-    return kinoko_map_draw_visible(pointer<KinokoActLayout>(layout),x,y);
-}
 
 extern "C" KinokoActLayer *__fastcall kinoko_act_layer_world_position(
     KinokoActLayer *layer, void *, float *x, float *y, float *z) {

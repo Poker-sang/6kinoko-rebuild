@@ -17,15 +17,15 @@ using Destroy = int32_t(__thiscall*)(int32_t, unsigned char);
 using InPlace = int32_t(__thiscall*)(int32_t);
 }
 extern "C" {
-char* g644 = nullptr;
-char g560 = 0;
-int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
-int32_t kinoko_actor_vtable(void) { return 0x14141414; }
-int32_t kinoko_actor_step_key(void) { return address(&step_key); }
-void retdec_trace(const char*) {}
-void retdec_trace_i32(const char*, int32_t) {}
-void retdec_trace_squirrel_name(const char*, int32_t) {}
-void _3f__3f_3_40_YAXPAX_40_Z(int32_t* allocation) {
+struct SQVM *kinoko_primary_vm = nullptr;
+char kinoko_sqrat_trace_enabled = 0;
+const void* kinoko_squirrel_object_vtable(void) { return reinterpret_cast<const void*>(0x12345678); }
+const void* kinoko_actor_vtable(void) { return reinterpret_cast<const void*>(0x14141414); }
+void* kinoko_actor_step_key(void) { return &step_key; }
+void kinoko_trace(const char*) {}
+void kinoko_trace_i32(const char*, int32_t) {}
+void kinoko_trace_squirrel_name(const char*, int32_t) {}
+void kinoko_host_free_allocation(int32_t* allocation) {
     ++deletes; deleted_address = address(allocation); std::free(allocation);
 }
 // The VM is real. This test substitutes only the already reconstructed callback
@@ -34,13 +34,13 @@ int32_t kinoko_actor_clear_script(KinokoActor *receiver_actor) {
     const auto actor=address(receiver_actor);
     require(ObjectView(actor + 56).value()._type == OT_NULL, "update reset before clear");
     require(ObjectView(actor + 68).value()._type == OT_NULL, "collision reset before clear");
-    require(load<int32_t>(pointer(actor))==kinoko_actor_vtable(), "base vtable restored before release hooks");
+    require(load<int32_t>(pointer(actor))==address(kinoko_actor_vtable()), "base vtable restored before release hooks");
     ++clears; return actor;
 }
 }
 namespace {
-int32_t exchange_vm(int32_t value) {
-    const auto previous = address(g644); g644 = pointer<char>(value); receiver = value; return previous;
+SQVM* exchange_vm(SQVM* value) {
+    const auto previous = address(kinoko_primary_vm); kinoko_primary_vm = pointer<SQVM>((int32_t)(intptr_t)value); receiver = (int32_t)(intptr_t)value; return reinterpret_cast<SQVM*>(static_cast<uintptr_t>(previous));
 }
 struct ControlFixture : boost::detail::sp_counted_base {
     ControlFixture(int strong, int weak) {
@@ -86,22 +86,22 @@ void initialize_key(HSQUIRRELVM vm) {
 void controls() {
     ControlFixture custom(2, 2);
     auto old_disposes = disposes, old_destroys = destroys;
-    kinoko_native_release_strong(address(custom.data()));
+    kinoko_native_release_strong((void*)(uintptr_t)(address(custom.data())));
     require(custom[1] == 1 && disposes == old_disposes, "nonfinal strong release");
-    kinoko_native_release_strong(address(custom.data()));
+    kinoko_native_release_strong((void*)(uintptr_t)(address(custom.data())));
     require(custom[1] == 0 && custom[2] == 1 && disposes == old_disposes + 1 && destroys == old_destroys,
         "dispose before implicit weak release");
-    kinoko_native_release_weak(address(custom.data()));
+    kinoko_native_release_weak((void*)(uintptr_t)(address(custom.data())));
     require(custom[2] == 0 && destroys == old_destroys + 1, "last custom weak destruction");
     auto* allocation = std::malloc(4); require(allocation != nullptr, "owner-slot allocation");
     auto* control = kinoko::native::upstream::create_owner_control(allocation);
     require(control != nullptr, "source control allocation");
-    kinoko_native_add_weak(address(control));
-    kinoko_native_release_strong(address(control));
+    kinoko_native_add_weak((void*)(uintptr_t)(address(control)));
+    kinoko_native_release_strong((void*)(uintptr_t)(address(control)));
     require(control->use_count() == 0 && kinoko::native::upstream::allocation(control) == nullptr,
         "source control frees owned slot, not Actor");
-    kinoko_native_release_weak(address(control));
-    kinoko_native_release_weak(0); kinoko_native_release_strong(0);
+    kinoko_native_release_weak((void*)(uintptr_t)(address(control)));
+    kinoko_native_release_weak((void*)(uintptr_t)(0)); kinoko_native_release_strong((void*)(uintptr_t)(0));
 }
 void initialize_table(HSQUIRRELVM vm, int32_t actor) {
     sq_newtable(vm); sq_pushstring(vm, "step", -1); sq_pushnull(vm);
@@ -109,7 +109,7 @@ void initialize_table(HSQUIRRELVM vm, int32_t actor) {
     ObjectView(actor + 44).capture(vm, -1); sq_pop(vm, 1);
 }
 SQInteger script_step(HSQUIRRELVM vm) {
-    require(g644 == reinterpret_cast<char*>(vm), "native callback receives child VM context");
+    require(kinoko_primary_vm == reinterpret_cast<SQVM*>(vm), "native callback receives child VM context");
     HSQOBJECT argument; sq_getstackobj(vm, 2, &argument);
     invoke(vm, active_actor, argument);
     return 0;
@@ -130,7 +130,7 @@ void lifecycle(HSQUIRRELVM vm) {
     require((int32_t)(intptr_t)(kinoko_actor_construct((KinokoActor *)(intptr_t)(0))) == 0 && (int32_t)(intptr_t)(kinoko_actor_dispose((KinokoActor *)(intptr_t)(0))) == 0, "null lifecycle");
     require((int32_t)(intptr_t)(kinoko_actor_construct((KinokoActor *)(intptr_t)(actor))) == actor, "construct unaligned Actor view");
     require(bytes.front() == 0xa7 && bytes.back() == 0xa7, "Actor allocation boundaries");
-    require(load<int32_t>(bytes.data() + 1) == kinoko_actor_vtable(), "original Actor vtable identity");
+    require(load<int32_t>(bytes.data() + 1) == address(kinoko_actor_vtable()), "original Actor vtable identity");
     require(load<int32_t>(bytes.data() + 9) == 1, "original Actor type");
     require(load<int32_t>(bytes.data() + 329) == actor + 376 && load<int32_t>(bytes.data() + 333) == actor + 340,
         "inline collision storage pointers");
@@ -173,7 +173,7 @@ void lifecycle(HSQUIRRELVM vm) {
     active_actor = actor;
     sq_newthread(vm, 64); HSQUIRRELVM child = nullptr; sq_getthread(vm, -1, &child);
     evaluate(child, "stepFixtureCall(stepFixtureValue);\nstepFixtureCall(null);\n");
-    require(g644 == reinterpret_cast<char*>(vm) && control[2] == 3, "child callback restores parent and ownership");
+    require(kinoko_primary_vm == reinterpret_cast<SQVM*>(vm) && control[2] == 3, "child callback restores parent and ownership");
     sq_pop(vm, 1); erase_slot(vm, "stepFixtureCall"); erase_slot(vm, "stepFixtureValue");
     invoke(vm, actor, instance.get());
     store(pointer(actor),int32_t{0x77777777});
@@ -204,11 +204,11 @@ int main() {
     try {
         for (int pass = 0; pass < 8; ++pass) {
             Machine machine; auto* vm = machine.get();
-            g644 = reinterpret_cast<char*>(vm); receiver = address(vm);
+            kinoko_primary_vm = reinterpret_cast<SQVM*>(vm); receiver = address(vm);
             kinoko_sq_set_context_exchange(exchange_vm);
             initialize_key(vm); controls(); lifecycle(vm);
             ObjectView(&step_key).release(vm); ObjectView(&step_key).reset();
-            top(vm, 0, "root stack balanced"); g644 = nullptr;
+            top(vm, 0, "root stack balanced"); kinoko_primary_vm = nullptr;
             std::printf("actor pass %d: 10000 thiscalls, real VM/child, ownership, controls and canaries OK\n", pass + 1);
         }
         return 0;

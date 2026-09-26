@@ -4,7 +4,7 @@
 #define CHECK(x) do { if(!(x)) { std::fprintf(stderr,"copy line %d\n",__LINE__);return 1; } } while(0)
 static unsigned script_assigns, virtual_destroys;
 extern "C" {
-unsigned char g_retdec_keyboard_state[256]{};
+unsigned char kinoko_keyboard_state[256]{};
 void* kinoko_sqplus_object_assign(void* destination,const void* source) {
     ++script_assigns;std::memcpy(destination,source,12);return destination;
 }

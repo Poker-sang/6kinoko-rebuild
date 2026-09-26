@@ -1,0 +1,212 @@
+[
+  {
+    "raw": "static __declspec(noinline) void retdec_trace_direct_ref_decrement(\n    const char *label, int32_t data, int32_t before, int32_t after) {\n    static volatile LONG trace_count;\n    char message[256];\n\n    if (data == 0 || !retdec_is_release_watch_data(data))\n        return;\n    if (InterlockedIncrement(&trace_count) > 512)\n        return;\n    wsprintfA(message,\n              \"sq-watch:direct-ref-dec label=%s data=0x%08lX before=%ld after=%ld caller=0x%08lX\",\n              label != NULL ? label : \"unknown\",\n              (unsigned long)(uint32_t)data, (long)before, (long)after,\n              (unsigned long)(uintptr_t)_ReturnAddress());\n    retdec_trace(message);\n}",
+    "name": "retdec_trace_direct_ref_decrement",
+    "kind": "function"
+  },
+  {
+    "raw": "static __declspec(noinline) void retdec_trace_watch_boundary(\n    const char *label, int32_t instruction, int32_t opcode) {\n    static int32_t initialized[8];\n    static int32_t previous[8];\n    static volatile LONG trace_count;\n    int32_t index;\n\n    for (index = 0; index < retdec_release_watch_count && index < 8;\n         ++index) {\n        int32_t data = retdec_release_watch_data[index];\n        int32_t current;\n        int32_t before;\n        char message[320];\n\n        if (data == 0)\n            continue;\n        __try {\n            current = *(int32_t *)(intptr_t)(data + 4);\n        } __except (EXCEPTION_EXECUTE_HANDLER) {\n            continue;\n        }\n        if (initialized[index] == 0) {\n            previous[index] = current;\n            initialized[index] = 1;\n            continue;\n        }\n        before = previous[index];\n        previous[index] = current;\n        if (before == current || InterlockedIncrement(&trace_count) > 512)\n            continue;\n        wsprintfA(message,\n                  \"sq-watch:boundary-ref-change label=%s data=0x%08lX before=%ld after=%ld instruction=0x%08lX opcode=0x%08lX caller=0x%08lX\",\n                  label != NULL ? label : \"unknown\",\n                  (unsigned long)(uint32_t)data, (long)before,\n                  (long)current, (unsigned long)(uint32_t)instruction,\n                  (unsigned long)(uint32_t)opcode,\n                  (unsigned long)(uintptr_t)_ReturnAddress());\n        retdec_trace(message);\n    }\n}",
+    "name": "retdec_trace_watch_boundary",
+    "kind": "function"
+  },
+  {
+    "raw": "static __declspec(noinline) void retdec_trace_realloc_state(\n    const char *label, int32_t block, int32_t old_bytes,\n    int32_t new_bytes, int32_t result);",
+    "name": "retdec_trace_realloc_state",
+    "kind": "prototype"
+  },
+  {
+    "raw": "struct retdec_native_binding;",
+    "name": "retdec_native_binding",
+    "kind": "type"
+  },
+  {
+    "raw": "void retdec_msvc_Finitlocks__YAXXZ2(void);",
+    "name": "retdec_msvc_Finitlocks__YAXXZ2",
+    "kind": "prototype"
+  },
+  {
+    "raw": "void retdec_msvc_Finitlocks__YAXXZ7(void);",
+    "name": "retdec_msvc_Finitlocks__YAXXZ7",
+    "kind": "prototype"
+  },
+  {
+    "raw": "void retdec_msvc_Finitlocks__YAXXZ8(void);",
+    "name": "retdec_msvc_Finitlocks__YAXXZ8",
+    "kind": "prototype"
+  },
+  {
+    "raw": "void retdec_msvc_Finitlocks__YAXXZ9(void);",
+    "name": "retdec_msvc_Finitlocks__YAXXZ9",
+    "kind": "prototype"
+  },
+  {
+    "raw": "int32_t _3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__40_V_3f__24_allocator_40_D_40_2_40__40_std_40__40_QAE_40_PBD_40_Z(int32_t * result, char * a2);",
+    "name": "_3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__40_V_3f__24_allocator_40_D_40_2_40__40_std_40__40_QAE_40_PBD_40_Z",
+    "kind": "prototype"
+  },
+  {
+    "raw": "int32_t function_401850(void);",
+    "name": "function_401850",
+    "kind": "prototype"
+  },
+  {
+    "raw": "static int32_t function_466270_this(int32_t this_ptr);",
+    "name": "function_466270_this",
+    "kind": "prototype"
+  },
+  {
+    "raw": "int32_t function_4664a0_this(int32_t result, int32_t a1);",
+    "name": "function_4664a0_this",
+    "kind": "prototype"
+  },
+  {
+    "raw": "static int32_t function_49da60_this(int32_t compiler_ptr, int32_t * name);",
+    "name": "function_49da60_this",
+    "kind": "prototype"
+  },
+  {
+    "raw": "static int32_t retdec_execute_clean_vm(\n    int32_t closure_slot, int32_t target, int32_t nargs,\n    int32_t stackbase, int32_t outres, int32_t raiseerror, int32_t resume);",
+    "name": "retdec_execute_clean_vm",
+    "kind": "prototype"
+  },
+  {
+    "raw": "int32_t function_4a9570(void);",
+    "name": "function_4a9570",
+    "kind": "prototype"
+  },
+  {
+    "raw": "static int32_t retdec_true_pair[2] = { 0x01000008, 1 };",
+    "name": "retdec_true_pair",
+    "kind": "global"
+  },
+  {
+    "raw": "static int32_t retdec_false_pair[2] = { 0x01000008, 0 };",
+    "name": "retdec_false_pair",
+    "kind": "global"
+  },
+  {
+    "raw": "struct retdec_native_binding {\n    const char *name;\n    int32_t (*function)(int32_t);\n    int32_t argument_count;\n    const char *typemask;\n};",
+    "name": "retdec_native_binding",
+    "kind": "type"
+  },
+  {
+    "raw": "int32_t unlzx_table_three_at_50f05c[16] = {0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 0x1fff, 0x3fff, 0x7fff};",
+    "name": "unlzx_table_three_at_50f05c",
+    "kind": "global"
+  },
+  {
+    "raw": "int32_t zinflate_distanceExtraBits_at_4d8cb8[30] = {0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13};",
+    "name": "zinflate_distanceExtraBits_at_4d8cb8",
+    "kind": "global"
+  },
+  {
+    "raw": "int32_t zinflate_lengthExtraBits_at_4d8c30[29] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0};",
+    "name": "zinflate_lengthExtraBits_at_4d8c30",
+    "kind": "global"
+  },
+  {
+    "raw": "int32_t function_401850(void) {\n    return (int32_t)(intptr_t)kinoko_renderer_construct(&g184);\n}",
+    "name": "function_401850",
+    "kind": "function"
+  },
+  {
+    "raw": "int32_t _3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__40_V_3f__24_allocator_40_D_40_2_40__40_std_40__40_QAE_40_PBD_40_Z(int32_t * result, char * a2) {\n    int32_t result2 = (int32_t)result;\n    *(int32_t *)(result2 + 20) = 15;\n    *(int32_t *)(result2 + 16) = 0;\n    *(char *)result = 0;\n    int32_t v1 = (int32_t)a2; \n    while (*(char *)v1 != 0) {\n\n        v1++;\n    }\n\n    kinoko_string_assign_cstr(result, (const char *)(a2));\n    return result2;\n}",
+    "name": "_3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__40_V_3f__24_allocator_40_D_40_2_40__40_std_40__40_QAE_40_PBD_40_Z",
+    "kind": "function"
+  },
+  {
+    "raw": "static int32_t function_466270_this(int32_t this_ptr) {\n    return kinoko_camera_initialize((KinokoCamera *)(intptr_t)this_ptr);\n}",
+    "name": "function_466270_this",
+    "kind": "function"
+  },
+  {
+    "raw": "int32_t function_4664a0_this(int32_t result, int32_t a1) {\n    return (int32_t)(intptr_t)kinoko_camera_copy((KinokoCamera *)(intptr_t)result,\n        (KinokoCamera *)(intptr_t)a1);\n}",
+    "name": "function_4664a0_this",
+    "kind": "function"
+  },
+  {
+    "raw": "static int32_t retdec_active_compiler;",
+    "name": "retdec_active_compiler",
+    "kind": "global"
+  },
+  {
+    "raw": "static int32_t retdec_active_lexer;",
+    "name": "retdec_active_lexer",
+    "kind": "global"
+  },
+  {
+    "raw": "static int32_t retdec_active_funcstate;",
+    "name": "retdec_active_funcstate",
+    "kind": "global"
+  },
+  {
+    "raw": "static volatile int32_t retdec_prepcall_instruction;",
+    "name": "retdec_prepcall_instruction",
+    "kind": "global"
+  },
+  {
+    "raw": "static volatile int32_t retdec_current_instruction;",
+    "name": "retdec_current_instruction",
+    "kind": "global"
+  },
+  {
+    "raw": "static volatile unsigned char retdec_prepcall_arg3;",
+    "name": "retdec_prepcall_arg3",
+    "kind": "global"
+  },
+  {
+    "raw": "static volatile int32_t retdec_call_wrapper_nparams;",
+    "name": "retdec_call_wrapper_nparams",
+    "kind": "global"
+  },
+  {
+    "raw": "static __declspec(noinline) void retdec_trace_realloc_state(\n    const char *label, int32_t block, int32_t old_bytes,\n    int32_t new_bytes, int32_t result) {\n    char message[256];\n\n    wsprintfA(message,\n              \"%s:block=0x%08lX old=0x%08lX new=0x%08lX result=0x%08lX\",\n              label, (unsigned long)block, (unsigned long)old_bytes,\n              (unsigned long)new_bytes, (unsigned long)result);\n    retdec_trace(message);\n}",
+    "name": "retdec_trace_realloc_state",
+    "kind": "function"
+  },
+  {
+    "raw": "static int32_t retdec_execute_clean_vm(\n    int32_t closure_slot, int32_t target, int32_t nargs,\n    int32_t stackbase, int32_t outres, int32_t raiseerror, int32_t resume) {\n    return kinoko_sq_execute(retdec_stack_vm(), closure_slot, target, nargs, stackbase, outres, raiseerror, resume);\n}",
+    "name": "retdec_execute_clean_vm",
+    "kind": "function"
+  },
+  {
+    "raw": "static int32_t retdec_gc_watch_table;",
+    "name": "retdec_gc_watch_table",
+    "kind": "global"
+  },
+  {
+    "raw": "static int32_t retdec_gc_watch_cycle;",
+    "name": "retdec_gc_watch_cycle",
+    "kind": "global"
+  },
+  {
+    "raw": "void retdec_msvc_Finitlocks__YAXXZ2(void) {\n    kinoko_string_destroy((void*)(intptr_t)((int32_t)(intptr_t)&g554));\n}",
+    "name": "retdec_msvc_Finitlocks__YAXXZ2",
+    "kind": "function"
+  },
+  {
+    "raw": "void retdec_msvc_Finitlocks__YAXXZ7(void) {\n\n    return;\n}",
+    "name": "retdec_msvc_Finitlocks__YAXXZ7",
+    "kind": "function"
+  },
+  {
+    "raw": "void retdec_msvc_Finitlocks__YAXXZ8(void) {\n\n    return;\n}",
+    "name": "retdec_msvc_Finitlocks__YAXXZ8",
+    "kind": "function"
+  },
+  {
+    "raw": "void retdec_msvc_Finitlocks__YAXXZ9(void) {\n\n    return;\n}",
+    "name": "retdec_msvc_Finitlocks__YAXXZ9",
+    "kind": "function"
+  },
+  {
+    "raw": "int32_t kinoko_call_game_vm(int32_t vm, int32_t nargs, int32_t retval, int32_t raiseerror) {\n    int32_t previous = retdec_active_vm;\n    int32_t previous_explicit = retdec_explicit_vm;\n    retdec_active_vm = vm;\n    retdec_explicit_vm = vm;\n    int32_t result = kinoko_sq_call(vm, nargs, retval, raiseerror);\n    retdec_explicit_vm = previous_explicit;\n    retdec_active_vm = previous;\n    return result;\n}",
+    "name": "kinoko_call_game_vm",
+    "kind": "function"
+  },
+  {
+    "raw": "int32_t kinoko_resume_game_vm(int32_t vm, int32_t out, int32_t raiseerror) {\n    int32_t previous = retdec_active_vm;\n    int32_t previous_explicit = retdec_explicit_vm;\n    retdec_active_vm = vm;\n    retdec_explicit_vm = vm;\n    int32_t result = retdec_execute_clean_vm(0, 0, 0, 0, out, raiseerror, 1);\n    retdec_explicit_vm = previous_explicit;\n    retdec_active_vm = previous;\n    return result;\n}",
+    "name": "kinoko_resume_game_vm",
+    "kind": "function"
+  }
+]

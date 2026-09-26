@@ -11,11 +11,17 @@
 struct SQVM;
 
 namespace kinoko::act {
-using Address = uint32_t;
 struct FindState; // owned native implementation, defined in act_runtime_lifecycle.cpp
-struct VectorStorage { Address begin, end, capacity; };
 // Representation only: the actual Squirrel API owns the external reference.
 using ObjectStorage = std::array<int32_t, 2>;
+struct StagePropertyAliases {
+    int32_t *margin_left, *margin_right, *margin_top, *margin_bottom;
+    float *offset_x, *offset_y;
+    uint8_t *visible;
+    int32_t *resolution_ms, *screen_width, *screen_height;
+    legacy::StringRecord *name;
+};
+static_assert(sizeof(StagePropertyAliases) == 44);
 struct RuntimeRecord {
     KinokoActSourceHolder *source_holder; // borrowed; never owns the holder or source ACT
     int32_t current_time;
@@ -28,13 +34,13 @@ struct RuntimeRecord {
     uint32_t unknown56;
     KinokoActSpriteStorage draw_sprites;
     uint32_t unknown72;
-    Address render_target; // borrowed CActRenderTarget, texture handle at +68
+    KinokoActResource *render_target; // borrowed CActRenderTarget, texture handle at +68
     uint32_t unknown80;
     FindState *find_state; // owned C++ find map, never an emulated STL tree
     uint32_t find_count, unknown92, next_find_id, wake_time;
     uint8_t hidden;
     std::array<uint8_t, 3> unknown105;
-    std::array<uint32_t, 11> stage_state;
+    StagePropertyAliases stage_properties;
     SQVM *vm; // borrowed VM, owns environment through an external reference
     ObjectStorage environment;
     kinoko::legacy::StringRecord name;
@@ -52,7 +58,7 @@ KINOKO_ACT_FIELD(RuntimeRecord, draw_sprites, 60);
 KINOKO_ACT_FIELD(RuntimeRecord, render_target, 76);
 KINOKO_ACT_FIELD(RuntimeRecord, find_state, 84);
 KINOKO_ACT_FIELD(RuntimeRecord, next_find_id, 96);
-KINOKO_ACT_FIELD(RuntimeRecord, stage_state, 108);
+KINOKO_ACT_FIELD(RuntimeRecord, stage_properties, 108);
 KINOKO_ACT_FIELD(RuntimeRecord, vm, 152);
 KINOKO_ACT_FIELD(RuntimeRecord, environment, 156);
 KINOKO_ACT_FIELD(RuntimeRecord, name, 164);

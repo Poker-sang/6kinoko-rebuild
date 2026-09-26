@@ -3,9 +3,9 @@
 struct SQVM;
 typedef struct KinokoSqplusVmSlots {
     char *skip_owner_reset;
-    int32_t *newest_shared_state;
-    char **current_vm;
-    int32_t *cached_root;
+    void **newest_shared_state;
+    struct SQVM **current_vm;
+    void **cached_root;
     int32_t *thread_wrapper;
 } KinokoSqplusVmSlots;
 #ifdef __cplusplus

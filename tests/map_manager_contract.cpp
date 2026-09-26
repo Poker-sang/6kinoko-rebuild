@@ -23,9 +23,9 @@ int32_t __fastcall delete_document(KinokoActDocument *source, void *, int32_t fl
 }
 }
 extern "C" {
-unsigned char g37;
-void retdec_trace(const char *) {}
-void retdec_trace_i32(const char *, int32_t) {}
+unsigned char kinoko_map_render_layer_methods_storage;
+void kinoko_trace(const char *) {}
+void kinoko_trace_i32(const char *, int32_t) {}
 void * kinoko_sqplus_object_initialize(void * ) { calls.push_back(0); return (void *)(intptr_t)(0); }
 void * kinoko_sqplus_object_reset(void * ) { calls.push_back(1); return (void *)(intptr_t)(0); }
 void * kinoko_sqplus_object_assign(void * , const void * ) { return (void *)(intptr_t)(0); }
@@ -40,8 +40,8 @@ void kinoko_act_runtime_dispose(KinokoActRuntime *player) {
 int32_t __fastcall kinoko_act_increment_frame(KinokoActRuntime *player, void *) {
     CHECK(player == expected_player); calls.push_back(5); return 0;
 }
-int32_t kinoko_act_update_frame(int32_t player) {
-    CHECK(player == address(expected_player)); calls.push_back(6); return 17;
+int32_t kinoko_act_update_frame(KinokoActRuntime* player) {
+    CHECK(player == expected_player); calls.push_back(6); return 17;
 }
 }
 int main() {

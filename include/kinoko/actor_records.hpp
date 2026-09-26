@@ -14,11 +14,11 @@ struct KinokoActor;
 struct KinokoActorPool;
 struct KinokoActorManager;
 struct KinokoAnimation;
+struct KinokoAnimationLookup;
 struct KinokoAnimationFrame;
 struct SQVM;
 
 namespace kinoko::actor {
-using Address = std::uint32_t; // serialized native Win32 address, never an owner
 using ScriptStorage = std::array<unsigned char, 12>; // external refs: ObjectView
 using Bounds = kinoko::camera::Bounds;
 struct InitialData {
@@ -105,7 +105,7 @@ struct FrameAppearance {
 };
 using Position3 = kinoko::render::Position3;
 struct FrameRecord {
-    Address vtable;
+    const void* vtable;
     std::int32_t texture; // borrowed handle; manager releases texture owners
     std::array<KinokoSpriteVertex, 4> vertices;
     float texture_width, texture_height;
@@ -117,10 +117,10 @@ struct FrameRecord {
     FrameAppearance *owned_payload; // malloc-owned, released before frame storage
 };
 struct TreeIndex {
-    Address policy, head;
+    void *policy, *head;
     std::int32_t count;
 };
-struct ListIndex { Address head; std::uint32_t count; };
+struct ListIndex { void* head; std::uint32_t count; };
 using VectorIndex = KinokoIntegerVector;
 // Manager iteration storage is native_buffer-owned; entries borrow live Actors.
 struct ActorIterationBuffer { KinokoActor **begin, **end; void *storage_owner; };
@@ -132,13 +132,15 @@ struct RenderLayerRecord {
 using CameraBoundsRecord = kinoko::camera::Record;
 // Only the verified prefix of the manager is described, not a new allocation
 // size. Index nodes and animation lists have distinct ownership semantics.
+struct AnimationIndex { uint32_t policy; KinokoAnimationLookup* owner; int32_t count; };
+static_assert(sizeof(AnimationIndex) == 12);
 struct ManagerPrefix {
     const void *methods;
     KinokoActorPool *pool;
     void *owner_list;
     std::array<unsigned char, 8> unknown12;
     std::array<RenderLayerRecord *, 4> render_layers;
-    KinokoIntegerMapIndex animation_lookup; // owns nodes; values borrow animation list items
+    AnimationIndex animation_lookup; // owns nodes; values borrow animation list items
     std::array<unsigned char, 4> unknown48;
     ListIndex animations;       // owns animation items, frames and payloads
     uint32_t unknown60;

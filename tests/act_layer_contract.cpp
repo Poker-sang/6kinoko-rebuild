@@ -28,8 +28,8 @@ extern "C" int32_t _3f__3f_2_40_YAPAXI_40_Z(int32_t size) {
     if (++test::allocation_count == test::fail_at) return 0;
     return kinoko::legacy::address(std::malloc(static_cast<size_t>(size)));
 }
-extern "C" void retdec_trace(const char *label) { test::trace.emplace_back(label); }
-extern "C" void retdec_trace_i32(const char *, int32_t) {}
+extern "C" void kinoko_trace(const char *label) { test::trace.emplace_back(label); }
+extern "C" void kinoko_trace_i32(const char *, int32_t) {}
 #define CHECK(c) do { if (!(c)) { std::fprintf(stderr, "layer line %d: %s\n", __LINE__, #c); return 1; } } while (0)
 
 static_assert(std::is_same_v<decltype(kinoko_act_layer_layout(nullptr, 0)), KinokoActLayout *>);

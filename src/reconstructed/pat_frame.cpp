@@ -56,7 +56,7 @@ extern "C" int32_t kinoko_pat_build_frame(KinokoActorManager *manager,KinokoAnim
         handle=handles[resource_base+fields->resource_index];
     const RecordView<FrameRecord> frame(receiver);
     frame.clear();
-    frame.set(&FrameRecord::vtable,static_cast<Address>(address(kinoko_pat_frame_methods())));
+    frame.set(&FrameRecord::vtable,kinoko_pat_frame_methods());
     frame.set(&FrameRecord::sprite_x,fields->sprite_x);frame.set(&FrameRecord::sprite_y,fields->sprite_y);
     frame.set(&FrameRecord::pivot_x,fields->offset_x);frame.set(&FrameRecord::pivot_y,fields->offset_y);
     frame.set(&FrameRecord::duration,fields->duration);
@@ -65,14 +65,14 @@ extern "C" int32_t kinoko_pat_build_frame(KinokoActorManager *manager,KinokoAnim
     frame.set(&FrameRecord::vertices,vertices);
     static std::atomic<int32_t> traces{};
     if (++traces<=48) {
-        retdec_trace_i32("actor:pat-frame-resource",fields->resource_index);
-        retdec_trace_i32("actor:pat-frame-sprite-x",fields->sprite_x);
-        retdec_trace_i32("actor:pat-frame-sprite-y",fields->sprite_y);
-        retdec_trace_i32("actor:pat-frame-width",fields->source_width);
-        retdec_trace_i32("actor:pat-frame-height",fields->source_height);
-        retdec_trace_i32("actor:pat-frame-offset-x",fields->offset_x);
-        retdec_trace_i32("actor:pat-frame-offset-y",fields->offset_y);
-        retdec_trace_i32("actor:pat-frame-handle",handle);
+        kinoko_trace_i32("actor:pat-frame-resource",fields->resource_index);
+        kinoko_trace_i32("actor:pat-frame-sprite-x",fields->sprite_x);
+        kinoko_trace_i32("actor:pat-frame-sprite-y",fields->sprite_y);
+        kinoko_trace_i32("actor:pat-frame-width",fields->source_width);
+        kinoko_trace_i32("actor:pat-frame-height",fields->source_height);
+        kinoko_trace_i32("actor:pat-frame-offset-x",fields->offset_x);
+        kinoko_trace_i32("actor:pat-frame-offset-y",fields->offset_y);
+        kinoko_trace_i32("actor:pat-frame-handle",handle);
     }
     uint32_t width=0,height=0;
     if (handle>0 && handle<KINOKO_TEXTURE_CAPACITY) {

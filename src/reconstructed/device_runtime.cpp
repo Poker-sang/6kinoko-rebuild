@@ -58,14 +58,14 @@ extern "C" int32_t kinoko_graphics_begin_scene(void) {
     if (!device) { LeaveCriticalSection(&kinoko_graphics_lock.native);return 0; }
     const auto status=device->BeginScene();
     static volatile LONG traces;
-    if (InterlockedIncrement(&traces)<=5) retdec_trace_hresult("401760:beginscene-hr",status);
+    if (InterlockedIncrement(&traces)<=5) kinoko_trace_hresult("401760:beginscene-hr",status);
     // 40177D compares exactly against zero, not merely SUCCEEDED(status).
     if (status!=D3D_OK) { LeaveCriticalSection(&kinoko_graphics_lock.native);return 0; }
     return 1;
 }
 extern "C" int32_t kinoko_graphics_end_scene(void) {
     if (auto *device=kinoko_graphics.device)
-        retdec_trace_hresult("401790:endscene-hr",device->EndScene());
+        kinoko_trace_hresult("401790:endscene-hr",device->EndScene());
     LeaveCriticalSection(&kinoko_graphics_lock.native);
     return 0;
 }
@@ -77,7 +77,7 @@ extern "C" int32_t kinoko_graphics_present(void) {
     HRESULT status=D3D_OK;
     if (swap_chain) status=swap_chain->Present(nullptr,nullptr,nullptr,nullptr,D3DPRESENT_DONOTWAIT);
     static volatile LONG traces;
-    if (InterlockedIncrement(&traces)<=5) retdec_trace_hresult("4017b0:present-hr",status);
+    if (InterlockedIncrement(&traces)<=5) kinoko_trace_hresult("4017b0:present-hr",status);
     if (status==D3D_OK) kinoko_renderer.present_pending=0;
     LeaveCriticalSection(&kinoko_graphics_lock.native);
     return status==D3D_OK;
@@ -87,6 +87,6 @@ extern "C" int32_t kinoko_graphics_clear(void) {
     if (!device) return D3DERR_INVALIDCALL;
     const auto status=device->Clear(0,nullptr,D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER,kinoko_renderer.clear_color,1.0f,0);
     static volatile LONG traces;
-    if (InterlockedIncrement(&traces)<=5) retdec_trace_hresult("401820:clear-hr",status);
+    if (InterlockedIncrement(&traces)<=5) kinoko_trace_hresult("401820:clear-hr",status);
     return status;
 }

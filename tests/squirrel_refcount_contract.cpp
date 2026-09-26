@@ -23,7 +23,7 @@ void base_destructor(int flags) {
     SQWeakRef* weak = value->GetWeakRef(OT_USERDATA);
     ++weak->_uiRef; // keep it alive after its target is destroyed
     const int32_t receiver = address(value);
-    require(retdec_call_thiscall1_result(value,
+    require(kinoko_call_thiscall1_result(value,
         reinterpret_cast<void*>(&kinoko_sq_delete_refcounted), flags) == receiver,
         "base destructor receiver/result");
     require(type(weak->_obj) == OT_NULL && weak->_obj._unVal.pRefCounted == nullptr,
@@ -32,21 +32,21 @@ void base_destructor(int flags) {
     if (!(flags & 1)) sq_free(storage, sizeof(BaseProbe));
 }
 void contracts() {
-    require(kinoko_sq_delete_refcounted(0, nullptr, 1) == 0, "null base destructor");
-    require(kinoko_sq_shared_state(0) == 0, "null VM shared-state query");
+    require(((int32_t)(uintptr_t)kinoko_sq_delete_refcounted((SQRefCounted*)(uintptr_t)(0), nullptr, 1)) == 0, "null base destructor");
+    require(((int32_t)(uintptr_t)kinoko_sq_shared_state((SQVM*)(uintptr_t)(0))) == 0, "null VM shared-state query");
     for (int i = 0; i < 64; ++i) {
         base_destructor(0);
         base_destructor(1);
     }
     HSQUIRRELVM vm = sq_open(32);
     require(vm != nullptr, "VM allocation");
-    require(kinoko_sq_shared_state(address(vm)) == address(vm->_sharedstate), "source shared state");
+    require(((int32_t)(uintptr_t)kinoko_sq_shared_state((SQVM*)(uintptr_t)(address(vm)))) == address(vm->_sharedstate), "source shared state");
     HSQUIRRELVM child = sq_newthread(vm, 16);
     require(child != nullptr, "thread allocation");
-    require(kinoko_sq_shared_state(address(child)) == kinoko_sq_shared_state(address(vm)),
+    require(((int32_t)(uintptr_t)kinoko_sq_shared_state((SQVM*)(uintptr_t)(address(child)))) == ((int32_t)(uintptr_t)kinoko_sq_shared_state((SQVM*)(uintptr_t)(address(vm)))),
         "thread must share parent state");
     const SQInteger top = sq_gettop(vm);
-    require(kinoko_sq_noop_constructor(address(vm)) == 0 && sq_gettop(vm) == top,
+    require(kinoko_sq_noop_constructor((SQVM*)(uintptr_t)(address(vm))) == 0 && sq_gettop(vm) == top,
         "embedding no-op constructor must leave the stack unchanged");
     sq_close(vm);
 }

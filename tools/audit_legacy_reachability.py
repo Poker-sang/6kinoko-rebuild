@@ -14,7 +14,7 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MAIN = ROOT / 'src/decompiled/6kinoko_rebuilt.c'
+MAIN = ROOT / 'src/reconstructed/runtime_host.cpp'
 LEX = re.compile(r'//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
 NAME = re.compile(r'\b(?:retdec_unbound_)?function_[0-9a-f]+(?:_\w+)?\b')
 DEFINITION = re.compile(r'^(?:static\s+)?(?:void|bool|char|int|(?:u?int(?:8|16|32|64)_t)|float(?:32|64)_t)[^\n;{}=]*\b((?:retdec_unbound_)?function_[0-9a-f]+(?:_\w+)?)\s*\([^;{}]*\)\s*\{', re.M)

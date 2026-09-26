@@ -25,7 +25,7 @@ static_assert(offsetof(SQVM, _vargsstack) == 36);
 // while allowing callers to supply ordinary local output objects as well.
 class Output {
 public:
-    Output(SQVM &vm, int32_t p) : vm_(vm), pointer_(&at<SQObjectPtr>(p)) {
+    Output(SQVM &vm, SQObjectPtr* p) : vm_(vm), pointer_(p) {
         const auto begin = reinterpret_cast<uintptr_t>(vm._stack._vals);
         const auto raw = reinterpret_cast<uintptr_t>(pointer_);
         if (raw >= begin && raw < begin + vm._stack.size() * sizeof(SQObjectPtr) &&
@@ -42,25 +42,25 @@ private:
 
 // Original 491500 / SQVM::GETVARGV_OP. The source operation preserves numeric
 // conversion, the negative bound, diagnostic text and acquire-before-release.
-extern "C" int32_t kinoko_sq_get_vararg(int32_t vm, int32_t target,
-                                         int32_t index, int32_t call_info) {
-    return at<SQVM>(vm).GETVARGV_OP(at<SQObjectPtr>(target), at<SQObjectPtr>(index),
-                                   &at<SQVM::CallInfo>(call_info));
+extern "C" int32_t kinoko_sq_get_vararg(SQVM* vm, SQObjectPtr* target,
+                                         SQObjectPtr* index, void* call_info) {
+    return (*vm).GETVARGV_OP((*target), (*index),
+                                   &(*reinterpret_cast<SQVM::CallInfo*>(call_info)));
 }
 
 // VM operations use the same source implementation as the bytecode interpreter.
-extern "C" int32_t kinoko_sq_clone(int32_t vm, int32_t source, int32_t target) {
-    auto &machine = at<SQVM>(vm);
+extern "C" int32_t kinoko_sq_clone(SQVM* vm, SQObjectPtr* source, SQObjectPtr* target) {
+    auto &machine = (*vm);
     Output output(machine, target);
-    SQObjectPtr self = at<SQObjectPtr>(source), result;
+    SQObjectPtr self = (*source), result;
     if (!machine.Clone(self, result)) return false;
     output.get() = result;
     return true;
 }
 
-extern "C" int32_t kinoko_sq_foreach(int32_t vm, int32_t object, int32_t key,
-    int32_t value, int32_t iterator, int32_t arg2, int32_t exitpos, int32_t *jump) {
-    auto &machine = at<SQVM>(vm);
-    return machine.FOREACH_OP(at<SQObjectPtr>(object), at<SQObjectPtr>(key),
-        at<SQObjectPtr>(value), at<SQObjectPtr>(iterator), arg2, exitpos, *jump);
+extern "C" int32_t kinoko_sq_foreach(SQVM* vm, SQObjectPtr* object, SQObjectPtr* key,
+    SQObjectPtr* value, SQObjectPtr* iterator, int32_t arg2, int32_t exitpos, int32_t *jump) {
+    auto &machine = (*vm);
+    return machine.FOREACH_OP((*object), (*key),
+        (*value), (*iterator), arg2, exitpos, *jump);
 }

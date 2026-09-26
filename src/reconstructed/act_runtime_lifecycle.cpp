@@ -102,11 +102,11 @@ extern "C" KinokoActRuntime *kinoko_act_runtime_initialize(
     view.set(&RuntimeRecord::vm, static_cast<HSQUIRRELVM>(nullptr));
     view.set(&RuntimeRecord::stage_active, uint8_t{0});
     kinoko::script::pair::reset(object_bytes(view));
-    view.set(&RuntimeRecord::render_target, uint32_t{0});
+    view.set(&RuntimeRecord::render_target, static_cast<KinokoActResource*>(nullptr));
     view.set(&RuntimeRecord::next_find_id, uint32_t{0});
     view.set(&RuntimeRecord::wake_time, uint32_t{0});
     view.set(&RuntimeRecord::hidden, uint8_t{0});
-    view.set(&RuntimeRecord::stage_state, std::array<uint32_t, 11>{});
+    view.set(&RuntimeRecord::stage_properties, StagePropertyAliases{});
     InitializeCriticalSection(reinterpret_cast<CRITICAL_SECTION*>(view.bytes(&RuntimeRecord::lock)));
     return storage;
 }
@@ -133,7 +133,7 @@ extern "C" void kinoko_act_runtime_dispose(KinokoActRuntime *storage) {
     DeleteCriticalSection(reinterpret_cast<CRITICAL_SECTION*>(view.bytes(&RuntimeRecord::lock)));
     name.destroy();
     // The existing recovered cleanup clears the first word, not the whole SSO buffer.
-    std::memset(view.bytes(&RuntimeRecord::name), 0, sizeof(Address));
+    std::memset(view.bytes(&RuntimeRecord::name), 0, sizeof(uint32_t));
     view.view(&RuntimeRecord::name).set(&kinoko::legacy::StringRecord::length, uint32_t{0});
     view.view(&RuntimeRecord::name).set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
     kinoko_act_draw_storage_destroy(storage);

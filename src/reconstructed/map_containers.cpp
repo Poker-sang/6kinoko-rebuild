@@ -7,11 +7,11 @@
 #include <stdexcept>
 #include <iterator>
 
-extern "C" unsigned char g37;
+extern "C" unsigned char kinoko_map_render_layer_methods_storage;
 namespace kinoko::map {
 using RenderLayer = kinoko::map::RenderLayerRecord;
 static_assert(sizeof(RenderLayer) == 8);
-inline constexpr auto render_layer_vtable = &g37;
+inline constexpr auto render_layer_vtable = &kinoko_map_render_layer_methods_storage;
 struct Containers {
     std::list<RenderLayer> layers;
     std::vector<KinokoActLayout *> events;

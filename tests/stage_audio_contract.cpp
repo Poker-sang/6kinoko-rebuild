@@ -57,14 +57,14 @@ public:
         g_audio_device.device.reset(&device);
     }
     ~DeviceFixture() {
-        retdec_bgm_release_all_tracks_locked();
+        kinoko_bgm_release_all_tracks_locked();
         g_audio_device.device = std::move(previous_);
     }
     DeviceFixture(const DeviceFixture&) = delete;
     DeviceFixture& operator=(const DeviceFixture&) = delete;
 };
 struct SoundCleanupGuard {
-    ~SoundCleanupGuard() { retdec_se_pool_release(); }
+    ~SoundCleanupGuard() { kinoko_se_pool_release(); }
 };
 struct Module {
     HMODULE handle = LoadLibraryA("dsound.dll");
@@ -74,12 +74,12 @@ struct Module {
 
 extern "C" int kinoko_test_bgm_pause(void) {
     AudioTestBuffer buffer;
-    BgmTrack saved = std::move(g_retdec_bgm_track);
-    const int32_t old_handle = g637;
-    g_retdec_bgm_track = BgmTrack{};
-    auto& track = g_retdec_bgm_track;
+    BgmTrack saved = std::move(g_kinoko_bgm_track);
+    const int32_t old_handle = kinoko_active_bgm_slot;
+    g_kinoko_bgm_track = BgmTrack{};
+    auto& track = g_kinoko_bgm_track;
     track.buffer.reset(&buffer);
-    track.handle = g637 = 123;
+    track.handle = kinoko_active_bgm_slot = 123;
     track.buffer_bytes = 65536;
     track.started = track.playing = track.looping = 1;
     track.play_offset = buffer.position = 4096;
@@ -88,16 +88,16 @@ extern "C" int kinoko_test_bgm_pause(void) {
     buffer.status = DSBSTATUS_PLAYING;
     kinoko_audio_pause_bgm();
     const bool paused = buffer.stops == 1 && !buffer.status && !track.playing;
-    retdec_bgm_service_track(&track);
+    kinoko_bgm_service_track(&track);
     const bool serviced = buffer.plays == 0 && buffer.position == 4096 &&
         track.play_offset == 4096 && track.buffered_bytes == 32768 && buffer.locks == 0;
     kinoko_audio_pause_bgm();
     const bool resumed = buffer.plays == 1 && buffer.status == DSBSTATUS_PLAYING &&
         buffer.position == 4096 && track.playing && track.started;
-    retdec_bgm_stop_for_handle(123);
+    kinoko_bgm_stop_for_handle(123);
     const bool stopped = buffer.position == 0 && !track.started && !track.playing;
-    g_retdec_bgm_track = std::move(saved);
-    g637 = old_handle;
+    g_kinoko_bgm_track = std::move(saved);
+    kinoko_active_bgm_slot = old_handle;
     CHECK(paused && serviced && resumed && stopped);
     CHECK(buffer.releases == 1);
     std::puts("PASS: PauseBgm toggles without rewind or service restart; StopBgm still rewinds");
@@ -107,13 +107,13 @@ extern "C" int kinoko_test_bgm_pause(void) {
 extern "C" int kinoko_test_sound_cleanup(int32_t (*clear_all)(void)) {
     AudioTestBuffer buffers[3];
     SoundCleanupGuard cleanup;
-    g_retdec_se_entry_count = 2;
-    g_retdec_se_entries[0].buffer.reset(&buffers[0]);
-    g_retdec_se_entries[1].buffer.reset(&buffers[1]);
-    g_retdec_se_pool.stream_slots[0].buffer.reset(&buffers[2]);
-    g_retdec_se_pool.initialized = 1;
+    g_kinoko_se_entry_count = 2;
+    g_kinoko_se_entries[0].buffer.reset(&buffers[0]);
+    g_kinoko_se_entries[1].buffer.reset(&buffers[1]);
+    g_kinoko_se_pool.stream_slots[0].buffer.reset(&buffers[2]);
+    g_kinoko_se_pool.initialized = 1;
     CHECK(clear_all() == 1);
-    CHECK(!g_retdec_se_entry_count && !g_retdec_se_pool.initialized);
+    CHECK(!g_kinoko_se_entry_count && !g_kinoko_se_pool.initialized);
     CHECK(clear_all() == 1);
     for (const auto& buffer : buffers) CHECK(buffer.releases == 1 && buffer.refs == 0);
     CHECK(buffers[0].stops == 1 && buffers[1].stops == 1);
@@ -128,23 +128,23 @@ extern "C" int kinoko_test_bgm_preserves_game_math(void) {
     unsigned current = 0, x87 = 0, sse = 0;
     std::array<unsigned char, RETDEC_BGM_CHUNK_BYTES> reference{};
     _controlfp_s(&current, _RC_NEAR, _MCW_RC);
-    CHECK(retdec_bgm_prepare_track(1, "data/bgm/st1.ogg", 1, 1.0f));
+    CHECK(kinoko_bgm_prepare_track(1, "data/bgm/st1.ogg", 1, 1.0f));
     std::memcpy(reference.data(), device.buffer.bytes.data(), reference.size());
-    retdec_bgm_release_track_locked();
+    kinoko_bgm_release_track_locked();
     CHECK(device.buffer.refs == 1);
     kinoko_enter_game_math();
     for (int failure = 0; failure <= 2; ++failure) {
         device.fail_create = failure == 1;
         device.buffer.fail_lock = failure == 2;
-        CHECK(retdec_bgm_prepare_track(1, "data/bgm/st1.ogg", 1, 1.0f) == (failure == 0));
+        CHECK(kinoko_bgm_prepare_track(1, "data/bgm/st1.ogg", 1, 1.0f) == (failure == 0));
         CHECK(__control87_2(0, 0, &x87, &sse));
         CHECK((x87 & _MCW_RC) == _RC_UP && (sse & _MCW_RC) == _RC_UP);
         if (!failure) CHECK(std::memcmp(reference.data(), device.buffer.bytes.data(), reference.size()) == 0);
-        retdec_bgm_release_track_locked();
+        kinoko_bgm_release_track_locked();
         CHECK(device.buffer.refs == 1);
     }
     device.fail_create = device.buffer.fail_lock = false;
-    CHECK(!retdec_bgm_prepare_track(1, "data/script/constant.cv4", 1, 1.0f));
+    CHECK(!kinoko_bgm_prepare_track(1, "data/script/constant.cv4", 1, 1.0f));
     CHECK(__control87_2(0, 0, &x87, &sse));
     CHECK((x87 & _MCW_RC) == _RC_UP && (sse & _MCW_RC) == _RC_UP);
     std::puts("PASS: real BGM decoding preserves PCM and game rounding on success/decoder/device/fill failure");

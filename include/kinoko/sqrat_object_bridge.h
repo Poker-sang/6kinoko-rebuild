@@ -8,8 +8,8 @@ extern "C" {
 
 /* Recovered host entry points. Values crossing this C ABI keep their Win32
    bit patterns; implementation uses the vendored Squirrel 2.2.2 source. */
-int32_t kinoko_sqrat_object_vtable(void);
-int32_t kinoko_sqrat_root_vtable(void);
+const void* kinoko_sqrat_object_vtable(void);
+const void* kinoko_sqrat_root_vtable(void);
 /* Original thiscall virtual slots: ECX receiver, callee pops output/flags.
    The unused EDX parameter lets MSVC express these entries without assembly. */
 void * __fastcall kinoko_sqrat_copy_object(void * receiver, void *unused, void * output);

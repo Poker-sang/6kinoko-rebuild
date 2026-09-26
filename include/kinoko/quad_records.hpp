@@ -7,7 +7,7 @@ namespace kinoko::render {
 struct Position3 { float x, y, z; };
 // Borrowed texture handle. The enclosing layout/animation owns this storage.
 struct QuadRecord {
-    uint32_t vtable;
+    const void* vtable;
     int32_t texture;
     std::array<KinokoSpriteVertex, 4> vertices;
     float texture_width, texture_height;

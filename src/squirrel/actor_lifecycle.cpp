@@ -11,13 +11,13 @@
 #include <type_traits>
 
 extern "C" {
-extern char* g644;
-void _3f__3f_3_40_YAXPAX_40_Z(int32_t* allocation);
+extern struct SQVM *kinoko_primary_vm;
+void kinoko_host_free_allocation(int32_t* allocation);
 }
 
 namespace {
 using namespace kinoko::script;
-inline char*& current_vm_storage = g644;
+inline SQVM*& current_vm_storage = kinoko_primary_vm;
 static_assert(sizeof(KinokoOwnedObjectWords) == sizeof(ObjectStorage));
 static_assert(std::is_trivially_copyable_v<KinokoOwnedObjectWords>);
 static_assert(std::is_trivially_destructible_v<KinokoOwnedObjectWords>);
@@ -37,7 +37,7 @@ void raw_set_step(const ActorView& actor, const HSQOBJECT& step) {
     sq_rawset(vm, -3);
 }
 
-int32_t instance_pointer(const ObjectView& object) {
+void* instance_pointer(const ObjectView& object) {
     auto* vm = current_vm();
     StackTop restore(vm);
     object.push(vm);
@@ -47,7 +47,7 @@ int32_t instance_pointer(const ObjectView& object) {
         sq_reseterror(vm);
         return 0;
     }
-    return address(receiver);
+    return receiver;
 }
 } // namespace
 
@@ -70,7 +70,7 @@ extern "C" KinokoActor *kinoko_actor_construct(KinokoActor *actor) {
     view.set(&ActorRecord::bounds_anchor_y, 0.0f);
     view.set(&ActorRecord::unknown360, std::array<unsigned char,12>{});
     view.set(&ActorRecord::release_pending, uint8_t{0});
-    view.set(&ActorRecord::vtable, pointer<const void>(kinoko_actor_vtable()));
+    view.set(&ActorRecord::vtable, kinoko_actor_vtable());
     view.set(&ActorRecord::owner_references, int32_t{1});
     for (auto member : script_members)
         ObjectView(view.bytes(member)).initialize(kinoko_squirrel_object_vtable());
@@ -82,7 +82,7 @@ extern "C" KinokoActor *kinoko_actor_construct(KinokoActor *actor) {
 extern "C" KinokoActor *kinoko_actor_dispose(KinokoActor *actor) {
     if (!actor) return 0;
     const ActorView view(actor);
-    view.set(&ActorRecord::vtable, pointer<const void>(kinoko_actor_vtable()));
+    view.set(&ActorRecord::vtable, kinoko_actor_vtable());
     // Keep the established source-backed reset/destructor diagnostic boundary.
     // Do not compile away trace calls globally or clear VM internals.
     kinoko_sqplus_object_reset((void *)(view.bytes(&ActorRecord::initial_function)));
@@ -91,18 +91,17 @@ extern "C" KinokoActor *kinoko_actor_dispose(KinokoActor *actor) {
     const auto parent_control = view.get(&ActorRecord::step_control);
     view.set(&ActorRecord::step, static_cast<KinokoActor **>(nullptr));
     view.set(&ActorRecord::step_control, static_cast<ControlRecord *>(nullptr));
-    kinoko_native_release_weak(address(parent_control));
+    kinoko_native_release_weak((void*)(parent_control));
     const auto owner_control = view.get(&ActorRecord::owner_control);
     view.set(&ActorRecord::owner, static_cast<KinokoActor **>(nullptr));
     view.set(&ActorRecord::owner_control, static_cast<ControlRecord *>(nullptr));
-    kinoko_native_release_strong(address(owner_control));
+    kinoko_native_release_strong((void*)(owner_control));
     for (auto member = script_members.rbegin(); member != script_members.rend(); ++member)
-        kinoko_squirrel_object_destroy(address(view.bytes(*member)), address(current_vm()),
-            kinoko_squirrel_object_vtable());
+        (int32_t)(intptr_t)kinoko_squirrel_object_destroy((void*)(view.bytes(*member)), (SQVM*)(current_vm()), (const void*)(uintptr_t)(kinoko_squirrel_object_vtable()));
     // 45E56C/45E58A are member destructors after the explicit reset above.
     // Release hooks may have installed new links while wrappers were destroyed.
-    kinoko_native_release_weak(address(view.get(&ActorRecord::step_control)));
-    kinoko_native_release_strong(address(view.get(&ActorRecord::owner_control)));
+    kinoko_native_release_weak((void*)(view.get(&ActorRecord::step_control)));
+    kinoko_native_release_strong((void*)(view.get(&ActorRecord::owner_control)));
     return actor;
 }
 
@@ -115,23 +114,22 @@ extern "C" int32_t kinoko_actor_set_step_owned(KinokoActor *actor, KinokoOwnedOb
         view.set(&ActorRecord::step, static_cast<KinokoActor **>(nullptr));
         const auto previous = view.get(&ActorRecord::step_control);
         view.set(&ActorRecord::step_control, static_cast<ControlRecord *>(nullptr));
-        kinoko_native_release_weak(address(previous));
+        kinoko_native_release_weak((void*)(previous));
         ObjectStorage empty{};
         ObjectView(&empty).initialize(kinoko_squirrel_object_vtable());
         raw_set_step(view, empty.value);
-        kinoko_squirrel_object_destroy(address(&empty), address(current_vm()),
-            kinoko_squirrel_object_vtable());
+        (int32_t)(intptr_t)kinoko_squirrel_object_destroy((void*)(&empty), (SQVM*)(current_vm()), (const void*)(uintptr_t)(kinoko_squirrel_object_vtable()));
     } else {
         // Do not invent weakref dereferencing: retain sq_getinstanceup's result
         // and the old distinction between native bookkeeping and script value.
         if (const auto receiver = instance_pointer(object)) {
-            const ActorView target(pointer(receiver));
+            const ActorView target(receiver);
             view.set(&ActorRecord::step, target.get(&ActorRecord::owner));
             const auto next = target.get(&ActorRecord::owner_control);
             const auto previous = view.get(&ActorRecord::step_control);
             if (next != previous) {
-                kinoko_native_add_weak(address(next));
-                kinoko_native_release_weak(address(previous));
+                kinoko_native_add_weak((void*)(next));
+                kinoko_native_release_weak((void*)(previous));
                 view.set(&ActorRecord::step_control, next);
             }
         }
@@ -139,8 +137,7 @@ extern "C" int32_t kinoko_actor_set_step_owned(KinokoActor *actor, KinokoOwnedOb
     }
     // The caller transferred one EXTERNAL reference with its by-value words.
     // Consume it exactly once, including on failed native-instance lookup.
-    return kinoko_squirrel_object_destroy(address(owned_object), address(current_vm()),
-        kinoko_squirrel_object_vtable());
+    return (int32_t)(intptr_t)kinoko_squirrel_object_destroy((void*)(owned_object), (SQVM*)(current_vm()), (const void*)(uintptr_t)(kinoko_squirrel_object_vtable()));
 }
 
 extern "C" KinokoActor *__fastcall kinoko_actor_dispose_method(KinokoActor *actor, void*) {
@@ -148,7 +145,7 @@ extern "C" KinokoActor *__fastcall kinoko_actor_dispose_method(KinokoActor *acto
 }
 extern "C" KinokoActor *__fastcall kinoko_actor_delete_method(KinokoActor *actor, void*, unsigned char flags) {
     kinoko_actor_dispose(actor);
-    if (flags & 1) _3f__3f_3_40_YAXPAX_40_Z(reinterpret_cast<int32_t *>(actor));
+    if (flags & 1) kinoko_host_free_allocation(reinterpret_cast<int32_t *>(actor));
     return actor;
 }
 extern "C" int32_t __fastcall kinoko_actor_set_step_method(KinokoActor *actor, void*, KinokoOwnedObjectWords object) {

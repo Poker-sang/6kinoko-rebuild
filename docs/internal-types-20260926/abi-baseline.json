@@ -1,0 +1,3180 @@
+{
+  "function_42bcc0": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      40,
+      "// function_42bcc0"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      73,
+      "// function_42bcc0"
+    ],
+    [
+      "tests\\legacy_method_entries_contract.cpp",
+      130,
+      "std::fprintf(stderr, \"Entry contract failed: function_42bcc0\\n\"); return 1;"
+    ]
+  ],
+  "function_42c100": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      46,
+      "// function_42c100"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      75,
+      "// function_42c100"
+    ],
+    [
+      "tests\\legacy_method_entries_contract.cpp",
+      134,
+      "std::fprintf(stderr, \"Entry contract failed: function_42c100\\n\"); return 1;"
+    ]
+  ],
+  "function_42c300": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      51,
+      "// function_42c300"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      77,
+      "// function_42c300"
+    ],
+    [
+      "tests\\legacy_method_entries_contract.cpp",
+      139,
+      "std::fprintf(stderr, \"Entry contract failed: function_42c300\\n\"); return 1;"
+    ]
+  ],
+  "function_43c860": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      57,
+      "// function_43c860"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      79,
+      "// function_43c860"
+    ],
+    [
+      "tests\\legacy_method_entries_contract.cpp",
+      144,
+      "std::fprintf(stderr, \"Entry contract failed: function_43c860\\n\"); return 1;"
+    ]
+  ],
+  "function_450950": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      65,
+      "// function_450950"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      82,
+      "// function_450950"
+    ],
+    [
+      "tests\\legacy_method_entries_contract.cpp",
+      149,
+      "std::fprintf(stderr, \"Entry contract failed: function_450950\\n\"); return 1;"
+    ]
+  ],
+  "function_450e30": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      71,
+      "// function_450e30"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      84,
+      "// function_450e30"
+    ],
+    [
+      "tests\\legacy_method_entries_contract.cpp",
+      155,
+      "std::fprintf(stderr, \"Entry contract failed: function_450e30\\n\"); return 1;"
+    ]
+  ],
+  "function_4514a0": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      77,
+      "// function_4514a0"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      87,
+      "// function_4514a0"
+    ],
+    [
+      "tests\\legacy_method_entries_contract.cpp",
+      161,
+      "std::fprintf(stderr, \"Entry contract failed: function_4514a0\\n\"); return 1;"
+    ]
+  ],
+  "function_457a10": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      84,
+      "// function_457a10"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      91,
+      "// function_457a10"
+    ],
+    [
+      "tests\\legacy_method_entries_contract.cpp",
+      166,
+      "std::fprintf(stderr, \"Entry contract failed: function_457a10\\n\"); return 1;"
+    ]
+  ],
+  "function_45dbd0": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      93,
+      "// function_45dbd0"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      94,
+      "// function_45dbd0"
+    ],
+    [
+      "tests\\legacy_method_entries_contract.cpp",
+      171,
+      "std::fprintf(stderr, \"Entry contract failed: function_45dbd0\\n\"); return 1;"
+    ]
+  ],
+  "function_45eb00": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      99,
+      "// function_45eb00"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      96,
+      "// function_45eb00"
+    ],
+    [
+      "tests\\legacy_method_entries_contract.cpp",
+      175,
+      "std::fprintf(stderr, \"Entry contract failed: function_45eb00\\n\"); return 1;"
+    ]
+  ],
+  "function_466490": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      104,
+      "// function_466490"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      98,
+      "// function_466490"
+    ]
+  ],
+  "function_469620": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      115,
+      "// function_469620"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      100,
+      "// function_469620"
+    ],
+    [
+      "tests\\legacy_method_entries_contract.cpp",
+      180,
+      "std::fprintf(stderr, \"Entry contract failed: function_469620\\n\"); return 1;"
+    ]
+  ],
+  "function_46a6f0": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      121,
+      "// function_46a6f0"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      102,
+      "// function_46a6f0"
+    ],
+    [
+      "tests\\legacy_method_entries_contract.cpp",
+      185,
+      "std::fprintf(stderr, \"Entry contract failed: function_46a6f0\\n\"); return 1;"
+    ]
+  ],
+  "function_46ab10": [
+    [
+      "src\\reconstructed\\legacy_method_entries.cpp",
+      132,
+      "// function_46ab10"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      106,
+      "// function_46ab10"
+    ],
+    [
+      "tests\\legacy_method_entries_contract.cpp",
+      194,
+      "std::fprintf(stderr, \"Entry contract failed: function_46ab10\\n\"); return 1;"
+    ]
+  ],
+  "function_41eff0": [
+    [
+      "src\\reconstructed\\runtime_host_internal.h",
+      342,
+      "int32_t function_41eff0(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\act_binding.cpp",
+      543,
+      "extern \"C\" int32_t function_41eff0(int32_t vm) {"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5951,
+      "CHECK(function_41eff0(0) == (int32_t)E_INVALIDARG);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5952,
+      "CHECK(function_41eff0(vm) == 0);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5953,
+      "CHECK(function_41eff0(vm) == 0);"
+    ]
+  ],
+  "function_42b6d0": [
+    [
+      "src\\reconstructed\\runtime_host_internal.h",
+      346,
+      "int32_t function_42b6d0(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\act_binding.cpp",
+      386,
+      "extern \"C\" int32_t function_42b6d0(int32_t vm) {"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5954,
+      "CHECK(function_42b6d0(0) == (int32_t)E_INVALIDARG);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5955,
+      "CHECK(function_42b6d0(vm) == 0);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5963,
+      "CHECK(function_42b6d0(vm) == 0);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5964,
+      "CHECK(function_42b6d0(vm) == 0);"
+    ]
+  ],
+  "function_42f350": [
+    [
+      "src\\reconstructed\\runtime_host_internal.h",
+      350,
+      "int32_t function_42f350(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\act_binding.cpp",
+      1598,
+      "extern \"C\" int32_t function_42f350(int32_t vm) {"
+    ],
+    [
+      "include\\kinoko\\legacy_method_entries.h",
+      68,
+      "// function_42f350"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5573,
+      "CHECK(function_42f350(0) == (int32_t)E_INVALIDARG);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5575,
+      "CHECK(function_42f350(vm) == 0);"
+    ]
+  ],
+  "function_433c90": [
+    [
+      "src\\reconstructed\\runtime_host_internal.h",
+      354,
+      "int32_t function_433c90(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\act_binding.cpp",
+      1516,
+      "extern \"C\" int32_t function_433c90(int32_t vm) {"
+    ],
+    [
+      "tests\\stage_contract.c",
+      4732,
+      "CHECK(function_433c90(0) == (int32_t)E_INVALIDARG);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      4733,
+      "CHECK(function_433c90(vm) == 0);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      4734,
+      "CHECK(function_433c90(vm) == 0);"
+    ]
+  ],
+  "function_446520": [
+    [
+      "src\\reconstructed\\runtime_host_internal.h",
+      360,
+      "int32_t function_446520(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\act_binding.cpp",
+      455,
+      "extern \"C\" int32_t function_446520(int32_t vm) {"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5605,
+      "CHECK(function_446520(0) == (int32_t)E_INVALIDARG);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5609,
+      "CHECK(function_446520(vm) == 0 && function_4495a0(vm) == 0);"
+    ]
+  ],
+  "function_4495a0": [
+    [
+      "src\\reconstructed\\runtime_host_internal.h",
+      364,
+      "int32_t function_4495a0(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\act_binding.cpp",
+      467,
+      "extern \"C\" int32_t function_4495a0(int32_t vm) {"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5606,
+      "CHECK(function_4495a0(0) == (int32_t)E_INVALIDARG);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5609,
+      "CHECK(function_446520(vm) == 0 && function_4495a0(vm) == 0);"
+    ]
+  ],
+  "function_4669d0": [
+    [
+      "src\\reconstructed\\runtime_host_internal.h",
+      376,
+      "int32_t function_4669d0(void);"
+    ],
+    [
+      "src\\squirrel\\camera_map_binding.cpp",
+      215,
+      "extern \"C\" int32_t function_4669d0(void) { return kinoko_register_camera_binding(); }"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2045,
+      "function_4669d0();"
+    ],
+    [
+      "tests\\stage_contract.c",
+      4706,
+      "function_4669d0(); function_46fac0();"
+    ]
+  ],
+  "function_46fac0": [
+    [
+      "src\\reconstructed\\runtime_host_internal.h",
+      384,
+      "int32_t function_46fac0(void);"
+    ],
+    [
+      "src\\squirrel\\camera_map_binding.cpp",
+      217,
+      "extern \"C\" int32_t function_46fac0(void) { return kinoko_register_map_binding(); }"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2044,
+      "function_46fac0();"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3742,
+      "function_46fac0();"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3838,
+      "function_46fac0();"
+    ],
+    [
+      "tests\\stage_contract.c",
+      4706,
+      "function_4669d0(); function_46fac0();"
+    ]
+  ],
+  "function_472c90": [
+    [
+      "src\\reconstructed\\runtime_host_internal.h",
+      402,
+      "int32_t function_472c90(int32_t path_ptr, int32_t object_vtable,"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      22,
+      "{\"LoadTable\", entry(function_472c90), entry(function_471c10)},"
+    ],
+    [
+      "src\\squirrel\\script_registration_host.hpp",
+      28,
+      "int32_t function_472c90(int32_t path_ptr, int32_t object_vtable,"
+    ],
+    [
+      "src\\squirrel\\table_serialization.cpp",
+      320,
+      "extern \"C\" int32_t function_472c90(int32_t path, int32_t vtable,"
+    ],
+    [
+      "tests\\stage_contract.c",
+      4691,
+      "CHECK(function_472c90(PTR(path),owned[0],owned[1],owned[2]));"
+    ]
+  ],
+  "function_472e50": [
+    [
+      "src\\reconstructed\\runtime_host_internal.h",
+      405,
+      "int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      23,
+      "{\"SaveTable\", entry(function_472e50), entry(function_471c10)},"
+    ],
+    [
+      "src\\squirrel\\script_registration_host.hpp",
+      30,
+      "int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,"
+    ],
+    [
+      "src\\squirrel\\table_serialization.cpp",
+      330,
+      "extern \"C\" int32_t function_472e50(int32_t path, int32_t vtable,"
+    ],
+    [
+      "tests\\stage_contract.c",
+      4688,
+      "CHECK(function_472e50(PTR(path),owned[0],owned[1],owned[2]));"
+    ]
+  ],
+  "function_4d47f0": [
+    [
+      "src\\reconstructed\\stage_cleanup.cpp",
+      135,
+      "extern \"C\" int32_t function_4d47f0() {"
+    ]
+  ],
+  "function_466770": [
+    [
+      "src\\squirrel\\camera_map_binding.cpp",
+      133,
+      "extern \"C\" int32_t function_466770(int32_t *output, int32_t vm,"
+    ]
+  ],
+  "function_46f200": [
+    [
+      "src\\squirrel\\camera_map_binding.cpp",
+      138,
+      "extern \"C\" int32_t function_46f200(int32_t *output, int32_t vm,"
+    ]
+  ],
+  "function_4029b0": [
+    [
+      "src\\squirrel\\game_script_entries.cpp",
+      9,
+      "inline auto commit_actor_result = function_4029b0;"
+    ],
+    [
+      "src\\squirrel\\squirrel_game_objects.cpp",
+      70,
+      "extern \"C\" int32_t function_4029b0(int32_t id, int32_t* object) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_game_objects.h",
+      8,
+      "int32_t function_4029b0(int32_t vm, int32_t* object);"
+    ],
+    [
+      "tests\\game_script_contract.cpp",
+      58,
+      "int32_t function_4029b0(int32_t id,int32_t* object) { require(pointer<SQVM>(id)==vm,\"result VM\"); kinoko::script::ObjectView(object).push(vm); return 1; }"
+    ],
+    [
+      "tests\\squirrel_game_objects_contract.cpp",
+      218,
+      "const auto slot=function_4029b0(address(vm),copy.data());"
+    ]
+  ],
+  "function_470ee0": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      11,
+      "inline auto show_call_stack_entry = function_470ee0;"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      462,
+      "extern \"C\" int32_t function_470ee0(int32_t vm) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      38,
+      "int32_t function_470ee0(int32_t vm);"
+    ]
+  ],
+  "function_48a400": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      12,
+      "inline auto register_root_table_entry = function_48a400;"
+    ],
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      44,
+      "extern \"C\" int32_t function_48a400(int32_t a1, int32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      9,
+      "int32_t function_48a400(int32_t a1, int32_t a2);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      162,
+      "function_48a400(machine, address(&retained));"
+    ]
+  ],
+  "function_48a430": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      13,
+      "inline auto register_root_bindings_entry = function_48a430;"
+    ],
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      51,
+      "extern \"C\" int32_t function_48a430(int32_t a1, int32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      10,
+      "int32_t function_48a430(int32_t a1, int32_t a2);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      168,
+      "function_48a430(machine, address(&retained));"
+    ]
+  ],
+  "function_471bc0": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      20,
+      "{\"PostQuitMessage\", entry(kinoko_host_close_window), entry(function_471bc0)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      29,
+      "{\"ClearActor\", entry(kinoko_script_clear_actors), entry(function_471bc0)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      31,
+      "{\"ClearCollision\", entry(kinoko_script_clear_collision), entry(function_471bc0)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      34,
+      "{\"ClearRenderLayer\", entry(kinoko_script_clear_render_layers), entry(function_471bc0)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      39,
+      "{\"ReleaseMap\", entry(kinoko_script_release_map), entry(function_471bc0)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      48,
+      "{\"StopBgm\", entry(kinoko_audio_stop_bgm), entry(function_471bc0)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      49,
+      "{\"PauseBgm\", entry(kinoko_audio_pause_bgm), entry(function_471bc0)},"
+    ],
+    [
+      "src\\squirrel\\script_registration_host.hpp",
+      17,
+      "int32_t function_471bc0(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      477,
+      "extern \"C\" int32_t function_471bc0(int32_t vm) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      51,
+      "int32_t function_471bc0(int32_t vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2057,
+      "int32_t adapters[]={PTR(function_471d90),PTR(function_471bc0),PTR(function_471bc0),"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2058,
+      "PTR(function_471bc0),PTR(function_471f10),PTR(function_471f10),PTR(function_471e50)};"
+    ]
+  ],
+  "function_471c10": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      21,
+      "{\"ReadCSV\", entry(kinoko_script_read_csv), entry(function_471c10)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      22,
+      "{\"LoadTable\", entry(function_472c90), entry(function_471c10)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      23,
+      "{\"SaveTable\", entry(function_472e50), entry(function_471c10)},"
+    ],
+    [
+      "src\\squirrel\\script_registration_host.hpp",
+      18,
+      "int32_t function_471c10(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      480,
+      "extern \"C\" int32_t function_471c10(int32_t vm) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      52,
+      "int32_t function_471c10(int32_t vm);"
+    ]
+  ],
+  "function_471d30": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      25,
+      "{\"SetInitFunctionByID\", entry(kinoko_script_set_init), entry(function_471d30)},"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      296,
+      "extern \"C\" int32_t function_471d30(int32_t id) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      50,
+      "int32_t function_471d30(int32_t vm);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      149,
+      "for (auto fn : {function_471d30,function_471f70,function_471e50}) {"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      151,
+      "auto callback = fn == function_471d30 ? reinterpret_cast<void*>(pair_id) :"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      154,
+      "if (fn == function_471d30) sq_pushinteger(vm,42);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      164,
+      "captured_closure(vm,function_471d30,address(reinterpret_cast<void*>(pair_id)));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3819,
+      "CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR(\"SetInitFunctionByID\")), (const void *)(intptr_t)(PTR(&target)), 4, (void *)(intptr_t)(PTR(function_471d30)), 0))>=0);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6056,
+      "CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR(\"SetInitFunctionByID\")), (const void *)(intptr_t)(PTR(&target)), 4, (void *)(intptr_t)(PTR(function_471d30)), 0)) >= 0);"
+    ]
+  ],
+  "function_471d90": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      26,
+      "{\"LoadAnimationData\", entry(kinoko_script_load_animation), entry(function_471d90)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      36,
+      "{\"LoadAct\", entry(kinoko_script_load_act), entry(function_471d90)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      37,
+      "{\"LoadMap\", entry(kinoko_script_load_map), entry(function_471d90)},"
+    ],
+    [
+      "src\\squirrel\\script_registration_host.hpp",
+      19,
+      "int32_t function_471d90(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      484,
+      "extern \"C\" int32_t function_471d90(int32_t vm) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      53,
+      "int32_t function_471d90(int32_t vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2057,
+      "int32_t adapters[]={PTR(function_471d90),PTR(function_471bc0),PTR(function_471bc0),"
+    ]
+  ],
+  "function_471e50": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      28,
+      "{\"CreateActorFromMap\", entry(kinoko_script_create_map_actors), entry(function_471e50)},"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      310,
+      "extern \"C\" int32_t function_471e50(int32_t id) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      60,
+      "int32_t function_471e50(int32_t vm);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      149,
+      "for (auto fn : {function_471d30,function_471f70,function_471e50}) {"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      155,
+      "else sq_pushstring(vm,fn == function_471e50 ? \"one\" : \"pair\",-1);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      157,
+      "if (fn != function_471e50) push_owned_userdata(vm);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      158,
+      "const auto arguments=fn == function_471e50 ? 3 : 4;"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2058,
+      "PTR(function_471bc0),PTR(function_471f10),PTR(function_471f10),PTR(function_471e50)};"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6172,
+      "CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR(\"CreateActorFromMap\")), (const void *)(intptr_t)(PTR(&target)), 4, (void *)(intptr_t)(PTR(function_471e50)), 0)) >= 0);"
+    ]
+  ],
+  "function_471eb0": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      30,
+      "{\"MoveActor\", entry(kinoko_script_move_actors), entry(function_471eb0)},"
+    ],
+    [
+      "src\\squirrel\\script_registration_host.hpp",
+      20,
+      "int32_t function_471eb0(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      488,
+      "extern \"C\" int32_t function_471eb0(int32_t vm) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      54,
+      "int32_t function_471eb0(int32_t vm);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      255,
+      "sq_settop(vm, base); captured_closure(vm, function_471eb0, address(reinterpret_cast<void*>(float_callback)));"
+    ]
+  ],
+  "function_471f10": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      32,
+      "{\"CreateCollision\", entry(kinoko_script_create_collision), entry(function_471f10)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      35,
+      "{\"CreateRenderLayer\", entry(kinoko_script_create_render_layer), entry(function_471f10)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      38,
+      "{\"LoadSE\", entry(kinoko_audio_load_sound_table), entry(function_471f10)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      40,
+      "{\"MessageBox\", entry(kinoko_host_show_message_abi), entry(function_471f10)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      41,
+      "{\"dprint\", entry(kinoko_script_dprint_noop), entry(function_471f10)},"
+    ],
+    [
+      "src\\squirrel\\script_registration_host.hpp",
+      21,
+      "int32_t function_471f10(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      491,
+      "extern \"C\" int32_t function_471f10(int32_t vm) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      55,
+      "int32_t function_471f10(int32_t vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2058,
+      "PTR(function_471bc0),PTR(function_471f10),PTR(function_471f10),PTR(function_471e50)};"
+    ]
+  ],
+  "function_471fd0": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      42,
+      "{\"Sleep\", entry(kinoko_host_sleep_abi), entry(function_471fd0)},"
+    ],
+    [
+      "src\\squirrel\\global_registration.cpp",
+      44,
+      "{\"PlaySE\", entry(kinoko_audio_play_sound), entry(function_471fd0)},"
+    ],
+    [
+      "src\\squirrel\\script_registration_host.hpp",
+      22,
+      "int32_t function_471fd0(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      495,
+      "extern \"C\" int32_t function_471fd0(int32_t vm) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      56,
+      "int32_t function_471fd0(int32_t vm);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      252,
+      "sq_settop(vm, base); captured_closure(vm, function_471fd0, address(reinterpret_cast<void*>(integer_callback)));"
+    ]
+  ],
+  "function_472030": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      43,
+      "{\"timeGetTime\", entry(kinoko_host_milliseconds), entry(function_472030)},"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      328,
+      "extern \"C\" int32_t function_472030(int32_t id) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      62,
+      "int32_t function_472030(int32_t vm);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      290,
+      "register_root(vm,\"constant\",function_472030,address(reinterpret_cast<void*>(constant)));"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      291,
+      "register_root(vm,\"none\",function_472030,0);"
+    ]
+  ],
+  "function_472080": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      45,
+      "{\"PlayBgm\", entry(kinoko_audio_play_bgm), entry(function_472080)},"
+    ],
+    [
+      "src\\squirrel\\script_registration_host.hpp",
+      23,
+      "int32_t function_472080(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      498,
+      "extern \"C\" int32_t function_472080(int32_t vm) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      57,
+      "int32_t function_472080(int32_t vm);"
+    ]
+  ],
+  "function_4720e0": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      46,
+      "{\"PlayBgmMargin\", entry(kinoko_audio_play_bgm_margin), entry(function_4720e0)},"
+    ],
+    [
+      "src\\squirrel\\script_registration_host.hpp",
+      24,
+      "int32_t function_4720e0(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      502,
+      "extern \"C\" int32_t function_4720e0(int32_t vm) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      58,
+      "int32_t function_4720e0(int32_t vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1591,
+      "CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR(\"PlayBgmMargin\")), (const void *)(intptr_t)(PTR(&margin_target)), 4, (void *)(intptr_t)(PTR(function_4720e0)), 0))>=0);"
+    ]
+  ],
+  "function_472140": [
+    [
+      "src\\squirrel\\global_registration.cpp",
+      47,
+      "{\"FadeBgm\", entry(kinoko_audio_fade_bgm), entry(function_472140)},"
+    ],
+    [
+      "src\\squirrel\\script_registration_host.hpp",
+      25,
+      "int32_t function_472140(int32_t a1);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      506,
+      "extern \"C\" int32_t function_472140(int32_t vm) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      59,
+      "int32_t function_472140(int32_t vm);"
+    ]
+  ],
+  "function_48a600": [
+    [
+      "src\\squirrel\\squirrel_csv.cpp",
+      14,
+      "int32_t function_48a600(int32_t vm);"
+    ],
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      79,
+      "extern \"C\" int32_t function_48a600(int32_t a1) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      14,
+      "int32_t function_48a600(int32_t a1);"
+    ]
+  ],
+  "function_48a230": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      37,
+      "extern \"C\" int32_t function_48a230(int32_t a1, int32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      8,
+      "int32_t function_48a230(int32_t a1, int32_t a2);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      172,
+      "auto* child = machine_at(function_48a230(machine, 32));"
+    ]
+  ],
+  "function_48a480": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      58,
+      "extern \"C\" int32_t function_48a480(int32_t a1, int32_t a2, int32_t a3) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      11,
+      "int32_t function_48a480(int32_t a1, int32_t a2, int32_t a3);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      159,
+      "function_48a480(machine, address(\"externally-retained\"), -1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2826,
+      "function_48a480(vm, PTR(names[i]), -1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3109,
+      "function_48a480(vm,PTR(path),-1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3129,
+      "function_48a480(vm, PTR(\"native-name-owned\"), -1);"
+    ]
+  ],
+  "function_48a4f0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      65,
+      "extern \"C\" int32_t function_48a4f0(int32_t a1, int32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      12,
+      "int32_t function_48a4f0(int32_t a1, int32_t a2);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1637,
+      "function_48a4f0(vm, right-left);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1969,
+      "function_48a4f0(vm, 12345);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2852,
+      "function_48a4f0(vm, keys[i]);"
+    ]
+  ],
+  "function_48a5c0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      72,
+      "extern \"C\" int32_t function_48a5c0(int32_t a1, int32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      13,
+      "int32_t function_48a5c0(int32_t a1, int32_t a2);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      151,
+      "function_48a5c0(machine, address(&native_object));"
+    ]
+  ],
+  "function_48a670": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      86,
+      "extern \"C\" int32_t function_48a670(int32_t a1) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      15,
+      "int32_t function_48a670(int32_t a1);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      190,
+      "function_48a670(machine);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2825,
+      "function_48a670(vm);"
+    ]
+  ],
+  "function_48a6f0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      93,
+      "extern \"C\" int32_t function_48a6f0(int32_t a1, int32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      16,
+      "int32_t function_48a6f0(int32_t a1, int32_t a2);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      152,
+      "require(function_48a6f0(machine, -1) == OT_USERPOINTER, \"userpointer must not be encoded as an integer\");"
+    ]
+  ],
+  "function_48a7d0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      100,
+      "extern \"C\" int32_t function_48a7d0(int32_t a1, int32_t a2, int32_t * a3) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      17,
+      "int32_t function_48a7d0(int32_t a1, int32_t a2, int32_t * a3);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      155,
+      "require(SQ_FAILED(function_48a7d0(machine, -1, &restored)), \"userpointer is not an integer\");"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1636,
+      "if (function_48a7d0(vm,2,&left)<0 || function_48a7d0(vm,3,&right)<0) return -1;"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3661,
+      "CHECK(function_48a7d0(vm, -1, &value) == 0 && value == 20);"
+    ]
+  ],
+  "function_48a9e0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      107,
+      "extern \"C\" int32_t function_48a9e0(int32_t a1, int32_t a2, int32_t * a3) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      18,
+      "int32_t function_48a9e0(int32_t a1, int32_t a2, int32_t * a3);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      154,
+      "require(SQ_SUCCEEDED(function_48a9e0(machine, -1, &restored)) && restored == address(&native_object), \"userpointer round trip\");"
+    ]
+  ],
+  "function_48aa20": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      114,
+      "extern \"C\" int32_t function_48aa20(int32_t a1) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      19,
+      "int32_t function_48aa20(int32_t a1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      616,
+      "int32_t top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      653,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      663,
+      "int32_t stack_top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      713,
+      "CHECK(function_48aa20(vm) == stack_top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      777,
+      "int32_t top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      842,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      863,
+      "int32_t stack_top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      918,
+      "CHECK(function_48aa20(vm) == stack_top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1076,
+      "int32_t compile_target = PTR(kinoko_script_compile_file_argument), stack_top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1120,
+      "CHECK(vm_failures == failures && function_48aa20(vm) == stack_top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1301,
+      "const int32_t stack_top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1308,
+      "CHECK(vm_failures==0 && function_48aa20(vm)==stack_top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1590,
+      "int failures=vm_failures, stack_top=function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1623,
+      "CHECK(function_48aa20(vm)==stack_top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1642,
+      "int top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1648,
+      "CHECK(function_48aa20(vm)==top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1702,
+      "CHECK(function_48aa20(vm)==top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1722,
+      "int32_t top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1753,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1759,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1776,
+      "int32_t top = function_48aa20(vm), base = *(int32_t *)(intptr_t)(vm + 52);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1793,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1808,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1821,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1830,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1879,
+      "CHECK(function_48aa20(vm)==top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1908,
+      "CHECK(function_48aa20(vm)==top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1953,
+      "CHECK(function_48aa20(vm)==top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2219,
+      "int32_t stack_top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2236,
+      "CHECK(function_48aa20(vm) == stack_top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2239,
+      "CHECK(function_48aa20(vm) == stack_top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2260,
+      "CHECK(function_48aa20(vm) == stack_top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2289,
+      "const int32_t top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2302,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2503,
+      "int32_t top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2516,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2555,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2812,
+      "const int top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2832,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2835,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2839,
+      "CHECK(function_48aa20(vm) == top+1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2887,
+      "const int top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2928,
+      "CHECK(native_instance_releases == 2 && function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2949,
+      "const int top=function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2956,
+      "CHECK(compile_error_calls==0 && function_48aa20(vm)==top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2958,
+      "CHECK(compile_error_calls==1 && compile_error_valid && function_48aa20(vm)==top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3009,
+      "CHECK(function_48aa20(vm)==top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3063,
+      "const int top=function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3120,
+      "CHECK(function_48aa20(vm)==top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3126,
+      "const int top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3175,
+      "error[0],error[1],function_48aa20(vm),*(int32_t *)(intptr_t)(vm+52),"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3180,
+      "CHECK(function_48aa20(vm)==top && *(int32_t *)(intptr_t)(vm+52)==base);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3186,
+      "int top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3245,
+      "CHECK(result && function_48aa20(vm)==top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3252,
+      "const int32_t stack_before = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3265,
+      "CHECK(function_48aa20(vm) == stack_before);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3292,
+      "CHECK(function_48aa20(vm) == stack_before);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3403,
+      "const int32_t top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3434,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3465,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3626,
+      "const int32_t top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3650,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3656,
+      "CHECK(function_48aa20(vm) == top + 1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3659,
+      "CHECK(function_48aa20(vm) == top + 2);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      4506,
+      "int32_t top=function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      4534,
+      "CHECK(atlas[108]==0 && function_48aa20(vm)==top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5950,
+      "int32_t before = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      5965,
+      "CHECK(function_48aa20(vm) == before);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6057,
+      "top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6067,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6181,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6233,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6272,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6336,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6371,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6380,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6414,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6586,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6600,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6789,
+      "CHECK(function_48aa20(vm) == top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6878,
+      "int32_t camera_top = function_48aa20(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6880,
+      "CHECK(function_48aa20(vm) == camera_top);"
+    ]
+  ],
+  "function_48aa30": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      118,
+      "extern \"C\" int32_t function_48aa30(int32_t a1, int32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      20,
+      "int32_t function_48aa30(int32_t a1, int32_t a2);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      156,
+      "function_48aa30(machine, 1);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      163,
+      "function_48aa30(machine, 1);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      170,
+      "function_48aa30(machine, 1);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      182,
+      "function_48aa30(machine, 3);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      188,
+      "function_48aa30(machine, 1);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      208,
+      "function_48aa30(machine, 1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2856,
+      "function_48aa30(vm, 2);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3140,
+      "function_48aa30(vm,2);"
+    ]
+  ],
+  "function_48aa50": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      122,
+      "extern \"C\" int32_t function_48aa50(int32_t a1) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      21,
+      "int32_t function_48aa50(int32_t a1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1270,
+      "function_48aa50(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3755,
+      "function_48aa50(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6047,
+      "function_48aa50(vm);"
+    ]
+  ],
+  "function_48ab40": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      129,
+      "extern \"C\" int32_t function_48ab40(int32_t a1, int32_t a2, int32_t * a3) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      22,
+      "int32_t function_48ab40(int32_t a1, int32_t a2, int32_t * a3);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      161,
+      "require(SQ_SUCCEEDED(function_48ab40(machine, -1, reinterpret_cast<int32_t*>(&retained))), \"get retained object\");"
+    ]
+  ],
+  "function_48ab90": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      136,
+      "extern \"C\" int32_t function_48ab90(int32_t a1, int32_t a2, int32_t a3) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      23,
+      "int32_t function_48ab90(int32_t a1, int32_t a2, int32_t a3);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      165,
+      "function_48ab90(machine, retained._type, address(retained._unVal.pRefCounted));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1268,
+      "function_48ab90(vm,root[2],root[3]);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2851,
+      "function_48ab90(vm, types[1], types[2]);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2963,
+      "function_48ab90(vm,root[2],root[3]);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2970,
+      "function_48ab90(vm,root[2],root[3]);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3108,
+      "function_48ab90(vm,root[2],root[3]);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3110,
+      "function_48ab90(vm,root[2],root[3]);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3654,
+      "function_48ab90(vm, array[1], array[2]);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3753,
+      "function_48ab90(vm,root[2],root[3]);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6045,
+      "function_48ab90(vm, root[2], root[3]);"
+    ]
+  ],
+  "function_48abe0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      143,
+      "extern \"C\" int32_t function_48abe0(int32_t result) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      24,
+      "int32_t function_48abe0(int32_t result);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      169,
+      "function_48abe0(address(&retained));"
+    ]
+  ],
+  "function_48ac00": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      150,
+      "extern \"C\" int32_t function_48ac00(int32_t a1, char * a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      25,
+      "int32_t function_48ac00(int32_t a1, char * a2);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2763,
+      "CHECK(function_48ac00(vm, \"ownership replacement\") == -1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2783,
+      "CHECK(function_48ac00(vm, expected) == -1);"
+    ]
+  ],
+  "function_48ac70": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      157,
+      "extern \"C\" int32_t function_48ac70(int32_t a1) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      26,
+      "int32_t function_48ac70(int32_t a1);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      157,
+      "function_48ac70(machine);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      209,
+      "function_48ac70(machine);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2756,
+      "function_48ac70(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2769,
+      "function_48ac70(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2786,
+      "function_48ac70(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2833,
+      "function_48ac70(vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2836,
+      "function_48ac70(vm);"
+    ]
+  ],
+  "function_48acc0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      164,
+      "extern \"C\" int32_t function_48acc0(int32_t a1) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      27,
+      "int32_t function_48acc0(int32_t a1);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      206,
+      "function_48acc0(machine);"
+    ]
+  ],
+  "function_48ace0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      168,
+      "extern \"C\" int32_t function_48ace0(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      28,
+      "int32_t function_48ace0(int32_t a1, int32_t a2, int32_t a3, int32_t a4);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      191,
+      "require(SQ_SUCCEEDED(function_48ace0(machine, 1, 1, 0)), \"deserialized closure call\");"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2964,
+      "CHECK(function_48ace0(vm,1,1,0)==0);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2971,
+      "CHECK(function_48ace0(vm,1,1,0)==0);"
+    ]
+  ],
+  "function_48afa0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      175,
+      "extern \"C\" int32_t function_48afa0(int32_t result, int32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      29,
+      "int32_t function_48afa0(int32_t result, int32_t a2);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1768,
+      "function_48afa0(vm, old_compiler);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2954,
+      "function_48afa0(vm,PTR(compiler_test_error));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2960,
+      "function_48afa0(vm,previous_handler);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3001,
+      "function_48afa0(vm, PTR(compiler_test_error));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3004,
+      "function_48afa0(vm, previous_handler);"
+    ]
+  ],
+  "function_48afc0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      182,
+      "extern \"C\" int32_t function_48afc0(int32_t a1, int32_t a2, int32_t a3) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      30,
+      "int32_t function_48afc0(int32_t a1, int32_t a2, int32_t a3);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      187,
+      "require(SQ_SUCCEEDED(function_48afc0(machine, address(reinterpret_cast<const void*>(write_bytecode)), address(&code))), \"source closure serialization\");"
+    ]
+  ],
+  "function_48b050": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      189,
+      "extern \"C\" int32_t function_48b050(int32_t a1, int32_t a2, int32_t * a3) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      31,
+      "int32_t function_48b050(int32_t a1, int32_t a2, int32_t * a3);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      189,
+      "require(SQ_SUCCEEDED(function_48b050(machine, address(reinterpret_cast<const void*>(read_bytecode)), reinterpret_cast<int32_t*>(&code))), \"source closure deserialization\");"
+    ]
+  ],
+  "function_48b180": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      196,
+      "extern \"C\" int32_t function_48b180(int32_t a1, int32_t a2, int32_t a3) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      32,
+      "int32_t function_48b180(int32_t a1, int32_t a2, int32_t a3);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      164,
+      "function_48b180(machine, 0, 0);"
+    ]
+  ],
+  "function_48b490": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      203,
+      "extern \"C\" int32_t function_48b490(int32_t a1, int32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      33,
+      "int32_t function_48b490(int32_t a1, int32_t a2);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      199,
+      "require(SQ_SUCCEEDED(function_48b490(machine, -1)), \"instance creation without constructor\");"
+    ]
+  ],
+  "function_48b870": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      210,
+      "extern \"C\" int32_t function_48b870(int32_t a1, int32_t a2, int32_t a3) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      34,
+      "int32_t function_48b870(int32_t a1, int32_t a2, int32_t a3);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      178,
+      "function_48b870(machine, address(child), -1);"
+    ]
+  ],
+  "function_48b8b0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      217,
+      "extern \"C\" int32_t function_48b8b0(int32_t result, int32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      35,
+      "int32_t function_48b8b0(int32_t result, int32_t a2);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1724,
+      "function_48b8b0(vm, PTR(capture_aux_output));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1767,
+      "function_48b8b0(vm, old_print);"
+    ]
+  ],
+  "function_48b8d0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      224,
+      "extern \"C\" int32_t function_48b8d0(int32_t a1) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      36,
+      "int32_t function_48b8d0(int32_t a1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1720,
+      "int32_t old_print = function_48b8d0(vm);"
+    ]
+  ],
+  "function_48c1f0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      231,
+      "extern \"C\" int32_t function_48c1f0(int32_t vm, int32_t reader, int32_t *context, int32_t name, int32_t raiseerror) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      37,
+      "int32_t function_48c1f0(int32_t vm, int32_t reader, int32_t *context, int32_t name, int32_t raiseerror);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2969,
+      "CHECK(function_48c1f0(vm,PTR(compiler_test_feed),(int32_t *)&feed,PTR(\"reader source\"),0)==0);"
+    ]
+  ],
+  "function_48c350": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      238,
+      "extern \"C\" int32_t function_48c350(int32_t a1, int32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      38,
+      "int32_t function_48c350(int32_t a1, int32_t a2);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      196,
+      "require(SQ_SUCCEEDED(function_48c350(machine, 0)), \"base class creation\");"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      198,
+      "require(SQ_SUCCEEDED(function_48c350(machine, 1)), \"derived class creation\");"
+    ]
+  ],
+  "function_48c580": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      245,
+      "extern \"C\" int32_t function_48c580(int32_t vm, int32_t index, int32_t name) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      39,
+      "int32_t function_48c580(int32_t vm, int32_t index, int32_t name);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3134,
+      "CHECK(function_48c580(vm,-1,PTR(\"native-name-owned\"))==0);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3136,
+      "CHECK(function_48c580(vm,-1,PTR(\"native-name-owned\"))==0);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3138,
+      "CHECK(function_48c580(vm,-1,PTR(\"native-name-replaced\"))==0);"
+    ]
+  ],
+  "function_48c780": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      252,
+      "extern \"C\" int32_t function_48c780(int32_t a1, int32_t a2, int32_t a3) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      40,
+      "int32_t function_48c780(int32_t a1, int32_t a2, int32_t a3);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      197,
+      "require(SQ_SUCCEEDED(function_48c780(machine, -1, address(&type_tag))), \"base class tag\");"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2828,
+      "CHECK(function_48c780(vm, -1, 100+i) == 0);"
+    ]
+  ],
+  "function_48c840": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      259,
+      "extern \"C\" int32_t function_48c840(int32_t a1, int32_t a2, int32_t a3) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      41,
+      "int32_t function_48c840(int32_t a1, int32_t a2, int32_t a3);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      200,
+      "require(SQ_SUCCEEDED(function_48c840(machine, -1, address(&native_object))), \"instance native object\");"
+    ]
+  ],
+  "function_48c890": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      266,
+      "extern \"C\" int32_t function_48c890(int32_t a1, int32_t a2, int32_t * a3, int32_t a4) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      42,
+      "int32_t function_48c890(int32_t a1, int32_t a2, int32_t * a3, int32_t a4);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      201,
+      "require(SQ_SUCCEEDED(function_48c890(machine, -1, &restored, address(&type_tag))) && restored == address(&native_object), \"type-tag lookup walks actual class base links\");"
+    ]
+  ],
+  "function_48c910": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      273,
+      "extern \"C\" int32_t function_48c910(int32_t a1, uint32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      43,
+      "int32_t function_48c910(int32_t a1, uint32_t a2);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2829,
+      "function_48c910(vm, top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2860,
+      "function_48c910(vm, top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2872,
+      "function_48c910(vm, top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2917,
+      "function_48c910(vm, top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2967,
+      "function_48c910(vm,top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2974,
+      "function_48c910(vm,top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3114,
+      "function_48c910(vm,top);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3662,
+      "function_48c910(vm, top);"
+    ]
+  ],
+  "function_48ce00": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      280,
+      "extern \"C\" int32_t function_48ce00(int32_t a1, int32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      44,
+      "int32_t function_48ce00(int32_t a1, int32_t a2);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2853,
+      "CHECK(function_48ce00(vm, -2) == 0);"
+    ]
+  ],
+  "function_48ce70": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      287,
+      "extern \"C\" int32_t function_48ce70(int32_t a1, int32_t a2) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      45,
+      "int32_t function_48ce70(int32_t a1, int32_t a2);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2827,
+      "CHECK(function_48ce70(vm, -2) == 0);"
+    ]
+  ],
+  "function_48d0b0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      294,
+      "extern \"C\" int32_t function_48d0b0(int32_t vm, int32_t text, int32_t length, int32_t *name, int32_t raiseerror) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      46,
+      "int32_t function_48d0b0(int32_t vm, int32_t text, int32_t length, int32_t *name, int32_t raiseerror);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      186,
+      "require(SQ_SUCCEEDED(function_48d0b0(machine, address(source), static_cast<int32_t>(std::strlen(source)), reinterpret_cast<int32_t*>(const_cast<char*>(\"legacy-bytecode\")), 0)), \"legacy compilebuffer\");"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2955,
+      "CHECK(function_48d0b0(vm,PTR(\"local =;\"),8,(int32_t *)\"callback source\",0)==-1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2957,
+      "CHECK(function_48d0b0(vm,PTR(\"local =;\"),8,(int32_t *)\"callback source\",1)==-1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2962,
+      "CHECK(function_48d0b0(vm,PTR(\"return 42;INVALID\"),10,(int32_t *)\"bounded source\",0)==0);"
+    ]
+  ],
+  "function_48d850": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      301,
+      "extern \"C\" int32_t function_48d850(int32_t a1, int32_t a2, int32_t a3) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      47,
+      "int32_t function_48d850(int32_t a1, int32_t a2, int32_t a3);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3133,
+      "function_48d850(vm,PTR(kinoko_sq_noop_constructor),0);"
+    ]
+  ],
+  "function_48dd10": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      308,
+      "extern \"C\" int32_t function_48dd10(int32_t vm, int32_t index, int32_t push_value) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      48,
+      "int32_t function_48dd10(int32_t vm, int32_t index, int32_t push_value);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3655,
+      "CHECK(function_48dd10(vm, -1, 0) == 0);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3658,
+      "CHECK(function_48dd10(vm, -1, 1) == 0);"
+    ]
+  ],
+  "function_48bec0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      315,
+      "extern \"C\" int32_t function_48bec0(int32_t shared_state, int32_t bytes) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      49,
+      "int32_t function_48bec0(int32_t a1, int32_t a2);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1510,
+      "int32_t userdata = function_48bec0(shared, 16);"
+    ]
+  ],
+  "function_4c7c90": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      322,
+      "extern \"C\" int32_t function_4c7c90(int32_t a1) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      50,
+      "int32_t function_4c7c90(int32_t a1);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      215,
+      "require(SQ_SUCCEEDED(function_4c7c90(address(vm))), \"source io registration\");"
+    ]
+  ],
+  "function_4c73a0": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      329,
+      "extern \"C\" int32_t function_4c73a0(int32_t a1) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      51,
+      "int32_t function_4c73a0(int32_t a1);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      216,
+      "require(SQ_SUCCEEDED(function_4c73a0(address(vm))), \"source blob registration\");"
+    ]
+  ],
+  "function_4c6c20": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      336,
+      "extern \"C\" int32_t function_4c6c20(int32_t a1) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      52,
+      "int32_t function_4c6c20(int32_t a1);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      217,
+      "require(SQ_SUCCEEDED(function_4c6c20(address(vm))), \"source math registration\");"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1269,
+      "CHECK(function_4c6c20(vm)==0);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3754,
+      "CHECK(function_4c6c20(vm)==0);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6046,
+      "CHECK(function_4c6c20(vm) == 0);"
+    ]
+  ],
+  "function_4c6670": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      343,
+      "extern \"C\" int32_t function_4c6670(int32_t a1) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      53,
+      "int32_t function_4c6670(int32_t a1);"
+    ],
+    [
+      "tests\\squirrel_source_vm_contract.cpp",
+      218,
+      "require(SQ_SUCCEEDED(function_4c6670(address(vm))), \"source string/regexp registration\");"
+    ]
+  ],
+  "function_4c5c80": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      350,
+      "extern \"C\" int32_t function_4c5c80(int32_t vm) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      54,
+      "int32_t function_4c5c80(int32_t vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1725,
+      "function_4c5c80(vm);"
+    ]
+  ],
+  "function_48e520_this": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      357,
+      "extern \"C\" int32_t function_48e520_this(int32_t receiver, int32_t delegate) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      55,
+      "int32_t function_48e520_this(int32_t this_ptr, int32_t delegate_ptr);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1141,
+      "CHECK(function_48e520_this(globals[3],root[3]));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1275,
+      "CHECK(function_48e520_this(globals[3],root[3]));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1338,
+      "CHECK(function_48e520_this(globals[3],root[3]));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1504,
+      "CHECK(function_48e520_this(second[1], first[1]));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1505,
+      "CHECK(!function_48e520_this(first[1], second[1]));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1506,
+      "CHECK(!function_48e520_this(first[1], first[1]));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1508,
+      "CHECK(function_48e520_this(second[1], 0));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1512,
+      "CHECK(userdata && function_48e520_this(userdata, first[1]));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1517,
+      "CHECK(function_48e520_this(userdata, first[1]));"
+    ]
+  ],
+  "function_491880_this": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      361,
+      "extern \"C\" int32_t function_491880_this(int32_t this_ptr, int32_t index) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      56,
+      "int32_t function_491880_this(int32_t this_ptr, int32_t index);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2840,
+      "int32_t *slot=(int32_t *)(intptr_t)function_491880_this(vm, -1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2854,
+      "slot=(int32_t *)(intptr_t)function_491880_this(vm, -1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2965,
+      "int32_t *value=(int32_t *)(intptr_t)function_491880_this(vm,-1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2972,
+      "value=(int32_t *)(intptr_t)function_491880_this(vm,-1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3112,
+      "int32_t *result=(int32_t *)(intptr_t)function_491880_this(vm,-1);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3130,
+      "int32_t *key=(int32_t *)(intptr_t)function_491880_this(vm,-1);"
+    ]
+  ],
+  "function_489f30_this": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      369,
+      "extern \"C\" int32_t function_489f30_this(int32_t value) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      58,
+      "int32_t function_489f30_this(int32_t this_ptr);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3229,
+      "function_489f30_this(PTR(destination));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3276,
+      "function_489f30_this(PTR(destination));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3278,
+      "function_489f30_this(PTR(source));"
+    ]
+  ],
+  "function_489f50_this": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      377,
+      "extern \"C\" int32_t function_489f50_this(int32_t destination, int32_t source) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      59,
+      "int32_t function_489f50_this(int32_t this_ptr, int32_t source_ptr);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3272,
+      "CHECK(function_489f50_this(PTR(destination), PTR(source)) == PTR(destination));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3274,
+      "CHECK(function_489f50_this(PTR(destination), PTR(destination)) == PTR(destination));"
+    ]
+  ],
+  "function_48e0e0_this": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      385,
+      "extern \"C\" int32_t function_48e0e0_this(int32_t destination, int32_t value) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      60,
+      "int32_t function_48e0e0_this(int32_t this_ptr, int32_t value);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2791,
+      "function_48e0e0_this(PTR(value), -37);"
+    ]
+  ],
+  "function_48e120_this": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      393,
+      "extern \"C\" int32_t function_48e120_this(int32_t destination, float value) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      61,
+      "int32_t function_48e120_this(int32_t this_ptr, float value);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2796,
+      "function_48e120_this(PTR(value), 0.75f);"
+    ]
+  ],
+  "function_499b00": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      404,
+      "extern \"C\" int32_t function_499b00(int32_t machine, int32_t value) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      62,
+      "int32_t function_499b00(int32_t this_ptr, int32_t value_ptr);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2758,
+      "function_499b00(vm, PTR(value));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2760,
+      "function_499b00(vm, PTR(error));"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2781,
+      "function_499b00(vm, PTR(error));"
+    ]
+  ],
+  "function_49a520_this": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      433,
+      "extern \"C\" int32_t function_49a520_this(int32_t shared_state, int32_t vm) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      64,
+      "int32_t function_49a520_this(int32_t shared_state, int32_t vm);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2300,
+      "CHECK(function_49a520_this(shared, vm) >= 0);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      2309,
+      "CHECK(function_49a520_this(shared, vm) >= 0);"
+    ]
+  ],
+  "function_48be70": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      481,
+      "extern \"C\" void __fastcall function_48be70(int32_t object, void* unused) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      73,
+      "void __fastcall function_48be70(int32_t object, void* unused);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1515,
+      "kinoko_call_thiscall0_result((void *)(intptr_t)userdata, function_48be70);"
+    ]
+  ],
+  "function_48bf50": [
+    [
+      "src\\squirrel\\squirrel_legacy_api.cpp",
+      487,
+      "extern \"C\" int32_t __fastcall function_48bf50(int32_t object, void* unused, int32_t flags) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_legacy_api.h",
+      74,
+      "int32_t __fastcall function_48bf50(int32_t object, void* unused, int32_t flags);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      1518,
+      "kinoko_call_thiscall1_result((void *)(intptr_t)userdata, function_48bf50, 0);"
+    ]
+  ],
+  "function_46b490": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      8,
+      "extern \"C\" int32_t function_46b490(int32_t, int32_t, int32_t, int32_t);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      195,
+      "extern \"C\" int32_t function_46b490(int32_t self, int32_t callback, int32_t id, int32_t first) {"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      241,
+      "extern \"C\" int32_t kinoko_input_save_entry(int32_t vm) { return kinoko_native_call_binding(vm, function_46b490); }"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      23,
+      "int32_t function_46b490(int32_t self, int32_t target, int32_t vm, int32_t first);"
+    ]
+  ],
+  "function_46b500": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      9,
+      "extern \"C\" int32_t function_46b500(int32_t, int32_t, int32_t, int32_t);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      208,
+      "extern \"C\" int32_t function_46b500(int32_t self, int32_t callback, int32_t id, int32_t first) {"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      242,
+      "extern \"C\" int32_t kinoko_input_assign_entry(int32_t vm) { return kinoko_native_call_binding(vm, function_46b500); }"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      25,
+      "int32_t function_46b500(int32_t self, int32_t target, int32_t vm, int32_t first);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      265,
+      "require(function_46b500(address(&native),0,address(vm),index)<0,\"invalid index checked before API\");"
+    ]
+  ],
+  "function_46b610": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      10,
+      "extern \"C\" int32_t function_46b610(int32_t, int32_t, int32_t, int32_t);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      222,
+      "extern \"C\" int32_t function_46b610(int32_t self, int32_t target, int32_t vm, int32_t first) {"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      243,
+      "extern \"C\" int32_t kinoko_input_wait_entry(int32_t vm) { return kinoko_native_call_binding(vm, function_46b610); }"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      27,
+      "int32_t function_46b610(int32_t self, int32_t target, int32_t vm, int32_t first);"
+    ]
+  ],
+  "function_46b6f0": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      11,
+      "extern \"C\" int32_t function_46b6f0(int32_t, int32_t, int32_t, int32_t);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      225,
+      "extern \"C\" int32_t function_46b6f0(int32_t self, int32_t target, int32_t vm, int32_t first) {"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      244,
+      "extern \"C\" int32_t kinoko_input_get_entry(int32_t vm) { return kinoko_native_call_binding(vm, function_46b6f0); }"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      29,
+      "int32_t function_46b6f0(int32_t self, int32_t target, int32_t vm, int32_t first);"
+    ]
+  ],
+  "function_471720": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      12,
+      "extern \"C\" int32_t function_471720(int32_t, int32_t, int32_t);"
+    ],
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      284,
+      "extern \"C\" int32_t function_471720(int32_t callback, int32_t id, int32_t index) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      48,
+      "int32_t function_471720(int32_t callback, int32_t vm, int32_t index);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      267,
+      "require(function_471720(1,address(vm),index)<0,\"pair argument index bounded\");"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      271,
+      "require(function_471720(address(reinterpret_cast<void*>(pair_name)),address(vm),-3)<0,"
+    ]
+  ],
+  "function_41e260": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      112,
+      "extern \"C\" int32_t function_41e260(int32_t id) { return kinoko_native_property_set_callback(id); }"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      11,
+      "int32_t function_41e260(int32_t vm);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      188,
+      "sq_newclosure(vm,entry(write ? function_41e2c0 : function_41e260),1);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      196,
+      "property_table(vm,read_property); sq_newclosure(vm,entry(function_41e260),1);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      203,
+      "require(function_41e260(address(vm))==1,\"legacy getter return despite inner failure\");"
+    ]
+  ],
+  "function_41e2c0": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      114,
+      "extern \"C\" int32_t function_41e2c0(int32_t id) { return kinoko_native_property_get_callback(id); }"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      12,
+      "int32_t function_41e2c0(int32_t vm);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      188,
+      "sq_newclosure(vm,entry(write ? function_41e2c0 : function_41e260),1);"
+    ]
+  ],
+  "function_431650": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      124,
+      "extern \"C\" int32_t function_431650(int32_t id) { return kinoko_native_class_weakref_callback(id); }"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      13,
+      "int32_t function_431650(int32_t vm);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      121,
+      "sq_pushstring(vm,\"weakref\",-1); sq_newclosure(vm,entry(function_431650),0); sq_newslot(vm,-3,SQFalse);"
+    ]
+  ],
+  "function_445730": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      140,
+      "extern \"C\" int32_t function_445730(int32_t id) { return kinoko_native_integer_member_callback(id); }"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      17,
+      "int32_t function_445730(int32_t vm);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      119,
+      "register_method(vm,\"one\",function_445730,address(reinterpret_cast<void*>(one_method)),true);"
+    ]
+  ],
+  "function_4552e0": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      158,
+      "extern \"C\" int32_t function_4552e0(int32_t id) { return kinoko_native_nullary_member_callback(id); }"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      18,
+      "int32_t function_4552e0(int32_t vm);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      118,
+      "register_method(vm,\"zero\",function_4552e0,address(reinterpret_cast<void*>(zero_method)),true);"
+    ]
+  ],
+  "function_4555a0": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      184,
+      "extern \"C\" int32_t function_4555a0(int32_t id) { return kinoko_native_draw_member_callback(id); }"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      19,
+      "int32_t function_4555a0(int32_t vm);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      120,
+      "register_method(vm,\"draw\",function_4555a0,address(reinterpret_cast<void*>(draw_method)),true);"
+    ]
+  ],
+  "function_4716b0": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      253,
+      "extern \"C\" int32_t function_4716b0(int32_t callback, int32_t id, int32_t index) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      44,
+      "int32_t function_4716b0(int32_t callback, int32_t vm, int32_t index);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      284,
+      "require(function_4716b0(0,address(vm),1)==0,\"optional null string callback\");"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      285,
+      "require(function_4716b0(address(reinterpret_cast<void*>(optional_name)),address(vm),1)==0,\"optional string callback\");"
+    ]
+  ],
+  "function_471a60": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      268,
+      "extern \"C\" int32_t function_471a60(int32_t callback, int32_t id, int32_t index) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      46,
+      "int32_t function_471a60(int32_t callback, int32_t vm, int32_t index);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      266,
+      "require(function_471a60(0,address(vm),index)<0,\"two argument index arithmetic bounded\");"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      287,
+      "require(function_471a60(0,address(vm),1)==0,\"optional null pair callback\");"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      288,
+      "require(function_471a60(address(reinterpret_cast<void*>(optional_two)),address(vm),1)==0,\"optional two integers callback\");"
+    ]
+  ],
+  "function_471f70": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      317,
+      "extern \"C\" int32_t function_471f70(int32_t id) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      61,
+      "int32_t function_471f70(int32_t vm);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      149,
+      "for (auto fn : {function_471d30,function_471f70,function_471e50}) {"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      152,
+      "fn == function_471f70 ? reinterpret_cast<void*>(pair_name) : reinterpret_cast<void*>(one_name);"
+    ],
+    [
+      "tests\\stage_contract.c",
+      6221,
+      "CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR(\"CreateEvent\")), (const void *)(intptr_t)(PTR(&target)), 4, (void *)(intptr_t)(PTR(function_471f70)), 0)) >= 0);"
+    ]
+  ],
+  "function_470df0": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      459,
+      "extern \"C\" int32_t function_470df0(int32_t vm, int32_t index) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      37,
+      "int32_t function_470df0(int32_t vm, int32_t index);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      211,
+      "require(function_470df0(address(vm), base + 1) == expected, \"source truth conversion\");"
+    ]
+  ],
+  "function_471160": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      465,
+      "extern \"C\" int32_t function_471160(int32_t callback, int32_t vm, int32_t index) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      39,
+      "int32_t function_471160(int32_t callback, int32_t vm, int32_t index);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      233,
+      "require(function_471160(address(reinterpret_cast<void*>(string_object)), address(vm), base + 1) == 1,"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      240,
+      "require(function_471160(0, address(vm), base + 1) == 0, \"null string/object callback\");"
+    ],
+    [
+      "tests\\stage_contract.c",
+      3111,
+      "CHECK(function_471160(PTR(kinoko_script_read_csv),vm,2)==1);"
+    ]
+  ],
+  "function_471330": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      468,
+      "extern \"C\" int32_t function_471330(int32_t callback, int32_t vm, int32_t index) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      40,
+      "int32_t function_471330(int32_t callback, int32_t vm, int32_t index);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      225,
+      "require(function_471330(address(reinterpret_cast<void*>(bool_name)), address(vm), base + 1) == 1,"
+    ]
+  ],
+  "function_471880": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      471,
+      "extern \"C\" int32_t function_471880(int32_t callback, int32_t vm, int32_t index) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      41,
+      "int32_t function_471880(int32_t callback, int32_t vm, int32_t index);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      245,
+      "require(function_471880(address(reinterpret_cast<void*>(play_four)), address(vm), base + 1) == 0,"
+    ]
+  ],
+  "function_471960": [
+    [
+      "src\\squirrel\\squirrel_native_calls.cpp",
+      474,
+      "extern \"C\" int32_t function_471960(int32_t callback, int32_t vm, int32_t index) {"
+    ],
+    [
+      "include\\kinoko\\squirrel_native_calls.h",
+      42,
+      "int32_t function_471960(int32_t callback, int32_t vm, int32_t index);"
+    ],
+    [
+      "tests\\squirrel_native_calls_contract.cpp",
+      249,
+      "require(function_471960(address(reinterpret_cast<void*>(play_five)), address(vm), base + 1) == 0,"
+    ]
+  ],
+  "function_4722e0": [
+    [
+      "src\\squirrel\\table_serialization.cpp",
+      301,
+      "extern \"C\" int32_t function_4722e0(int32_t *stream, int32_t vtable,"
+    ]
+  ],
+  "function_472820": [
+    [
+      "src\\squirrel\\table_serialization.cpp",
+      312,
+      "extern \"C\" int32_t function_472820(int32_t *stream, int32_t vtable,"
+    ]
+  ]
+}

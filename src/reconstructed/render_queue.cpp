@@ -16,27 +16,24 @@ using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 }
 extern "C" void kinoko_initialize_render_queue(void) { layers.clear(); }
-extern "C" int32_t kinoko_render_queue_identity(void) { return address(&layers); }
-extern "C" int32_t kinoko_render_queue_first(void) {
-    return layers.empty() ? address(&layers) : address(&layers.front());
+extern "C" void* kinoko_render_queue_identity(void) { return &layers; }
+extern "C" void* kinoko_render_queue_first(void) {
+    return layers.empty() ? static_cast<void*>(&layers) : &layers.front();
 }
 extern "C" int32_t kinoko_render_queue_size(void) { return static_cast<int32_t>(layers.size()); }
-extern "C" int32_t kinoko_clear_render_queue(void) {
+extern "C" void* kinoko_clear_render_queue(void) {
     layers.clear();
-    return address(&layers);
+    return &layers;
 }
 extern "C" void *kinoko_render_queue_append(KinokoRenderLayer *object) {
     if(layers.size()==0x3ffffffeu) throw std::length_error("list<T> too long");
     layers.push_back(reinterpret_cast<RenderLayer *>(object));
     return &layers.back();
 }
-extern "C" int32_t kinoko_append_render_queue(int32_t object) {
-    return address(kinoko_render_queue_append(pointer<KinokoRenderLayer>(object)));
-}
-extern "C" void kinoko_draw_render_queue(int32_t camera) {
+extern "C" void kinoko_draw_render_queue(struct KinokoCamera* camera) {
     for(auto *object:layers) {
         if(!object) continue;
         const auto *methods=kinoko::legacy::load<const LayerMethods *>(object);
-        if(methods && methods->draw) methods->draw(object,pointer<KinokoCamera>(camera));
+        if(methods && methods->draw) methods->draw(object,camera);
     }
 }

@@ -24,35 +24,35 @@ int32_t table_access(SQVM* vm, bool write) {
     kinoko_sqplus_select_vm(vm);
     VariableContext context{static_cast<int32_t>(sq_gettop(vm)),vm};
     if (context.count < 1 || sq_gettype(vm, 1) != OT_TABLE) return -1;
-    int32_t metadata = 0;
+    void* metadata = nullptr;
     const auto status = write ? kinoko_sqplus_find_table_variable(&metadata, &context) :
         kinoko_sqplus_find_variable(&context, &metadata);
     if (status) return status;
     if (!metadata) return -1;
     const auto source = load<Variable>(metadata).offset;
-    return write ? kinoko_sqplus_write_variable(&context, metadata, source) :
+    return write ? kinoko_sqplus_write_variable(&context, metadata, (void*)(uintptr_t)(source)) :
         kinoko_sqplus_read_variable(&context, metadata, source);
 }
 int32_t instance_access(SQVM* vm, bool write) {
     if (!vm) return -1;
     kinoko_sqplus_select_vm(vm);
     VariableContext context{static_cast<int32_t>(sq_gettop(vm)),vm};
-    int32_t metadata = 0, source = 0;
-    if (!kinoko_sqplus_resolve_instance_variable(address(vm), context.count, &metadata, &source)) return -1;
-    return write ? kinoko_sqplus_write_variable(&context, metadata, source) :
+    void* metadata = nullptr; int32_t source = 0;
+    if (!kinoko_sqplus_resolve_instance_variable(vm, context.count, &metadata, &source)) return -1;
+    return write ? kinoko_sqplus_write_variable(&context, metadata, (void*)(uintptr_t)(source)) :
         kinoko_sqplus_read_variable(&context, metadata, source);
 }
 } // namespace
 
-extern "C" int32_t  kinoko_sqplus_find_variable(const void* context, int32_t* output) {
+extern "C" int32_t  kinoko_sqplus_find_variable(const void* context, void** output) {
     if (!context || !output || !context_value(context).vm) return -1;
     void* value = nullptr;
     const auto status = upstream::sqplus_variable_info(context_value(context).vm, value);
-    if (status == SQ_OK) *output = address(value);
+    if (status == SQ_OK) *output = value;
     return status;
 }
 
-extern "C" int32_t  kinoko_sqplus_find_table_variable(int32_t* output, const void* context) {
+extern "C" int32_t  kinoko_sqplus_find_table_variable(void** output, const void* context) {
     if (output) *output = 0;
     if (!context_has(context, 1)) return -1;
     auto* vm = context_value(context).vm;
@@ -71,11 +71,11 @@ extern "C" int32_t  kinoko_sqplus_find_table_variable(int32_t* output, const voi
     SQObjectPtr value;
     if (!_table(object)->Get(key, value) || type(value) != OT_USERDATA ||
         _userdata(value)->_size < static_cast<SQInteger>(sizeof(Variable))) return -1;
-    if (output) *output = address(_userdataval(value));
+    if (output) *output = _userdataval(value);
     return 0;
 }
 
-extern "C" int32_t  kinoko_sqplus_read_variable(const void* context, int32_t metadata, int32_t source) {
+extern "C" int32_t  kinoko_sqplus_read_variable(const void* context, const void* metadata, int32_t source) {
     if (!context || !context_value(context).vm || !metadata) return -1;
     auto* vm = context_value(context).vm;
     const auto info = load<Variable>(metadata);
@@ -99,23 +99,23 @@ extern "C" int32_t  kinoko_sqplus_read_variable(const void* context, int32_t met
     }
 }
 
-extern "C" int32_t  kinoko_sqplus_write_variable(const void* context, int32_t metadata, int32_t destination) {
+extern "C" int32_t  kinoko_sqplus_write_variable(const void* context, const void* metadata, void* destination) {
     if (!context_has(context, 3) || !metadata || !destination) return -1;
     auto* vm = context_value(context).vm;
     const auto info = load<Variable>(metadata);
     if (info.flags & (ReadOnly | Constant)) return -1;
     return static_cast<int32_t>(upstream::sqplus_write_scalar(vm, info,
-        pointer<void>(destination)));
+        destination));
 }
 
-extern "C" int32_t  kinoko_sqplus_resolve_instance_variable(int32_t vm_address, int32_t top, int32_t* output_metadata, int32_t* output_source) {
+extern "C" int32_t  kinoko_sqplus_resolve_instance_variable(struct SQVM* vm_address, int32_t top, void** output_metadata, int32_t* output_source) {
     if (output_metadata) *output_metadata = 0;
     if (output_source) *output_source = 0;
-    auto* vm = pointer<SQVM>(vm_address);
+    auto* vm = vm_address;
     if (!vm || top < 2 || sq_gettop(vm) < 2 || !output_metadata || !output_source ||
         sq_gettype(vm, 1) != OT_INSTANCE) return 0;
     VariableContext context{top,vm};
-    int32_t metadata = 0;
+    void* metadata = nullptr;
     if (kinoko_sqplus_find_variable(&context, &metadata) || !metadata) return 0;
     const auto info = load<Variable>(metadata);
     HSQOBJECT instance{};

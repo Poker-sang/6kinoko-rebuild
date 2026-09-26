@@ -13,6 +13,16 @@ struct KeyRecord {
     legacy::StringRecord script_name;
     uint32_t unknown32;
 };
+struct TimelinePair { int32_t begin, length; };
+struct TimelineBuffer { TimelinePair *begin, *end; void* owner; };
+struct TimelineRecord {
+    const void* methods;
+    int32_t begin_time, duration;
+    TimelineBuffer pairs;
+    uint32_t reserved24;
+};
+static_assert(sizeof(TimelinePair) == 8 && sizeof(TimelineRecord) == 28);
+static_assert(offsetof(TimelineRecord, pairs) == 12);
 using KeyView = kinoko::native::RecordView<KeyRecord>;
 static_assert(sizeof(KeyRecord) == 36);
 static_assert(offsetof(KeyRecord, layout) == 4);

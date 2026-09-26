@@ -5,7 +5,7 @@
 #include <vector>
 #include <type_traits>
 #include <new>
-extern "C" void retdec_trace_i32(const char*, int32_t);
+extern "C" void kinoko_trace_i32(const char*, int32_t);
 namespace {
 using namespace kinoko::act;
 using namespace kinoko::legacy;
@@ -49,8 +49,8 @@ extern "C" int32_t kinoko_act_append_blit(KinokoActRuntime* self, int32_t x, int
     const RecordView<TextureResourcePrefix> texture(texture_resource);
     const auto* symbols=kinoko_act_host_symbols();
     const auto type=texture.get(&TextureResourcePrefix::vtable);
-    if(type!=static_cast<Address>(address(symbols->texture_resource_vtable)) &&
-       type!=static_cast<Address>(address(symbols->render_target_vtable))) return E_FAIL;
+    if(type!=symbols->texture_resource_vtable &&
+       type!=symbols->render_target_vtable) return E_FAIL;
     const BlitCommand command{blend,alpha<0?0:alpha>1?1:alpha,
         static_cast<float>(x),static_cast<float>(y),sx,sy,width,height,
         texture.get(&TextureResourcePrefix::texture)};
@@ -58,15 +58,10 @@ extern "C" int32_t kinoko_act_append_blit(KinokoActRuntime* self, int32_t x, int
     catch(const std::bad_alloc&) { return E_OUTOFMEMORY; }
     static volatile LONG trace_count;
     if(InterlockedIncrement(&trace_count)<=12) {
-        retdec_trace_i32("act:bitblt-texture",command.texture);
-        retdec_trace_i32("act:bitblt-x",x);retdec_trace_i32("act:bitblt-y",y);
+        kinoko_trace_i32("act:bitblt-texture",command.texture);
+        kinoko_trace_i32("act:bitblt-x",x);kinoko_trace_i32("act:bitblt-y",y);
     }
     return 0;
-}
-extern "C" int32_t retdec_act_bitblt_this(int32_t self,int32_t x,int32_t y,
-    int32_t width,int32_t height,int32_t texture,int32_t sx,int32_t sy,int32_t blend,float alpha) {
-    return kinoko_act_append_blit(pointer<KinokoActRuntime>(self),x,y,width,height,
-        pointer<KinokoActResource>(texture),sx,sy,blend,alpha);
 }
 extern "C" int32_t kinoko_act_resize_sprites(KinokoActSpriteStorage* storage,uint32_t requested) {
     if(!storage || requested>0x1642c85u) return 0;

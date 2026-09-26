@@ -44,7 +44,7 @@ int query_visible(KinokoActLayout *layout, int32_t *cached,
             const int32_t x = record_x + offset_ix, y = record_y + offset_iy;
             if ((step > 0 && x > right) || (step < 0 && x < minimum_x)) break;
             if (x < minimum_x || x > right || y < minimum_y || y > bottom) continue;
-            auto *chip = retdec_mcd_find_chip(data, placement.get(&Placement::chip_id));
+            auto *chip = kinoko_mcd_find_chip(data, placement.get(&Placement::chip_id));
             if (!chip) continue;
             placement.set(&Placement::fractional_left, static_cast<float>(record_x) + offset_x);
             placement.set(&Placement::fractional_top, static_cast<float>(record_y) + offset_y);

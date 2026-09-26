@@ -1,7 +1,7 @@
 # Game and development tools
 
 `runtime-builds/<run-dir>/kinoko_retdec_rebuild.exe` is the only game executable.
-It runs the reconstructed original logic in `src/decompiled/6kinoko_rebuilt.c`.
+The C++ host is `src/reconstructed/runtime_host.cpp`; typed original virtual tables are in `src/reconstructed/runtime_method_tables.cpp`. The original decompilation remains evidence only in `src/decompiled/6kinoko.exe.c`.
 Stage the three original DAT files beside it with `stage_dat.ps1`, then launch
 it with `run_staged.ps1`.
 

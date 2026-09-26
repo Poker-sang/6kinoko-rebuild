@@ -71,9 +71,10 @@ void *operator new(std::size_t size) {
 void operator delete(void *p) noexcept { std::free(p); }
 void operator delete(void *p, std::size_t) noexcept { std::free(p); }
 extern "C" {
-int32_t g603 = 0, g604 = 0, g639 = 0;
-KinokoIntegerMap* g638 = nullptr;
-char *g644 = nullptr;
+void* kinoko_stage_list_slot = nullptr;
+int32_t kinoko_stage_count = 0, kinoko_sound_lookup_count = 0;
+KinokoIntegerMap* kinoko_sound_lookup = nullptr;
+struct SQVM *kinoko_primary_vm = nullptr;
 KinokoActDocument *kinoko_act_document_create() {
     if (state.fail_document) return nullptr;
     auto *document = static_cast<KinokoActDocument *>(std::calloc(1, sizeof(DocumentRecord)));
@@ -109,22 +110,22 @@ void kinoko_act_runtime_dispose(KinokoActRuntime *storage) {
     state.latest_runtime = nullptr;
     // production stage cleanup owns the raw runtime allocation
 }
-int32_t retdec_root_table_construct_this(int32_t, int32_t, int32_t) {
+int32_t kinoko_root_table_construct_this(KinokoActRuntime*, struct SQVM*, void*) {
     if (state.throw_publish) fail_next_new = true;
     return 1;
 }
-void retdec_trace(const char *) {}
-void retdec_trace_i32(const char *, int32_t) {}
-void retdec_trace_squirrel_name(const char *, int32_t) {}
+void kinoko_trace(const char *) {}
+void kinoko_trace_i32(const char *, int32_t) {}
+void kinoko_trace_squirrel_name(const char *, int32_t) {}
 int32_t __fastcall kinoko_act_increment_frame(KinokoActRuntime *, void *) { return 0; }
-int32_t kinoko_act_update_frame(int32_t) { return 0; }
-int32_t kinoko_act_prepare_draw(int32_t) { return 0; }
-int32_t kinoko_act_draw(int32_t, float, float) { return 0; }
+int32_t kinoko_act_update_frame(KinokoActRuntime*) { return 0; }
+int32_t kinoko_act_prepare_draw(KinokoActRuntime*) { return 0; }
+int32_t kinoko_act_draw(KinokoActRuntime*, float, float) { return 0; }
 KinokoIntegerMap* kinoko_integer_map_create() { return 0; }
 void kinoko_integer_map_destroy(KinokoIntegerMap*) {}
 void kinoko_integer_map_clear(KinokoIntegerMap*) {}
 void kinoko_initialize_render_queue() {}
-int32_t kinoko_clear_render_queue() { return 0; }
+void* kinoko_clear_render_queue() { return 0; }
 int32_t kinoko_audio_shutdown_resources() { return 0; }
 }
 int main() {
@@ -136,7 +137,7 @@ int main() {
     kinoko_stage_owner_destroy(state.owner);
     reset();
     state.owner = kinoko_stage_load("caller-owned");
-    CHECK(state.owner && !g603 && state.deletes == 0 && state.runtimes == 1);
+    CHECK(state.owner && !kinoko_stage_list_slot && state.deletes == 0 && state.runtimes == 1);
     CHECK(kinoko_act_source_layer_count(OwnerView(state.owner).get(&OwnerRecord::holder)) == 0);
     kinoko_stage_owner_destroy(state.owner);
     CHECK(state.deletes == 1 && state.runtime_deletes == 1);
@@ -148,10 +149,10 @@ int main() {
     kinoko_stage_list_construct();
     reset();
     state.owner = kinoko_stage_load("published");
-    CHECK(state.owner && g604 == 1 && state.deletes == 0);
+    CHECK(state.owner && kinoko_stage_count == 1 && state.deletes == 0);
     CHECK(kinoko_stage_list_value(kinoko_stage_list_first()) == state.owner);
     kinoko_clear_global_stages();
-    CHECK(g604 == 0 && state.deletes == 1 && state.runtime_deletes == 1);
+    CHECK(kinoko_stage_count == 0 && state.deletes == 1 && state.runtime_deletes == 1);
     kinoko_clear_global_stages();
     CHECK(state.deletes == 1);
     kinoko_stage_list_destroy();

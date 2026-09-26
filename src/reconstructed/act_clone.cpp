@@ -1,5 +1,8 @@
 #include "kinoko/act_resource_records_io.hpp"
 #include "kinoko/act_clone.h"
+#include "kinoko/legacy_memory.hpp"
+#include "kinoko/act_key_records.hpp"
+#include "kinoko/act_layout_records.hpp"
 #include "kinoko/texture_store.h"
 #include "kinoko/act_runtime.h"
 #include "kinoko/boost_control.hpp"
@@ -17,83 +20,86 @@
 
 namespace {
 namespace up = kinoko::native::upstream;
-using Address = uint32_t;
-template<class T> T &field(Address address, size_t offset=0) {
-    return *reinterpret_cast<T *>(static_cast<uintptr_t>(address)+offset);
-}
-void *pointer(Address address) { return reinterpret_cast<void *>(static_cast<uintptr_t>(address)); }
-Address address(const void *p) { return static_cast<Address>(reinterpret_cast<uintptr_t>(p)); }
-void dispose_chip_data(void* data) { retdec_mcd_free(static_cast<retdec_mcd_data*>(data)); }
+using namespace kinoko::act;
+int32_t legacy_address(const void* p) { return static_cast<int32_t>(reinterpret_cast<uintptr_t>(p)); }
+void dispose_chip_data(void* data) { kinoko_mcd_free(static_cast<kinoko_mcd_data*>(data)); }
 
 }
 
 // Original 42B580/42B5C0/42B3F0. Keep both constructor vtables; the sprite
 // assignment copies offsets 8..235, and layout assignment copies 236..312.
 // Padding 313..315 is not part of the source assignment.
-extern "C" int32_t __fastcall kinoko_method_clone_c2d_layout(int32_t source, void*) {
-    if (!source) return 0;
-    auto* result=static_cast<unsigned char*>(std::calloc(1,316));
-    if (!result) return 0;
-    retdec_construct_c2dlayout(static_cast<int32_t>(address(result)));
-    std::memcpy(result+8,static_cast<unsigned char*>(pointer(source))+8,305);
-    return static_cast<int32_t>(address(result));
+extern "C" KinokoActLayout* __fastcall kinoko_method_clone_c2d_layout(KinokoActLayout* source, void*) {
+    if (!source) return nullptr;
+    auto* result=static_cast<unsigned char*>(std::calloc(1,sizeof(Layout2DRecord)));
+    if (!result) return nullptr;
+    (int32_t)(intptr_t)kinoko_construct_c2dlayout((KinokoActLayout*)(uintptr_t)(legacy_address(result)));
+    constexpr auto begin=offsetof(Layout2DRecord,quad)+sizeof(void*);
+    constexpr auto end=offsetof(Layout2DRecord,pivots_initialized)+sizeof(uint8_t);
+    std::memcpy(result+begin,reinterpret_cast<const unsigned char*>(source)+begin,end-begin);
+    return reinterpret_cast<KinokoActLayout*>(result);
 }
 
 // Original 4265E0 copies the string and dispatches the layout's clone virtual.
-// It does not copy trailing key padding or treat every layout as C2DLayout.
-extern "C" int32_t __fastcall kinoko_method_clone_act_key(int32_t source, void*) {
-    if (!source) return 0;
+// Trailing key padding is not assigned.
+extern "C" KinokoActKey* __fastcall kinoko_method_clone_act_key(KinokoActKey* source, void*) {
+    if (!source) return nullptr;
     auto release=[](unsigned char* key) {
         if (!key) return;
-        const kinoko::legacy::StringView name(key+8);
-        name.destroy();
+        kinoko::legacy::StringView(KeyView(key).bytes(&KeyRecord::script_name)).destroy();
         std::free(key);
     };
     std::unique_ptr<unsigned char,decltype(release)> result(
-        static_cast<unsigned char*>(std::calloc(1,36)),release);
-    if (!result) return 0;
-    const auto key=address(result.get());
-    field<Address>(key)=address(kinoko_act_host_symbols()->key_vtable);
-    field<uint32_t>(key,28)=15;
-    const kinoko::legacy::StringView input(static_cast<unsigned char*>(pointer(source))+8);
-    const kinoko::legacy::StringView output(result.get()+8);
-    output.assign(input.data(),input.length());
-    if (output.length()!=input.length()) return 0;
-    const auto layout=field<Address>(source,4);
-    if (layout) field<int32_t>(key,4)=retdec_call_thiscall0_result(
-        pointer(layout),field<void*>(field<Address>(layout),20));
-    return static_cast<int32_t>(address(result.release()));
+        static_cast<unsigned char*>(std::calloc(1,sizeof(KeyRecord))),release);
+    if (!result) return nullptr;
+    const KeyView input(source), output(result.get());
+    output.set(&KeyRecord::methods,kinoko_act_host_symbols()->key_vtable);
+    output.view(&KeyRecord::script_name).set(&kinoko::legacy::StringRecord::capacity,uint32_t{15});
+    const kinoko::legacy::StringView input_name(input.bytes(&KeyRecord::script_name));
+    const kinoko::legacy::StringView output_name(output.bytes(&KeyRecord::script_name));
+    output_name.assign(input_name.data(),input_name.length());
+    if (output_name.length()!=input_name.length()) return nullptr;
+    if (auto* layout=input.get(&KeyRecord::layout)) {
+        const auto* methods=kinoko::legacy::load<const unsigned char*>(layout);
+        using Clone=KinokoActLayout* (__thiscall*)(KinokoActLayout*);
+        output.set(&KeyRecord::layout,kinoko::legacy::load<Clone>(methods+5*sizeof(void*))(layout));
+    }
+    return reinterpret_cast<KinokoActKey*>(result.release());
 }
 
 namespace {
 std::mutex cloned_texture_mutex;
-std::unordered_set<Address> cloned_texture_owners;
+std::unordered_set<KinokoActResource*> cloned_texture_owners;
 // 42F9D0/42FA50 and 446AF0/446B70/449B70 copy different resource fields.
 // The MCD control is the actual Boost counter already used by archive clones.
-int32_t clone_resource(int32_t source, const void* vtable, bool chip) {
+KinokoActResource* clone_resource(KinokoActResource* source, const void* vtable, bool chip) {
     if (!source) return 0;
     auto destroy=[](unsigned char* value) {
-        if (value) retdec_destroy_cact_resource(static_cast<int32_t>(address(value)));
+        if (value) kinoko_destroy_cact_resource((KinokoActResource*)(uintptr_t)(legacy_address(value)));
     };
     std::unique_ptr<unsigned char,decltype(destroy)> owned(
         static_cast<unsigned char*>(std::calloc(1,100)),destroy);
     if (!owned) return 0;
-    const auto result=address(owned.get());
-    field<Address>(result)=address(vtable);
-    field<int32_t>(result,4)=field<int32_t>(source,4);
-    field<uint32_t>(result,28)=15;
-    if (chip) field<uint32_t>(result,56)=field<uint32_t>(result,92)=15;
-    else field<uint32_t>(result,60)=15;
+    auto* result=reinterpret_cast<KinokoActResource*>(owned.get());
+    const ChipResourceFields chip_input(source), chip_output(result);
+    const TextureResourceFields texture_input(source), texture_output(result);
+    chip_output.set(&ChipResourceRecord::methods,vtable);
+    chip_output.set(&ChipResourceRecord::id,chip_input.get(&ChipResourceRecord::id));
+    chip_output.view(&ChipResourceRecord::name).set(&kinoko::legacy::StringRecord::capacity,uint32_t{15});
+    if (chip) {
+        chip_output.view(&ChipResourceRecord::source_name).set(&kinoko::legacy::StringRecord::capacity,uint32_t{15});
+        chip_output.view(&ChipResourceRecord::loaded_path).set(&kinoko::legacy::StringRecord::capacity,uint32_t{15});
+    } else texture_output.view(&TextureResourceRecord::texture_name).set(&kinoko::legacy::StringRecord::capacity,uint32_t{15});
     const auto copy_string=[&](size_t offset) {
-        const kinoko::legacy::StringView input(static_cast<unsigned char*>(pointer(source))+offset);
+        const kinoko::legacy::StringView input(reinterpret_cast<unsigned char*>(source)+offset);
         const kinoko::legacy::StringView output(owned.get()+offset);
         output.assign(input.data(),input.length());
         if (input.length()!=output.length()) throw std::bad_alloc();
     };
-    copy_string(8);
+    copy_string(offsetof(ChipResourceRecord,name));
     if (chip) {
-        copy_string(36); copy_string(72);
-        const kinoko::act::ChipResourceFields input(pointer(source)), output(owned.get());
+        copy_string(offsetof(ChipResourceRecord,source_name)); copy_string(offsetof(ChipResourceRecord,loaded_path));
+        const kinoko::act::ChipResourceFields input(source), output(owned.get());
         auto *control = input.get(&kinoko::act::ChipResourceRecord::shared_data);
         if (!control) {
             control = up::create_callback_control(input.get(&kinoko::act::ChipResourceRecord::data),dispose_chip_data);
@@ -104,10 +110,12 @@ int32_t clone_resource(int32_t source, const void* vtable, bool chip) {
         output.set(&kinoko::act::ChipResourceRecord::data, input.get(&kinoko::act::ChipResourceRecord::data));
         output.set(&kinoko::act::ChipResourceRecord::shared_data, control);
     } else {
-        copy_string(40);
-        field<uint8_t>(result,36)=1; // Both original clone methods mark borrowing.
-        std::memcpy(owned.get()+72,static_cast<unsigned char*>(pointer(source))+72,25);
-        const auto handle=field<int32_t>(source,68);
+        copy_string(offsetof(TextureResourceRecord,texture_name));
+        texture_output.set(&TextureResourceRecord::borrows_texture,uint8_t{1}); // Both original clone methods mark borrowing.
+        constexpr auto begin=offsetof(TextureResourceRecord,width);
+        constexpr auto end=offsetof(TextureResourceRecord,auto_size)+sizeof(uint8_t);
+        std::memcpy(owned.get()+begin,reinterpret_cast<unsigned char*>(source)+begin,end-begin);
+        const auto handle=texture_input.get(&TextureResourceRecord::texture);
         // The reconstructed texture store refcounts native handles. Retain
         // here so the source and clone can each execute their native cleanup.
         if (handle) {
@@ -119,34 +127,34 @@ int32_t clone_resource(int32_t source, const void* vtable, bool chip) {
             }
             if (!kinoko_texture_retain(handle)) return 0;
         }
-        field<int32_t>(result,68)=handle;
+        texture_output.set(&TextureResourceRecord::texture,handle);
     }
-    return static_cast<int32_t>(address(owned.release()));
+    return reinterpret_cast<KinokoActResource*>(owned.release());
 }
 }
-extern "C" int32_t kinoko_act_release_cloned_texture(int32_t resource) {
+extern "C" int32_t kinoko_act_release_cloned_texture(KinokoActResource* resource) {
     {
         std::lock_guard<std::mutex> lock(cloned_texture_mutex);
-        if (!cloned_texture_owners.erase(static_cast<Address>(resource))) return 0;
+        if (!cloned_texture_owners.erase(resource)) return 0;
     }
-    kinoko_texture_release(field<int32_t>(resource,68));
+    kinoko_texture_release(TextureResourceFields(resource).get(&TextureResourceRecord::texture));
     return 1;
 }
-extern "C" int32_t __fastcall kinoko_method_clone_chip_resource(int32_t source, void*) {
+extern "C" KinokoActResource* __fastcall kinoko_method_clone_chip_resource(KinokoActResource* source, void*) {
     try { return clone_resource(source,kinoko_act_host_symbols()->chip_resource_vtable,true); }
     catch (...) { return 0; }
 }
-extern "C" int32_t __fastcall kinoko_method_clone_texture_resource(int32_t source, void*) {
+extern "C" KinokoActResource* __fastcall kinoko_method_clone_texture_resource(KinokoActResource* source, void*) {
     try { return clone_resource(source,kinoko_act_host_symbols()->texture_resource_vtable,false); }
     catch (...) { return 0; }
 }
-extern "C" int32_t __fastcall kinoko_method_clone_render_target(int32_t source, void*) {
+extern "C" KinokoActResource* __fastcall kinoko_method_clone_render_target(KinokoActResource* source, void*) {
     try { return clone_resource(source,kinoko_act_host_symbols()->render_target_vtable,false); }
     catch (...) { return 0; }
 }
 
-extern "C" int32_t kinoko_act_release_chip_data(int32_t resource) {
-    const kinoko::act::ChipResourceFields fields(pointer(static_cast<Address>(resource)));
+extern "C" int32_t kinoko_act_release_chip_data(KinokoActResource* resource) {
+    const kinoko::act::ChipResourceFields fields(resource);
     auto *control = fields.get(&kinoko::act::ChipResourceRecord::shared_data);
     if (!control) return 1;
     fields.set(&kinoko::act::ChipResourceRecord::shared_data, static_cast<up::CountedControl *>(nullptr));

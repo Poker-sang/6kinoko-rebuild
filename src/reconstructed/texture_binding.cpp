@@ -2,7 +2,7 @@
 #include "kinoko/graphics_device.h"
 #include <array>
 
-extern "C" void retdec_trace_i32(const char*,int32_t);
+extern "C" void kinoko_trace_i32(const char*,int32_t);
 namespace {
 // 4059C0 initializes eight consecutive borrowed handles at original 51AEE8.
 // They are cache keys only; ownership stays with the store and D3D device.
@@ -25,7 +25,7 @@ extern "C" int32_t kinoko_texture_bind_stage(int32_t stage,int32_t handle) {
         return 0;
     }
     if (handle<0 || handle>=KINOKO_TEXTURE_CAPACITY || !kinoko_texture_slots[handle].texture) {
-        retdec_trace_i32("texture:unresolved-handle",handle);
+        kinoko_trace_i32("texture:unresolved-handle",handle);
         return E_FAIL;
     }
     if (handle==cached) return handle;

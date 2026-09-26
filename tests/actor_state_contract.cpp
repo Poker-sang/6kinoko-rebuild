@@ -16,10 +16,10 @@ ActorRecord *reset_actor;
 int32_t reset_priority;
 }
 extern "C" {
-void kinoko_native_add_strong(int32_t p) { events.push_back(10); events.push_back(p); }
-void kinoko_native_release_strong(int32_t p) { events.push_back(11); events.push_back(p); }
-void kinoko_native_add_weak(int32_t p) { events.push_back(12); events.push_back(p); }
-void kinoko_native_release_weak(int32_t p) { events.push_back(13); events.push_back(p); }
+void kinoko_native_add_strong(void* p) { events.push_back(10); events.push_back(address(p)); }
+void kinoko_native_release_strong(void* p) { events.push_back(11); events.push_back(address(p)); }
+void kinoko_native_add_weak(void* p) { events.push_back(12); events.push_back(address(p)); }
+void kinoko_native_release_weak(void* p) { events.push_back(13); events.push_back(address(p)); }
 void * kinoko_sqplus_object_assign(void * out, const void * in) { std::memmove(out,in,12); return out; }
 void * kinoko_sqplus_object_copy_construct(void * out, const void * in) { std::memcpy(out,in,12); events.push_back(static_cast<int32_t *>(out)[1]); return (void *)(intptr_t)(out); }
 void*  kinoko_sqplus_object_destroy(void * p) { events.push_back(static_cast<int32_t *>(p)[1]); return (void*)(intptr_t)((int32_t)(intptr_t)(p)); }
@@ -65,7 +65,7 @@ int main() {
     // Reset passes saved fields to the retaining Init entry, and takes the
     // priority written by Init instead of restoring the pre-reset priority.
     reset_actor=&destination; destination.spawn_x=10; destination.spawn_y=20; destination.spawn_z=-1;
-    const KinokoOwnedObjectWords callback{1,31,2},argument{1,32,3};
+    const KinokoOwnedObjectWords callback{reinterpret_cast<const void*>(1),31,2},argument{reinterpret_cast<const void*>(1),32,3};
     std::memcpy(destination.initial_function.data(),&callback,12);
     std::memcpy(destination.initial_argument.data(),&argument,12);
     events.clear(); CHECK(kinoko_actor_reset(dst)==81 && reset_priority==73);

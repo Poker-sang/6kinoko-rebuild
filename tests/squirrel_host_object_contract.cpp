@@ -16,35 +16,35 @@ using namespace kinoko::script;
 // These are the game's narrow host services, not mocks for Squirrel. Every
 // object/VM operation below executes the actual vendored 2.2.2 implementation.
 extern "C" {
-char* g644 = nullptr;
-int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
-int32_t kinoko_native_void_type(void) { return 0x13572468; }
-void retdec_trace(const char*) {}
-void retdec_trace_i32(const char*, int32_t) {}
-void retdec_trace_squirrel_name(const char*, int32_t) {}
-void _3f__3f_3_40_YAXPAX_40_Z(int32_t* p) { std::free(p); }
+struct SQVM *kinoko_primary_vm = nullptr;
+const void* kinoko_squirrel_object_vtable(void) { return reinterpret_cast<const void*>(0x12345678); }
+void* kinoko_native_void_type(void) { return reinterpret_cast<void*>(0x13572468); }
+void kinoko_trace(const char*) {}
+void kinoko_trace_i32(const char*, int32_t) {}
+void kinoko_trace_squirrel_name(const char*, int32_t) {}
+void kinoko_host_free_allocation(int32_t* p) { std::free(p); }
 }
 
 namespace {
 void require(bool value, const char* message) {
     if (!value) throw std::runtime_error(message); // Runs in Release too.
 }
-int32_t exchange_vm(int32_t vm) {
-    const auto previous = address(g644);
-    g644 = pointer<char>(vm);
-    return previous;
+SQVM* exchange_vm(SQVM* vm) {
+    const auto previous = address(kinoko_primary_vm);
+    kinoko_primary_vm = pointer<SQVM>((int32_t)(intptr_t)vm);
+    return reinterpret_cast<SQVM*>(static_cast<uintptr_t>(previous));
 }
 class Machine final {
 public:
-    Machine() : vm_(pointer<SQVM>(kinoko_sq_open(64))) {
+    Machine() : vm_(pointer<SQVM>(((int32_t)(uintptr_t)kinoko_sq_open(64)))) {
         require(vm_ != nullptr, "open VM");
-        g644 = reinterpret_cast<char*>(vm_);
+        kinoko_primary_vm = reinterpret_cast<SQVM*>(vm_);
         kinoko_sq_set_context_exchange(exchange_vm);
     }
     ~Machine() {
         kinoko_sq_set_context_exchange(nullptr);
         sq_close(vm_);
-        g644 = nullptr;
+        kinoko_primary_vm = nullptr;
     }
     HSQUIRRELVM get() const { return vm_; }
     Machine(const Machine&) = delete;
@@ -83,7 +83,7 @@ void ownership(HSQUIRRELVM vm) {
     const int released = userdata_releases;
     HostObject first, copy, replacement;
     require(kinoko_sqplus_object_is_null((void *)(intptr_t)(first.id())) == 1, "default null object");
-    require(first.words[0] == kinoko_squirrel_object_vtable(), "original vtable identity");
+    require(first.words[0] == address(kinoko_squirrel_object_vtable()), "original vtable identity");
     push_owned_userdata(vm);
     require(kinoko_sqplus_object_capture((void *)(intptr_t)(first.id()), -1) == OT_USERDATA, "capture returns type");
     sq_pop(vm, 1);
@@ -232,7 +232,7 @@ void userdata_delegates_and_types(HSQUIRRELVM vm) {
 }
 
 SQInteger host_callback(HSQUIRRELVM vm) {
-    if (g644 != reinterpret_cast<char*>(vm)) return sq_throwerror(vm, "wrong host VM");
+    if (kinoko_primary_vm != reinterpret_cast<SQVM*>(vm)) return sq_throwerror(vm, "wrong host VM");
     HostObject table;
     table.table();
     if (kinoko_sqplus_object_set_index_string((void *)(intptr_t)(table.id()), 1, (const char *)("child")) != 1)
@@ -256,10 +256,10 @@ void threads(HSQUIRRELVM vm) {
     sq_pop(vm, 1); // External owner must now keep the child alive.
     require(SQ_SUCCEEDED(sq_compilebuffer(child, "return host_callback();", 23, "host-thread", SQFalse)), "child compile");
     sq_pushroottable(child);
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(child), 1, SQTrue, SQFalse)), "child invokes host wrapper on child VM");
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(child)), 1, SQTrue, SQFalse)), "child invokes host wrapper on child VM");
     SQInteger result = 0;
     require(SQ_SUCCEEDED(sq_getinteger(child, -1, &result)) && result == 1, "child result");
-    require(g644 == reinterpret_cast<char*>(vm), "host receiver restored");
+    require(kinoko_primary_vm == reinterpret_cast<SQVM*>(vm), "host receiver restored");
     sq_settop(child, 0);
     // Exercise the old stack-reservation path while retaining the input thread.
     while (static_cast<SQUnsignedInteger>(vm->_top) < vm->_stack.size()) sq_pushinteger(vm, 17);
@@ -344,7 +344,7 @@ void native_arguments(HSQUIRRELVM vm) {
     const char program[] = "return native_arguments(19, 2.5, \"ok\");";
     require(SQ_SUCCEEDED(sq_compilebuffer(vm, program, sizeof(program) - 1, "native-arguments", SQFalse)), "compile native argument call");
     sq_pushroottable(vm);
-    require(SQ_SUCCEEDED(kinoko_sq_call(id, 1, SQTrue, SQFalse)), "execute real closure with captured userdata");
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(id), 1, SQTrue, SQFalse)), "execute real closure with captured userdata");
     SQInteger result = 0;
     require(SQ_SUCCEEDED(sq_getinteger(vm, -1, &result)) && result == 21, "native argument result");
     // 2.2.2 sq_call pops its arguments, but retains the called closure.
@@ -376,15 +376,14 @@ void native_instances(HSQUIRRELVM vm) {
     require(SQ_SUCCEEDED(sq_newslot(vm, -3, SQFalse)), "register class");
     sq_pop(vm, 1);
     const int before_release = instance_releases, before_constructor = constructor_calls;
-    require(kinoko_native_instance_create(address(vm), address("HostNative"), address(&native_data),
-        address(reinterpret_cast<const void*>(&release_instance)), kinoko_squirrel_object_vtable()) == 1, "create native instance");
+    require(kinoko_native_instance_create((SQVM*)(uintptr_t)(address(vm)), (const char*)(uintptr_t)(address("HostNative")), (void*)(uintptr_t)(address(&native_data)), (SQRELEASEHOOK)(uintptr_t)(address(reinterpret_cast<const void*>(&release_instance)))) == 1, "create native instance");
     require_top(vm, top + 1, "native creation leaves exactly the instance");
     require(constructor_calls == before_constructor, "native creation must NOT call script constructor");
     SQUserPointer actual = nullptr;
     require(SQ_SUCCEEDED(sq_getinstanceup(vm, -1, &actual, &type_tag)) && actual == &native_data, "native pointer/type association");
     sq_pushstring(vm, "__ot", -1);
     require(SQ_SUCCEEDED(sq_get(vm, -2)), "native map present");
-    for (int32_t key : {kinoko_native_void_type(), address(&base_tag)}) {
+    for (int32_t key : {(int32_t)(intptr_t)kinoko_native_void_type(), address(&base_tag)}) {
         sq_pushinteger(vm, key);
         require(SQ_SUCCEEDED(sq_rawget(vm, -2)), "base/void mapping present");
         require(SQ_SUCCEEDED(sq_getuserpointer(vm, -1, &actual)) && actual == &native_data, "base/void pointer value");
@@ -396,8 +395,7 @@ void native_instances(HSQUIRRELVM vm) {
     require(instance_releases == before_release, "stack still owns native instance");
     sq_pop(vm, 1);
     require(instance_releases == before_release + 1, "native release hook executes exactly once");
-    require(kinoko_native_instance_create(address(vm), address("MissingNative"), address(&native_data), 0,
-        kinoko_squirrel_object_vtable()) == 0, "missing native class fails");
+    require(kinoko_native_instance_create((SQVM*)(uintptr_t)(address(vm)), (const char*)(uintptr_t)(address("MissingNative")), (void*)(uintptr_t)(address(&native_data)), (SQRELEASEHOOK)(uintptr_t)(0)) == 0, "missing native class fails");
     require_top(vm, top, "native failure restores incoming stack");
 }
 }

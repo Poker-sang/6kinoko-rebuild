@@ -1,0 +1,22 @@
+{
+  "kinoko_map_update": [
+    "kinoko_map_update_visible",
+    "KinokoActLayout*",
+    false
+  ],
+  "kinoko_map_draw": [
+    "kinoko_map_draw_visible",
+    "KinokoActLayout*",
+    false
+  ],
+  "kinoko_map_find_layout": [
+    "kinoko_map_lookup_layout",
+    "KinokoMapManager*",
+    true
+  ],
+  "kinoko_map_create_render_layer": [
+    "kinoko_map_make_render_layer",
+    "KinokoMapManager*",
+    true
+  ]
+}

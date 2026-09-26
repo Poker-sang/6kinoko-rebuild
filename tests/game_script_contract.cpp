@@ -34,10 +34,10 @@ void expect_last_release_order() {
 }
 }
 extern "C" {
-void retdec_trace(const char*) {}
-void retdec_trace_i32(const char*,int32_t) {}
-void retdec_trace_squirrel_name(const char*,int32_t) {}
-int32_t kinoko_squirrel_object_vtable() { return 0x12345678; }
+void kinoko_trace(const char*) {}
+void kinoko_trace_i32(const char*,int32_t) {}
+void kinoko_trace_squirrel_name(const char*,int32_t) {}
+const void* kinoko_squirrel_object_vtable() { return reinterpret_cast<const void*>(0x12345678); }
 void * kinoko_sqplus_object_initialize(void * id) { kinoko::script::ObjectView(id).initialize(kinoko_squirrel_object_vtable()); return id; }
 void * kinoko_sqplus_object_copy_construct(void * out, const void * source) {
     kinoko::script::ObjectView(out).initialize(kinoko_squirrel_object_vtable());
@@ -55,7 +55,7 @@ int32_t  kinoko_sqplus_object_raw_set_name(void * table, const char* key, const 
     kinoko::script::ObjectView(table).push(vm); sq_pushstring(vm,key,-1); kinoko::script::ObjectView(object).push(vm);
     const auto result=sq_newslot(vm,-3,SQFalse); sq_pop(vm,1); return SQ_SUCCEEDED(result);
 }
-int32_t function_4029b0(int32_t id,int32_t* object) { require(pointer<SQVM>(id)==vm,"result VM"); kinoko::script::ObjectView(object).push(vm); return 1; }
+void* kinoko_push_script_object(SQVM* id,void* object) { require(id==vm,"result VM"); kinoko::script::ObjectView(object).push(vm); return object; }
 const KinokoGameObjects* kinoko_game_objects() { return &objects; }
 SQVM* kinoko_actor_default_vm() { return vm; }
 KinokoScriptCallback* kinoko_game_global_callback() { return &callback; }
@@ -88,7 +88,7 @@ int32_t kinoko_pat_load(KinokoActorManager* owner,const char*,const char* direct
 KinokoStageOwner* kinoko_stage_load(const char*) { return nullptr; }
 int32_t kinoko_game_load_map_file(const char*) { return map_result; }
 int32_t kinoko_game_release_map_state() { return 1; }
-int32_t kinoko_clear_render_queue() { return 0; }
+void* kinoko_clear_render_queue() { return 0; }
 void* kinoko_scene_create_render_layer(const char*) { return &layout_token; }
 }
 namespace {

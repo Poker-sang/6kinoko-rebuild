@@ -3,10 +3,10 @@
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/squirrel_native_arguments.h"
 #include "kinoko/squirrel_game_objects.h"
-extern "C" void retdec_trace_i32(const char*,int32_t);
+extern "C" void kinoko_trace_i32(const char*,int32_t);
 namespace {
 using namespace kinoko::script;
-inline auto commit_actor_result = function_4029b0;
+inline auto commit_actor_result = kinoko_push_script_object;
 inline int32_t destroy_object_result(void* object) {
     return address(kinoko_sqplus_object_destroy(object));
 }
@@ -34,10 +34,10 @@ extern "C" int32_t kinoko_script_create_actor_entry(SQVM* vm) {
     HSQOBJECT closure{},argument{};
     float x{},y{},z{};
     const auto top=vm ? sq_gettop(vm) : 0;
-    retdec_trace_i32("native-471df0:top",top);
+    kinoko_trace_i32("native-471df0:top",top);
     for(int i=2;i<=5;++i) {
         const char* labels[]={"native-471df0:type2","native-471df0:type3","native-471df0:type4","native-471df0:type5"};
-        retdec_trace_i32(labels[i-2],vm && i<=top ? sq_gettype(vm,i) : OT_NULL);
+        kinoko_trace_i32(labels[i-2],vm && i<=top ? sq_gettype(vm,i) : OT_NULL);
     }
     if(!target || top<6 || !read(vm,2,closure) ||
        !kinoko_native_float_arg(vm, 3, &x) || !kinoko_native_float_arg(vm, 4, &y) ||
@@ -47,7 +47,7 @@ extern "C" int32_t kinoko_script_create_actor_entry(SQVM* vm) {
     KinokoOwnedObjectWords result{kinoko_squirrel_object_vtable(),OT_NULL,0};
     using Function=KinokoOwnedObjectWords* (__cdecl *)(KinokoOwnedObjectWords*,KinokoOwnedObjectWords,float,float,float,KinokoOwnedObjectWords);
     reinterpret_cast<Function>(target)(&result,fn,x,y,z,arg);
-    commit_actor_result(address(vm),reinterpret_cast<int32_t*>(&result));
+    commit_actor_result(vm, &result);
     destroy_object_result(&result);
     return 1;
 }

@@ -1,12 +1,13 @@
 #pragma once
 #include <cstdint>
+#include "kinoko/string_font_renderer_records.hpp"
 #include <cstddef>
 
 namespace kinoko::text {
 struct AtlasLifecycle {
     int32_t cursor_x, cursor_y, row_height, width, height;
     int32_t last_glyph_id;
-    unsigned char unknown24[404];
+    FontRendererRecord renderer;
     int32_t texture;
     int32_t references;
 };

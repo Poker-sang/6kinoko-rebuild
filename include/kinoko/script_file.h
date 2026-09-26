@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+struct SQVM;
 #ifdef __cplusplus
 #define KINOKO_SCRIPT_MAY_THROW noexcept(false)
 extern "C" {
@@ -13,8 +14,8 @@ void* kinoko_script_root(void);
 int32_t kinoko_script_close_vm(void);
 int32_t kinoko_script_show_call_stack(void) KINOKO_SCRIPT_MAY_THROW;
 /* Original x86 by-value Sqrat Object argument, including its ownership flag. */
-int32_t kinoko_script_compile_file_argument(int32_t path, int32_t vtable,
-    int32_t vm, int32_t type, int32_t data, char owns_reference) KINOKO_SCRIPT_MAY_THROW;
+int32_t kinoko_script_compile_file_argument(const char* path, const void* vtable,
+    struct SQVM* vm, int32_t type, int32_t data, char owns_reference) KINOKO_SCRIPT_MAY_THROW;
 #ifdef __cplusplus
 }
 #endif

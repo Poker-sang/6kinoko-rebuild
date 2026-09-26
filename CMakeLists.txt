@@ -122,10 +122,10 @@ add_library(kinoko_legacy_abi STATIC
 target_include_directories(kinoko_legacy_abi PUBLIC include)
 
 add_library(kinoko_retdec_support STATIC
-    src/platform/retdec_memory.cpp
-    src/platform/retdec_address_space.cpp
-    src/platform/retdec_runtime_compat.cpp)
-target_include_directories(kinoko_retdec_support PUBLIC include PRIVATE src/decompiled)
+    src/platform/legacy_memory_ops.cpp
+    src/platform/address_space.cpp
+    src/platform/windows_crt_compat.cpp)
+target_include_directories(kinoko_retdec_support PUBLIC include)
 target_compile_definitions(kinoko_retdec_support PRIVATE _CRT_SECURE_NO_WARNINGS)
 target_compile_options(kinoko_retdec_support PRIVATE /Gy)
 add_library(kinoko_diagnostics STATIC src/platform/diagnostics.cpp)
@@ -158,14 +158,13 @@ target_link_libraries(kinoko_base_utilities PUBLIC kinoko_zlib)
 target_link_libraries(kinoko_native_methods PUBLIC kinoko_base_utilities)
 
 add_executable(kinoko_retdec_rebuild WIN32
-    src/decompiled/6kinoko_rebuilt.c
-    src/decompiled/retdec_asm_stubs.c
+    src/reconstructed/runtime_host.cpp
+    src/reconstructed/runtime_method_tables.cpp
     src/platform/windows_entry.cpp
     src/platform/resources/windows_resources.rc
 )
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT kinoko_retdec_rebuild)
 target_include_directories(kinoko_retdec_rebuild PRIVATE
-    src/decompiled
     include
     src/platform/resources
 )
@@ -439,11 +438,12 @@ add_test(
 
 add_executable(kinoko_stage_contract
     tests/stage_contract.c
+    src/reconstructed/runtime_host.cpp
+    src/reconstructed/runtime_method_tables.cpp
     tests/stage_audio_contract.cpp
     tests/act_ownership_contract.cpp
-    src/decompiled/retdec_asm_stubs.c
 )
-target_include_directories(kinoko_stage_contract PRIVATE src/decompiled
+target_include_directories(kinoko_stage_contract PRIVATE
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,INCLUDE_DIRECTORIES>)
 target_compile_definitions(kinoko_stage_contract PRIVATE
     RETDEC_DISABLE_TRACE RETDEC_DISABLE_RENDER_CAPTURE)
@@ -588,7 +588,7 @@ target_link_libraries(kinoko_vorbis_decoder_contract PRIVATE kinoko_vorbis_decod
 add_test(NAME vorbis_decoder_contract COMMAND kinoko_vorbis_decoder_contract --snapshot "${CMAKE_BINARY_DIR}/vorbis-snapshot.bin")
 
 add_executable(kinoko_audio_runtime_contract tests/audio_runtime_contract.cpp)
-target_include_directories(kinoko_audio_runtime_contract PRIVATE include src/decompiled)
+target_include_directories(kinoko_audio_runtime_contract PRIVATE include)
 target_compile_definitions(kinoko_audio_runtime_contract PRIVATE _CRT_SECURE_NO_WARNINGS)
 target_link_libraries(kinoko_audio_runtime_contract PRIVATE kinoko_vorbis_decoder kinoko_actor_collision ole32 dxguid winmm user32)
 add_test(NAME audio_runtime_contract COMMAND kinoko_audio_runtime_contract)

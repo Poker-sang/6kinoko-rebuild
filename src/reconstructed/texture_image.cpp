@@ -11,7 +11,7 @@
 extern "C" {
 HRESULT WINAPI D3DXCreateTexture(IDirect3DDevice9*,UINT,UINT,UINT,DWORD,
     D3DFORMAT,D3DPOOL,IDirect3DTexture9**);
-void retdec_trace_i32(const char*,int32_t);
+void kinoko_trace_i32(const char*,int32_t);
 }
 
 namespace {
@@ -142,21 +142,21 @@ extern "C" HRESULT kinoko_texture_load_image(const char* path, IDirect3DTexture9
         result=D3DXCreateTexture(kinoko_graphics.device,allocation_width,allocation_height,
             1,0,format,D3DPOOL_MANAGED,texture.put());
     }
-    retdec_trace_hresult("texture:create-hr",result);
-    retdec_trace_i32("texture:create-object",diagnostic_address(texture.get()));
+    kinoko_trace_hresult("texture:create-hr",result);
+    kinoko_trace_i32("texture:create-object",diagnostic_address(texture.get()));
     if (FAILED(result) || !texture) return result;
     if (!*reinterpret_cast<void***>(texture.get())) {
-        retdec_trace("texture:create-no-vtable");
+        kinoko_trace("texture:create-no-vtable");
         texture.detach(); // inherited invalid-interface boundary: Release is unavailable
         return E_FAIL;
     }
     const HRESULT creation_result = result;
     D3DLOCKED_RECT locked{};
     const HRESULT lock_result = texture->LockRect(0,&locked,nullptr,0);
-    retdec_trace_hresult("texture:lock-hr",lock_result);
-    retdec_trace_i32("texture:lock-object",diagnostic_address(texture.get()));
-    retdec_trace_i32("texture:lock-bits",diagnostic_address(locked.pBits));
-    retdec_trace_i32("texture:lock-pitch",locked.Pitch);
+    kinoko_trace_hresult("texture:lock-hr",lock_result);
+    kinoko_trace_i32("texture:lock-object",diagnostic_address(texture.get()));
+    kinoko_trace_i32("texture:lock-bits",diagnostic_address(locked.pBits));
+    kinoko_trace_i32("texture:lock-pitch",locked.Pitch);
     // 40E7E0 tests exactly zero. A failed or nonzero-success lock skips upload,
     // but 40E705 still returns the creation status and hands off the texture.
     if (lock_result != D3D_OK) {
@@ -164,7 +164,7 @@ extern "C" HRESULT kinoko_texture_load_image(const char* path, IDirect3DTexture9
         return creation_result;
     }
     if (!locked.pBits || locked.Pitch<=0) {
-        retdec_trace("texture:lock-invalid-surface");
+        kinoko_trace("texture:lock-invalid-surface");
         texture->UnlockRect(0);
         return E_FAIL;
     }
@@ -172,7 +172,7 @@ extern "C" HRESULT kinoko_texture_load_image(const char* path, IDirect3DTexture9
         texture->UnlockRect(0);
         return E_FAIL;
     }
-    retdec_trace_i32("texture:unlock-object",diagnostic_address(texture.get()));
+    kinoko_trace_i32("texture:unlock-object",diagnostic_address(texture.get()));
     texture->UnlockRect(0); // 40E815 ignores this HRESULT.
     *output=texture.detach();
     return creation_result;

@@ -7,7 +7,7 @@
 static KinokoControllerState controller{};
 static bool available=true;
 extern "C" {
-unsigned char g_retdec_keyboard_state[256]{};
+unsigned char kinoko_keyboard_state[256]{};
 const KinokoControllerState* kinoko_input_controller_state(int32_t index) {
     return index==0 && available?&controller:nullptr;
 }
@@ -18,12 +18,12 @@ int main() {
     a.id=255;a.left=203;a.right=205;a.up=200;a.down=208;
     std::fill_n(a.buttons,12,-1);a.buttons[0]=44;
     s.counts[3]=37;s.reserved70[0]=0xab;
-    g_retdec_keyboard_state[203]=g_retdec_keyboard_state[205]=g_retdec_keyboard_state[44]=0x80;
+    kinoko_keyboard_state[203]=kinoko_keyboard_state[205]=kinoko_keyboard_state[44]=0x80;
     kinoko_input_device_update(&device,nullptr);
     CHECK(s.counts[0]==-1 && s.counts[2]==1 && s.counts[3]==37 && s.axes[0]==-1);
     s.counts[2]=INT32_MAX;kinoko_input_device_update(&device,nullptr);
     CHECK(s.counts[2]==INT32_MIN && s.reserved70[0]==0xab);
-    std::memset(g_retdec_keyboard_state,0,256);kinoko_input_device_update(&device,nullptr);
+    std::memset(kinoko_keyboard_state,0,256);kinoko_input_device_update(&device,nullptr);
     CHECK(s.released[0]==1 && s.released[2]==0 && s.counts[2]==0);
     kinoko_input_device_update(&device,nullptr);CHECK(s.released[0]==0);
     a.id=0;a.buttons[0]=0;controller.axes[0]=-501;controller.axes[1]=501;

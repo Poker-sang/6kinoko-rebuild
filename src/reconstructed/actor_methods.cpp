@@ -1,3 +1,4 @@
+#include "kinoko/actor_lifecycle.h"
 #include "kinoko/actor_methods.h"
 #include "kinoko/actor_animation.h"
 #include "kinoko/game_host.h"
@@ -10,7 +11,7 @@
 extern "C" {
 void * kinoko_sqplus_object_instance(void * object, void * index);
 void*  kinoko_sqplus_object_destroy(void * object);
-void retdec_trace_star_state(const char *phase, int32_t actor);
+void kinoko_trace_star_state(const char *phase, int32_t actor);
 }
 
 namespace {
@@ -49,7 +50,7 @@ public:
     }
 
     int32_t release() const {
-        retdec_trace_star_state("release", address(actor_));
+        kinoko_trace_star_state("release", address(actor_));
         view_.set(&ActorRecord::release_pending, uint8_t{1});
         ManagerView(view_.get(&ActorRecord::manager))
             .set(&ManagerPrefix::cleanup_pending, uint8_t{1});
@@ -63,15 +64,13 @@ public:
         return actor_;
     }
 
-    int32_t sync_animation(int32_t vtable, int32_t type, int32_t value) const {
-        int32_t incoming[3] = {vtable, type, value};
-        const auto incoming_address = static_cast<int32_t>(
-            reinterpret_cast<uintptr_t>(incoming));
+    int32_t sync_animation(const void* vtable, int32_t type, int32_t value) const {
+        KinokoOwnedObjectWords incoming{vtable, type, value};
         if (type == 0x0a008000 && view_.get(&ActorRecord::animation)) {
-            kinoko_actor_sync_animation_state(actor_, pointer<KinokoActor>((int32_t)(intptr_t)(kinoko_sqplus_object_instance((void *)(intptr_t)(incoming_address), (void *)(intptr_t)(0)))));
+            kinoko_actor_sync_animation_state(actor_, reinterpret_cast<KinokoActor*>((kinoko_sqplus_object_instance(&incoming, (void *)(intptr_t)(0)))));
         }
         // The by-value SqPlus object owns an external VM reference on entry.
-        return (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(incoming_address)));
+        return (int32_t)(intptr_t)(kinoko_sqplus_object_destroy(&incoming));
     }
 
 private:
@@ -136,6 +135,6 @@ extern "C" KinokoActor* kinoko_actor_set_init_data(KinokoActor* actor, const voi
 
 // 45FE80: consume one 12-byte SquirrelObject with the original thiscall ABI.
 extern "C" int32_t __fastcall kinoko_actor_sync_animation(KinokoActor* actor, void *,
-    int32_t vtable, int32_t type, int32_t value) {
+    const void* vtable, int32_t type, int32_t value) {
     return ActorMethods(actor).sync_animation(vtable, type, value);
 }

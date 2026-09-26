@@ -1,3 +1,4 @@
+struct KinokoCamera;
 #pragma once
 #include <stdint.h>
 typedef struct KinokoRenderLayer KinokoRenderLayer;
@@ -7,12 +8,11 @@ extern "C" {
 void kinoko_initialize_render_queue(void);
 /* Return a borrowed queue node identity; appending never owns the layer. */
 void *kinoko_render_queue_append(KinokoRenderLayer *layer);
-int32_t kinoko_clear_render_queue(void);
-int32_t kinoko_render_queue_identity(void);
-int32_t kinoko_render_queue_first(void);
+void* kinoko_clear_render_queue(void);
+void* kinoko_render_queue_identity(void);
+void* kinoko_render_queue_first(void);
 int32_t kinoko_render_queue_size(void);
-int32_t kinoko_append_render_queue(int32_t object);
-void kinoko_draw_render_queue(int32_t camera);
+void kinoko_draw_render_queue(struct KinokoCamera* camera);
 #ifdef __cplusplus
 }
 #endif

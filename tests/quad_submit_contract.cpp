@@ -16,8 +16,8 @@ extern "C" {
 KinokoGraphics kinoko_graphics{};
 KinokoRenderer kinoko_renderer{};
 int32_t kinoko_texture_bind_stage(int32_t stage,int32_t texture) { calls.push_back(1);valid=valid && stage==0 && texture==17;return E_FAIL; }
-void retdec_trace_i32(const char *,int32_t) {}
-void retdec_trace_hresult(const char *,long) {}
+void kinoko_trace_i32(const char *,int32_t) {}
+void kinoko_trace_hresult(const char *,long) {}
 }
 static HRESULT STDMETHODCALLTYPE format(IDirect3DDevice9 *,DWORD fvf) {
     calls.push_back(2);valid=valid && fvf==324;return E_FAIL;

@@ -15,8 +15,8 @@
 #include <d3d9.h>
 
 extern "C" {
-void retdec_trace_i32(const char*, int32_t);
-void retdec_trace_squirrel_name(const char*, int32_t);
+void kinoko_trace_i32(const char*, int32_t);
+void kinoko_trace_squirrel_name(const char*, int32_t);
 
 }
 
@@ -27,22 +27,22 @@ using kinoko::native::RecordView;
 using RuntimeView = RecordView<RuntimeRecord>;
 
 struct DrawLayoutPrefix {
-    Address vtable;
+    const void* vtable;
     std::array<uint8_t, 304> unknown4;
     int32_t texture;
 };
 static_assert(offsetof(DrawLayoutPrefix, texture) == 308);
 int32_t float_bits(float value) { return load<int32_t>(&value); }
-Address method(int32_t object, unsigned index) {
-    const auto table = load<Address>(pointer(object));
-    return table ? load<Address>(pointer<unsigned char>(table) + index * sizeof(Address)) : 0;
+void* method(const void* object, unsigned index) {
+    const auto table = load<const unsigned char*>(object);
+    return table ? load<void*>(table + index * sizeof(void*)) : nullptr;
 }
 class DrawTarget final {
     bool selected_;
 public:
-    DrawTarget(Address target, IDirect3DDevice9* device) : selected_(target != 0) {
+    DrawTarget(KinokoActResource* target, IDirect3DDevice9* device) : selected_(target != 0) {
         if (!selected_) return;
-        const RecordView<TextureResourcePrefix> resource(pointer(target));
+        const RecordView<TextureResourcePrefix> resource(target);
         kinoko_set_render_target(resource.get(&TextureResourcePrefix::texture));
         // 452636/452659 clear the selected target to opaque black before
         // checking stage/ACT visibility. The original ignores these HRESULTs.
@@ -107,35 +107,35 @@ int32_t prepare_sprite(void* item, const BlitCommand& command) {
     target.set(&BlitSprite::sprite, sprite);
     return 0;
 }
-void trace_draw(int32_t self, const RuntimeView& resource, LONG actor_index, LONG trace_index) {
+void trace_draw(KinokoActRuntime* self, const RuntimeView& resource, LONG actor_index, LONG trace_index) {
     const auto act = resource.get(&RuntimeRecord::active_document);
     const DocumentView document(act);
     if (actor_index <= 64) {
-        retdec_trace_i32("4525d0:actor-index", actor_index);
-        retdec_trace_i32("4525d0:flag-68", load<int32_t>(resource.bytes(&RuntimeRecord::hidden)));
-        retdec_trace_i32("4525d0:flag-8", load<int32_t>(resource.bytes(&RuntimeRecord::stage_active)));
-        retdec_trace_i32("4525d0:field-10", address(resource.get(&RuntimeRecord::active_holder)));
-        retdec_trace_i32("4525d0:act", address(act));
+        kinoko_trace_i32("4525d0:actor-index", actor_index);
+        kinoko_trace_i32("4525d0:flag-68", load<int32_t>(resource.bytes(&RuntimeRecord::hidden)));
+        kinoko_trace_i32("4525d0:flag-8", load<int32_t>(resource.bytes(&RuntimeRecord::stage_active)));
+        kinoko_trace_i32("4525d0:field-10", address(resource.get(&RuntimeRecord::active_holder)));
+        kinoko_trace_i32("4525d0:act", address(act));
         if (act) {
-            retdec_trace_squirrel_name("4525d0:actor-name", address(kinoko_string_data((const void*)(document.bytes(&DocumentRecord::name)))));
-            retdec_trace_i32("4525d0:act-60", load<int32_t>(document.bytes(&DocumentRecord::visible)));
-            retdec_trace_i32("4525d0:act-begin", address(document.get(&DocumentRecord::layers).begin));
-            retdec_trace_i32("4525d0:act-end", address(document.get(&DocumentRecord::layers).end));
+            kinoko_trace_squirrel_name("4525d0:actor-name", address(kinoko_string_data((const void*)(document.bytes(&DocumentRecord::name)))));
+            kinoko_trace_i32("4525d0:act-60", load<int32_t>(document.bytes(&DocumentRecord::visible)));
+            kinoko_trace_i32("4525d0:act-begin", address(document.get(&DocumentRecord::layers).begin));
+            kinoko_trace_i32("4525d0:act-end", address(document.get(&DocumentRecord::layers).end));
         }
     }
     if (trace_index <= 8) {
-        retdec_trace("4525d0:live-entry");
-        retdec_trace_i32("4525d0:live-resource", self);
-        retdec_trace_i32("4525d0:live-act", address(act));
-        if (act) retdec_trace_squirrel_name("4525d0:live-act-name", address(kinoko_string_data((const void*)(document.bytes(&DocumentRecord::name)))));
-        retdec_trace_squirrel_name("4525d0:live-resource-name", address(kinoko_string_data((const void*)(resource.bytes(&RuntimeRecord::name)))));
+        kinoko_trace("4525d0:live-entry");
+        kinoko_trace_i32("4525d0:live-resource", address(self));
+        kinoko_trace_i32("4525d0:live-act", address(act));
+        if (act) kinoko_trace_squirrel_name("4525d0:live-act-name", address(kinoko_string_data((const void*)(document.bytes(&DocumentRecord::name)))));
+        kinoko_trace_squirrel_name("4525d0:live-resource-name", address(kinoko_string_data((const void*)(resource.bytes(&RuntimeRecord::name)))));
     }
 }
 }
 
-extern "C" int32_t kinoko_act_prepare_draw(int32_t self) {
+extern "C" int32_t kinoko_act_prepare_draw(KinokoActRuntime* self) {
     if (!self) return E_FAIL;
-    const RuntimeView resource(pointer(self));
+    const RuntimeView resource(self);
     if (resource.get(&RuntimeRecord::hidden)) return 0;
     kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION*>(resource.bytes(&RuntimeRecord::lock)));
     const auto act = resource.get(&RuntimeRecord::active_document);
@@ -145,10 +145,10 @@ extern "C" int32_t kinoko_act_prepare_draw(int32_t self) {
     int32_t result = 0;
     const auto layers = document.get(&DocumentRecord::layers);
     for (int32_t i = layer_distance(layers) - 1; i >= 0; --i) {
-        const auto layout = address(kinoko_act_layer_layout(pointer<KinokoActRuntime>(self), i));
+        const auto layout = kinoko_act_layer_layout(self, i);
         if (layout) {
             const auto update = method(layout, 7);
-            if (update && retdec_call_thiscall0_result(pointer(layout), pointer(update)) < 0) result = E_FAIL;
+            if (update && kinoko_call_thiscall0_result(layout, update) < 0) result = E_FAIL;
         }
     }
     const auto commands = kinoko_act_command_span((KinokoActRuntime*)(intptr_t)(self));
@@ -162,10 +162,10 @@ extern "C" int32_t kinoko_act_prepare_draw(int32_t self) {
     return result;
 }
 
-extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
+extern "C" int32_t kinoko_act_draw(KinokoActRuntime* self, float x, float y) {
     auto* device = kinoko_graphics.device;
     if (!self) return E_FAIL;
-    const RuntimeView resource(pointer(self));
+    const RuntimeView resource(self);
     if (resource.get(&RuntimeRecord::hidden)) return 0;
     static volatile LONG actor_trace_count, trace_count;
     const auto actor_index = InterlockedIncrement(&actor_trace_count);
@@ -185,17 +185,17 @@ extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
     DrawStates states(device);
     int32_t result = 0;
     for (int32_t i = layer_distance(layers) - 1; i >= 0; --i) {
-        const auto layout = address(kinoko_act_layer_layout(pointer<KinokoActRuntime>(self), i));
+        const auto layout = kinoko_act_layer_layout(self, i);
         if (!layout) continue;
         const auto draw = method(layout, 8);
         if (!draw) { result = E_FAIL; continue; }
-        const auto status = retdec_call_thiscall2_result(pointer(layout), pointer(draw), float_bits(draw_x), float_bits(draw_y));
+        const auto status = kinoko_call_thiscall2_result(layout, draw, float_bits(draw_x), float_bits(draw_y));
         if (trace_index <= 8) {
-            retdec_trace_i32("4525d0:live-x", float_bits(draw_x));
-            retdec_trace_i32("4525d0:live-y", float_bits(draw_y));
-            retdec_trace_i32("4525d0:live-layout", layout);
-            retdec_trace_i32("4525d0:live-texture", load<Address>(pointer(layout))==address(kinoko_string_layout_methods())?0:RecordView<DrawLayoutPrefix>(pointer(layout)).get(&DrawLayoutPrefix::texture));
-            retdec_trace_i32("4525d0:live-draw-result", status);
+            kinoko_trace_i32("4525d0:live-x", float_bits(draw_x));
+            kinoko_trace_i32("4525d0:live-y", float_bits(draw_y));
+            kinoko_trace_i32("4525d0:live-layout", address(layout));
+            kinoko_trace_i32("4525d0:live-texture", load<const void*>(layout)==kinoko_string_layout_methods()?0:RecordView<DrawLayoutPrefix>(layout).get(&DrawLayoutPrefix::texture));
+            kinoko_trace_i32("4525d0:live-draw-result", status);
         }
         if (status < 0) result = status;
     }
@@ -206,10 +206,10 @@ extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
                  item != kinoko_act_sprite_span((KinokoActRuntime*)(intptr_t)(self)).end; item += sizeof(BlitSprite)) {
                 const RecordView<BlitSprite> entry(item);
                 const auto command = entry.get(&BlitSprite::command);
-                const auto sprite = address(entry.bytes(&BlitSprite::sprite));
+                const auto sprite = entry.bytes(&BlitSprite::sprite);
                 set_blend(blit_device, command.blend);
                 const auto draw = method(sprite, 7);
-                if (draw && retdec_call_thiscall2_result(pointer(sprite), pointer(draw),
+                if (draw && kinoko_call_thiscall2_result(sprite, draw,
                     float_bits(draw_x + command.x), float_bits(draw_y + command.y)) < 0) result = E_FAIL;
             }
             kinoko_texture_bind_stage(0, 0);

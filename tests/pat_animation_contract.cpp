@@ -46,13 +46,13 @@ int32_t kinoko_reader_read_exact(KinokoArchiveReader *source,void *output,uint32
 }
 int32_t kinoko_texture_acquire(const char *name) { ++loads;loaded_path=name;return 2; }
 const void *kinoko_pat_frame_methods(void) { return nullptr; }
-void retdec_trace_i32(const char *,int32_t) {}
-void retdec_trace_squirrel_name(const char *,int32_t) {}
+void kinoko_trace_i32(const char *,int32_t) {}
+void kinoko_trace_squirrel_name(const char *,int32_t) {}
 }
 #define CHECK(x) do { if (!(x)) { std::fprintf(stderr,"PAT line %d: %s\n",__LINE__,#x);return 1; } } while(0)
 int main() {
     ManagerPrefix manager{};auto *receiver=reinterpret_cast<KinokoActorManager *>(&manager);
-    kinoko_animation_list_construct(address(&manager.animations));
+    kinoko_animation_list_construct((void*)(uintptr_t)(address(&manager.animations)));
     kinoko_integer_vector_construct((KinokoIntegerVector*)(&manager.textures));
     kinoko_integer_vector_append((KinokoIntegerVector*)(&manager.textures), 1);
     kinoko_texture_slots[1].width=64;kinoko_texture_slots[1].height=64;
@@ -69,8 +69,9 @@ int main() {
     CHECK(loaded_path=="data/player\\sprite.png");
     CHECK(manager.animations.count==2 && manager.animation_lookup.count==2);
     const auto lookup=manager.animation_lookup.owner;
-    const auto head_address=*kinoko_integer_map_find(lookup,20);
-    CHECK(*kinoko_integer_map_find(lookup,10)==head_address);
+    const auto head_pointer=kinoko_animation_find(receiver,20);
+    const auto head_address=address(head_pointer);
+    CHECK(kinoko_animation_find(receiver,10)==head_pointer);
     const auto head=kinoko::native::RecordView<AnimationRecord>(pointer<void>(head_address)).load();
     CHECK(head.duration_total==1 && head.left==-2 && head.bottom==8 && head.has_bounds);
     CHECK(head.next && head.previous==nullptr);
@@ -93,12 +94,12 @@ int main() {
     }
     CHECK(!kinoko_pat_read_animations(&stream,receiver,1));
     CHECK(manager.animations.count==3);
-    CHECK(kinoko_integer_map_find(lookup,40)==nullptr);
-    kinoko_integer_map_clear(lookup);
-    kinoko_clear_animation_list(address(&manager.animations));
+    CHECK(kinoko_animation_find(receiver,40)==nullptr);
+    kinoko_animation_lookup_clear(receiver);
+    kinoko_clear_animation_list((void*)(uintptr_t)(address(&manager.animations)));
     CHECK(manager.animations.count==0);
-    kinoko_clear_animation_list(address(&manager.animations));
-    kinoko_animation_list_destroy(address(&manager.animations));
-    kinoko_integer_vector_destroy((KinokoIntegerVector*)(&manager.textures));kinoko_integer_map_destroy(lookup);
+    kinoko_clear_animation_list((void*)(uintptr_t)(address(&manager.animations)));
+    kinoko_animation_list_destroy((void*)(uintptr_t)(address(&manager.animations)));
+    kinoko_integer_vector_destroy((KinokoIntegerVector*)(&manager.textures));kinoko_animation_lookup_destroy(receiver);
     std::puts("PASS: PAT byte alignment, resource base, aliases, linked takes, 3-axis signs and partial ownership");
 }

@@ -7,7 +7,7 @@ description: 6kinoko简单的逆向skill
 
 逆向6kinoko项目以提供的C反编译源码为基础，使用IDA MCP，并且不要忘记使用 ..\squirrel-2.2.2 源码的反汇编结果作为辅助。但若确定是squirrel相关的函数，你可以选择直接引入源码。生成后必须复制 6kinoko_*.dat 文件到 exe 所在目录，不能直接指定工作目录。在原版目录中还有 marisa[A-C].dat 是存档文件。
 
-主要逻辑在 .\src\decompiled\6kinoko_rebuilt.c 里，你尽量做到经过的函数完全相同（可以通过x64dbg MCP保证）。
+运行宿主已迁到 .\src\reconstructed\runtime_host.cpp，具名虚表在 runtime_method_tables.cpp；原始证据仍在 .\src\decompiled\6kinoko.exe.c 里，你尽量做到经过的函数完全相同（可以通过x64dbg MCP保证）。
 
 x32dbg/x64dbg 在 C:\Users\poker\AppData\Local\Microsoft\WinGet\Packages\x64dbg.x64dbg_Microsoft.Winget.Source_8wekyb3d8bbwe\release\x32\x32dbg.exe 里，使若丢失可以手动拉起进程。
 

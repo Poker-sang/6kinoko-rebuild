@@ -1,0 +1,8 @@
+{
+  "function_42b6d0": "kinoko_register_c2dlayout_class",
+  "function_446520": "kinoko_register_texture_resource_class",
+  "function_4495a0": "kinoko_register_render_target_class",
+  "function_41eff0": "kinoko_register_cact_layer_class",
+  "function_433c90": "kinoko_register_map_layout_class",
+  "function_42f350": "kinoko_register_chip_resource_class"
+}

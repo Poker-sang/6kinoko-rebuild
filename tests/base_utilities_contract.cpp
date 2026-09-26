@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <string>
 
-extern "C" { char* g767 = nullptr; }
+extern "C" { char* kinoko_game_window_slot = nullptr; }
 namespace {
 void require(bool value, const char* message) { if (!value) throw std::runtime_error(message); }
 void codecs() {

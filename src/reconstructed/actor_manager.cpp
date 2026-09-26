@@ -46,9 +46,8 @@ extern "C" KinokoActorManager *kinoko_actor_manager_construct(KinokoActorManager
     auto *pool=static_cast<KinokoActorPool *>(std::calloc(1,80));
     if (!pool || !kinoko_actor_pool_construct(pool)) return nullptr;
     state.set(&ManagerPrefix::pool,pool);
-    state.view(&ManagerPrefix::animation_lookup).set(&KinokoIntegerMapIndex::owner,
-        kinoko_integer_map_create());
-    kinoko_animation_list_construct(address(state.bytes(&ManagerPrefix::animations)));
+    kinoko_animation_lookup_construct(manager);
+    kinoko_animation_list_construct((void*)(uintptr_t)(address(state.bytes(&ManagerPrefix::animations))));
     kinoko_integer_vector_construct((KinokoIntegerVector*)(state.bytes(&ManagerPrefix::textures)));
     kinoko_priority_construct(state.bytes(&ManagerPrefix::actors));
     for (int32_t i=0;i<4;++i) {
@@ -112,7 +111,7 @@ extern "C" int32_t kinoko_actor_manager_reindex(KinokoActorManager *manager,Kino
 extern "C" void *kinoko_actor_manager_clear_actors(KinokoActorManager *manager) {
     const ManagerView state(manager);
     auto *index=state.bytes(&ManagerPrefix::actors);
-    auto *sentinel=pointer<void>(state.get(&ManagerPrefix::actors).head);
+    auto *sentinel=state.get(&ManagerPrefix::actors).head;
     if (!sentinel) return nullptr;
     for (auto *entry=kinoko_actor_priority_first(index);entry!=sentinel;) {
         if (auto *actor=kinoko_actor_priority_value(entry)) {
@@ -150,12 +149,12 @@ extern "C" int32_t kinoko_actor_manager_refresh(KinokoActorManager *manager) {
         // Both buffers grow together, based on the iteration buffer alone.
         for (auto member:{&ManagerPrefix::iteration,&ManagerPrefix::callback_candidates}) {
             const auto buffer=state.view(member);
-            if (tree.count>INT32_MAX/8 || !kinoko_native_buffer_resize(address(buffer.data()),tree.count*8u)) return 0;
+            if (tree.count>INT32_MAX/8 || !kinoko_native_buffer_resize((void*)(buffer.data()), tree.count*8u)) return 0;
         }
     }
     auto **actors=state.get(&ManagerPrefix::iteration).begin;
     auto *index=state.bytes(&ManagerPrefix::actors);
-    auto *sentinel=pointer<void>(tree.head);
+    auto *sentinel=tree.head;
     int32_t count=0,back=0,middle=0,front=0;
     for (auto *entry=kinoko_actor_priority_first(index);entry!=sentinel;) {
         auto *actor=kinoko_actor_priority_value(entry);

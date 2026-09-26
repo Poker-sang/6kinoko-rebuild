@@ -41,7 +41,7 @@ extern "C" KinokoActDocument *kinoko_act_document_initialize(KinokoActDocument *
         string.set(&StringRecord::length, uint32_t{0});
         *string.bytes(&StringRecord::characters) = 0;
     }
-    retdec_construct_cact_script(address(view.bytes(&DocumentRecord::script)));
+    (int32_t)(intptr_t)kinoko_construct_cact_script((void*)(view.bytes(&DocumentRecord::script)));
     view.set(&DocumentRecord::layers, kinoko::act::DocumentPointerSpan<KinokoActLayer>{});
     view.set(&DocumentRecord::resources, kinoko::act::DocumentPointerSpan<kinoko::act::ResourceRecord>{});
     view.set(&DocumentRecord::resolution_ms, int32_t{16});
@@ -89,14 +89,14 @@ extern "C" int32_t kinoko_act_document_load(KinokoActDocument *document, const c
     kinoko_reader_seek_relative(borrowed_reader, payload_offset);
 
     // Retain these calls in quiet builds: only the diagnostic sink is silent.
-    retdec_trace_i32("act:header-magic", static_cast<int32_t>(magic));
-    retdec_trace_i32("act:header-version", static_cast<int32_t>(version));
-    retdec_trace_i32("act:header-offset", static_cast<int32_t>(payload_offset));
+    kinoko_trace_i32("act:header-magic", static_cast<int32_t>(magic));
+    kinoko_trace_i32("act:header-version", static_cast<int32_t>(version));
+    kinoko_trace_i32("act:header-offset", static_cast<int32_t>(payload_offset));
     using ReadDocument = uint8_t (__thiscall *)(KinokoActDocument *, KinokoArchiveReader **, int32_t);
     const auto *table = static_cast<const unsigned char *>(view_of(document).get(&DocumentRecord::vtable));
     const auto read = kinoko::legacy::load<ReadDocument>(table + sizeof(void *));
     const auto result = read(document, &reader_slot, static_cast<int32_t>(version));
-    retdec_trace_i32("act:load-result", result);
+    kinoko_trace_i32("act:load-result", result);
     return result; // reader closes after the payload loader/last trace, once
 }
 

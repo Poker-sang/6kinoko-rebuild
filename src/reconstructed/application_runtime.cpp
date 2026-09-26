@@ -21,7 +21,7 @@
 #include <cstring>
 
 extern "C" {
-void retdec_trace(const char*);
+void kinoko_trace(const char*);
 }
 
 namespace kinoko::application {
@@ -63,7 +63,7 @@ void update_statistics() {
 DWORD WINAPI game_loop(void*) {
     // This is a timer-registry borrow: unregister it, never close it separately.
     const HANDLE frame_event = kinoko_frame_timer_register();
-    retdec_trace("game:entry");
+    kinoko_trace("game:entry");
     while (state.is_running()) {
         update_statistics();
         update_frame();
@@ -73,7 +73,7 @@ DWORD WINAPI game_loop(void*) {
         else Sleep(16); // Retained reconstruction fallback for event allocation failure.
     }
     if (frame_event) kinoko_frame_timer_unregister(frame_event);
-    retdec_trace("game:exit");
+    kinoko_trace("game:exit");
     return 0;
 }
 DWORD WINAPI game_worker(void*) {

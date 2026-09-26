@@ -15,13 +15,13 @@
 // Real source VM, SqPlus references, serializer, Windows file I/O and codec.
 // Only unrelated game host/diagnostic ports are supplied by this fixture.
 extern "C" {
-char* g644 = nullptr;
-int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
-int32_t kinoko_native_void_type(void) { return 0x13572468; }
-void retdec_trace(const char*) {}
-void retdec_trace_i32(const char*, int32_t) {}
-void retdec_trace_squirrel_name(const char*, int32_t) {}
-void _3f__3f_3_40_YAXPAX_40_Z(int32_t* p) { std::free(p); }
+struct SQVM *kinoko_primary_vm = nullptr;
+const void* kinoko_squirrel_object_vtable(void) { return reinterpret_cast<const void*>(0x12345678); }
+void* kinoko_native_void_type(void) { return reinterpret_cast<void*>(0x13572468); }
+void kinoko_trace(const char*) {}
+void kinoko_trace_i32(const char*, int32_t) {}
+void kinoko_trace_squirrel_name(const char*, int32_t) {}
+void kinoko_host_free_allocation(int32_t* p) { std::free(p); }
 }
 namespace {
 using Bytes = std::vector<unsigned char>;
@@ -31,8 +31,8 @@ void require(bool ok, const char* message) {
 class Machine {
 public:
     HSQUIRRELVM vm = sq_open(128);
-    Machine() { require(vm != nullptr, "open VM"); g644 = reinterpret_cast<char*>(vm); }
-    ~Machine() { sq_close(vm); g644 = nullptr; }
+    Machine() { require(vm != nullptr, "open VM"); kinoko_primary_vm = reinterpret_cast<SQVM*>(vm); }
+    ~Machine() { sq_close(vm); kinoko_primary_vm = nullptr; }
 };
 // Never touch the original game's marisa[A-C].dat. Each run gets its own directory.
 class Files {
@@ -69,10 +69,8 @@ bool file_call(HSQUIRRELVM vm, const std::string& path, const char* table, bool 
     // The original by-value SqPlus argument transfers this external reference.
     sq_addref(vm,&value); sq_settop(vm,top);
     const auto result=save
-        ? kinoko_savedata_save_file_entry(path.c_str(),kinoko_squirrel_object_vtable(),
-            value._type,kinoko::script::data_bits(value))
-        : kinoko_savedata_load_file_entry(path.c_str(),kinoko_squirrel_object_vtable(),
-            value._type,kinoko::script::data_bits(value));
+        ? kinoko_savedata_save_file_entry(path.c_str(), (const void*)(uintptr_t)(kinoko_squirrel_object_vtable()), value._type, kinoko::script::data_bits(value))
+        : kinoko_savedata_load_file_entry(path.c_str(), (const void*)(uintptr_t)(kinoko_squirrel_object_vtable()), value._type, kinoko::script::data_bits(value));
     require(sq_gettop(vm)==top,"file call stack balance");
     return result!=0;
 }

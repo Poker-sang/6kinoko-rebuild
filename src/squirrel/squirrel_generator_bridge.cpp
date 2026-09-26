@@ -20,22 +20,22 @@ template <typename T> T *pointer(int32_t address) {
 
 // Original 490370/490630 match the supplied 2.2.2 generator implementation.
 // In particular Resume saves the CALLER's top before installing the new frame.
-extern "C" int32_t kinoko_sq_generator_yield(int32_t generator, int32_t vm) {
-    return pointer<SQGenerator>(generator)->Yield(pointer<SQVM>(vm));
+extern "C" int32_t kinoko_sq_generator_yield(SQGenerator* generator, SQVM* vm) {
+    return generator->Yield(vm);
 }
 
-extern "C" int32_t kinoko_sq_generator_resume(int32_t generator, int32_t vm, int32_t target) {
-    return pointer<SQGenerator>(generator)->Resume(pointer<SQVM>(vm), target);
+extern "C" int32_t kinoko_sq_generator_resume(SQGenerator* generator, SQVM* vm, int32_t target) {
+    return generator->Resume(vm, target);
 }
 
-extern "C" void kinoko_sq_generator_kill(int32_t generator) {
-    pointer<SQGenerator>(generator)->Kill();
+extern "C" void kinoko_sq_generator_kill(SQGenerator* generator) {
+    generator->Kill();
 }
 
 // Original 4A36D0 / sqbaselib.cpp::array_remove. Retain the result through
 // vector compaction, then push it before the local reference is released.
-extern "C" int32_t kinoko_sq_array_remove(int32_t vm) {
-    auto *v = pointer<SQVM>(vm);
+extern "C" int32_t kinoko_sq_array_remove(SQVM* vm) {
+    auto *v = vm;
     const SQObjectPtr &index = stack_get(v, 2);
     if (!sq_isnumeric(index))
         return sq_throwerror(v, _SC("wrong type"));

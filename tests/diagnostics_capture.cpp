@@ -71,9 +71,9 @@ int main() {
     if (kinoko_diagnostics_accepts("48a430:type") ||
         !kinoko_diagnostics_accepts("stagevm:failure-error"))
         return 4;
-    retdec_trace("stagevm:failure-source:test fixture");
-    retdec_trace("stagevm:failure-error:first script failure");
-    retdec_trace("stagevm:failure-error:second script failure");
+    kinoko_trace("stagevm:failure-source:test fixture");
+    kinoko_trace("stagevm:failure-error:first script failure");
+    kinoko_trace("stagevm:failure-error:second script failure");
     if (!handled_probe(false) || !handled_probe(false) || !handled_probe(true))
         return 1;
     kinoko_diagnostics_shutdown();

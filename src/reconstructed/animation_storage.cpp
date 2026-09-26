@@ -4,6 +4,8 @@
 #include "kinoko/integer_vector.h"
 #include "kinoko/legacy_memory.hpp"
 #include <list>
+#include <map>
+struct KinokoAnimationLookup { std::map<int32_t, KinokoAnimation*> values; };
 #include <vector>
 #include <memory>
 namespace {
@@ -29,7 +31,7 @@ using Animations=std::list<std::unique_ptr<Animation>>;
 struct ListStorage { Animations *owner; uint32_t count; };
 static_assert(sizeof(ListStorage)==sizeof(ListIndex));
 using ListView=RecordView<ListStorage>;
-ListView view(int32_t list) { return ListView(pointer<void>(list)); }
+ListView view(void* list) { return ListView(list); }
 void adopt(const ListView list,Animation *animation) {
     auto *owner=list.get(&ListStorage::owner);
     if (!owner) {
@@ -52,38 +54,49 @@ extern "C" void kinoko_animation_release(KinokoAnimation *animation) {
 extern "C" void kinoko_animation_manager_adopt(KinokoActorManager *manager,KinokoAnimation *animation) {
     adopt(ListView(ManagerView(manager).bytes(&ManagerPrefix::animations)),reinterpret_cast<Animation *>(animation));
 }
+extern "C" void kinoko_animation_lookup_construct(KinokoActorManager* manager) {
+    ManagerView(manager).view(&ManagerPrefix::animation_lookup).set(&AnimationIndex::owner,new KinokoAnimationLookup);
+}
+extern "C" void kinoko_animation_lookup_clear(KinokoActorManager* manager) {
+    const auto index=ManagerView(manager).view(&ManagerPrefix::animation_lookup);
+    if(auto* owner=index.get(&AnimationIndex::owner)) owner->values.clear();
+    index.set(&AnimationIndex::count,int32_t{0});
+}
+extern "C" void kinoko_animation_lookup_destroy(KinokoActorManager* manager) {
+    const auto index=ManagerView(manager).view(&ManagerPrefix::animation_lookup);
+    delete index.get(&AnimationIndex::owner);
+    index.set(&AnimationIndex::owner,static_cast<KinokoAnimationLookup*>(nullptr));
+    index.set(&AnimationIndex::count,int32_t{0});
+}
 extern "C" int32_t kinoko_animation_bind(KinokoActorManager *manager,int32_t take,KinokoAnimation *animation) {
     const auto index=ManagerView(manager).view(&ManagerPrefix::animation_lookup);
-    auto head=index.get(&KinokoIntegerMapIndex::owner);
-    if (!head) {
-        head=kinoko_integer_map_create();index.set(&KinokoIntegerMapIndex::owner,head);
+    auto* owner=index.get(&AnimationIndex::owner);
+    if (!owner) {
+        owner=new KinokoAnimationLookup; index.set(&AnimationIndex::owner,owner);
     }
-    // The legacy map owns integer slots, not the pointed-to animations.
-    const auto result=kinoko_integer_map_put(head,take,address(animation));
-    index.set(&KinokoIntegerMapIndex::count,static_cast<int32_t>(kinoko_integer_map_size(head)));
-    return result!=0;
+    // Nodes own only borrowed animation pointers. The animation list owns data.
+    owner->values[take]=animation;
+    index.set(&AnimationIndex::count,static_cast<int32_t>(owner->values.size()));
+    return 1;
 }
 extern "C" KinokoAnimation *kinoko_animation_find(KinokoActorManager *manager,int32_t take) {
-    const auto head=ManagerView(manager).get(&ManagerPrefix::animation_lookup).owner;
-    if (!head) return nullptr;
-    const auto slot=kinoko_integer_map_find(head,take);
-    return slot?pointer<KinokoAnimation>(*slot):nullptr;
+    const auto* owner=ManagerView(manager).get(&ManagerPrefix::animation_lookup).owner;
+    if (!owner) return nullptr;
+    const auto found=owner->values.find(take);
+    return found==owner->values.end()?nullptr:found->second;
 }
 extern "C" void kinoko_animation_add_texture(KinokoActorManager *manager,int32_t handle) {
     kinoko_integer_vector_append((KinokoIntegerVector*)(ManagerView(manager).bytes(&ManagerPrefix::textures)), handle);
 }
-// Legacy container entry points retain their binary integer slots.
-extern "C" void kinoko_animation_list_construct(int32_t list) {
+// Container entry points receive the owner slot directly.
+extern "C" void kinoko_animation_list_construct(void* list) {
     view(list).set(&ListStorage::owner,new Animations);view(list).set(&ListStorage::count,uint32_t{0});
 }
-extern "C" void kinoko_animation_list_destroy(int32_t list) {
+extern "C" void kinoko_animation_list_destroy(void* list) {
     delete view(list).get(&ListStorage::owner);
     view(list).set(&ListStorage::owner,static_cast<Animations *>(nullptr));view(list).set(&ListStorage::count,uint32_t{0});
 }
-extern "C" int32_t kinoko_animation_create(uint32_t frames) { return address(kinoko_animation_allocate(frames)); }
-extern "C" void kinoko_animation_discard(int32_t animation) { kinoko_animation_release(pointer<KinokoAnimation>(animation)); }
-extern "C" void kinoko_animation_adopt(int32_t list,int32_t animation) { adopt(view(list),pointer<Animation>(animation)); }
-extern "C" int32_t kinoko_clear_animation_list(int32_t list) {
+extern "C" int32_t kinoko_clear_animation_list(void* list) {
     if (list) {
         if (auto *owner=view(list).get(&ListStorage::owner)) owner->clear();
         view(list).set(&ListStorage::count,uint32_t{0});

@@ -11,7 +11,7 @@
 #include <cstring>
 
 extern "C" {
-extern unsigned char g327, g37;
+extern unsigned char kinoko_map_layout_methods_storage, kinoko_map_render_layer_methods_storage;
 }
 
 using namespace kinoko::map;
@@ -30,7 +30,7 @@ extern "C" KinokoActLayout *kinoko_map_lookup_layout(KinokoMapManager *storage, 
         if (!borrowed_layout) continue;
         const LayoutView layout(borrowed_layout);
         auto *layer = layout.get(&LayoutRecord::owning_layer);
-        if (layout.get(&LayoutRecord::methods) != &g327 || !layer) continue;
+        if (layout.get(&LayoutRecord::methods) != &kinoko_map_layout_methods_storage || !layer) continue;
         const kinoko::legacy::StringView layer_name(LayerView(layer).bytes(&LayerRecord::name));
         if (std::strcmp(layer_name.data(), name) == 0)
             return borrowed_layout;
@@ -38,16 +38,7 @@ extern "C" KinokoActLayout *kinoko_map_lookup_layout(KinokoMapManager *storage, 
     return 0;
 }
 
-extern "C" int32_t kinoko_map_find_layout(int32_t manager_address, const char *name) {
-    return kinoko::legacy::address(kinoko_map_lookup_layout(
-        kinoko::legacy::pointer<KinokoMapManager>(manager_address), name));
-}
 
-extern "C" int32_t kinoko_map_create_render_layer(int32_t manager_address,
-                                                   const char *name) {
-    return kinoko::legacy::address(kinoko_map_make_render_layer(
-        kinoko::legacy::pointer<KinokoMapManager>(manager_address), name));
-}
 extern "C" KinokoRenderLayer *kinoko_map_make_render_layer(KinokoMapManager *manager,
                                                           const char *name) {
     auto *layout = kinoko_map_lookup_layout(manager, name);
@@ -69,7 +60,7 @@ static_assert(offsetof(ResourceMethods, query) == 8);
 static_assert(offsetof(LayoutMethods, set_layer) == 24);
 }
 
-extern "C" retdec_mcd_data *kinoko_map_layer_chip_data(KinokoActLayout *layout) {
+extern "C" kinoko_mcd_data *kinoko_map_layer_chip_data(KinokoActLayout *layout) {
     if (!layout) return nullptr;
     auto *layer = LayoutView(layout).get(&LayoutRecord::owning_layer);
     if (!layer) return nullptr;
@@ -83,13 +74,13 @@ extern "C" retdec_mcd_data *kinoko_map_layer_chip_data(KinokoActLayout *layout) 
     return ChipResourceView(chip).get(&ChipResourceRecord::data);
 }
 
-extern "C" retdec_mcd_data *kinoko_map_cached_chip_data(KinokoActLayout *layout) {
+extern "C" kinoko_mcd_data *kinoko_map_cached_chip_data(KinokoActLayout *layout) {
     if (!layout) return nullptr;
     auto *resource = LayoutView(layout).get(&LayoutRecord::cached_chip_resource);
     return resource ? ChipResourceView(resource).get(&ChipResourceRecord::data) : nullptr;
 }
 
-extern "C" retdec_mcd_data *kinoko_map_query_chip_data(KinokoActLayout *layout) {
+extern "C" kinoko_mcd_data *kinoko_map_query_chip_data(KinokoActLayout *layout) {
     if (!layout) return nullptr;
     const LayoutView map(layout);
     if (!map.get(&LayoutRecord::cached_chip_resource)) {

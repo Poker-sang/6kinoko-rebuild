@@ -48,7 +48,7 @@ struct LayerStorageRecord {
     uint16_t visibility_flags;
     std::array<uint8_t, 2> padding142;
     std::array<uint32_t, 3> position;
-    std::array<uint8_t, 12> unknown156;
+    std::array<uint8_t, 12> origin_bits;
     std::array<uint32_t, 3> previous_position;
     LayerListRecord keys, timelines;
     ScriptStorageRecord script;

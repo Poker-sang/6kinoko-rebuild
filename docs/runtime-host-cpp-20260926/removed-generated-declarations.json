@@ -1,0 +1,2037 @@
+{
+  "basis": "No identifier reference outside removed declaration in active src/include/tests (original evidence excluded); repeated to fixed point. No runtime/test execution.",
+  "items": [
+    {
+      "name": "int3_t",
+      "declaration": "// ---------------- Integer Types Definitions -----------------\n\ntypedef int8_t int3_t;"
+    },
+    {
+      "name": "int80_t",
+      "declaration": "typedef int64_t int80_t;"
+    },
+    {
+      "name": "int864_t",
+      "declaration": "typedef int64_t int864_t;"
+    },
+    {
+      "name": "retdec_EXCEPTION_POINTERS",
+      "declaration": "// ------------------------ Structures ------------------------\n\nstruct retdec_EXCEPTION_POINTERS {\n    struct retdec_EXCEPTION_RECORD * e0;\n    struct retdec_CONTEXT * e1;\n};"
+    },
+    {
+      "name": "_IO_FILE",
+      "declaration": "struct _IO_FILE {\n    int32_t e0;\n};"
+    },
+    {
+      "name": "retdec_OVERLAPPED",
+      "declaration": "struct retdec_OVERLAPPED {\n    int32_t e0;\n    int32_t e1;\n    int32_t e2;\n    int32_t * e3;\n};"
+    },
+    {
+      "name": "retdec_SECURITY_ATTRIBUTES",
+      "declaration": "struct retdec_SECURITY_ATTRIBUTES {\n    int32_t e0;\n    int32_t * e1;\n    bool e2;\n};"
+    },
+    {
+      "name": "retdec_WIN32_FIND_DATAA",
+      "declaration": "struct retdec_WIN32_FIND_DATAA {\n    int32_t e0;\n    struct retdec_FILETIME e1;\n    struct retdec_FILETIME e2;\n    struct retdec_FILETIME e3;\n    int32_t e4;\n    int32_t e5;\n    int32_t e6;\n    int32_t e7;\n    char e8[1];\n    char e9[14];\n    int32_t e10;\n    int32_t e11;\n    int16_t e12;\n};"
+    },
+    {
+      "name": "__jmp_buf_tag",
+      "declaration": "struct __jmp_buf_tag {\n    int32_t e0[8];\n    int32_t e1;\n    struct _TYPEDEF___sigset_t e2;\n};"
+    },
+    {
+      "name": "lconv",
+      "declaration": "struct lconv {\n    char * e0;\n    char * e1;\n    char * e2;\n    char * e3;\n    char * e4;\n    char * e5;\n    char * e6;\n    char * e7;\n    char * e8;\n    char * e9;\n    char e10;\n    char e11;\n    char e12;\n    char e13;\n    char e14;\n    char e15;\n    char e16;\n    char e17;\n    char e18;\n    char e19;\n    char e20;\n    char e21;\n    char e22;\n    char e23;\n};"
+    },
+    {
+      "name": "retdec_GLYPHMETRICS",
+      "declaration": "struct retdec_GLYPHMETRICS {\n    int32_t e0;\n    int32_t e1;\n    struct retdec_tagPOINT e2;\n    int16_t e3;\n    int16_t e4;\n};"
+    },
+    {
+      "name": "retdec_tagMSG",
+      "declaration": "struct retdec_tagMSG {\n    int32_t * e0;\n    int32_t e1;\n    int32_t e2;\n    int32_t e3;\n    int32_t e4;\n    struct retdec_tagPOINT e5;\n};"
+    },
+    {
+      "name": "retdec_tagCANDIDATEFORM",
+      "declaration": "struct retdec_tagCANDIDATEFORM {\n    int32_t e0;\n    int32_t e1;\n    struct retdec_tagPOINT e2;\n    struct retdec_tagRECT e3;\n};"
+    },
+    {
+      "name": "retdec_tagTEXTMETRICA",
+      "declaration": "struct retdec_tagTEXTMETRICA {\n    int32_t e0;\n    int32_t e1;\n    int32_t e2;\n    int32_t e3;\n    int32_t e4;\n    int32_t e5;\n    int32_t e6;\n    int32_t e7;\n    int32_t e8;\n    int32_t e9;\n    int32_t e10;\n    char e11;\n    char e12;\n    char e13;\n    char e14;\n    char e15;\n    char e16;\n    char e17;\n    char e18;\n    char e19;\n};"
+    },
+    {
+      "name": "retdec_tagWINDOWINFO",
+      "declaration": "struct retdec_tagWINDOWINFO {\n    int32_t e0;\n    struct retdec_tagRECT e1;\n    struct retdec_tagRECT e2;\n    int32_t e3;\n    int32_t e4;\n    int32_t e5;\n    int32_t e6;\n    int32_t e7;\n    int16_t e8;\n    int16_t e9;\n};"
+    },
+    {
+      "name": "retdec_tagWNDCLASSEXA",
+      "declaration": "struct retdec_tagWNDCLASSEXA {\n    int32_t e0;\n    int32_t e1;\n    int32_t (*e2)(int32_t *, int32_t, int32_t, int32_t);\n    int32_t e3;\n    int32_t e4;\n    int32_t * e5;\n    int32_t * e6;\n    int32_t * e7;\n    int32_t * e8;\n    char * e9;\n    char * e10;\n    int32_t * e11;\n};"
+    },
+    {
+      "name": "vtable_4d5484_type",
+      "declaration": "struct vtable_4d5484_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4d55a4_type",
+      "declaration": "struct vtable_4d55a4_type {\n    int32_t (*e0)();\n    int32_t (*e1)();\n};"
+    },
+    {
+      "name": "vtable_4d55bc_type",
+      "declaration": "struct vtable_4d55bc_type {\n    int32_t (*e0)();\n    int32_t (*e1)();\n};"
+    },
+    {
+      "name": "vtable_4d5878_type",
+      "declaration": "struct vtable_4d5878_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n};"
+    },
+    {
+      "name": "vtable_4d5898_type",
+      "declaration": "struct vtable_4d5898_type {\n    int32_t (*e0)(char);\n    uint32_t (__fastcall *e1)(KinokoColoredQuad *, void *, uint32_t);\n    uint32_t (__fastcall *e2)(KinokoColoredQuad *, void *, const uint32_t *);\n    uint32_t (__fastcall *e3)(KinokoColoredQuad *, void *, uint32_t);\n};"
+    },
+    {
+      "name": "vtable_4d5924_type",
+      "declaration": "struct vtable_4d5924_type {\n    int32_t (*e0)();\n    int32_t (*e1)();\n};"
+    },
+    {
+      "name": "vtable_4d5a68_type",
+      "declaration": "struct vtable_4d5a68_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n};"
+    },
+    {
+      "name": "vtable_4d5adc_type",
+      "declaration": "struct vtable_4d5adc_type {\n    int32_t (*e0)();\n    int32_t (*e1)();\n};"
+    },
+    {
+      "name": "vtable_4d5ba8_type",
+      "declaration": "struct vtable_4d5ba8_type {\n    int32_t (*e0)();\n    int32_t (*e1)();\n};"
+    },
+    {
+      "name": "vtable_4d5e88_type",
+      "declaration": "struct vtable_4d5e88_type {\n    int32_t (*e0)();\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n    int32_t (*e4)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4d9fa0_type",
+      "declaration": "struct vtable_4d9fa0_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4d9fb4_type",
+      "declaration": "/* RetDec emitted the vtable at 0x4d9fb4 as a single dword (g67),\n   although the original image contains four virtual slots. */\nstruct vtable_4d9fb4_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4d9fc8_type",
+      "declaration": "struct vtable_4d9fc8_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)();\n    int32_t (*e4)(int32_t, int32_t, int32_t);\n};"
+    },
+    {
+      "name": "vtable_4da160_type",
+      "declaration": "struct vtable_4da160_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4da330_type",
+      "declaration": "struct vtable_4da330_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n};"
+    },
+    {
+      "name": "vtable_4da33c_type",
+      "declaration": "/* The dword RetDec called g71 is the first slot of this two-slot table. */\nstruct vtable_4da33c_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n};"
+    },
+    {
+      "name": "vtable_4da4e4_type",
+      "declaration": "struct vtable_4da4e4_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4da554_type",
+      "declaration": "struct vtable_4da554_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4da87c_type",
+      "declaration": "struct vtable_4da87c_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)();\n    int32_t (*e4)(int32_t, int32_t, int32_t);\n};"
+    },
+    {
+      "name": "vtable_4da894_type",
+      "declaration": "struct vtable_4da894_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)();\n    int32_t (*e4)(int32_t, int32_t, int32_t);\n};"
+    },
+    {
+      "name": "vtable_4da8ac_type",
+      "declaration": "struct vtable_4da8ac_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4da958_type",
+      "declaration": "struct vtable_4da958_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n};"
+    },
+    {
+      "name": "vtable_4db71c_type",
+      "declaration": "struct vtable_4db71c_type {\n    int32_t (*e0)();\n    int32_t (*e1)();\n};"
+    },
+    {
+      "name": "vtable_4e4fbc_type",
+      "declaration": "struct vtable_4e4fbc_type {\n    int32_t (*e0)(int32_t, int32_t);\n    int32_t (*e1)(int32_t, int32_t);\n    int32_t (*e2)();\n    int32_t (*e3)();\n    int32_t (*e4)();\n    int32_t (*e5)(int32_t, int32_t);\n    int32_t (*e6)();\n    int32_t (*e7)();\n    int32_t (*e8)(char);\n};"
+    },
+    {
+      "name": "vtable_4e50e4_type",
+      "declaration": "struct vtable_4e50e4_type {\n    int32_t (*e0)(int32_t, int32_t);\n    int32_t (*e1)(int32_t, int32_t);\n    int32_t (*e2)();\n    int32_t (*e3)();\n    int32_t (*e4)();\n    int32_t (*e5)(int32_t, int32_t);\n    int32_t (*e6)();\n    int32_t (*e7)();\n    int32_t (*e8)(char);\n};"
+    },
+    {
+      "name": "vtable_4eb330_type",
+      "declaration": "struct vtable_4eb330_type {\n    int32_t (__fastcall *e0)(int32_t, void *, int32_t);\n    int32_t (__fastcall *e1)(int32_t, void *);\n    int32_t (__fastcall *e2)(int32_t, void *, int32_t);\n};"
+    },
+    {
+      "name": "vtable_4eb45c_type",
+      "declaration": "struct vtable_4eb45c_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)(int32_t);\n    int32_t (*e2)(int16_t, int16_t);\n    int32_t (__fastcall *e3)(int32_t, void *, uint32_t);\n    int32_t (*e4)();\n};"
+    },
+    {
+      "name": "vtable_4eb59c_type",
+      "declaration": "struct vtable_4eb59c_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)(int32_t);\n    int32_t (*e2)(int16_t, int16_t);\n    int32_t (__fastcall *e3)(int32_t, void *, uint32_t);\n    int32_t (*e4)();\n};"
+    },
+    {
+      "name": "vtable_4eb5cc_type",
+      "declaration": "struct vtable_4eb5cc_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)(int32_t);\n    int32_t (*e2)(int16_t, int16_t);\n    int32_t (__fastcall *e3)(int32_t, void *, uint32_t);\n    int32_t (*e4)();\n};"
+    },
+    {
+      "name": "vtable_4eb5fc_type",
+      "declaration": "struct vtable_4eb5fc_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)(int32_t);\n    int32_t (*e2)(int16_t, int16_t);\n    int32_t (__fastcall *e3)(int32_t, void *, uint32_t);\n    int32_t (*e4)();\n};"
+    },
+    {
+      "name": "vtable_4eb6f0_type",
+      "declaration": "struct vtable_4eb6f0_type {\n    int32_t (*e0)(int32_t, int32_t);\n    int32_t (*e1)(char);\n};"
+    },
+    {
+      "name": "vtable_4eb7d8_type",
+      "declaration": "struct vtable_4eb7d8_type {\n    int32_t (*e0)(int32_t, int32_t);\n    int32_t (*e1)(char);\n};"
+    },
+    {
+      "name": "vtable_4ebed0_type",
+      "declaration": "struct vtable_4ebed0_type {\n    int32_t (*e0)(int32_t);\n    int32_t (*e1)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ebf88_type",
+      "declaration": "struct vtable_4ebf88_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ebfb0_type",
+      "declaration": "struct vtable_4ebfb0_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ec138_type",
+      "declaration": "struct vtable_4ec138_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ec22c_type",
+      "declaration": "struct vtable_4ec22c_type {\n    int32_t (*e0)(int32_t);\n    int32_t (*e1)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ec2c4_type",
+      "declaration": "struct vtable_4ec2c4_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ec2ec_type",
+      "declaration": "struct vtable_4ec2ec_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ec3c8_type",
+      "declaration": "struct vtable_4ec3c8_type {\n    int32_t (*e0)(int32_t);\n    int32_t (*e1)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ec440_type",
+      "declaration": "struct vtable_4ec440_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ec5a8_type",
+      "declaration": "struct vtable_4ec5a8_type {\n    int32_t (*e0)(int32_t);\n    int32_t (*e1)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ec640_type",
+      "declaration": "struct vtable_4ec640_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ec668_type",
+      "declaration": "struct vtable_4ec668_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ec834_type",
+      "declaration": "struct vtable_4ec834_type {\n    int32_t (__fastcall *e0)(int32_t, void *, int32_t);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ec844_type",
+      "declaration": "struct vtable_4ec844_type {\n    int32_t (__fastcall *e0)(int32_t, void *, int32_t);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ec884_type",
+      "declaration": "struct vtable_4ec884_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ec8ac_type",
+      "declaration": "struct vtable_4ec8ac_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ec954_type",
+      "declaration": "struct vtable_4ec954_type {\n    int32_t (*e0)(int32_t);\n    int32_t (*e1)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ec9b4_type",
+      "declaration": "struct vtable_4ec9b4_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ecc4c_type",
+      "declaration": "struct vtable_4ecc4c_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ecc74_type",
+      "declaration": "struct vtable_4ecc74_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ecd84_type",
+      "declaration": "struct vtable_4ecd84_type {\n    int32_t (__fastcall *e0)(int32_t, void *, int32_t);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ecd94_type",
+      "declaration": "struct vtable_4ecd94_type {\n    int32_t (__fastcall *e0)(int32_t, void *, int32_t);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ecdec_type",
+      "declaration": "struct vtable_4ecdec_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ece14_type",
+      "declaration": "struct vtable_4ece14_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4eceb8_type",
+      "declaration": "struct vtable_4eceb8_type {\n    int32_t (*e0)(int32_t);\n    int32_t (*e1)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ecf58_type",
+      "declaration": "struct vtable_4ecf58_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ecf80_type",
+      "declaration": "struct vtable_4ecf80_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ed04c_type",
+      "declaration": "struct vtable_4ed04c_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)(int32_t);\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)();\n    int32_t (*e4)();\n    int32_t (*e5)(int32_t, int32_t);\n    int32_t (*e6)();\n    int32_t (*e7)(char);\n    int32_t (*e8)(int32_t);\n    int32_t (*e9)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ed174_type",
+      "declaration": "struct vtable_4ed174_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ed364_type",
+      "declaration": "struct vtable_4ed364_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t, int32_t);\n    int32_t (*e3)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ed394_type",
+      "declaration": "struct vtable_4ed394_type {\n    int32_t (*e0)(char);\n};"
+    },
+    {
+      "name": "vtable_4ed53c_type",
+      "declaration": "struct vtable_4ed53c_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n    int32_t (*e2)();\n    int32_t (*e3)();\n};"
+    },
+    {
+      "name": "vtable_4ed56c_type",
+      "declaration": "struct vtable_4ed56c_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)(int32_t, int32_t, int32_t, int32_t, char);\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)(int32_t);\n    int32_t (*e4)(int32_t);\n    int32_t (*e5)(int32_t);\n    int32_t (*e6)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ed58c_type",
+      "declaration": "struct vtable_4ed58c_type {\n    int32_t (*e0)(char);\n};"
+    },
+    {
+      "name": "vtable_4ed594_type",
+      "declaration": "struct vtable_4ed594_type {\n    int32_t (*e0)();\n    int32_t (*e1)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ed5ac_type",
+      "declaration": "struct vtable_4ed5ac_type {\n    int32_t (*e0)();\n    int32_t (*e1)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ed5c4_type",
+      "declaration": "struct vtable_4ed5c4_type {\n    int32_t (*e0)();\n    int32_t (*e1)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ed5dc_type",
+      "declaration": "struct vtable_4ed5dc_type {\n    int32_t (*e0)();\n    int32_t (*e1)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ed5f4_type",
+      "declaration": "struct vtable_4ed5f4_type {\n    int32_t (*e0)();\n    int32_t (*e1)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ed60c_type",
+      "declaration": "struct vtable_4ed60c_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)(int32_t);\n    int32_t (*e2)(int16_t, int16_t);\n    int32_t (__fastcall *e3)(int32_t, void *, uint32_t);\n    int32_t (*e4)();\n};"
+    },
+    {
+      "name": "vtable_4ed63c_type",
+      "declaration": "struct vtable_4ed63c_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)(int32_t);\n    int32_t (*e2)(int16_t, int16_t);\n    int32_t (__fastcall *e3)(int32_t, void *, uint32_t);\n    int32_t (*e4)();\n};"
+    },
+    {
+      "name": "vtable_4ed66c_type",
+      "declaration": "struct vtable_4ed66c_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)(int32_t, int32_t);\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)(int32_t);\n    int32_t (*e4)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ed684_type",
+      "declaration": "struct vtable_4ed684_type {\n    int32_t (*e0)(char);\n};"
+    },
+    {
+      "name": "vtable_4ed68c_type",
+      "declaration": "struct vtable_4ed68c_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)(int32_t, int32_t);\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)(int32_t);\n    int32_t (*e4)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ed6a4_type",
+      "declaration": "struct vtable_4ed6a4_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)(int32_t);\n    int32_t (*e2)(int32_t);\n};"
+    },
+    {
+      "name": "vtable_4ed6b4_type",
+      "declaration": "struct vtable_4ed6b4_type {\n    int32_t (*e0)();\n    int32_t (*e1)();\n    int32_t (*e2)(int32_t, int32_t);\n    int32_t (*e3)(int32_t);\n    int32_t (*e4)(char);\n};"
+    },
+    {
+      "name": "vtable_4ed700_type",
+      "declaration": "struct vtable_4ed700_type {\n    int32_t (*e0)(int32_t);\n    int32_t (*e1)(char);\n    int32_t (*e2)(int32_t);\n    int32_t (*e3)(int32_t);\n    int32_t (*e4)(int32_t, int32_t);\n    int32_t (*e5)(int32_t);\n};"
+    },
+    {
+      "name": "Adler_CRC32__0x01c26a37__at_4d7258",
+      "declaration": "// --------------------- Global Variables ---------------------\n\n// Detected cryptographic pattern: Adler_CRC32__0x01c26a37_ (32-bit, little endian)\nint32_t Adler_CRC32__0x01c26a37__at_4d7258[256] = {0, 0x1c26a37, 0x384d46e, 0x246be59, 0x709a8dc, 0x6cbc2eb, 0x48d7cb2, 0x54f1685, 0xe1351b8, 0xfd13b8f, 0xd9785d6, 0xc55efe1, 0x91af964, 0x8d89353, 0xa9e2d0a, 0xb5c473d, 0x1c26a370, 0x1de4c947, 0x1fa2771e, 0x1e601d29, 0x1b2f0bac, 0x1aed619b, 0x18abdfc2, 0x1969b5f5, 0x1235f2c8, 0x13f798ff, 0x11b126a6, 0x10734c91, 0x153c5a14, 0x14fe3023, 0x16b88e7a, 0x177ae44d, 0x384d46e0, 0x398f2cd7, 0x3bc9928e, 0x3a0bf8b9, 0x3f44ee3c, 0x3e86840b, 0x3cc03a52, 0x3d025065, 0x365e1758, 0x379c7d6f, 0x35dac336, 0x3418a901, 0x3157bf84, 0x3095d5b3, 0x32d36bea, 0x331101dd, 0x246be590, 0x25a98fa7, 0x27ef31fe, 0x262d5bc9, 0x23624d4c, 0x22a0277b, 0x20e69922, 0x2124f315, 0x2a78b428, 0x2bbade1f, 0x29fc6046, 0x283e0a71, 0x2d711cf4, 0x2cb376c3, 0x2ef5c89a, 0x2f37a2ad, 0x709a8dc0, 0x7158e7f7, 0x731e59ae, 0x72dc3399, 0x7793251c, 0x76514f2b, 0x7417f172, 0x75d59b45, 0x7e89dc78, 0x7f4bb64f, 0x7d0d0816, 0x7ccf6221, 0x798074a4, 0x78421e93, 0x7a04a0ca, 0x7bc6cafd, 0x6cbc2eb0, 0x6d7e4487, 0x6f38fade, 0x6efa90e9, 0x6bb5866c, 0x6a77ec5b, 0x68315202, 0x69f33835, 0x62af7f08, 0x636d153f, 0x612bab66, 0x60e9c151, 0x65a6d7d4, 0x6464bde3, 0x662203ba, 0x67e0698d, 0x48d7cb20, 0x4915a117, 0x4b531f4e, 0x4a917579, 0x4fde63fc, 0x4e1c09cb, 0x4c5ab792, 0x4d98dda5, 0x46c49a98, 0x4706f0af, 0x45404ef6, 0x448224c1, 0x41cd3244, 0x400f5873, 0x4249e62a, 0x438b8c1d, 0x54f16850, 0x55330267, 0x5775bc3e, 0x56b7d609, 0x53f8c08c, 0x523aaabb, 0x507c14e2, 0x51be7ed5, 0x5ae239e8, 0x5b2053df, 0x5966ed86, 0x58a487b1, 0x5deb9134, 0x5c29fb03, 0x5e6f455a, 0x5fad2f6d, -0x1ecae480, -0x1f088e49, -0x1d4e3012, -0x1c8c5a27, -0x19c34ca4, -0x18012695, -0x1a4798ce, -0x1b85f2fb, -0x10d9b5c8, -0x111bdff1, -0x135d61aa, -0x129f0b9f, -0x17d01d1c, -0x1612772d, -0x1454c976, -0x1596a343, -0x2ec4710, -0x32e2d39, -0x1689362, -0xaaf957, -0x5e5efd4, -0x42785e5, -0x6613bbe, -0x7a3518b, -0xcff16b8, -0xd3d7c81, -0xf7bc2da, -0xeb9a8ef, -0xbf6be6c, -0xa34d45d, -0x8726a06, -0x9b00033, -0x2687a2a0, -0x2745c8a9, -0x250376f2, -0x24c11cc7, -0x218e0a44, -0x204c6075, -0x220ade2e, -0x23c8b41b, -0x2894f328, -0x29569911, -0x2b10274a, -0x2ad24d7f, -0x2f9d5bfc, -0x2e5f31cd, -0x2c198f96, -0x2ddbe5a3, -0x3aa101f0, -0x3b636bd9, -0x3925d582, -0x38e7bfb7, -0x3da8a934, -0x3c6ac305, -0x3e2c7d5e, -0x3fee176b, -0x34b25058, -0x35703a61, -0x3736843a, -0x36f4ee0f, -0x33bbf88c, -0x327992bd, -0x303f2ce6, -0x31fd46d3, -0x6e5069c0, -0x6f920389, -0x6dd4bdd2, -0x6c16d7e7, -0x6959c164, -0x689bab55, -0x6add150e, -0x6b1f7f3b, -0x60433808, -0x61815231, -0x63c7ec6a, -0x6205865f, -0x674a90dc, -0x6688faed, -0x64ce44b6, -0x650c2e83, -0x7276cad0, -0x73b4a0f9, -0x71f21ea2, -0x70307497, -0x757f6214, -0x74bd0825, -0x76fbb67e, -0x7739dc4b, -0x7c659b78, -0x7da7f141, -0x7fe14f1a, -0x7e23252f, -0x7b6c33ac, -0x7aae599d, -0x78e8e7c6, -0x792a8df3, -0x561d2f60, -0x57df4569, -0x5599fb32, -0x545b9107, -0x51148784, -0x50d6edb5, -0x529053ee, -0x535239db, -0x580e7ee8, -0x59cc14d1, -0x5b8aaa8a, -0x5a48c0bf, -0x5f07d63c, -0x5ec5bc0d, -0x5c830256, -0x5d416863, -0x4a3b8c30, -0x4bf9e619, -0x49bf5842, -0x487d3277, -0x4d3224f4, -0x4cf04ec5, -0x4eb6f09e, -0x4f749aab, -0x4428dd98, -0x45eab7a1, -0x47ac09fa, -0x466e63cf, -0x4321754c, -0x42e31f7d, -0x40a5a126, -0x4167cb13};"
+    },
+    {
+      "name": "Adler_CRC32__0x191b3141__at_4d6e58",
+      "declaration": "// 0x4d7258\n// Detected cryptographic pattern: Adler_CRC32__0x191b3141_ (32-bit, little endian)\nint32_t Adler_CRC32__0x191b3141__at_4d6e58[256] = {0, 0x191b3141, 0x32366282, 0x2b2d53c3, 0x646cc504, 0x7d77f445, 0x565aa786, 0x4f4196c7, -0x372675f8, -0x2e3d44b7, -0x5101776, -0x1c0b2635, -0x534ab0f4, -0x4a5181b3, -0x617cd272, -0x7867e331, 0x4ac21251, 0x53d92310, 0x78f470d3, 0x61ef4192, 0x2eaed755, 0x37b5e614, 0x1c98b5d7, 0x5838496, -0x7de467a7, -0x64ff56e8, -0x4fd20525, -0x56c93466, -0x1988a2a3, -0x9393e4, -0x2bbec021, -0x32a5f162, -0x6a7bdb5e, -0x7360ea1d, -0x584db9e0, -0x4156889f, -0xe171e5a, -0x170c2f19, -0x3c217cdc, -0x253a4d9b, 0x5d5daeaa, 0x44469feb, 0x6f6bcc28, 0x7670fd69, 0x39316bae, 0x202a5aef, 0xb07092c, 0x121c386d, -0x20b9c90d, -0x39a2f84e, -0x128fab8f, -0xb949ad0, -0x44d50c09, -0x5dce3d4a, -0x76e36e8b, -0x6ff85fcc, 0x179fbcfb, 0xe848dba, 0x25a9de79, 0x3cb2ef38, 0x73f379ff, 0x6ae848be, 0x41c51b7d, 0x58de2a3c, -0xf86b0fb, -0x169d81bc, -0x3db0d279, -0x24abe33a, -0x6bea75ff, -0x72f144c0, -0x59dc177d, -0x40c7263e, 0x38a0c50d, 0x21bbf44c, 0xa96a78f, 0x138d96ce, 0x5ccc0009, 0x45d73148, 0x6efa628b, 0x77e153ca, -0x4544a2ac, -0x5c5f93eb, -0x7772c02a, -0x6e69f169, -0x212867b0, -0x383356ef, -0x131e052e, -0xa05346d, 0x7262d75c, 0x6b79e61d, 0x4054b5de, 0x594f849f, 0x160e1258, 0xf152319, 0x243870da, 0x3d23419b, 0x65fd6ba7, 0x7ce65ae6, 0x57cb0925, 0x4ed03864, 0x191aea3, 0x188a9fe2, 0x33a7cc21, 0x2abcfd60, -0x52db1e51, -0x4bc02f12, -0x60ed7cd3, -0x79f64d94, -0x36b7db55, -0x2facea16, -0x481b9d7, -0x1d9a8898, 0x2f3f79f6, 0x362448b7, 0x1d091b74, 0x4122a35, 0x4b53bcf2, 0x52488db3, 0x7965de70, 0x607eef31, -0x18190c02, -0x1023d41, -0x2a2f6e84, -0x33345fc3, -0x7c75c906, -0x656ef845, -0x4e43ab88, -0x57589ac7, 0x3b83984b, 0x2298a90a, 0x9b5fac9, 0x10aecb88, 0x5fef5d4f, 0x46f46c0e, 0x6dd93fcd, 0x74c20e8c, -0xca5edbd, -0x15bedcfe, -0x3e938f3f, -0x2788be80, -0x68c928b9, -0x71d219fa, -0x5aff4a3b, -0x43e47b7c, 0x71418a1a, 0x685abb5b, 0x4377e898, 0x5a6cd9d9, 0x152d4f1e, 0xc367e5f, 0x271b2d9c, 0x3e001cdd, -0x4667ffee, -0x5f7ccead, -0x74519d70, -0x6d4aac2f, -0x220b3aea, -0x3b100ba9, -0x103d586c, -0x926692b, -0x51f84317, -0x48e37258, -0x63ce2195, -0x7ad510d6, -0x35948613, -0x2c8fb754, -0x7a2e491, -0x1eb9d5d2, 0x66de36e1, 0x7fc507a0, 0x54e85463, 0x4df36522, 0x2b2f3e5, 0x1ba9c2a4, 0x30849167, 0x299fa026, -0x1b3a5148, -0x2216007, -0x290c33c6, -0x30170285, -0x7f569444, -0x664da503, -0x4d60f6c2, -0x547bc781, 0x2c1c24b0, 0x350715f1, 0x1e2a4632, 0x7317773, 0x4870e1b4, 0x516bd0f5, 0x7a468336, 0x635db277, -0x340528b2, -0x2d1e19f1, -0x6334a34, -0x1f287b73, -0x5069edb6, -0x4972dcf5, -0x625f8f38, -0x7b44be77, 0x3235d46, 0x1a386c07, 0x31153fc4, 0x280e0e85, 0x674f9842, 0x7e54a903, 0x5579fac0, 0x4c62cb81, -0x7ec73ae1, -0x67dc0ba2, -0x4cf15863, -0x55ea6924, -0x1aabffe5, -0x3b0cea6, -0x289d9d67, -0x3186ac28, 0x49e14f17, 0x50fa7e56, 0x7bd72d95, 0x62cc1cd4, 0x2d8d8a13, 0x3496bb52, 0x1fbbe891, 0x6a0d9d0, 0x5e7ef3ec, 0x4765c2ad, 0x6c48916e, 0x7553a02f, 0x3a1236e8, 0x230907a9, 0x824546a, 0x113f652b, -0x6958861c, -0x7043b75b, -0x5b6ee49a, -0x4275d5d9, -0xd344320, -0x142f725f, -0x3f02219e, -0x261910dd, 0x14bce1bd, 0xda7d0fc, 0x268a833f, 0x3f91b27e, 0x70d024b9, 0x69cb15f8, 0x42e6463b, 0x5bfd777a, -0x239a944b, -0x3a81a50c, -0x11acf6c9, -0x8b7c78a, -0x47f6514f, -0x5eed6010, -0x75c033cd, -0x6cdb028e};"
+    },
+    {
+      "name": "Adler_CRC32__0xb8bc6765__at_4d7658",
+      "declaration": "// 0x4d6e58\n// Detected cryptographic pattern: Adler_CRC32__0xb8bc6765_ (32-bit, little endian)\nint32_t Adler_CRC32__0xb8bc6765__at_4d7658[256] = {0, -0x4743989b, -0x55f63775, 0x12b5afee, -0x709d68a9, 0x37def032, 0x256b5fdc, -0x6228c747, -0x3a4bd711, 0x7d084f8a, 0x6fbde064, -0x28fe78ff, 0x4ad6bfb8, -0xd952723, -0x1f2088cd, 0x58631056, 0x5019579f, -0x175acf06, -0x5ef60ec, 0x42acf871, -0x20843f38, 0x67c7a7ad, 0x75720843, -0x323190da, -0x6a528090, 0x2d111815, 0x3fa4b7fb, -0x78e72f62, 0x1acfe827, -0x5d8c70be, -0x4f39df54, 0x87a47c9, -0x5fcd50c2, 0x188ec85b, 0xa3b67b5, -0x4d78ff30, 0x2f503869, -0x6813a0f4, -0x7aa60f1e, 0x3de59787, 0x658687d1, -0x22c51f4c, -0x3070b0a6, 0x7733283f, -0x151bef7a, 0x525877e3, 0x40edd80d, -0x7ae4098, -0xfd4075f, 0x48979fc4, 0x5a22302a, -0x1d61a8b1, 0x7f496ff6, -0x380af76d, -0x2abf5883, 0x6dfcc018, 0x359fd04e, -0x72dc48d5, -0x6069e73b, 0x272a7fa0, -0x4502b8e7, 0x241207c, 0x10f48f92, -0x57b71709, -0x64eba7c3, 0x23a83f58, 0x311d90b6, -0x765e082d, 0x1476cf6a, -0x533557f1, -0x4180f81f, 0x6c36084, 0x5ea070d2, -0x19e3e849, -0xb5647a7, 0x4c15df3c, -0x2e3d187b, 0x697e80e0, 0x7bcb2f0e, -0x3c88b795, -0x34f2f05e, 0x73b168c7, 0x6104c729, -0x26475fb4, 0x446f98f5, -0x32c0070, -0x1199af82, 0x56da371b, 0xeb9274d, -0x49fabfd8, -0x5b4f103a, 0x1c0c88a3, -0x7e244fe6, 0x3967d77f, 0x2bd27891, -0x6c91e00c, 0x3b26f703, -0x7c656f9a, -0x6ed0c078, 0x299358ed, -0x4bbb9fac, 0xcf80731, 0x1e4da8df, -0x590e3046, -0x16d2014, 0x462eb889, 0x549b1767, -0x13d88ffe, 0x71f048bb, -0x36b3d022, -0x24067fd0, 0x6345e755, 0x6b3fa09c, -0x2c7c3807, -0x3ec997e9, 0x798a0f72, -0x1ba2c835, 0x5ce150ae, 0x4e54ff40, -0x91767db, -0x5174778d, 0x1637ef16, 0x48240f8, -0x43c1d863, 0x21e91f24, -0x66aa87bf, -0x741f2851, 0x335cb0ca, -0x12a649c5, 0x55e5d15e, 0x47507eb0, -0x13e62b, 0x623b216c, -0x2578b9f7, -0x37cd1619, 0x708e8e82, 0x28ed9ed4, -0x6fae064f, -0x7d1ba9a1, 0x3a58313a, -0x5870f67d, 0x1f336ee6, 0xd86c108, -0x4ac55993, -0x42bf1e5c, 0x5fc86c1, 0x1749292f, -0x500ab1b6, 0x322276f3, -0x7561ee6a, -0x67d44188, 0x2097d91d, 0x78f4c94b, -0x3fb751d2, -0x2d02fe40, 0x6a4166a5, -0x869a1e4, 0x4f2a3979, 0x5d9f9697, -0x1adc0e0e, 0x4d6b1905, -0xa2881a0, -0x189d2e72, 0x5fdeb6eb, -0x3df671ae, 0x7ab5e937, 0x680046d9, -0x2f43de44, -0x7720ce16, 0x3063568f, 0x22d6f961, -0x659561fc, 0x7bda6bd, -0x40fe3e28, -0x524b91ca, 0x15080953, 0x1d724e9a, -0x5a31d601, -0x488479ef, 0xfc7e174, -0x6def2633, 0x2aacbea8, 0x38191146, -0x7f5a89dd, -0x2739998b, 0x607a0110, 0x72cfaefe, -0x358c3665, 0x57a4f122, -0x10e769b9, -0x252c657, 0x45115ecc, 0x764dee06, -0x310e769d, -0x23bbd973, 0x64f841e8, -0x6d086af, 0x41931e34, 0x5326b1da, -0x14652941, -0x4c063917, 0xb45a18c, 0x19f00e62, -0x5eb396f9, 0x3c9b51be, -0x7bd8c925, -0x696d66cb, 0x2e2efe50, 0x2654b999, -0x61172104, -0x73a28eee, 0x34e11677, -0x56c9d132, 0x118a49ab, 0x33fe645, -0x447c7ee0, -0x1c1f6e8a, 0x5b5cf613, 0x49e959fd, -0xeaac168, 0x6c820621, -0x2bc19ebc, -0x39743156, 0x7e37a9cf, -0x2980bec8, 0x6ec3265d, 0x7c7689b3, -0x3b35112a, 0x591dd66f, -0x1e5e4ef6, -0xcebe11c, 0x4ba87981, 0x13cb69d7, -0x5488f14e, -0x463d5ea4, 0x17ec639, -0x63560180, 0x241599e5, 0x36a0360b, -0x71e3ae92, -0x7999e959, 0x3eda71c2, 0x2c6fde2c, -0x6b2c46b7, 0x90481f0, -0x4e47196b, -0x5cf2b685, 0x1bb12e1e, 0x43d23e48, -0x491a6d3, -0x1624093d, 0x516791a6, -0x334f56e1, 0x740cce7a, 0x66b96194, -0x21faf90f};"
+    },
+    {
+      "name": "CRC_32_IEEE_802_3_poly_0x04C11DB7_at_4d6a58",
+      "declaration": "// 0x4d7658\n// Detected cryptographic pattern: CRC_32_IEEE_802_3_poly_0x04C11DB7 (32-bit, little endian)\nint32_t CRC_32_IEEE_802_3_poly_0x04C11DB7_at_4d6a58[256] = {0, 0x77073096, -0x11f19ed4, -0x66f6ae46, 0x76dc419, 0x706af48f, -0x169c5acb, -0x619b6a5d, 0xedb8832, 0x79dcb8a4, -0x1f2a16e2, -0x682d2678, 0x9b64c2b, 0x7eb17cbd, -0x1847d2f9, -0x6f40e26f, 0x1db71064, 0x6ab020f2, -0xc468eb8, -0x7b41be22, 0x1adad47d, 0x6ddde4eb, -0xb2b4aaf, -0x7c2c7a39, 0x136c9856, 0x646ba8c0, -0x29d0686, -0x759a3614, 0x14015c4f, 0x63066cd9, -0x5f0c29d, -0x72f7f20b, 0x3b6e20c8, 0x4c69105e, -0x2a9fbe1c, -0x5d988e8e, 0x3c03e4d1, 0x4b04d447, -0x2df27a03, -0x5af54a95, 0x35b5a8fa, 0x42b2986c, -0x2444362a, -0x534306c0, 0x32d86ce3, 0x45df5c75, -0x2329f231, -0x542ec2a7, 0x26d930ac, 0x51de003a, -0x3728ae80, -0x402f9eea, 0x21b4f4b5, 0x56b3c423, -0x30456a67, -0x47425af1, 0x2802b89e, 0x5f058808, -0x39f3264e, -0x4ef416dc, 0x2f6f7c87, 0x58684c11, -0x3e9ee255, -0x4999d2c3, 0x76dc4190, 0x1db7106, -0x672ddf44, -0x102aefd6, 0x71b18589, 0x6b6b51f, -0x60401b5b, -0x17472bcd, 0x7807c9a2, 0xf00f934, -0x69f65772, -0x1ef167e8, 0x7f6a0dbb, 0x86d3d2d, -0x6e9b9369, -0x199ca3ff, 0x6b6b51f4, 0x1c6c6162, -0x7a9acf28, -0xd9dffb2, 0x6c0695ed, 0x1b01a57b, -0x7df70b3f, -0xaf03ba9, 0x65b0d9c6, 0x12b7e950, -0x74414716, -0x3467784, 0x62dd1ddf, 0x15da2d49, -0x732c830d, -0x42bb39b, 0x4db26158, 0x3ab551ce, -0x5c43ff8c, -0x2b44cf1e, 0x4adfa541, 0x3dd895d7, -0x5b2e3b93, -0x2c290b05, 0x4369e96a, 0x346ed9fc, -0x529877ba, -0x259f4730, 0x44042d73, 0x33031de5, -0x55f5b3a1, -0x22f28337, 0x5005713c, 0x270241aa, -0x41f4eff0, -0x36f3df7a, 0x5768b525, 0x206f85b3, -0x46992bf7, -0x319e1b61, 0x5edef90e, 0x29d9c998, -0x4f2f67de, -0x3828574c, 0x59b33d17, 0x2eb40d81, -0x4842a3c5, -0x3f459353, -0x12477ce0, -0x65404c4a, 0x3b6e20c, 0x74b1d29a, -0x152ab8c7, -0x622d8851, 0x4db2615, 0x73dc1683, -0x1c9cf4ee, -0x6b9bc47c, 0xd6d6a3e, 0x7a6a5aa8, -0x1bf130f5, -0x6cf60063, 0xa00ae27, 0x7d079eb1, -0xff06cbc, -0x78f75c2e, 0x1e01f268, 0x6906c2fe, -0x89da8a3, -0x7f9a9835, 0x196c3671, 0x6e6b06e7, -0x12be48a, -0x762cd420, 0x10da7a5a, 0x67dd4acc, -0x6462091, -0x71411007, 0x17b7be43, 0x60b08ed5, -0x29295c18, -0x5e2e6c82, 0x38d8c2c4, 0x4fdff252, -0x2e44980f, -0x5943a899, 0x3fb506dd, 0x48b2364b, -0x27f2d426, -0x50f5e4b4, 0x36034af6, 0x41047a60, -0x209f103d, -0x579820ab, 0x316e8eef, 0x4669be79, -0x349e4c74, -0x43997ce6, 0x256fd2a0, 0x5268e236, -0x33f3886b, -0x44f4b8fd, 0x220216b9, 0x5505262f, -0x3a45c442, -0x4d42f4d8, 0x2bb45a92, 0x5cb36a04, -0x3d280059, -0x4a2f30cf, 0x2cd99e8b, 0x5bdeae1d, -0x649b3d50, -0x139c0dda, 0x756aa39c, 0x26d930a, -0x63f6f957, -0x14f1c9c1, 0x72076785, 0x5005713, -0x6a40b57e, -0x1d4785ec, 0x7bb12bae, 0xcb61b38, -0x6d2d7165, -0x1a2a41f3, 0x7cdcefb7, 0xbdbdf21, -0x792c2d2c, -0xe2b1dbe, 0x68ddb3f8, 0x1fda836e, -0x7e41e933, -0x946d9a5, 0x6fb077e1, 0x18b74777, -0x77f7a51a, -0xf09590, 0x66063bca, 0x11010b5c, -0x709a6101, -0x79d5197, 0x616bffd3, 0x166ccf45, -0x5ff51d88, -0x28f22d12, 0x4e048354, 0x3903b3c2, -0x5898d99f, -0x2f9fe909, 0x4969474d, 0x3e6e77db, -0x512e95b6, -0x2629a524, 0x40df0b66, 0x37d83bf0, -0x564351ad, -0x2144613b, 0x47b2cf7f, 0x30b5ffe9, -0x42420de4, -0x35453d76, 0x53b39330, 0x24b4a3a6, -0x452fc9fb, -0x3228f96d, 0x54de5729, 0x23d967bf, -0x4c9985d2, -0x3b9eb548, 0x5d681b02, 0x2a6f2b94, -0x4bf441c9, -0x3cf3715f, 0x5a05df1b, 0x2d02ef8d};"
+    },
+    {
+      "name": "CRC_32_IEEE_802_3_poly_0x04C11DB7_at_50ec54",
+      "declaration": "// 0x4d6a58\n// Detected cryptographic pattern: CRC_32_IEEE_802_3_poly_0x04C11DB7 (32-bit, little endian)\nint32_t CRC_32_IEEE_802_3_poly_0x04C11DB7_at_50ec54[256] = {0, 0x4c11db7, 0x9823b6e, 0xd4326d9, 0x130476dc, 0x17c56b6b, 0x1a864db2, 0x1e475005, 0x2608edb8, 0x22c9f00f, 0x2f8ad6d6, 0x2b4bcb61, 0x350c9b64, 0x31cd86d3, 0x3c8ea00a, 0x384fbdbd, 0x4c11db70, 0x48d0c6c7, 0x4593e01e, 0x4152fda9, 0x5f15adac, 0x5bd4b01b, 0x569796c2, 0x52568b75, 0x6a1936c8, 0x6ed82b7f, 0x639b0da6, 0x675a1011, 0x791d4014, 0x7ddc5da3, 0x709f7b7a, 0x745e66cd, -0x67dc4920, -0x631d54a9, -0x6e5e7272, -0x6a9f6fc7, -0x74d83fc4, -0x70192275, -0x7d5a04ae, -0x799b191b, -0x41d4a4a8, -0x4515b911, -0x48569fca, -0x4c97827f, -0x52d0d27c, -0x5611cfcd, -0x5b52e916, -0x5f93f4a3, -0x2bcd9270, -0x2f0c8fd9, -0x224fa902, -0x268eb4b7, -0x38c9e4b4, -0x3c08f905, -0x314bdfde, -0x358ac26b, -0xdc57fd8, -0x9046261, -0x44744ba, -0x86590f, -0x1ec1090c, -0x1a0014bd, -0x17433266, -0x13822fd3, 0x34867077, 0x30476dc0, 0x3d044b19, 0x39c556ae, 0x278206ab, 0x23431b1c, 0x2e003dc5, 0x2ac12072, 0x128e9dcf, 0x164f8078, 0x1b0ca6a1, 0x1fcdbb16, 0x18aeb13, 0x54bf6a4, 0x808d07d, 0xcc9cdca, 0x7897ab07, 0x7c56b6b0, 0x71159069, 0x75d48dde, 0x6b93dddb, 0x6f52c06c, 0x6211e6b5, 0x66d0fb02, 0x5e9f46bf, 0x5a5e5b08, 0x571d7dd1, 0x53dc6066, 0x4d9b3063, 0x495a2dd4, 0x44190b0d, 0x40d816ba, -0x535a3969, -0x579b24e0, -0x5ad80207, -0x5e191fb2, -0x405e4fb5, -0x449f5204, -0x49dc74db, -0x4d1d696e, -0x7552d4d1, -0x7193c968, -0x7cd0efbf, -0x7811f20a, -0x6656a20d, -0x6297bfbc, -0x6fd49963, -0x6b1584d6, -0x1f4be219, -0x1b8affb0, -0x16c9d977, -0x1208c4c2, -0xc4f94c5, -0x88e8974, -0x5cdafab, -0x10cb21e, -0x39430fa1, -0x3d821218, -0x30c134cf, -0x3400297a, -0x2a47797d, -0x2e8664cc, -0x23c54213, -0x27045fa6, 0x690ce0ee, 0x6dcdfd59, 0x608edb80, 0x644fc637, 0x7a089632, 0x7ec98b85, 0x738aad5c, 0x774bb0eb, 0x4f040d56, 0x4bc510e1, 0x46863638, 0x42472b8f, 0x5c007b8a, 0x58c1663d, 0x558240e4, 0x51435d53, 0x251d3b9e, 0x21dc2629, 0x2c9f00f0, 0x285e1d47, 0x36194d42, 0x32d850f5, 0x3f9b762c, 0x3b5a6b9b, 0x315d626, 0x7d4cb91, 0xa97ed48, 0xe56f0ff, 0x1011a0fa, 0x14d0bd4d, 0x19939b94, 0x1d528623, -0xed0a9f2, -0xa11b447, -0x75292a0, -0x3938f29, -0x1dd4df2e, -0x1915c29b, -0x1456e444, -0x1097f9f5, -0x28d8444a, -0x2c1959ff, -0x215a7f28, -0x259b6291, -0x3bdc3296, -0x3f1d2f23, -0x325e09fc, -0x369f144d, -0x42c17282, -0x46006f37, -0x4b4349f0, -0x4f825459, -0x51c5045e, -0x550419eb, -0x58473f34, -0x5c862285, -0x64c99f3a, -0x6008828f, -0x6d4ba458, -0x698ab9e1, -0x77cde9e6, -0x730cf453, -0x7e4fd28c, -0x7a8ecf3d, 0x5d8a9099, 0x594b8d2e, 0x5408abf7, 0x50c9b640, 0x4e8ee645, 0x4a4ffbf2, 0x470cdd2b, 0x43cdc09c, 0x7b827d21, 0x7f436096, 0x7200464f, 0x76c15bf8, 0x68860bfd, 0x6c47164a, 0x61043093, 0x65c52d24, 0x119b4be9, 0x155a565e, 0x18197087, 0x1cd86d30, 0x29f3d35, 0x65e2082, 0xb1d065b, 0xfdc1bec, 0x3793a651, 0x3352bbe6, 0x3e119d3f, 0x3ad08088, 0x2497d08d, 0x2056cd3a, 0x2d15ebe3, 0x29d4f654, -0x3a56d987, -0x3e97c432, -0x33d4e2e9, -0x3715ff60, -0x2952af5b, -0x2d93b2ee, -0x20d09435, -0x24118984, -0x1c5e343f, -0x189f298a, -0x15dc0f51, -0x111d12e8, -0xf5a42e3, -0xb9b5f56, -0x6d8798d, -0x219643c, -0x764702f7, -0x72861f42, -0x7fc53999, -0x7b042430, -0x6543742b, -0x6182699e, -0x6cc14f45, -0x680052f4, -0x504fef4f, -0x548ef2fa, -0x59cdd421, -0x5d0cc998, -0x434b9993, -0x478a8426, -0x4ac9a2fd, -0x4e08bf4c};"
+    },
+    {
+      "name": "Vorbis_FLOOR1_fromdB_LOOKUP_at_50c580",
+      "declaration": "// 0x50ec54\n// Detected cryptographic pattern: Vorbis_FLOOR1_fromdB_LOOKUP (32-bit, little endian)\nfloat32_t Vorbis_FLOOR1_fromdB_LOOKUP_at_50c580[256] = {1.06498632e-7f, 1.1341951e-7f, 1.20790148e-7f, 1.28639783e-7f, 1.36999503e-7f, 1.45902504e-7f, 1.55384086e-7f, 1.65481808e-7f, 1.76235744e-7f, 1.87688556e-7f, 1.99885605e-7f, 2.12875307e-7f, 2.26709133e-7f, 2.41441967e-7f, 2.57132228e-7f, 2.73842119e-7f, 2.91637917e-7f, 3.10590224e-7f, 3.307741e-7f, 3.52269666e-7f, 3.75162131e-7f, 3.99542301e-7f, 4.25506812e-7f, 4.53158634e-7f, 4.82607447e-7f, 5.13970008e-7f, 5.47370632e-7f, 5.8294188e-7f, 6.20824721e-7f, 6.61169395e-7f, 7.04135914e-7f, 7.49894639e-7f, 7.98627013e-7f, 8.50526305e-7f, 9.05798287e-7f, 9.64662149e-7f, 1.02735135e-6f, 1.0941144e-6f, 1.16521608e-6f, 1.24093845e-6f, 1.32158164e-6f, 1.40746545e-6f, 1.49893049e-6f, 1.59633942e-6f, 1.70007854e-6f, 1.81055918e-6f, 1.92821949e-6f, 2.05352603e-6f, 2.18697573e-6f, 2.3290977e-6f, 2.48045581e-6f, 2.64164964e-6f, 2.81331904e-6f, 2.9961443e-6f, 3.19085052e-6f, 3.39821008e-6f, 3.61904495e-6f, 3.85423073e-6f, 4.10470057e-6f, 4.37144718e-6f, 4.6555283e-6f, 4.9580708e-6f, 5.28027385e-6f, 5.6234162e-6f, 5.98885708e-6f, 6.37804669e-6f, 6.79252844e-6f, 7.23394533e-6f, 7.70404768e-6f, 8.20469995e-6f, 8.73788758e-6f, 9.30572514e-6f, 9.91046363e-6f, 1.05545014e-5f, 1.12403923e-5f, 1.19708557e-5f, 1.27487892e-5f, 1.3577278e-5f, 1.44596061e-5f, 1.53992714e-5f, 1.64000048e-5f, 1.74657689e-5f, 1.86007928e-5f, 1.98095768e-5f, 2.10969138e-5f, 2.24679115e-5f, 2.39280016e-5f, 2.54829774e-5f, 2.71390054e-5f, 2.89026502e-5f, 3.07809096e-5f, 3.27812268e-5f, 3.49115326e-5f, 3.71802817e-5f, 3.95964671e-5f, 4.21696677e-5f, 4.49100917e-5f, 4.7828602e-5f, 5.09367746e-5f, 5.42469315e-5f, 5.77722021e-5f, 6.15265672e-5f, 6.55249095e-5f, 6.97830837e-5f, 7.43179844e-5f, 7.91475831e-5f, 8.42910376e-5f, 8.97687496e-5f, 9.56024232e-5f, 1.01815211e-4f, 1.08431741e-4f, 1.15478237e-4f, 1.22982674e-4f, 1.30974775e-4f, 1.39486248e-4f, 1.48550855e-4f, 1.58204537e-4f, 1.68485552e-4f, 1.7943469e-4f, 1.91095358e-4f, 2.03513817e-4f, 2.16739296e-4f, 2.30824226e-4f, 2.45824485e-4f, 2.61799549e-4f, 2.78812746e-4f, 2.96931568e-4f, 3.16227874e-4f, 3.36778146e-4f, 3.58663878e-4f, 3.81971884e-4f, 4.0679457e-4f, 4.33230365e-4f, 4.61384101e-4f, 4.91367478e-4f, 5.2329927e-4f, 5.57306223e-4f, 5.93523087e-4f, 6.32093579e-4f, 6.73170609e-4f, 7.16916984e-4f, 7.63506279e-4f, 8.13123246e-4f, 8.65964568e-4f, 9.22239851e-4f, 9.82172205e-4f, 0.00104599923f, 0.00111397426f, 0.00118636654f, 0.00126346329f, 0.0013455702f, 0.00143301289f, 0.00152613816f, 0.00162531529f, 0.00173093739f, 0.00184342347f, 0.00196321961f, 0.00209080055f, 0.0022266726f, 0.00237137428f, 0.00252547953f, 0.00268959929f, 0.00286438479f, 0.0030505287f, 0.00324876909f, 0.00345989247f, 0.00368473586f, 0.00392419053f, 0.00417920668f, 0.00445079478f, 0.00474003283f, 0.00504806684f, 0.0053761187f, 0.005725489f, 0.00609756354f, 0.00649381755f, 0.00691582262f, 0.00736525143f, 0.00784388743f, 0.00835362729f, 0.00889649242f, 0.00947463698f, 0.010090352f, 0.0107460804f, 0.0114444206f, 0.012188144f, 0.0129801976f, 0.0138237253f, 0.0147220679f, 0.0156787913f, 0.0166976862f, 0.0177827962f, 0.0189384222f, 0.0201691482f, 0.0214798544f, 0.0228757355f, 0.0243623294f, 0.0259455312f, 0.0276316181f, 0.0294272769f, 0.0313396268f, 0.0333762504f, 0.0355452262f, 0.0378551558f, 0.0403151996f, 0.0429351069f, 0.0457252748f, 0.0486967564f, 0.0518613495f, 0.0552315898f, 0.0588208511f, 0.0626433641f, 0.0667142794f, 0.0710497499f, 0.075666964f, 0.080584228f, 0.0858210474f, 0.0913981795f, 0.0973377451f, 0.103663303f, 0.110399932f, 0.117574342f, 0.125214979f, 0.133352146f, 0.142018124f, 0.151247263f, 0.161076173f, 0.171543807f, 0.182691678f, 0.194564015f, 0.207207873f, 0.220673427f, 0.235014021f, 0.250286549f, 0.266551584f, 0.283873618f, 0.302321315f, 0.32196787f, 0.342891127f, 0.365174145f, 0.388905197f, 0.414178461f, 0.44109413f, 0.469758898f, 0.50028646f, 0.532797933f, 0.567422092f, 0.604296386f, 0.643566966f, 0.685389578f, 0.729930043f, 0.777365028f, 0.827882587f, 0.881683051f, 0.938979804f, 1.0f};"
+    },
+    {
+      "name": "Zlib_base_dist_at_4d95f0",
+      "declaration": "// 0x50c580\n// Detected cryptographic pattern: Zlib_base_dist (32-bit, little endian)\nint32_t Zlib_base_dist_at_4d95f0[30] = {0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 0x1000, 0x1800, 0x2000, 0x3000, 0x4000, 0x6000};"
+    },
+    {
+      "name": "Zlib_base_length_at_4d9578",
+      "declaration": "// 0x4d95f0\n// Detected cryptographic pattern: Zlib_base_length (32-bit, little endian)\nint32_t Zlib_base_length_at_4d9578[29] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 0};"
+    },
+    {
+      "name": "g1",
+      "declaration": "// 0x4d9578\nchar * g1;"
+    },
+    {
+      "name": "g2",
+      "declaration": "// 0x4028ac\nint32_t (*g2)(int32_t *) = (int32_t (*)(int32_t *))0x15ff006a;"
+    },
+    {
+      "name": "g3",
+      "declaration": "// 0x40aaa0\nint32_t (*g3)(int32_t *) = (int32_t (*)(int32_t *))0x15ff006a;"
+    },
+    {
+      "name": "g4",
+      "declaration": "// 0x40aac0\nint32_t g4 = 0x15ff006a;"
+    },
+    {
+      "name": "g5",
+      "declaration": "// 0x40e2b0\nint32_t g5 = 0x15ff006a;"
+    },
+    {
+      "name": "g6",
+      "declaration": "// 0x40e2d0\nint32_t g6 = 0x15ff006a;"
+    },
+    {
+      "name": "g7",
+      "declaration": "// 0x40e2f0\nvoid (*g7)(int32_t *) = (void (*)(int32_t *))0xc7c18b;"
+    },
+    {
+      "name": "g8",
+      "declaration": "// 0x45c770\nvoid (*g8)(int32_t *) = (void (*)(int32_t *))0xc7c18b;"
+    },
+    {
+      "name": "g9",
+      "declaration": "// 0x45cac0\nchar * g9;"
+    },
+    {
+      "name": "g10",
+      "declaration": "// 0x49f418\nchar * g10;"
+    },
+    {
+      "name": "g11",
+      "declaration": "// 0x4a5e8c\nchar * g11;"
+    },
+    {
+      "name": "g45",
+      "declaration": "// 0x4d5eec\n\nint32_t g45 = 1888;"
+    },
+    {
+      "name": "g46",
+      "declaration": "// 0x4d5f38\nint32_t g46 = 0x10510;"
+    },
+    {
+      "name": "g47",
+      "declaration": "// 0x4d6738\nint16_t * g47 = (int16_t *)0x110010;"
+    },
+    {
+      "name": "g48",
+      "declaration": "// 0x4d67b8\nint16_t * g48 = NULL;"
+    },
+    {
+      "name": "g49",
+      "declaration": "// 0x4d69d8\nint32_t g49 = 0;"
+    },
+    {
+      "name": "g50",
+      "declaration": "// 0x4d69da\nint16_t * g50 = NULL;"
+    },
+    {
+      "name": "g51",
+      "declaration": "// 0x4d69dc\nint16_t * g51 = (int16_t *)0x64d00000;"
+    },
+    {
+      "name": "g60",
+      "declaration": "// 0x4d69de\nint32_t g60 = 0x279afa84;"
+    },
+    {
+      "name": "g61",
+      "declaration": "// 0x4d9c8c\nint32_t g61 = -0x3af5816d;"
+    },
+    {
+      "name": "g62",
+      "declaration": "// 0x4d9cac\nint32_t g62 = 0x3901cc3f;"
+    },
+    {
+      "name": "g63",
+      "declaration": "// 0x4d9cbc\nint32_t g63 = -0x40867fd0;"
+    },
+    {
+      "name": "g64",
+      "declaration": "// 0x4d9d7c\nint32_t g64 = 0x25e609e4;"
+    },
+    {
+      "name": "g77",
+      "declaration": "// 0x4d9d8c\n // 0x4d9fb4\n // 0x4da33c\nint32_t g77 = 124;"
+    },
+    {
+      "name": "g82",
+      "declaration": "// 0x4db728\nint32_t g82 = 0x4b07e1;"
+    },
+    {
+      "name": "g99",
+      "declaration": "// 0x4dc338\n\nint128_t g99;"
+    },
+    {
+      "name": "g125",
+      "declaration": "// 0x4e0cc0\n\nint32_t g125 = 0x4c3d36;"
+    },
+    {
+      "name": "g128",
+      "declaration": "// 0x4e4a8c\nint32_t g128 = 1;"
+    },
+    {
+      "name": "g181",
+      "declaration": "// 0x4e5050\n\nchar * g181 = \"D3D\\x83I\\x83u\\x83W\\x83\\x46\\x83N\\x83g\\x82\\xcc\\x8d\\xec\\x90\\xac\\x82\\xc9\\x8e\\xb8\\x94s\";"
+    },
+    {
+      "name": "g182",
+      "declaration": "// 0x4eb160\nchar * g182 = \"\\x83\\x66\\x83\\x42\\x83X\\x83v\\x83\\x8c\\x83\\x43\\x83\\x82\\x81[\\x83h\\x82\\xcc\\x8e\\xe6\\x93\\xbe\\x82\\xc9\\x8e\\xb8\\x94s\";"
+    },
+    {
+      "name": "g183",
+      "declaration": "// 0x4eb17c\nint32_t g183 = -0x7cbbccbc;"
+    },
+    {
+      "name": "g189",
+      "declaration": "// 0x4eb19c\n // 0x4eb388\n // 0x4eb474\nchar * g189;"
+    },
+    {
+      "name": "g191",
+      "declaration": "// 0x4eb488\nint32_t g191 = 0x65726944;"
+    },
+    {
+      "name": "g192",
+      "declaration": "// 0x4eb49c\nchar * g192 = \"DirectInput\\x83I\\x83u\\x83W\\x83\\x46\\x83N\\x83g\\x82\\xcc\\x8d\\xec\\x90\\xac\\x82\\xc9\\x8e\\xb8\\x94s#1\";"
+    },
+    {
+      "name": "g193",
+      "declaration": "// 0x4eb4c4\nchar * g193 = \"\\x83L\\x81[\\x83{\\x81[\\x83h\\x82\\xcc\\x8f\\x89\\x8a\\xfa\\x89\\xbb\\x82\\xc9\\x8e\\xb8\\x94s\";"
+    },
+    {
+      "name": "g194",
+      "declaration": "// 0x4eb4fc\nint32_t g194 = 0x5b816683;"
+    },
+    {
+      "name": "g195",
+      "declaration": "// 0x4eb518\nchar * g195 = \"\\x8b\\xa6\\x92\\xb2\\x83\\x8c\\x83x\\x83\\x8b\\x82\\xcc\\x90\\xdd\\x92\\xe8\\x82\\xc9\\x8e\\xb8\\x94s\";"
+    },
+    {
+      "name": "g196",
+      "declaration": "// 0x4eb538\nchar * g196 = \"\\x83\\x66\\x83o\\x83\\x43\\x83X\\x82\\xcc\\x97\\xf1\\x8b\\x93\\x82\\xc9\\x8e\\xb8\\x94s\";"
+    },
+    {
+      "name": "g197",
+      "declaration": "// 0x4eb550\nchar * g197 = \"\\x83}\\x83\\x45\\x83X\\x82\\xcc\\x8f\\x89\\x8a\\xfa\\x89\\xbb\\x82\\xc9\\x8e\\xb8\\x94s\";"
+    },
+    {
+      "name": "g207",
+      "declaration": "// 0x4eb568\n // 0x4eb5b4\n // 0x4eb5e4\n // 0x4eb614\n // 0x4eb654\n // 0x4eb6b4\nint32_t g207 = 0x62836f83;"
+    },
+    {
+      "name": "g210",
+      "declaration": "// 0x4eb6f8\nint32_t g210 = 0x65726944;"
+    },
+    {
+      "name": "g211",
+      "declaration": "// 0x4eb71c\nint32_t g211 = -0x767c897d;"
+    },
+    {
+      "name": "g212",
+      "declaration": "// 0x4eb744\nint32_t g212 = 0x58838a83;"
+    },
+    {
+      "name": "g216",
+      "declaration": "// 0x4eb76c\n // 0x4eb790\n // 0x4eb7b0\nchar g216 = -96;"
+    },
+    {
+      "name": "g217",
+      "declaration": "// 0x4eb7e4\nint32_t g217 = 117;"
+    },
+    {
+      "name": "g230",
+      "declaration": "// 0x4eb908\n\nint32_t g230 = 0x4ab306;"
+    },
+    {
+      "name": "g232",
+      "declaration": "// 0x4ebaac\nint32_t g232 = 0x4173c0;"
+    },
+    {
+      "name": "g270",
+      "declaration": "// 0x4ebae0\n // 0x4ebb10\n // 0x4ebb1c\n // 0x4ebb50\n // 0x4ebb68\n // 0x4ebb80\n // 0x4ebba8\n\n // 0x4ebea0\n // 0x4ebec4\n // 0x4ebedc\n // 0x4ebef4\n // 0x4ebf04\n // 0x4ebf14\n // 0x4ebf2c\n // 0x4ebf44\n // 0x4ebf5c\n // 0x4ebf74\n // 0x4ebf9c\n // 0x4ebfc4\nint32_t g270 = 0x4258a0;"
+    },
+    {
+      "name": "g278",
+      "declaration": "// 0x4ec00c\n\n // 0x4ec08c\nint32_t g278 = 0x426b30;"
+    },
+    {
+      "name": "g286",
+      "declaration": "// 0x4ec0cc\n // 0x4ec0fc\n // 0x4ec108\n // 0x4ec14c\nint32_t g286 = 0x428f80;"
+    },
+    {
+      "name": "g301",
+      "declaration": "// 0x4ec384\nint32_t g301 = 0x42c890;"
+    },
+    {
+      "name": "g302",
+      "declaration": "// 0x4ec398\nint32_t g302 = 0x42e6d0;"
+    },
+    {
+      "name": "g311",
+      "declaration": "// 0x4ec3bc\n // 0x4ec3d4\n // 0x4ec3ec\n // 0x4ec3fc\n // 0x4ec414\n // 0x4ec42c\n // 0x4ec454\nint32_t g311 = 47;"
+    },
+    {
+      "name": "g312",
+      "declaration": "// 0x4ec464\nint32_t g312 = 92;"
+    },
+    {
+      "name": "g314",
+      "declaration": "// 0x4ec468\nint32_t g314 = 0x430540;"
+    },
+    {
+      "name": "g329",
+      "declaration": "// 0x4ec578\n // 0x4ec59c\n // 0x4ec5b4\n // 0x4ec5cc\n // 0x4ec5dc\n // 0x4ec5ec\n // 0x4ec5fc\n // 0x4ec614\n // 0x4ec62c\n // 0x4ec654\nint32_t g329 = 0x436710;"
+    },
+    {
+      "name": "g341",
+      "declaration": "// 0x4ec7e0\n // 0x4ec810\n // 0x4ec81c\n // 0x4ec898\nint32_t g341 = 0x43cec0;"
+    },
+    {
+      "name": "g349",
+      "declaration": "// 0x4ec924\n // 0x4ec948\n // 0x4ec960\n\n // 0x4ec988\n // 0x4ec9a0\nchar * g349 = \"\\x82l\\x82r \\x83S\\x83V\\x83\\x62\\x83N\";"
+    },
+    {
+      "name": "g351",
+      "declaration": "int32_t g351 = 0x441660;"
+    },
+    {
+      "name": "g366",
+      "declaration": "// 0x4ecb60\n\n // 0x4ecc38\n // 0x4ecc60\nint32_t g366 = 0x447340;"
+    },
+    {
+      "name": "g380",
+      "declaration": "// 0x4ecd30\n // 0x4ecd60\n // 0x4ecd6c\n // 0x4ece00\n // 0x4ece28\nint32_t g380 = 0x449f10;"
+    },
+    {
+      "name": "g381",
+      "declaration": "// 0x4ece88\nint32_t g381 = 0x44bf40;"
+    },
+    {
+      "name": "g396",
+      "declaration": "// 0x4eceac\n // 0x4ecec4\n // 0x4ecedc\n // 0x4eceec\n // 0x4ecefc\n // 0x4ecf14\n // 0x4ecf2c\n // 0x4ecf44\n // 0x4ecf6c\n // 0x4ed038\n // 0x4ed078\nint32_t g396 = 0x44ce70;"
+    },
+    {
+      "name": "g408",
+      "declaration": "// 0x4ed0a8\n\n // 0x4ed160\nint32_t g408 = 0x453580;"
+    },
+    {
+      "name": "g409",
+      "declaration": "// 0x4ed2f8\nint32_t g409 = 0x453580;"
+    },
+    {
+      "name": "g440",
+      "declaration": "// 0x4ed308\n // 0x4ed324\n // 0x4ed378\n // 0x4ed550\n // 0x4ed5a0\n // 0x4ed5b8\n // 0x4ed5d0\n // 0x4ed5e8\n // 0x4ed600\n // 0x4ed624\n // 0x4ed654\n // 0x4ed71c\n // 0x4ed734\nchar * g440;"
+    },
+    {
+      "name": "g441",
+      "declaration": "// 0x4f3514\nint32_t g441 = 0x19930522;"
+    },
+    {
+      "name": "g443",
+      "declaration": "// 0x4f5f28\n // 0x4f72fc\nchar * g443;"
+    },
+    {
+      "name": "g461",
+      "declaration": "// 0x4f7308\n // 0x4f7310\n // 0x4f7318\n // 0x4f7320\n // 0x4f7324\n // 0x4f7328\n // 0x4f732c\n // 0x4f7330\n // 0x4f7334\n\nint32_t g461 = 0;"
+    },
+    {
+      "name": "g462",
+      "declaration": "// 0x4fe594\nfloat32_t * g462 = (float32_t *)-0x3db40000;"
+    },
+    {
+      "name": "g463",
+      "declaration": "// 0x4fe5b8\nbool g463 = false;"
+    },
+    {
+      "name": "g464",
+      "declaration": "// 0x4fe6c8\nfloat32_t g464 = -30.0f;"
+    },
+    {
+      "name": "g465",
+      "declaration": "// 0x4fe714\nfloat32_t * g465 = (float32_t *)-0x3d900000;"
+    },
+    {
+      "name": "g466",
+      "declaration": "// 0x4fe718\nfloat64_t * g466 = NULL;"
+    },
+    {
+      "name": "g467",
+      "declaration": "// 0x504058\nfloat32_t * g467 = NULL;"
+    },
+    {
+      "name": "g468",
+      "declaration": "// 0x5040a0\nfloat32_t * g468 = (float32_t *)-0x43dd3997;"
+    },
+    {
+      "name": "g469",
+      "declaration": "// 0x5044a0\nint32_t g469;"
+    },
+    {
+      "name": "g470",
+      "declaration": "// 0x504520\nint32_t g470;"
+    },
+    {
+      "name": "g471",
+      "declaration": "// 0x504528\nint32_t g471 = 4;"
+    },
+    {
+      "name": "g472",
+      "declaration": "// 0x504538\nfloat32_t g472 = 6.28318548f;"
+    },
+    {
+      "name": "g473",
+      "declaration": "// 0x504548\nfloat32_t g473 = 0.707106769f;"
+    },
+    {
+      "name": "g474",
+      "declaration": "// 0x50454c\nfloat32_t g474 = 6.28318548f;"
+    },
+    {
+      "name": "g475",
+      "declaration": "// 0x504550\nint32_t g475;"
+    },
+    {
+      "name": "g476",
+      "declaration": "// 0x50c4e4\nfloat32_t * g476 = (float32_t *)0x3f800000;"
+    },
+    {
+      "name": "g477",
+      "declaration": "// 0x50c9bc\nfloat32_t * g477 = (float32_t *)0x3f7fec43;"
+    },
+    {
+      "name": "g478",
+      "declaration": "// 0x50c9c0\nfloat32_t * g478 = (float32_t *)0x3fb504f3;"
+    },
+    {
+      "name": "g479",
+      "declaration": "// 0x50cbc0\nfloat32_t * g479 = (float32_t *)0x3fb2416a;"
+    },
+    {
+      "name": "g480",
+      "declaration": "// 0x50cbc4\nfloat32_t * g480 = (float32_t *)0x3f800000;"
+    },
+    {
+      "name": "g481",
+      "declaration": "// 0x50ccc4\nfloat32_t * g481 = (float32_t *)0x3f800000;"
+    },
+    {
+      "name": "g482",
+      "declaration": "// 0x50cd48\nfloat32_t * g482 = (float32_t *)0x3f7e2a20;"
+    },
+    {
+      "name": "g485",
+      "declaration": "// 0x50cfe4\nint32_t g485 = 0x1000008;"
+    },
+    {
+      "name": "g486",
+      "declaration": "// 0x50cfe8\nint32_t g486 = 1;"
+    },
+    {
+      "name": "g487",
+      "declaration": "// 0x50cfec\nint32_t g487 = 0x1000008;"
+    },
+    {
+      "name": "g488",
+      "declaration": "// 0x50cff0\nint32_t g488 = 0;"
+    },
+    {
+      "name": "g489",
+      "declaration": "int32_t g489 = 0x5000002;"
+    },
+    {
+      "name": "g490",
+      "declaration": "// 0x50cff8\nint32_t g490 = 1;"
+    },
+    {
+      "name": "g491",
+      "declaration": "// 0x50cffc\nint32_t g491 = 0x5000002;"
+    },
+    {
+      "name": "g492",
+      "declaration": "// 0x50d000\nint32_t g492 = -1;"
+    },
+    {
+      "name": "g493",
+      "declaration": "// 0x50d004\nchar (*g493)[16] = \"seterrorhandler\";"
+    },
+    {
+      "name": "g494",
+      "declaration": "// 0x50d008\nint32_t g494 = 0x4a1850;"
+    },
+    {
+      "name": "g495",
+      "declaration": "// 0x50d00c\nint32_t g495 = 2;"
+    },
+    {
+      "name": "g496",
+      "declaration": "// 0x50d010\nint32_t g496 = 0;"
+    },
+    {
+      "name": "g497",
+      "declaration": "// 0x50d014\nchar (*g497)[4] = \"len\";"
+    },
+    {
+      "name": "g498",
+      "declaration": "// 0x50d128\nchar (*g498)[4] = \"len\";"
+    },
+    {
+      "name": "g499",
+      "declaration": "// 0x50d1b8\nchar (*g499)[4] = \"len\";"
+    },
+    {
+      "name": "g500",
+      "declaration": "// 0x50d2b8\nchar (*g500)[10] = \"tointeger\";"
+    },
+    {
+      "name": "g501",
+      "declaration": "// 0x50d358\nchar (*g501)[5] = \"call\";"
+    },
+    {
+      "name": "g502",
+      "declaration": "// 0x50d3b8\nchar (*g502)[10] = \"getstatus\";"
+    },
+    {
+      "name": "g503",
+      "declaration": "// 0x50d448\nchar (*g503)[5] = \"call\";"
+    },
+    {
+      "name": "g504",
+      "declaration": "// 0x50d488\nchar (*g504)[14] = \"getattributes\";"
+    },
+    {
+      "name": "g505",
+      "declaration": "// 0x50d4e8\nchar (*g505)[9] = \"getclass\";"
+    },
+    {
+      "name": "g506",
+      "declaration": "// 0x50d558\nchar (*g506)[4] = \"ref\";"
+    },
+    {
+      "name": "g508",
+      "declaration": "// 0x50d5a8\n // 0x50d658\nfloat64_t g508 = 0.5;"
+    },
+    {
+      "name": "g526",
+      "declaration": "// 0x50d6f0\n\n// 0x50f108\n // 0x50f178\n // 0x50f17c\n // 0x50f180\n // 0x50f184\n // 0x50f1d8\n // 0x50f1dc\n // 0x50f1e0\n // 0x50f1e4\n // 0x50f308\n // 0x50f398\n // 0x50f428\n // 0x50f458\nchar * g526;"
+    },
+    {
+      "name": "g529",
+      "declaration": "int32_t g529 = 0x412210;"
+    },
+    {
+      "name": "g530",
+      "declaration": "// 0x50f6d8\nint32_t g530 = 0x412350;"
+    },
+    {
+      "name": "g531",
+      "declaration": "// 0x50f6dc\nint32_t g531 = 0x4123a0;"
+    },
+    {
+      "name": "g532",
+      "declaration": "// 0x50f6e0\nint32_t g532 = 0x4123c0;"
+    },
+    {
+      "name": "g557",
+      "declaration": "int32_t g557 = 0;"
+    },
+    {
+      "name": "g558",
+      "declaration": "// 0x51013c\nstruct retdec_MAT2 * g558 = (struct retdec_MAT2 *)0x10000;"
+    },
+    {
+      "name": "g559",
+      "declaration": "// 0x51034c\nstruct retdec_MAT2 * g559 = (struct retdec_MAT2 *)0x10000;"
+    },
+    {
+      "name": "g574",
+      "declaration": "// 0x5109db\nint32_t g574 = 0;"
+    },
+    {
+      "name": "g615",
+      "declaration": "int32_t g615 = 0;"
+    },
+    {
+      "name": "g616",
+      "declaration": "// 0x514388\nint32_t g616 = 0;"
+    },
+    {
+      "name": "g640",
+      "declaration": "// 0x5144c0\nint32_t g640 = 0;"
+    },
+    {
+      "name": "g641",
+      "declaration": "// 0x5148cc\nchar * g641;"
+    },
+    {
+      "name": "g646",
+      "declaration": "// zero-initialized global SquirrelObject storage\nchar * g646;"
+    },
+    {
+      "name": "g647",
+      "declaration": "// 0x5149f8\nchar * g647;"
+    },
+    {
+      "name": "g666",
+      "declaration": "// 0x51620c\nint32_t g666 = 0;"
+    },
+    {
+      "name": "g667",
+      "declaration": "// 0x516214\nint32_t g667 = 0;"
+    },
+    {
+      "name": "g670",
+      "declaration": "// 0x516840\nint32_t g670 = 0;"
+    },
+    {
+      "name": "g671",
+      "declaration": "// 0x5179e0\nfloat32_t g671 = 0.0f;"
+    },
+    {
+      "name": "g672",
+      "declaration": "// 0x5187f0\nint32_t g672 = 0;"
+    },
+    {
+      "name": "g674",
+      "declaration": "// 0x51ac10\nchar g674 = 0;"
+    },
+    {
+      "name": "g723",
+      "declaration": "// 0x51ae34\nint32_t g723 = 0;"
+    },
+    {
+      "name": "g742",
+      "declaration": "// 0x51ae40\n // 0x51ae48\n // 0x51ae4c\n // 0x51ae50\n // 0x51ae54\n // 0x51ae58\n // 0x51ae5c\n // 0x51ae64\n // 0x51ae68\n // 0x51ae6c\n // 0x51ae74\n // 0x51ae78\n // 0x51ae7c\n // 0x51ae84\n // 0x51ae88\n // 0x51ae90\n // 0x51ae94\n // 0x51ae98\n // 0x51aeb0\nint32_t g742 = 0;"
+    },
+    {
+      "name": "g745",
+      "declaration": "// 0x51aec4\n // 0x51aed8\n // 0x51aedc\nint32_t g745 = 0;"
+    },
+    {
+      "name": "g790",
+      "declaration": "float80_t g790 = 0.0L;"
+    },
+    {
+      "name": "g791",
+      "declaration": "// 0x51b1c0\nint32_t g791 = 0;"
+    },
+    {
+      "name": "g792",
+      "declaration": "// 0x51b1c8\nint32_t g792 = 0;"
+    },
+    {
+      "name": "g793",
+      "declaration": "// 0x51b1d0\nint32_t g793 = 0;"
+    },
+    {
+      "name": "g794",
+      "declaration": "// 0x51b1d4\nchar g794 = 0;"
+    },
+    {
+      "name": "g795",
+      "declaration": "// 0x51b1d8\nint32_t g795 = 0;"
+    },
+    {
+      "name": "g796",
+      "declaration": "// 0x51b1dc\nstruct retdec_RTL_CRITICAL_SECTION g796 = { 0 };"
+    },
+    {
+      "name": "g797",
+      "declaration": "// 0x51b1e0\nint32_t g797 = 0;"
+    },
+    {
+      "name": "g798",
+      "declaration": "// 0x51b1f8\nint32_t g798 = 0;"
+    },
+    {
+      "name": "g799",
+      "declaration": "// 0x51b248\nint32_t g799 = 0;"
+    },
+    {
+      "name": "g800",
+      "declaration": "// 0x51b24c\nint32_t g800 = 0;"
+    },
+    {
+      "name": "g801",
+      "declaration": "// 0x51b254\nint32_t g801 = 0;"
+    },
+    {
+      "name": "g802",
+      "declaration": "// 0x51b258\nint32_t g802 = 0;"
+    },
+    {
+      "name": "g803",
+      "declaration": "// 0x51b260\nint32_t g803 = 0;"
+    },
+    {
+      "name": "g804",
+      "declaration": "// 0x51b264\nfloat80_t g804 = 0.0L;"
+    },
+    {
+      "name": "g805",
+      "declaration": "// 0x51b278\n\nint32_t g805 = 0;"
+    },
+    {
+      "name": "g806",
+      "declaration": "// 0x51b27c\nint32_t g806 = 0;"
+    },
+    {
+      "name": "g807",
+      "declaration": "// 0x51b280\nint32_t g807 = 0;"
+    },
+    {
+      "name": "g808",
+      "declaration": "// 0x51b284\nint32_t g808 = 0;"
+    },
+    {
+      "name": "g809",
+      "declaration": "// 0x51b288\nint32_t g809 = 0;"
+    },
+    {
+      "name": "g810",
+      "declaration": "// 0x51b28c\nint32_t g810 = 0;"
+    },
+    {
+      "name": "g811",
+      "declaration": "// 0x51b294\nint32_t g811 = 0;"
+    },
+    {
+      "name": "g812",
+      "declaration": "// 0x51b298\nint32_t g812 = 0;"
+    },
+    {
+      "name": "g813",
+      "declaration": "// 0x51b29c\nint32_t g813 = 0;"
+    },
+    {
+      "name": "g814",
+      "declaration": "// 0x51b2a4\nint32_t g814 = 0;"
+    },
+    {
+      "name": "g815",
+      "declaration": "// 0x51b2a8\nint32_t g815 = 0;"
+    },
+    {
+      "name": "g816",
+      "declaration": "// 0x51b2ac\nint32_t g816 = 0;"
+    },
+    {
+      "name": "g817",
+      "declaration": "// 0x51b2b4\nint32_t g817 = 0;"
+    },
+    {
+      "name": "g818",
+      "declaration": "// 0x51b2b8\nint32_t g818 = 0;"
+    },
+    {
+      "name": "g819",
+      "declaration": "// 0x51b2c0\nint32_t g819 = 0;"
+    },
+    {
+      "name": "g820",
+      "declaration": "// 0x51b2c4\nstruct retdec_RTL_CRITICAL_SECTION g820 = { 0 };"
+    },
+    {
+      "name": "g821",
+      "declaration": "// 0x51b2c8\nint32_t g821 = 0;"
+    },
+    {
+      "name": "g822",
+      "declaration": "// 0x51b2e0\nint32_t g822 = 0;"
+    },
+    {
+      "name": "g823",
+      "declaration": "// 0x51b348\nint32_t g823 = 0;"
+    },
+    {
+      "name": "g824",
+      "declaration": "// 0x51b4c8\nint32_t g824 = 0;"
+    },
+    {
+      "name": "g825",
+      "declaration": "// 0x51b6c8\nint32_t g825 = 0;"
+    },
+    {
+      "name": "g826",
+      "declaration": "// 0x51b6cc\nint32_t g826 = 0;"
+    },
+    {
+      "name": "g827",
+      "declaration": "// 0x51b6d0\nint32_t g827 = 0;"
+    },
+    {
+      "name": "g828",
+      "declaration": "// 0x51b6d8\nint32_t g828 = 0;"
+    },
+    {
+      "name": "g829",
+      "declaration": "// 0x51b6dc\nint32_t g829 = 0;"
+    },
+    {
+      "name": "g830",
+      "declaration": "// 0x51b6e0\nint32_t g830 = 0;"
+    },
+    {
+      "name": "g831",
+      "declaration": "// 0x51b6e8\nint32_t g831 = 0;"
+    },
+    {
+      "name": "g832",
+      "declaration": "// 0x51b6ec\nint32_t g832 = 0;"
+    },
+    {
+      "name": "g872",
+      "declaration": "// 0x51b6f0\nint32_t g872 = 0;"
+    },
+    {
+      "name": "g873",
+      "declaration": "// 0x51b7c8\nint32_t g873 = 0;"
+    },
+    {
+      "name": "g875",
+      "declaration": "// 0x51b7d0\nchar * g875;"
+    },
+    {
+      "name": "g890",
+      "declaration": "// 0x51b8e0\n // 0x51b924\n // 0x51b928\nint32_t g890 = 0;"
+    },
+    {
+      "name": "g891",
+      "declaration": "// 0x51b930\nint32_t g891 = 0;"
+    },
+    {
+      "name": "g892",
+      "declaration": "// 0x51b934\nint32_t g892 = 0;"
+    },
+    {
+      "name": "g893",
+      "declaration": "// 0x51b93c\nint32_t g893 = 0;"
+    },
+    {
+      "name": "g896",
+      "declaration": "// 0x51b940\n // 0x51b948\n // 0x51b94c\nint32_t g896 = 0;"
+    },
+    {
+      "name": "g897",
+      "declaration": "// 0x51b954\nint32_t g897 = 0;"
+    },
+    {
+      "name": "g900",
+      "declaration": "// 0x51b958\n // 0x51b960\n\nint32_t g900 = 0;"
+    },
+    {
+      "name": "g901",
+      "declaration": "// 0x51b96c\nint32_t g901 = 0;"
+    },
+    {
+      "name": "g904",
+      "declaration": "// 0x51b970\n // 0x51b978\n // 0x51b97c\nint32_t g904 = 0;"
+    },
+    {
+      "name": "g905",
+      "declaration": "// 0x51b984\nint32_t g905 = 0;"
+    },
+    {
+      "name": "g906",
+      "declaration": "// 0x51b988\nint32_t g906 = 0;"
+    },
+    {
+      "name": "g908",
+      "declaration": "// 0x51b990\n // 0x51b994\nint32_t g908 = 0;"
+    },
+    {
+      "name": "g909",
+      "declaration": "// 0x51b99c\nint32_t g909 = 0;"
+    },
+    {
+      "name": "g911",
+      "declaration": "// 0x51b9a8\nint32_t g911 = 0;"
+    },
+    {
+      "name": "g912",
+      "declaration": "// 0x51b9ac\nint32_t g912 = 0;"
+    },
+    {
+      "name": "g913",
+      "declaration": "// 0x51b9b4\nint32_t g913 = 0;"
+    },
+    {
+      "name": "g915",
+      "declaration": "// 0x51b9c0\nint32_t g915 = 0;"
+    },
+    {
+      "name": "g916",
+      "declaration": "// 0x51b9c4\nint32_t g916 = 0;"
+    },
+    {
+      "name": "g917",
+      "declaration": "// 0x51b9cc\nint32_t g917 = 0;"
+    },
+    {
+      "name": "g920",
+      "declaration": "// 0x51b9d8\n // 0x51b9dc\nint32_t g920 = 0;"
+    },
+    {
+      "name": "g921",
+      "declaration": "// 0x51b9e4\nint32_t g921 = 0;"
+    },
+    {
+      "name": "g923",
+      "declaration": "// 0x51b9e8\n\nint32_t g923 = 0;"
+    },
+    {
+      "name": "g924",
+      "declaration": "// 0x51b9f4\nint32_t g924 = 0;"
+    },
+    {
+      "name": "g925",
+      "declaration": "// 0x51b9fc\nint32_t g925 = 0;"
+    },
+    {
+      "name": "g928",
+      "declaration": "// 0x51ba08\n // 0x51ba0c\nint32_t g928 = 0;"
+    },
+    {
+      "name": "g929",
+      "declaration": "// 0x51ba14\nint32_t g929 = 0;"
+    },
+    {
+      "name": "g931",
+      "declaration": "// 0x51ba20\nint32_t g931 = 0;"
+    },
+    {
+      "name": "g932",
+      "declaration": "// 0x51ba24\nint32_t g932 = 0;"
+    },
+    {
+      "name": "g933",
+      "declaration": "// 0x51ba2c\nint32_t g933 = 0;"
+    },
+    {
+      "name": "g935",
+      "declaration": "// 0x51ba38\nint32_t g935 = 0;"
+    },
+    {
+      "name": "g936",
+      "declaration": "// 0x51ba3c\nint32_t g936 = 0;"
+    },
+    {
+      "name": "g937",
+      "declaration": "// 0x51ba44\nint32_t g937 = 0;"
+    },
+    {
+      "name": "g938",
+      "declaration": "// 0x51ba48\nint32_t g938 = 0;"
+    },
+    {
+      "name": "g940",
+      "declaration": "// 0x51ba50\n // 0x51ba54\nint32_t g940 = 0;"
+    },
+    {
+      "name": "g941",
+      "declaration": "// 0x51ba5c\nint32_t g941 = 0;"
+    },
+    {
+      "name": "g947",
+      "declaration": "// 0x51ba60\n // 0x51ba68\n // 0x51ba6c\n // 0x51ba70\n // 0x51ba74\n // 0x51ba78\nint32_t g947 = 0;"
+    },
+    {
+      "name": "g948",
+      "declaration": "// 0x51ba80\nint32_t g948 = 0;"
+    },
+    {
+      "name": "g950",
+      "declaration": "// 0x51ba84\n // 0x51ba88\nint32_t g950 = 0;"
+    },
+    {
+      "name": "g951",
+      "declaration": "// 0x51ba8c\nint32_t g951 = 0;"
+    },
+    {
+      "name": "g952",
+      "declaration": "// 0x51ba90\nbool g952 = false;"
+    },
+    {
+      "name": "g954",
+      "declaration": "// recovered 0x51baa0\nint32_t g954 = 0;"
+    },
+    {
+      "name": "g955",
+      "declaration": "// 0x51baa4\nint32_t g955 = 0;"
+    },
+    {
+      "name": "g956",
+      "declaration": "// 0x51baa8\nint32_t g956 = 0;"
+    },
+    {
+      "name": "g957",
+      "declaration": "// 0x51baac\nint32_t g957 = 0;"
+    },
+    {
+      "name": "g958",
+      "declaration": "// 0x51bab0\nint32_t g958 = 0;"
+    },
+    {
+      "name": "g959",
+      "declaration": "// 0x51bab4\nint32_t g959 = 0;"
+    },
+    {
+      "name": "g960",
+      "declaration": "// 0x51babc\nint32_t g960 = 0;"
+    },
+    {
+      "name": "g961",
+      "declaration": "// 0x51bac0\nint32_t g961 = 0;"
+    },
+    {
+      "name": "g962",
+      "declaration": "// 0x51bac4\nint32_t g962 = 0;"
+    },
+    {
+      "name": "g963",
+      "declaration": "// 0x51bacc\nint32_t g963 = 0;"
+    },
+    {
+      "name": "g964",
+      "declaration": "// 0x51bad0\nint32_t g964 = 0;"
+    },
+    {
+      "name": "g965",
+      "declaration": "// 0x51bad4\nint32_t g965 = 0;"
+    },
+    {
+      "name": "g966",
+      "declaration": "// 0x51badc\nint32_t g966 = 0;"
+    },
+    {
+      "name": "g967",
+      "declaration": "// 0x51bae0\nint32_t g967 = 0;"
+    },
+    {
+      "name": "g968",
+      "declaration": "// 0x51bae8\nint32_t g968 = 0;"
+    },
+    {
+      "name": "g969",
+      "declaration": "// 0x51baec\nstruct retdec_RTL_CRITICAL_SECTION g969 = { 0 };"
+    },
+    {
+      "name": "g970",
+      "declaration": "// 0x51baf0\nint32_t g970 = 0;"
+    },
+    {
+      "name": "g971",
+      "declaration": "// 0x51bb08\nint32_t g971 = 0;"
+    },
+    {
+      "name": "g973",
+      "declaration": "// 0x51bb1c\n // 0x51bb30\nint32_t g973 = 0;"
+    },
+    {
+      "name": "g974",
+      "declaration": "// 0x51bb34\nint32_t g974 = 0;"
+    },
+    {
+      "name": "g976",
+      "declaration": "// 0x51bb38\n // 0x51bb40\nint32_t g976 = 0;"
+    },
+    {
+      "name": "g977",
+      "declaration": "// 0x51bb44\nint32_t g977 = 0;"
+    },
+    {
+      "name": "g978",
+      "declaration": "// 0x51bb48\nint32_t g978 = 0;"
+    },
+    {
+      "name": "g979",
+      "declaration": "// 0x51bb4c\nint32_t g979 = 0;"
+    },
+    {
+      "name": "g980",
+      "declaration": "// 0x51bb50\nint32_t g980 = 0;"
+    },
+    {
+      "name": "g981",
+      "declaration": "// 0x51bb54\nint32_t g981 = 0;"
+    },
+    {
+      "name": "g982",
+      "declaration": "// 0x51bb5c\nint32_t g982 = 0;"
+    },
+    {
+      "name": "g983",
+      "declaration": "// 0x51bb60\nint32_t g983 = 0;"
+    },
+    {
+      "name": "g984",
+      "declaration": "// 0x51bb64\nint32_t g984 = 0;"
+    },
+    {
+      "name": "g985",
+      "declaration": "// 0x51bb6c\nint32_t g985 = 0;"
+    },
+    {
+      "name": "g986",
+      "declaration": "// 0x51bb70\nint32_t g986 = 0;"
+    },
+    {
+      "name": "g987",
+      "declaration": "// 0x51bb74\nint32_t g987 = 0;"
+    },
+    {
+      "name": "g988",
+      "declaration": "// 0x51bb7c\nint32_t g988 = 0;"
+    },
+    {
+      "name": "g989",
+      "declaration": "// 0x51bb80\nint32_t g989 = 0;"
+    },
+    {
+      "name": "g990",
+      "declaration": "// 0x51bb88\nint32_t g990 = 0;"
+    },
+    {
+      "name": "g991",
+      "declaration": "// 0x51bb8c\nstruct retdec_RTL_CRITICAL_SECTION g991 = { 0 };"
+    },
+    {
+      "name": "g992",
+      "declaration": "// 0x51bb90\nint32_t g992 = 0;"
+    },
+    {
+      "name": "g993",
+      "declaration": "// 0x51bba8\nint32_t g993 = 0;"
+    },
+    {
+      "name": "g994",
+      "declaration": "// 0x51bbbc\nint32_t g994 = 0;"
+    },
+    {
+      "name": "g995",
+      "declaration": "// 0x51bbd0\nint32_t g995 = 0;"
+    },
+    {
+      "name": "g996",
+      "declaration": "// 0x51bbd4\nint32_t g996 = 0;"
+    },
+    {
+      "name": "g997",
+      "declaration": "// 0x51bbd8\nint32_t g997 = 0;"
+    },
+    {
+      "name": "g998",
+      "declaration": "// 0x51bbe0\nint32_t g998 = 0;"
+    },
+    {
+      "name": "g999",
+      "declaration": "// 0x51bbe4\nint32_t g999 = 0;"
+    },
+    {
+      "name": "g1000",
+      "declaration": "// 0x51bbe8\nint32_t g1000 = 0;"
+    },
+    {
+      "name": "g1001",
+      "declaration": "// 0x51bbec\nint32_t g1001 = 0;"
+    },
+    {
+      "name": "g1002",
+      "declaration": "// 0x51bbf0\nint32_t g1002 = 0;"
+    },
+    {
+      "name": "g1003",
+      "declaration": "// 0x51bbf4\nint32_t g1003 = 0;"
+    },
+    {
+      "name": "g1004",
+      "declaration": "// 0x51bbfc\nint32_t g1004 = 0;"
+    },
+    {
+      "name": "g1005",
+      "declaration": "// 0x51bc00\nint32_t g1005 = 0;"
+    },
+    {
+      "name": "g1006",
+      "declaration": "// 0x51bc04\nint32_t g1006 = 0;"
+    },
+    {
+      "name": "g1007",
+      "declaration": "// 0x51bc0c\nint32_t g1007 = 0;"
+    },
+    {
+      "name": "g1008",
+      "declaration": "// 0x51bc10\nint32_t g1008 = 0;"
+    },
+    {
+      "name": "g1009",
+      "declaration": "// 0x51bc14\nint32_t g1009 = 0;"
+    },
+    {
+      "name": "g1010",
+      "declaration": "// 0x51bc1c\nint32_t g1010 = 0;"
+    },
+    {
+      "name": "g1011",
+      "declaration": "// 0x51bc20\nint32_t g1011 = 0;"
+    },
+    {
+      "name": "g1012",
+      "declaration": "// 0x51bc28\nint32_t g1012 = 0;"
+    },
+    {
+      "name": "g1013",
+      "declaration": "// 0x51bc2c\nstruct retdec_RTL_CRITICAL_SECTION g1013 = { 0 };"
+    },
+    {
+      "name": "g1014",
+      "declaration": "// 0x51bc30\nint32_t g1014 = 0;"
+    },
+    {
+      "name": "g1015",
+      "declaration": "// 0x51bc48\nint32_t g1015 = 0;"
+    },
+    {
+      "name": "g1016",
+      "declaration": "// 0x51bc5c\nint32_t g1016 = 0;"
+    },
+    {
+      "name": "g1017",
+      "declaration": "// 0x51bc70\nint32_t g1017 = 0;"
+    },
+    {
+      "name": "g1018",
+      "declaration": "// 0x51bc74\nint32_t g1018 = 0;"
+    },
+    {
+      "name": "g1036",
+      "declaration": "// 0x51bc78\n // 0x51bc80\n // 0x51bc84\n // 0x51bc88\n // 0x51bc90\n\n // 0x51bca0\n // 0x51bca4\n // 0x51bca8\n\n // 0x51bcb0\n // 0x51bcb1\n // 0x51bcb2\n // 0x51bcb3\n // 0x51bcb4\n\nchar g1036 = 0;"
+    },
+    {
+      "name": "g1039",
+      "declaration": "// recovered 0x51bcb7\n // 0x51bcb8\nchar g1039 = 0;"
+    },
+    {
+      "name": "g1040",
+      "declaration": "// 0x51bcb9\nchar g1040 = 0;"
+    },
+    {
+      "name": "g1041",
+      "declaration": "// 0x51bcba\nint32_t g1041 = 0;"
+    },
+    {
+      "name": "g1042",
+      "declaration": "// 0x51bcbc\nint32_t g1042 = 0;"
+    },
+    {
+      "name": "g1043",
+      "declaration": "// 0x51bcc0\nint32_t g1043 = 0;"
+    },
+    {
+      "name": "g1044",
+      "declaration": "// 0x51bcc4\nint32_t g1044 = 0;"
+    },
+    {
+      "name": "g1045",
+      "declaration": "// 0x51bccc\nint32_t g1045 = 0;"
+    },
+    {
+      "name": "g1046",
+      "declaration": "// 0x51bcd0\nint32_t g1046 = 0;"
+    },
+    {
+      "name": "g1047",
+      "declaration": "// 0x51bcd4\nint32_t g1047 = 0;"
+    },
+    {
+      "name": "g1048",
+      "declaration": "// 0x51bcd8\nint32_t g1048 = 0;"
+    },
+    {
+      "name": "g1051",
+      "declaration": "// recovered 0x51bce0/0x51bce4\nint32_t g1051 = 0;"
+    },
+    {
+      "name": "g1052",
+      "declaration": "// 0x51bce8\nint32_t g1052 = 0;"
+    },
+    {
+      "name": "g1053",
+      "declaration": "// 0x51bcec\nint32_t g1053 = 0;"
+    },
+    {
+      "name": "g1054",
+      "declaration": "// 0x51bcf0\nint32_t g1054 = 0;"
+    },
+    {
+      "name": "g1055",
+      "declaration": "// 0x51bcf8\nint32_t g1055 = 0;"
+    },
+    {
+      "name": "g1056",
+      "declaration": "// 0x51bcfc\nint32_t g1056 = 0;"
+    },
+    {
+      "name": "g1057",
+      "declaration": "// 0x51bd00\nint32_t g1057 = 0;"
+    },
+    {
+      "name": "g1058",
+      "declaration": "// 0x51bd04\nint32_t g1058 = 0;"
+    },
+    {
+      "name": "g1081",
+      "declaration": "// 0x51bd64\nint32_t g1081 = 0;"
+    },
+    {
+      "name": "g1082",
+      "declaration": "// 0x51bd6c\nint32_t g1082 = 0;"
+    },
+    {
+      "name": "g1083",
+      "declaration": "// 0x51bd70\nint32_t g1083 = 0;"
+    },
+    {
+      "name": "g1084",
+      "declaration": "// 0x51bd74\nint32_t g1084 = 0;"
+    },
+    {
+      "name": "g1085",
+      "declaration": "// 0x51bd7c\nint32_t g1085 = 0;"
+    },
+    {
+      "name": "g1086",
+      "declaration": "// 0x51bd80\nint32_t g1086 = 0;"
+    },
+    {
+      "name": "g1087",
+      "declaration": "// 0x51bd84\nint32_t g1087 = 0;"
+    },
+    {
+      "name": "g1088",
+      "declaration": "// 0x51bd88\nint32_t g1088 = 0;"
+    },
+    {
+      "name": "g1156",
+      "declaration": "// 0x51bea8\n\nchar g1156 = 0;"
+    },
+    {
+      "name": "g1157",
+      "declaration": "// 0x51beb4\nchar g1157 = 0;"
+    },
+    {
+      "name": "g1158",
+      "declaration": "// 0x51beb8\nchar g1158 = 0;"
+    },
+    {
+      "name": "g1159",
+      "declaration": "// 0x51bebc\nchar g1159 = 0;"
+    },
+    {
+      "name": "g1160",
+      "declaration": "// 0x51bec0\nchar g1160 = 0;"
+    },
+    {
+      "name": "g1161",
+      "declaration": "// 0x51bec4\nchar g1161 = 0;"
+    },
+    {
+      "name": "g1162",
+      "declaration": "// 0x51bec8\nchar g1162 = 0;"
+    },
+    {
+      "name": "g1163",
+      "declaration": "// 0x51becc\nchar g1163 = 0;"
+    },
+    {
+      "name": "g1164",
+      "declaration": "// 0x51bed0\nchar g1164 = 0;"
+    },
+    {
+      "name": "g1169",
+      "declaration": "// 0x51bed4\n\nint32_t g1169 = 0;"
+    },
+    {
+      "name": "g1171",
+      "declaration": "// 0x51bee8\n\nint32_t g1171 = 0;"
+    },
+    {
+      "name": "g1172",
+      "declaration": "// 0x50f05c\nint32_t g1172;"
+    },
+    {
+      "name": "g1173",
+      "declaration": "int32_t g1173;"
+    },
+    {
+      "name": "g1174",
+      "declaration": "int32_t g1174;"
+    },
+    {
+      "name": "g1175",
+      "declaration": "int32_t g1175;"
+    },
+    {
+      "name": "g1176",
+      "declaration": "int32_t g1176;"
+    },
+    {
+      "name": "g1177",
+      "declaration": "int32_t g1177;"
+    },
+    {
+      "name": "g1178",
+      "declaration": "int32_t g1178;"
+    },
+    {
+      "name": "g1179",
+      "declaration": "int32_t g1179;"
+    },
+    {
+      "name": "g1180",
+      "declaration": "int32_t g1180;"
+    },
+    {
+      "name": "g1181",
+      "declaration": "int32_t g1181;"
+    },
+    {
+      "name": "g1182",
+      "declaration": "int32_t g1182;"
+    },
+    {
+      "name": "g1183",
+      "declaration": "int32_t g1183;"
+    },
+    {
+      "name": "g1184",
+      "declaration": "char g1184;"
+    },
+    {
+      "name": "g1185",
+      "declaration": "char g1185;"
+    },
+    {
+      "name": "g1186",
+      "declaration": "char g1186;"
+    },
+    {
+      "name": "g1187",
+      "declaration": "int32_t g1187;"
+    },
+    {
+      "name": "g1188",
+      "declaration": "int32_t g1188;"
+    },
+    {
+      "name": "g1189",
+      "declaration": "int32_t g1189;"
+    },
+    {
+      "name": "g1190",
+      "declaration": "int32_t g1190;"
+    },
+    {
+      "name": "g1191",
+      "declaration": "int32_t g1191;"
+    },
+    {
+      "name": "g1192",
+      "declaration": "int32_t g1192;"
+    },
+    {
+      "name": "g1193",
+      "declaration": "int32_t g1193;"
+    },
+    {
+      "name": "g1194",
+      "declaration": "char g1194;"
+    },
+    {
+      "name": "g1195",
+      "declaration": "int32_t g1195;"
+    },
+    {
+      "name": "g1196",
+      "declaration": "int32_t g1196;"
+    },
+    {
+      "name": "g1197",
+      "declaration": "int32_t g1197;"
+    },
+    {
+      "name": "g1198",
+      "declaration": "int32_t g1198;"
+    },
+    {
+      "name": "g1199",
+      "declaration": "int32_t g1199;"
+    },
+    {
+      "name": "g1200",
+      "declaration": "int32_t g1200;"
+    },
+    {
+      "name": "g1201",
+      "declaration": "int32_t g1201;"
+    },
+    {
+      "name": "g1202",
+      "declaration": "int32_t g1202;"
+    },
+    {
+      "name": "g1203",
+      "declaration": "int32_t g1203;"
+    },
+    {
+      "name": "g1204",
+      "declaration": "int32_t g1204;"
+    },
+    {
+      "name": "g1205",
+      "declaration": "int32_t g1205;"
+    },
+    {
+      "name": "g1206",
+      "declaration": "int32_t g1206;"
+    },
+    {
+      "name": "g1207",
+      "declaration": "int32_t g1207;"
+    },
+    {
+      "name": "g1208",
+      "declaration": "int32_t g1208;"
+    },
+    {
+      "name": "g1209",
+      "declaration": "int32_t g1209;"
+    },
+    {
+      "name": "g1210",
+      "declaration": "int32_t g1210;"
+    },
+    {
+      "name": "g1211",
+      "declaration": "int32_t g1211;"
+    },
+    {
+      "name": "g1212",
+      "declaration": "int32_t g1212;"
+    },
+    {
+      "name": "g1213",
+      "declaration": "char g1213;"
+    },
+    {
+      "name": "g1214",
+      "declaration": "int32_t g1214;"
+    },
+    {
+      "name": "g1215",
+      "declaration": "int32_t g1215;"
+    },
+    {
+      "name": "g1216",
+      "declaration": "int32_t g1216;"
+    },
+    {
+      "name": "g1217",
+      "declaration": "char g1217;"
+    },
+    {
+      "name": "g1218",
+      "declaration": "char g1218;"
+    },
+    {
+      "name": "g1219",
+      "declaration": "int32_t g1219;"
+    },
+    {
+      "name": "g1220",
+      "declaration": "int32_t g1220;"
+    },
+    {
+      "name": "g1221",
+      "declaration": "int32_t g1221;"
+    },
+    {
+      "name": "g1222",
+      "declaration": "int32_t g1222;"
+    },
+    {
+      "name": "g1223",
+      "declaration": "int32_t g1223;"
+    },
+    {
+      "name": "g1225",
+      "declaration": "int32_t g1225;"
+    },
+    {
+      "name": "g1226",
+      "declaration": "int32_t g1226;"
+    },
+    {
+      "name": "g1227",
+      "declaration": "char g1227;"
+    },
+    {
+      "name": "g65",
+      "declaration": "// 0x4d5c80\n // 0x4d5e88\nstruct vtable_4d9eb0_type g65 = {\n    .e0 = (int32_t (*)(char))kinoko_sq_delete_refcounted,\n    .e1 = __purecall\n};"
+    },
+    {
+      "name": "g561",
+      "declaration": "// 0x4ed2cc\n // 0x4ed364\n // 0x4ed394\n // 0x4ed53c\n // 0x4ed56c\n // 0x4ed58c\n // 0x4ed594\n // 0x4ed5ac\n // 0x4ed5c4\n // 0x4ed5dc\n // 0x4ed5f4\n // 0x4ed60c\n // 0x4ed63c\n // 0x4ed66c\n // 0x4ed684\n // 0x4ed68c\n // 0x4ed6a4\n // 0x4ed6b4\n // 0x4ed700\n // 0x4f7314\n // 0x4f7338\n\n // 0x50f6cc\n // 0x4f731c\nint32_t * g561 = &g80;"
+    },
+    {
+      "name": "g563",
+      "declaration": "// 0x510a2c\n // 0x511170\nint32_t * g563 = &g80;"
+    },
+    {
+      "name": "g564",
+      "declaration": "// 0x511340\nint32_t * g564 = &g80;"
+    },
+    {
+      "name": "g565",
+      "declaration": "// 0x511564\nint32_t * g565 = &g80;"
+    },
+    {
+      "name": "g566",
+      "declaration": "// 0x511944\nint32_t * g566 = &g80;"
+    },
+    {
+      "name": "g567",
+      "declaration": "// 0x511964\nint32_t * g567 = &g80;"
+    },
+    {
+      "name": "g568",
+      "declaration": "// 0x511984\nint32_t * g568 = &g80;"
+    },
+    {
+      "name": "g569",
+      "declaration": "// 0x5119a4\nint32_t * g569 = &g80;"
+    },
+    {
+      "name": "g570",
+      "declaration": "// 0x5119c4\nint32_t * g570 = &g80;"
+    },
+    {
+      "name": "g571",
+      "declaration": "// 0x511cc0\nint32_t * g571 = &g80;"
+    },
+    {
+      "name": "g572",
+      "declaration": "// 0x5123dc\nint32_t * g572 = &g80;"
+    },
+    {
+      "name": "g573",
+      "declaration": "// 0x5125cc\nint32_t * g573 = &g80;"
+    },
+    {
+      "name": "int128_t",
+      "declaration": "typedef int64_t int128_t;"
+    },
+    {
+      "name": "float64_t",
+      "declaration": "typedef double float64_t;"
+    },
+    {
+      "name": "retdec_EXCEPTION_RECORD",
+      "declaration": "struct retdec_EXCEPTION_RECORD {\n    int32_t e0;\n    int32_t e1;\n    struct retdec_EXCEPTION_RECORD * e2;\n    int32_t * e3;\n    int32_t e4;\n    int32_t e5[1];\n};"
+    },
+    {
+      "name": "retdec_FILETIME",
+      "declaration": "struct retdec_FILETIME {\n    int32_t e0;\n    int32_t e1;\n};"
+    },
+    {
+      "name": "retdec_CONTEXT",
+      "declaration": "struct retdec_CONTEXT {\n    int32_t e0;\n    int32_t e1;\n    int32_t e2;\n    int32_t e3;\n    int32_t e4;\n    int32_t e5;\n    int32_t e6;\n    int32_t e7;\n    int16_t e8;\n    int16_t e9;\n    int16_t e10;\n    int16_t e11;\n    int16_t e12;\n    int16_t e13;\n    int32_t e14;\n    int32_t e15;\n    int32_t e16;\n    int32_t e17;\n    int32_t e18;\n    int32_t e19;\n    int32_t e20;\n    int32_t e21;\n    int32_t e22;\n    int32_t e23;\n    int32_t e24;\n    int32_t e25;\n    int32_t e26;\n    int32_t e27;\n    int32_t e28;\n    int32_t e29;\n    int32_t e30;\n    int32_t e31;\n    int32_t e32;\n    int32_t e33;\n    int32_t e34;\n    int32_t e35;\n    int32_t e36;\n    int32_t e37;\n    int32_t e38;\n    struct retdec_M128A e39[26];\n    int32_t e40;\n    int32_t e41;\n    int32_t e42;\n    int32_t e43;\n    int32_t e44;\n    int32_t e45;\n};"
+    },
+    {
+      "name": "retdec_MAT2",
+      "declaration": "struct retdec_MAT2 {\n    struct retdec_FIXED e0;\n    struct retdec_FIXED e1;\n    struct retdec_FIXED e2;\n    struct retdec_FIXED e3;\n};"
+    },
+    {
+      "name": "_TYPEDEF___sigset_t",
+      "declaration": "struct _TYPEDEF___sigset_t {\n    int32_t e0[1];\n};"
+    },
+    {
+      "name": "retdec_tagPOINT",
+      "declaration": "struct retdec_tagPOINT {\n    int32_t e0;\n    int32_t e1;\n};"
+    },
+    {
+      "name": "retdec_tagRECT",
+      "declaration": "struct retdec_tagRECT {\n    int32_t e0;\n    int32_t e1;\n    int32_t e2;\n    int32_t e3;\n};"
+    },
+    {
+      "name": "vtable_4d9eb0_type",
+      "declaration": "struct vtable_4d9eb0_type {\n    int32_t (*e0)(char);\n    int32_t (*e1)();\n};"
+    },
+    {
+      "name": "g80",
+      "declaration": "// 0x4da950\nint32_t g80 = 0x4ab2c1;"
+    },
+    {
+      "name": "retdec_FIXED",
+      "declaration": "struct retdec_FIXED {\n    int16_t e0;\n    int16_t e1;\n};"
+    },
+    {
+      "name": "retdec_M128A",
+      "declaration": "struct retdec_M128A {\n    int32_t e0;\n    int64_t e1;\n};"
+    }
+  ]
+}

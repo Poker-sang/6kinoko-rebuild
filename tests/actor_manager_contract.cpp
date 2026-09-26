@@ -51,7 +51,8 @@ uint32_t kinoko_actor_owner_list_size(KinokoActorManager *) { return 512; }
 void kinoko_actor_owner_list_clear(KinokoActorManager *) {}
 KinokoActor *kinoko_actor_owner_list_acquire(KinokoActorManager *) { return nullptr; }
 KinokoIntegerMap* kinoko_integer_map_create(void) { return 0; }
-void kinoko_animation_list_construct(int32_t) {}
+void kinoko_animation_list_construct(void*) {}
+void kinoko_animation_lookup_construct(KinokoActorManager*) {}
 void kinoko_integer_vector_construct(KinokoIntegerVector*) {}
 KinokoActor* kinoko_actor_set_init_data(KinokoActor* a,const void*) { return a; }
 int32_t kinoko_actor_initialize(KinokoActor *,KinokoActorManager *,const KinokoOwnedObjectWords *,float,float,float,const KinokoOwnedObjectWords *) { return initialize_ok; }
@@ -157,7 +158,7 @@ int main() {
     actors[5].world_bounds.left=74.01f;actors[5].active=0;
     CHECK(!kinoko_actor_activate(actor_at(5),reinterpret_cast<KinokoCamera *>(&camera),64));
     kinoko_priority_destroy((void *)(intptr_t)(address(&manager.actors)));
-    kinoko_native_buffer_destroy(address(&manager.iteration));
-    kinoko_native_buffer_destroy(address(&manager.callback_candidates));
+    kinoko_native_buffer_destroy((void*)(uintptr_t)(address(&manager.iteration)));
+    kinoko_native_buffer_destroy((void*)(uintptr_t)(address(&manager.callback_candidates)));
     std::puts("PASS: priority partitions, stable reinsertion, callback masks, deferred ownership and creation failure");
 }

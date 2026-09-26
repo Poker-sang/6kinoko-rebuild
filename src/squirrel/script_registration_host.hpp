@@ -10,27 +10,24 @@ extern "C" {
 int32_t kinoko_script_dprint_noop(void);
 int32_t kinoko_actor_register_script_class(void);
 int32_t kinoko_register_input_class(void);
-int32_t function_470f60(int32_t a1);
-int32_t function_470f80(int32_t dwMilliseconds);
-int32_t function_470f90(void);
-int32_t function_471080(void);
-int32_t function_471bc0(int32_t a1);
-int32_t function_471c10(int32_t a1);
-int32_t function_471d90(int32_t a1);
-int32_t function_471eb0(int32_t a1);
-int32_t function_471f10(int32_t a1);
-int32_t function_471fd0(int32_t a1);
-int32_t function_472080(int32_t a1);
-int32_t function_4720e0(int32_t a1);
-int32_t function_472140(int32_t a1);
+int32_t kinoko_host_show_message(const char* text);
+int32_t kinoko_host_sleep(int32_t dwMilliseconds);
+int32_t kinoko_host_milliseconds(void);
+int32_t kinoko_host_close_window(void);
+int32_t kinoko_native_void_entry(struct SQVM* a1);
+int32_t kinoko_native_string_object_result_entry(struct SQVM* a1);
+int32_t kinoko_native_string_bool_result_entry(struct SQVM* a1);
+int32_t kinoko_native_two_floats_entry(struct SQVM* a1);
+int32_t kinoko_native_string_entry(struct SQVM* a1);
+int32_t kinoko_native_integer_entry(struct SQVM* a1);
+int32_t kinoko_native_string_two_integer_truth_callback(struct SQVM* a1);
+int32_t kinoko_native_string_three_integer_truth_callback(struct SQVM* a1);
+int32_t kinoko_native_two_integer_entry(struct SQVM* a1);
 int32_t kinoko_script_bind_root_value(int32_t * a1, int32_t * a2, char * a3, int32_t a4);
 int32_t kinoko_script_bind_root_integer(int32_t * a1, int32_t a2, char * a3);
-int32_t function_472c90(int32_t path_ptr, int32_t object_vtable,
-                        int32_t object_type, int32_t object_data);
-int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,
-                        int32_t object_type, int32_t object_data);
-int32_t retdec_compile_file_native(int32_t vm);
-void retdec_trace(const char*);
-void retdec_trace_i32(const char*, int32_t);
-extern int32_t g629[3], g664;
+int32_t kinoko_compile_file_native(struct SQVM* vm);
+void kinoko_trace(const char*);
+void kinoko_trace_i32(const char*, int32_t);
+extern int32_t kinoko_input_class_storage[3];
+extern struct SQVM* kinoko_act_vm;
 }

@@ -3,9 +3,9 @@
 #include <algorithm>
 
 struct KinokoInputKeyStorage { std::vector<uint8_t> scans; };
-extern "C" unsigned char g_retdec_keyboard_state[256];
+extern "C" unsigned char kinoko_keyboard_state[256];
 namespace {
-bool down(uint8_t scan) { return (g_retdec_keyboard_state[scan]&0x80)!=0; }
+bool down(uint8_t scan) { return (kinoko_keyboard_state[scan]&0x80)!=0; }
 }
 extern "C" void kinoko_input_keys_construct(KinokoKeyTracker* tracker) {
     tracker->keys=new KinokoInputKeyStorage;

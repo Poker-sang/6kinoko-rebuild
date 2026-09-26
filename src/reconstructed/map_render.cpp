@@ -8,35 +8,35 @@ using MapRenderLayer = kinoko::map::RenderLayerRecord;
 using Camera = kinoko::actor::CameraBoundsRecord;
 }
 
-extern "C" int32_t __fastcall kinoko_map_update_all_entry(int32_t layout, void *) {
-    return kinoko_map_update_visible(kinoko::legacy::pointer<KinokoActLayout>(layout),
+extern "C" int32_t __fastcall kinoko_map_update_all_entry(KinokoActLayout* layout, void *) {
+    return kinoko_map_update_visible(layout,
         0, 0, INT32_MAX, INT32_MAX);
 }
 
 extern "C" int32_t __fastcall kinoko_map_update_visible_entry(
-    int32_t layout, void *, int32_t left, int32_t top, int32_t right, int32_t bottom) {
-    return kinoko_map_update_visible(kinoko::legacy::pointer<KinokoActLayout>(layout),
+    KinokoActLayout* layout, void *, int32_t left, int32_t top, int32_t right, int32_t bottom) {
+    return kinoko_map_update_visible(layout,
         left, top, right, bottom);
 }
 
 extern "C" int32_t __fastcall kinoko_map_draw_entry(
-    int32_t layout, void *, float x, float y) {
-    return kinoko_map_draw_visible(kinoko::legacy::pointer<KinokoActLayout>(layout), x, y);
+    KinokoActLayout* layout, void *, float x, float y) {
+    return kinoko_map_draw_visible(layout, x, y);
 }
 
 // Original 46EED0: camera rectangle (+32 right/bottom), then camera offset.
 // __fastcall supplies ECX and the original callee-cleaned stack without assembly.
 extern "C" int32_t __fastcall kinoko_map_render_layer_entry(
-    int32_t layer_address, void *, int32_t camera_address) {
+    KinokoRenderLayer* layer_address, void *, KinokoCamera* camera_address) {
     if (!layer_address) return 0;
     const auto layer=kinoko::native::RecordView<MapRenderLayer>(
-        kinoko::legacy::pointer<void>(layer_address)).load();
+        layer_address).load();
     if (!layer.layout) return 0;
     int32_t left=0,top=0,right=0,bottom=0;
     float x=0,y=0;
     if (camera_address) {
         const auto camera=kinoko::native::RecordView<Camera>(
-            kinoko::legacy::pointer<void>(camera_address)).load();
+            camera_address).load();
         left=static_cast<int32_t>(camera.bounds.left);
         top=static_cast<int32_t>(camera.bounds.top);
         right=static_cast<int32_t>(camera.bounds.right)+32;

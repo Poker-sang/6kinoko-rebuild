@@ -6,13 +6,13 @@
 #include "kinoko/legacy_abi.h"
 #include <cstring>
 extern "C" {
-extern char* g644;
-void retdec_trace_i32(const char*, int32_t);
-void retdec_trace_squirrel_table_entries(const char*, int32_t);
-int32_t kinoko_camera_update_entry(int32_t);
+extern struct SQVM *kinoko_primary_vm;
+void kinoko_trace_i32(const char*, int32_t);
+void kinoko_trace_squirrel_table_entries(const char*, int32_t);
+int32_t kinoko_camera_update_entry(struct SQVM*);
 }
 namespace {
-inline char*& camera_vm_slot = g644;
+inline SQVM*& camera_vm_slot = kinoko_primary_vm;
 using namespace kinoko::script;
 using namespace kinoko::script::binding;
 template<class T> int32_t entry(T target) { return static_cast<int32_t>(reinterpret_cast<intptr_t>(target)); }
@@ -103,15 +103,15 @@ CameraTarget camera_receiver(SQVM *vm) {
     static int traces;
     if (traces < 16) {
         ++traces;
-        retdec_trace_i32("4665e0:vm", address(vm));
-        retdec_trace_i32("4665e0:result", address(&result));
-        retdec_trace_i32("4665e0:stack-count", top);
-        retdec_trace_i32("4665e0:instance-up", address(result.instance));
-        retdec_trace_i32("4665e0:userdata-status", status);
-        retdec_trace_i32("4665e0:userdata-payload", address(payload));
-        retdec_trace_i32("4665e0:userdata-tag", address(tag));
-        retdec_trace_i32("4665e0:instance-type", instance._type);
-        retdec_trace_i32("4665e0:instance-data", data_bits(instance));
+        kinoko_trace_i32("4665e0:vm", address(vm));
+        kinoko_trace_i32("4665e0:result", address(&result));
+        kinoko_trace_i32("4665e0:stack-count", top);
+        kinoko_trace_i32("4665e0:instance-up", address(result.instance));
+        kinoko_trace_i32("4665e0:userdata-status", status);
+        kinoko_trace_i32("4665e0:userdata-payload", address(payload));
+        kinoko_trace_i32("4665e0:userdata-tag", address(tag));
+        kinoko_trace_i32("4665e0:instance-type", instance._type);
+        kinoko_trace_i32("4665e0:instance-data", data_bits(instance));
     }
     ObjectStorage object{};
     kinoko_sqplus_object_construct_value(&object, instance._type, data_bits(instance));
@@ -130,16 +130,6 @@ CameraTarget camera_receiver(SQVM *vm) {
 
 } // namespace
 
-extern "C" int32_t function_466770(int32_t *output, int32_t vm,
-                                      int32_t name, int32_t parent) {
-    return create_class(reinterpret_cast<ObjectStorage *>(output), pointer<SQVM>(vm),
-        pointer<const char>(name), pointer<const char>(parent), kinoko_camera_binding_type());
-}
-extern "C" int32_t function_46f200(int32_t *output, int32_t vm,
-                                      int32_t name, int32_t parent) {
-    return create_class(reinterpret_cast<ObjectStorage *>(output), pointer<SQVM>(vm),
-        pointer<const char>(name), pointer<const char>(parent), kinoko_map_binding_type());
-}
 
 namespace {
 int32_t kinoko_call_camera_update(SQVM *vm) {
@@ -154,16 +144,16 @@ int32_t kinoko_call_camera_update(SQVM *vm) {
     int32_t arguments[3]{};
     kinoko_sqplus_argument_object(arguments, 0, vm);
     if (camera_native_trace_count < 16) {
-        retdec_trace_i32("466890:vm", address(vm));
-        retdec_trace_i32("466890:native-instance", address(target.instance));
-        retdec_trace_i32("466890:type-info", address(target.method_slot));
-        retdec_trace_i32("466890:method", address(method));
-        retdec_trace_i32("466890:arg0", arguments[0]);
-        retdec_trace_i32("466890:arg1", arguments[1]);
-        retdec_trace_i32("466890:arg2", arguments[2]);
+        kinoko_trace_i32("466890:vm", address(vm));
+        kinoko_trace_i32("466890:native-instance", address(target.instance));
+        kinoko_trace_i32("466890:type-info", address(target.method_slot));
+        kinoko_trace_i32("466890:method", address(method));
+        kinoko_trace_i32("466890:arg0", arguments[0]);
+        kinoko_trace_i32("466890:arg1", arguments[1]);
+        kinoko_trace_i32("466890:arg2", arguments[2]);
         ++camera_native_trace_count;
     }
-    retdec_call_thiscall3_result(target.instance, method,
+    kinoko_call_thiscall3_result(target.instance, method,
                                 arguments[0], arguments[1], arguments[2]);
     return 0;
 }
@@ -183,9 +173,9 @@ int32_t register_camera_binding_impl() {
     bind_fields(reinterpret_cast<int32_t *>(&state.klass), kinoko_camera_binding_type(), camera_fields);
     const auto value = ObjectView(&state.klass).value();
     if (data_bits(value)) {
-        retdec_trace_i32("camera-class:type", value._type);
-        retdec_trace_i32("camera-class:data", data_bits(value));
-        retdec_trace_squirrel_table_entries("camera-class-members", load<int32_t>(data_bits(value)+24));
+        kinoko_trace_i32("camera-class:type", value._type);
+        kinoko_trace_i32("camera-class:data", data_bits(value));
+        kinoko_trace_squirrel_table_entries("camera-class-members", load<int32_t>(data_bits(value)+24));
     }
     kinoko_sqplus_object_destroy(&state.second_table);
     kinoko_sqplus_object_destroy(&state.first_table);
@@ -208,10 +198,8 @@ int32_t register_map_binding_impl() {
     return address(kinoko_sqplus_object_destroy(&state.klass));
 }
 } // namespace
-extern "C" int32_t kinoko_camera_update_entry(int32_t vm) {
-    return kinoko_call_camera_update(pointer<SQVM>(vm));
+extern "C" int32_t kinoko_camera_update_entry(struct SQVM* vm) {
+    return kinoko_call_camera_update(vm);
 }
 extern "C" int32_t kinoko_register_camera_binding(void) { return register_camera_binding_impl(); }
-extern "C" int32_t function_4669d0(void) { return kinoko_register_camera_binding(); }
 extern "C" int32_t kinoko_register_map_binding(void) { return register_map_binding_impl(); }
-extern "C" int32_t function_46fac0(void) { return kinoko_register_map_binding(); }

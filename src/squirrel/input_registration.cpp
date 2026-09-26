@@ -8,29 +8,29 @@
 namespace {
 using namespace kinoko::script;
 using namespace kinoko::script::binding;
-template<class Function> int32_t entry(Function function) {
-    return static_cast<int32_t>(reinterpret_cast<intptr_t>(function));
+template<class Function> void* entry(Function function) {
+    return reinterpret_cast<void*>(function);
 }
-// Explicit boundary to shared SqPlus wrappers that still carry integer slots.
-KinokoInputManager* input_receiver(int32_t self) { return reinterpret_cast<KinokoInputManager*>(static_cast<intptr_t>(self)); }
-int32_t save_config(int32_t self, const char* path) { return kinoko_input_save_config(input_receiver(self), path); }
-int32_t load_config(int32_t self, const char* path) { return kinoko_input_load_config(input_receiver(self), path); }
-int32_t set_assignment(int32_t self, int32_t device, int32_t field, int32_t value) {
+// Native input callbacks borrow the actual manager pointer.
+KinokoInputManager* input_receiver(void* self) { return static_cast<KinokoInputManager*>(self); }
+int32_t save_config(void* self, const char* path) { return kinoko_input_save_config(input_receiver(self), path); }
+int32_t load_config(void* self, const char* path) { return kinoko_input_load_config(input_receiver(self), path); }
+int32_t set_assignment(void* self, int32_t device, int32_t field, int32_t value) {
     return kinoko_input_set_assignment(input_receiver(self), device, field, value);
 }
-int32_t wait_assignment(int32_t self, int32_t device, int32_t field) {
+int32_t wait_assignment(void* self, int32_t device, int32_t field) {
     return kinoko_input_wait_assignment(input_receiver(self), device, field);
 }
-int32_t get_assignment(int32_t self, int32_t device, int32_t field) {
+int32_t get_assignment(void* self, int32_t device, int32_t field) {
     return kinoko_input_get_assignment(input_receiver(self), device, field);
 }
-struct InputMethod { const char* name; int32_t target; int32_t wrapper; };
+struct InputMethod { const char* name; void* target; SQFUNCTION wrapper; };
 const InputMethod methods[] = {
-    {"Save", entry(save_config), entry(kinoko_input_save_entry)},
-    {"Load", entry(load_config), entry(kinoko_input_save_entry)},
-    {"SetAssign", entry(set_assignment), entry(kinoko_input_assign_entry)},
-    {"WaitAssign", entry(wait_assignment), entry(kinoko_input_wait_entry)},
-    {"GetAssign", entry(get_assignment), entry(kinoko_input_get_entry)},
+    {"Save", entry(save_config), kinoko_input_save_entry},
+    {"Load", entry(load_config), kinoko_input_save_entry},
+    {"SetAssign", entry(set_assignment), kinoko_input_assign_entry},
+    {"WaitAssign", entry(wait_assignment), kinoko_input_wait_entry},
+    {"GetAssign", entry(get_assignment), kinoko_input_get_entry},
 };
 struct Field { const char* name; int32_t offset; bool boolean; };
 // Original 46D950 order: s0 follows s9; button/key names intentionally alias.
@@ -69,52 +69,56 @@ constexpr Field fields[] = {
 };
 
 // Original 46CFB0 class builder: 48-byte SqPlus class binding storage.
-void construct_input_class(int32_t state[12]) {
-    state[0] = address(current_vm());
-    state[1] = address("Input");
-    kinoko_sqplus_object_initialize((void *)(state + 2));
-    state[5] = 0;
-    kinoko_sqplus_object_new_table(static_cast<void *>(state + 6));
-    kinoko_sqplus_object_new_table(static_cast<void *>(state + 9));
+void construct_input_class(ClassBindingStorage& state) {
+    state.vm = current_vm();
+    state.name = "Input";
+    kinoko_sqplus_object_initialize(&state.klass);
+    state.parent = nullptr;
+    kinoko_sqplus_object_new_table(&state.members);
+    kinoko_sqplus_object_new_table(&state.methods);
     auto* vm = current_vm();
     const auto top = sq_gettop(vm);
-    int32_t temporary[3]{}, nested[3]{};
-    kinoko_sqplus_object_initialize((void *)(temporary));
-    if (kinoko_sqplus_create_class(pointer<SQVM>(state[0]), (void *)(temporary), kinoko_input_binding_type(), pointer<const char>(state[1]), nullptr)) {
-        kinoko_sqplus_object_initialize((void *)(nested));
-        ObjectView(temporary).push(vm);
-        kinoko_sqplus_object_capture((void *)(nested), -1);
+    ObjectStorage temporary{}, nested{};
+    kinoko_sqplus_object_initialize(&temporary);
+    if (kinoko_sqplus_create_class(state.vm, &temporary, kinoko_input_binding_type(), state.name, nullptr)) {
+        kinoko_sqplus_object_initialize(&nested);
+        ObjectView(&temporary).push(vm);
+        kinoko_sqplus_object_capture(&nested, -1);
         sq_pop(vm, 1);
-        address(kinoko_sqplus_setup_hierarchy(nested));
+        kinoko_sqplus_setup_hierarchy(&nested);
     }
     sq_settop(vm, top);
-    kinoko_sqplus_object_assign((void *)(state + 2), (const void *)(temporary));
-    address(kinoko_sqplus_object_destroy((void *)(temporary)));
+    kinoko_sqplus_object_assign(&state.klass, &temporary);
+    kinoko_sqplus_object_destroy(&temporary);
 }
 } // namespace
 
 extern "C" int32_t kinoko_register_input_class(void) {
-    int32_t root[3]{}, state[12]{}, temporary[3]{};
-    kinoko_sqplus_object_copy_construct(static_cast<void *>(root), kinoko_sqplus_root_object());
+    ObjectStorage root{}, temporary{};
+    ClassBindingStorage state{};
+    kinoko_sqplus_object_copy_construct(&root, kinoko_sqplus_root_object());
     construct_input_class(state);
-    auto* vm = pointer<SQVM>(state[0]);
+    auto* vm = state.vm;
     for (const auto& method : methods) {
-        ObjectView(state + 2).push(vm);
+        ObjectView(&state.klass).push(vm);
         sq_pushstring(vm, method.name, -1);
-        std::memcpy(sq_newuserdata(vm, 4), &method.target, 4);
-        sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(pointer(method.wrapper)), 1);
+        std::memcpy(sq_newuserdata(vm, sizeof method.target), &method.target, sizeof method.target);
+        sq_newclosure(vm, method.wrapper, 1);
         sq_newslot(vm, -3, SQFalse);
         sq_pop(vm, 1);
     }
     auto* descriptor = kinoko_input_binding_type();
     for (const auto& field : fields) {
         auto bind = field.boolean ? kinoko_sqplus_bind_boolean : kinoko_sqplus_bind_integer;
-        bind(state + 2, descriptor, field.offset, const_cast<char*>(field.name), 0);
+        bind(reinterpret_cast<int32_t*>(&state.klass), descriptor, field.offset, const_cast<char*>(field.name), 0);
     }
-    kinoko_sqplus_object_assign(const_cast<void *>(kinoko_input_script_symbols()->input_class), (const void *)((int32_t*)(intptr_t)(kinoko_sqplus_object_get_value((void *)(root), (void *)(temporary), "Input"))));
-    address(kinoko_sqplus_object_destroy((void *)(temporary)));
-    for (int offset : {9, 6, 2}) address(kinoko_sqplus_object_destroy(static_cast<void *>(state + offset)));
-    return address(kinoko_sqplus_object_destroy(static_cast<void *>(root)));
+    kinoko_sqplus_object_assign(const_cast<void*>(kinoko_input_script_symbols()->input_class),
+        kinoko_sqplus_object_get_value(&root, &temporary, "Input"));
+    kinoko_sqplus_object_destroy(&temporary);
+    kinoko_sqplus_object_destroy(&state.methods);
+    kinoko_sqplus_object_destroy(&state.members);
+    kinoko_sqplus_object_destroy(&state.klass);
+    return address(kinoko_sqplus_object_destroy(&root));
 }
 
 // Original 46E6F0 receives the 0x513CC0 CInputManager in ECX. The host
@@ -132,20 +136,20 @@ extern "C" int32_t kinoko_input_initialize_script_instance(KinokoInputManager* m
         kinoko_input_manager_construct_devices(manager, static_cast<uint32_t>(kinoko_input_snapshot.controller_count));
         devices_constructed = true;
     }
-    retdec_trace("46e6f0:begin");
-    retdec_trace_i32("46e6f0:this", static_cast<int32_t>(reinterpret_cast<uintptr_t>(manager)));
-    retdec_trace_i32("46e6f0:g644", static_cast<int32_t>(reinterpret_cast<uintptr_t>(host.vm)));
+    kinoko_trace("46e6f0:begin");
+    kinoko_trace_i32("46e6f0:this", static_cast<int32_t>(reinterpret_cast<uintptr_t>(manager)));
+    kinoko_trace_i32("46e6f0:g644", static_cast<int32_t>(reinterpret_cast<uintptr_t>(host.vm)));
     const auto* input_class = static_cast<const int32_t*>(host.input_class);
-    retdec_trace_i32("46e6f0:g629-type", input_class[0]);
-    retdec_trace_i32("46e6f0:g629-data", input_class[1]);
+    kinoko_trace_i32("46e6f0:g629-type", input_class[0]);
+    kinoko_trace_i32("46e6f0:g629-data", input_class[1]);
     std::array<int32_t, 3> instance{};
     kinoko_sqplus_object_new_instance(instance.data(), host.input_class);
-    retdec_trace_i32("46e6f0:instance-type", instance[1]);
-    retdec_trace_i32("46e6f0:instance-data", instance[2]);
+    kinoko_trace_i32("46e6f0:instance-type", instance[1]);
+    kinoko_trace_i32("46e6f0:instance-data", instance[2]);
     kinoko_sqplus_object_assign(manager->script_object, instance.data());
     kinoko_sqplus_object_destroy(instance.data());
     kinoko_sqplus_object_set_instance(manager->script_object, manager);
     kinoko_sqplus_object_raw_set_name(host.root, "input", manager->script_object);
-    retdec_trace("46e6f0:done");
+    kinoko_trace("46e6f0:done");
     return 1;
 }

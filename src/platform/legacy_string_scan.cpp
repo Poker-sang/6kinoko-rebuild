@@ -19,7 +19,7 @@ static int page_is_readable(const MEMORY_BASIC_INFORMATION *info)
 /* A large part of the RetDec output lost the third argument of
    std::string::assign(const char *, size_t). Keep those old call sites
    usable while the explicit-length callers are repaired incrementally. */
-extern "C" uint32_t retdec_safe_c_string_length(const char *source)
+extern "C" uint32_t kinoko_safe_c_string_length(const char *source)
 {
     const unsigned char *cursor = (const unsigned char *)source;
     const uintptr_t limit = static_cast<uintptr_t>(reinterpret_cast<uintptr_t>(source)) + 0x100000u;

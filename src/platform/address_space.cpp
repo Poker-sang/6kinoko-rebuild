@@ -4,7 +4,7 @@
 
 // Shared production address validation, independent of CRT emulation and the
 // unresolved legacy scanner. Keep its single-region/protection rules intact.
-extern "C" int retdec_valid_range(const void *address, size_t size, int writeable)
+extern "C" int kinoko_valid_range(const void *address, size_t size, int writeable)
 {
     MEMORY_BASIC_INFORMATION info;
     uintptr_t start = (uintptr_t)address;

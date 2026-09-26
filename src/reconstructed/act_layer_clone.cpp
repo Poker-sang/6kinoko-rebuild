@@ -1,4 +1,5 @@
 #include "kinoko/act_array.h"
+#include "kinoko/act_key_records.hpp"
 #include "kinoko/act_runtime.h"
 #include "kinoko/act_script_text.hpp"
 #include "kinoko/act_layer_storage.hpp"
@@ -11,12 +12,12 @@
 #include <memory>
 #include <unordered_set>
 
-extern "C" int32_t g664;
+extern "C" struct SQVM* kinoko_act_vm;
 
 namespace {
 using kinoko::legacy::address;
 using kinoko::legacy::pointer;
-inline int32_t& act_layer_vm_slot = g664;
+inline SQVM*& act_layer_vm_slot = kinoko_act_vm;
 using kinoko::legacy::field;
 namespace sqrat = kinoko::script::upstream;
 
@@ -27,7 +28,7 @@ struct LayerDelete {
     }
 };
 struct KeyDelete {
-    void operator()(unsigned char* key) const { retdec_destroy_cact_key(address(key)); }
+    void operator()(unsigned char* key) const { kinoko_destroy_cact_key((void*)(key)); }
 };
 
 void assign_object(kinoko::act::LayerObjectView destination, kinoko::act::LayerObjectView source) {
@@ -45,43 +46,52 @@ void assign_object(kinoko::act::LayerObjectView destination, kinoko::act::LayerO
         sqrat::sqrat_retain(vm, kinoko::legacy::load<HSQOBJECT>(destination.bytes(&LayerObjectRecord::value)));
 }
 
-void clone_list(int32_t destination, int32_t source, int32_t offset, bool bind) {
-    const auto head=field<int32_t>(source+offset);
+void clone_list(kinoko::act::LayerStorageView destination, kinoko::act::LayerStorageView source,
+                kinoko::act::LayerListRecord kinoko::act::LayerStorageRecord::*member, bool bind) {
+    using namespace kinoko::act;
+    const auto target = destination.view(member), input = source.view(member);
+    auto* head = input.get(&LayerListRecord::head);
     if (!head) return;
-    std::unordered_set<int32_t> visited;
-    for (auto node=field<int32_t>(head);node!=head;node=field<int32_t>(node)) {
-        if (!node || visited.size()>=0x10000 || !visited.insert(node).second) throw std::bad_alloc();
-        const auto original=field<int32_t>(node+8);
+    std::unordered_set<KeyNode*> visited;
+    for (auto* node = head->next; node != head; node = node->next) {
+        if (!node || visited.size() >= 0x10000 || !visited.insert(node).second) throw std::bad_alloc();
+        auto* original = node->key;
         if (!original) throw std::bad_alloc();
-        const auto copy=retdec_call_thiscall0_result(pointer<void>(original),
-            field<void*>(field<int32_t>(original)+20));
-        std::unique_ptr<unsigned char,KeyDelete> owner(pointer<unsigned char>(copy));
-        if (!copy || !retdec_act_append_list(destination+offset,copy)) throw std::bad_alloc();
+        using Clone = void* (__thiscall*)(void*);
+        const auto* methods = kinoko::legacy::load<const void* const*>(original);
+        auto* copy = reinterpret_cast<Clone>(const_cast<void*>(methods[5]))(original);
+        std::unique_ptr<unsigned char, KeyDelete> owner(static_cast<unsigned char*>(copy));
+        if (!copy || !kinoko_act_append_list(target.bytes(&LayerListRecord::head), copy)) throw std::bad_alloc();
         owner.release();
-        ++field<int32_t>(destination+offset+4);
-        const auto layout=field<int32_t>(copy+4);
-        if (bind && layout) retdec_call_thiscall1_result(pointer<void>(layout),
-            field<void*>(field<int32_t>(layout)+24),destination);
+        target.set(&LayerListRecord::count, target.get(&LayerListRecord::count) + 1);
+        // Timelines share the list representation, but have no layout pointer.
+        if (bind) {
+            auto* layout = KeyView(copy).get(&KeyRecord::layout);
+            if (layout) {
+                using Bind = int32_t (__thiscall*)(KinokoActLayout*, KinokoActLayer*);
+                const auto* methods = kinoko::legacy::load<const void* const*>(layout);
+                reinterpret_cast<Bind>(const_cast<void*>(methods[6]))(layout, reinterpret_cast<KinokoActLayer*>(destination.data()));
+            }
+        }
     }
 }
 }
 
 // Original 41EA50 and its 41ECA0 assignment: constructor-owned containers,
 // shallow hierarchy links, deep keys, and source-backed Sqrat reference copies.
-extern "C" int32_t __fastcall kinoko_method_clone_act_layer(int32_t source, void*) {
+extern "C" KinokoActLayer* __fastcall kinoko_method_clone_act_layer(KinokoActLayer* source, void*) {
     if (!source) return 0;
     try {
         kinoko::legacy::Allocation<unsigned char> storage(static_cast<unsigned char*>(std::calloc(1,sizeof(kinoko::act::LayerStorageRecord))));
-        if (!storage || !kinoko_act_layer_initialize(reinterpret_cast<KinokoActLayer*>(storage.get()),pointer<SQVM>(act_layer_vm_slot))) return 0;
+        if (!storage || !kinoko_act_layer_initialize(reinterpret_cast<KinokoActLayer*>(storage.get()),act_layer_vm_slot)) return 0;
         std::unique_ptr<unsigned char,LayerDelete> owned(storage.release());
-        const auto result=address(owned.get());
+        
         using namespace kinoko::act;
-        const LayerStorageView destination(owned.get()), original(pointer<void>(source));
+        const LayerStorageView destination(owned.get()), original(source);
         const auto target_links = destination.view(&LayerStorageRecord::association);
         const auto source_links = original.view(&LayerStorageRecord::association);
         target_links.set(&LayerAssociationRecord::property_aliases, source_links.get(&LayerAssociationRecord::property_aliases));
-        kinoko_act_array_clone(address(target_links.bytes(&LayerAssociationRecord::children)),
-                               address(source_links.bytes(&LayerAssociationRecord::children)));
+        kinoko_act_array_clone((void*)(target_links.bytes(&LayerAssociationRecord::children)), (const void*)(source_links.bytes(&LayerAssociationRecord::children)));
         target_links.set(&LayerAssociationRecord::parent, source_links.get(&LayerAssociationRecord::parent));
         *target_links.bytes(&LayerAssociationRecord::flags92) =
             *source_links.bytes(&LayerAssociationRecord::flags92);
@@ -95,7 +105,7 @@ extern "C" int32_t __fastcall kinoko_method_clone_act_layer(int32_t source, void
         if (output.length()!=input.length()) return 0;
         destination.set(&LayerStorageRecord::visibility_flags, original.get(&LayerStorageRecord::visibility_flags));
         destination.set(&LayerStorageRecord::position, original.get(&LayerStorageRecord::position));
-        destination.set(&LayerStorageRecord::unknown156, original.get(&LayerStorageRecord::unknown156));
+        destination.set(&LayerStorageRecord::origin_bits, original.get(&LayerStorageRecord::origin_bits));
         destination.set(&LayerStorageRecord::previous_position, original.get(&LayerStorageRecord::previous_position));
         const ScriptTextView target_script(destination.bytes(&LayerStorageRecord::script));
         const ScriptTextView source_script(original.bytes(&LayerStorageRecord::script));
@@ -103,8 +113,8 @@ extern "C" int32_t __fastcall kinoko_method_clone_act_layer(int32_t source, void
         assign_object(destination.view(&LayerStorageRecord::script_object), original.view(&LayerStorageRecord::script_object));
         assign_object(destination.view(&LayerStorageRecord::layout_object), original.view(&LayerStorageRecord::layout_object));
         copy_script_text(target_script, source_script);
-        clone_list(result,source,offsetof(LayerStorageRecord, keys),true);
-        clone_list(result,source,offsetof(LayerStorageRecord, timelines),false);
-        return address(owned.release());
+        clone_list(destination, original, &LayerStorageRecord::keys, true);
+        clone_list(destination, original, &LayerStorageRecord::timelines, false);
+        return reinterpret_cast<KinokoActLayer*>(owned.release());
     } catch (...) { return 0; }
 }

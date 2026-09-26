@@ -1,3 +1,4 @@
+#include "kinoko/squirrel_native_types.h"
 #pragma once
 #include "kinoko/squirrel_source_runtime.h"
 #include "kinoko/squirrel_host_object.hpp"
@@ -15,12 +16,12 @@ inline void require(bool condition, const char* message) {
     if (!condition) throw std::runtime_error(message); // Also executes in Release.
 }
 inline thread_local int32_t receiver = 0x12345678;
-inline int32_t exchange_receiver(int32_t vm) {
-    const auto old = receiver; receiver = vm; return old;
+inline SQVM* exchange_receiver(SQVM* vm) {
+    const auto old = receiver; receiver = (int32_t)(intptr_t)vm; return reinterpret_cast<SQVM*>(static_cast<uintptr_t>(old));
 }
 class Machine final {
 public:
-    Machine() : vm_(pointer<SQVM>(kinoko_sq_open(64))) {
+    Machine() : vm_(pointer<SQVM>(((int32_t)(uintptr_t)kinoko_sq_open(64)))) {
         require(vm_ != nullptr, "open source VM");
         kinoko_sq_set_context_exchange(exchange_receiver);
     }
@@ -71,7 +72,7 @@ inline void evaluate(HSQUIRRELVM vm, const char* source, Pair* result = nullptr)
         "bridge-contract", SQFalse)), "compile source contract");
     sq_pushroottable(vm);
     const auto saved_receiver = receiver;
-    const auto status = kinoko_sq_call(address(vm), 1, SQTrue, SQFalse);
+    const auto status = kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 1, SQTrue, SQFalse);
     if (SQ_FAILED(status)) last_error(vm);
     require(SQ_SUCCEEDED(status), "execute source contract");
     require(receiver == saved_receiver, "nested source call restores receiver");

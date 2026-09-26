@@ -4,7 +4,7 @@
 
 namespace {
 template<int Id> struct NativeTag {};
-using CopyEntry = int32_t (*)(int32_t, int32_t);
+using CopyEntry = void (*)(void*, void*);
 // The descriptor is a normally constructed upstream ClassType. Only its game
 // copy operation is supplied by the embedding; naming/base/cache methods and
 // the actual C++ vtable come from the source library.
@@ -15,8 +15,7 @@ public:
 private:
     static inline CopyEntry entry = nullptr;
     static void copy(void* destination, void* source) {
-        entry(static_cast<int32_t>(reinterpret_cast<intptr_t>(destination)),
-              static_cast<int32_t>(reinterpret_cast<intptr_t>(source)));
+        entry(destination, source);
     }
 };
 template<int Id> int32_t* native_type(CopyEntry copy) {

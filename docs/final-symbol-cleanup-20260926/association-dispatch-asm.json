@@ -1,0 +1,1 @@
+{"addr":"0x4252e0","asm":{"name":"sub_4252E0","start_ea":"0x4252e0","segment":".text","lines":[{"addr":"4252e0","instruction":"mov eax, [ecx]","label":"sub_4252E0"},{"addr":"4252e2","instruction":"jmp dword ptr [eax+18h]"}]},"instruction_count":2,"total_instructions":null,"cursor":{"done":true}}

@@ -3,10 +3,10 @@
 #include <cstdlib>
 #include <cstring>
 
-extern "C" char* g767; // Remaining game-window ABI consumers borrow this HWND.
+extern "C" char* kinoko_game_window_slot; // Remaining game-window ABI consumers borrow this HWND.
 namespace {
 KinokoProcessContext context{};
-inline char*& game_window_handle = g767;
+inline char*& game_window_handle = kinoko_game_window_slot;
 }
 
 extern "C" const KinokoProcessContext* kinoko_process_context() { return &context; }

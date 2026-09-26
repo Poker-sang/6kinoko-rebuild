@@ -3,11 +3,11 @@
 #include <cstdlib>
 
 extern "C" {
-char g560 = 0;
-int32_t kinoko_sqrat_object_vtable(void) { return 0x12121212; }
-int32_t kinoko_sqrat_root_vtable(void) { return 0x34343434; }
-void retdec_trace_i32(const char*, int32_t) {}
-void retdec_trace_squirrel_name(const char*, int32_t) {}
+char kinoko_sqrat_trace_enabled = 0;
+const void* kinoko_sqrat_object_vtable(void) { return reinterpret_cast<const void*>(0x12121212); }
+const void* kinoko_sqrat_root_vtable(void) { return reinterpret_cast<const void*>(0x34343434); }
+void kinoko_trace_i32(const char*, int32_t) {}
+void kinoko_trace_squirrel_name(const char*, int32_t) {}
 }
 namespace {
 using namespace bridge_test;
@@ -48,7 +48,7 @@ void virtual_entries(HSQUIRRELVM vm) {
     const auto borrowed = object;
     require(destroy(object.data(), 0) == address(object.data()), "borrowed destructor returns receiver");
     require(released == before && object[2] == borrowed[2] && object[3] == borrowed[3] && object[4] == 0, "borrowed destructor does not release or overwrite pair");
-    require(object[0] == kinoko_sqrat_object_vtable(), "destructor restores base vtable");
+    require(object[0] == (int32_t)(intptr_t)kinoko_sqrat_object_vtable(), "destructor restores base vtable");
     // Transfer the sole external owner to a real heap record; the deleting
     // slot must release it once and use the recovered allocation family.
     auto* heap = static_cast<int32_t*>(std::malloc(sizeof(object)));
@@ -66,13 +66,13 @@ void ownership(HSQUIRRELVM vm) {
         std::array<unsigned char, 32> bytes; bytes.fill(0xa7);
         auto* object = bytes.data() + 4 + misalignment;
         require((int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(object), (struct SQVM *)(vm))) == address(object), "construct returns object");
-        require(load<int32_t>(object) == kinoko_sqrat_root_vtable(), "root vtable identity");
+        require(load<int32_t>(object) == (int32_t)(intptr_t)kinoko_sqrat_root_vtable(), "root vtable identity");
         require(load<int32_t>(object + 4) == address(vm), "stored owning VM");
         require(load<HSQOBJECT>(object + 8)._type == OT_TABLE && object[16] == 1, "root pair and ownership");
         top(vm, base, "root construction balances stack");
         kinoko_sqrat_object_release((void *)(object));
         kinoko_sqrat_object_release((void *)(object));
-        require(load<int32_t>(object) == kinoko_sqrat_object_vtable(), "base vtable after release");
+        require(load<int32_t>(object) == (int32_t)(intptr_t)kinoko_sqrat_object_vtable(), "base vtable after release");
         require(load<int32_t>(object + 4) == address(vm), "release preserves VM field");
         require(load<HSQOBJECT>(object + 8)._type == OT_NULL && load<int32_t>(object + 12) == 0 && object[16] == 0, "idempotent null release");
         for (int i = 0; i < 32; ++i) if (i < 4 + misalignment || i >= 21 + misalignment)
@@ -186,11 +186,11 @@ void callback(HSQUIRRELVM vm) {
     words[3] = failing.words[0]; words[4] = failing.words[1];
     sq_newclosure(vm, handler, 0); sq_seterrorhandler(vm);
     const int errors = error_handler_calls;
-    g560 = 0;
+    kinoko_sqrat_trace_enabled = 0;
     require(kinoko_sqrat_invoke_callback((const void *)(words.data())) == address(vm), "failing call still returns VM");
     require(error_handler_calls == errors, "zero error handler flag");
     sq_getlasterror(vm); require(get_string(vm) == "callback-failure", "failed callback preserves source error"); sq_pop(vm, 1);
-    g560 = 1; kinoko_sqrat_invoke_callback((const void *)(words.data())); g560 = 0;
+    kinoko_sqrat_trace_enabled = 1; kinoko_sqrat_invoke_callback((const void *)(words.data())); kinoko_sqrat_trace_enabled = 0;
     require(error_handler_calls == errors + 1, "original handler flag honored");
     require(kinoko_sqrat_invoke_callback((const void *)(intptr_t)(0)) == -1, "null callback guard");
     top(vm, base, "failure callback stack");

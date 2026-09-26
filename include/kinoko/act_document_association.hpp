@@ -5,9 +5,18 @@
 
 namespace kinoko::act {
 // Prefix of the existing 348-byte layer, never constructed over game storage.
+struct LayerPropertyAliases {
+    float *rotation_x, *rotation_y, *rotation_z;
+    float *rotation_pivot_x, *rotation_pivot_y, *rotation_pivot_z;
+    float *scale_x, *scale_y, *scale_z;
+    float *scale_pivot_x, *scale_pivot_y, *scale_pivot_z;
+    float *alpha;
+    int32_t *blend, *red, *green, *blue;
+};
+static_assert(sizeof(LayerPropertyAliases) == 68);
 struct LayerAssociationRecord {
     const void *vtable;
-    std::array<unsigned char, 68> property_aliases;
+    LayerPropertyAliases property_aliases;
     DocumentPointerSpan<KinokoActLayer> children;
     uint32_t unknown84;
     KinokoActLayer *parent;

@@ -108,9 +108,7 @@ int main() {
         const char layout[]=".?AVC2DLayout@@", timeline[]=".?AVCActTimeLine@@";
         const char binary[]={static_cast<char>(0x80),0,static_cast<char>(0xff)};
         auto hash=[](const char* bytes,size_t size) {
-            return static_cast<uint32_t>(kinoko_boost_hash_range(
-                static_cast<int32_t>(reinterpret_cast<uintptr_t>(bytes)),
-                static_cast<int32_t>(reinterpret_cast<uintptr_t>(bytes+size))));
+            return static_cast<uint32_t>(kinoko_boost_hash_range((const char*)(uintptr_t)(static_cast<int32_t>(reinterpret_cast<uintptr_t>(bytes))), (const char*)(uintptr_t)(static_cast<int32_t>(reinterpret_cast<uintptr_t>(bytes+size)))));
         };
         require(hash(layout,sizeof(layout)-1)==0x655cd5b0u,"original C2DLayout serialized type ID");
         require(hash(timeline,sizeof(timeline)-1)==0x9902f2c0u,"original CActTimeLine serialized type ID");

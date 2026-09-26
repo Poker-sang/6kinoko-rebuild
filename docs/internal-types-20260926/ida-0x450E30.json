@@ -1,0 +1,51 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"addr\":\"0x450E30\",\"code\":\"int __thiscall sub_450E30(void *this, void **a2, void ***a3)\\n{\\n  void ***v4; // ecx\\n  int v6; // esi\\n  void **v7; // [esp+Ch] [ebp-20h] BYREF\\n  void **v8; // [esp+10h] [ebp-1Ch]\\n  _BYTE v9[8]; // [esp+14h] [ebp-18h] BYREF\\n  char v10; // [esp+1Ch] [ebp-10h]\\n  int v11; // [esp+28h] [ebp-4h]\\n\\n  v8 = a2;\\n  v10 = 1;\\n  sub_48ABE0(a1: v9);\\n  v7 = &Sqrat::RootTable::`vftable';\\n  sub_48A670(a1: a2);\\n  sub_48AB40(a1: a2, a2: -1, a3: v9);\\n  sub_48A400(a1: a2, a2: v9);\\n  sub_48AA30(a1: a2, a2: 1);\\n  v4 = a3;\\n  v11 = 0;\\n  if ( a3 == nullptr )\\n    v4 = &v7;\\n  if ( v4[1] == a2 )\\n  {\\n    v6 = sub_450F30(a1: this);\\n    v7 = &Sqrat::Object::`vftable';\\n    if ( v10 != 0 )\\n      sub_48A430(a1: v8, a2: v9);\\n    return v6;\\n  }\\n  else\\n  {\\n    v7 = &Sqrat::Object::`vftable';\\n    if ( v10 != 0 )\\n      sub_48A430(a1: v8, a2: v9);\\n    return -2147024809;\\n  }\\n}\",\"refs\":[{\"addr\":\"0x48abe0\",\"name\":\"sub_48ABE0\"},{\"addr\":\"0x4d5c80\",\"name\":\"??_7RootTable@Sqrat@@6B@\"},{\"addr\":\"0x48a670\",\"name\":\"sub_48A670\"},{\"addr\":\"0x48ab40\",\"name\":\"sub_48AB40\"},{\"addr\":\"0x48a400\",\"name\":\"sub_48A400\"},{\"addr\":\"0x48aa30\",\"name\":\"sub_48AA30\"},{\"addr\":\"0x450f30\",\"name\":\"sub_450F30\"},{\"addr\":\"0x4d5c68\",\"name\":\"??_7Object@Sqrat@@6B@\"},{\"addr\":\"0x48a430\",\"name\":\"sub_48A430\"}]}"
+    }
+  ],
+  "structuredContent": {
+    "addr": "0x450E30",
+    "code": "int __thiscall sub_450E30(void *this, void **a2, void ***a3)\n{\n  void ***v4; // ecx\n  int v6; // esi\n  void **v7; // [esp+Ch] [ebp-20h] BYREF\n  void **v8; // [esp+10h] [ebp-1Ch]\n  _BYTE v9[8]; // [esp+14h] [ebp-18h] BYREF\n  char v10; // [esp+1Ch] [ebp-10h]\n  int v11; // [esp+28h] [ebp-4h]\n\n  v8 = a2;\n  v10 = 1;\n  sub_48ABE0(a1: v9);\n  v7 = &Sqrat::RootTable::`vftable';\n  sub_48A670(a1: a2);\n  sub_48AB40(a1: a2, a2: -1, a3: v9);\n  sub_48A400(a1: a2, a2: v9);\n  sub_48AA30(a1: a2, a2: 1);\n  v4 = a3;\n  v11 = 0;\n  if ( a3 == nullptr )\n    v4 = &v7;\n  if ( v4[1] == a2 )\n  {\n    v6 = sub_450F30(a1: this);\n    v7 = &Sqrat::Object::`vftable';\n    if ( v10 != 0 )\n      sub_48A430(a1: v8, a2: v9);\n    return v6;\n  }\n  else\n  {\n    v7 = &Sqrat::Object::`vftable';\n    if ( v10 != 0 )\n      sub_48A430(a1: v8, a2: v9);\n    return -2147024809;\n  }\n}",
+    "refs": [
+      {
+        "addr": "0x48abe0",
+        "name": "sub_48ABE0"
+      },
+      {
+        "addr": "0x4d5c80",
+        "name": "??_7RootTable@Sqrat@@6B@"
+      },
+      {
+        "addr": "0x48a670",
+        "name": "sub_48A670"
+      },
+      {
+        "addr": "0x48ab40",
+        "name": "sub_48AB40"
+      },
+      {
+        "addr": "0x48a400",
+        "name": "sub_48A400"
+      },
+      {
+        "addr": "0x48aa30",
+        "name": "sub_48AA30"
+      },
+      {
+        "addr": "0x450f30",
+        "name": "sub_450F30"
+      },
+      {
+        "addr": "0x4d5c68",
+        "name": "??_7Object@Sqrat@@6B@"
+      },
+      {
+        "addr": "0x48a430",
+        "name": "sub_48A430"
+      }
+    ]
+  },
+  "isError": false
+}

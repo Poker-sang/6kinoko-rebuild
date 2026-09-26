@@ -9,7 +9,7 @@
 #include <climits>
 #include <cstring>
 
-extern "C" void retdec_trace_i32(const char *, int32_t);
+extern "C" void kinoko_trace_i32(const char *, int32_t);
 
 namespace {
 using namespace kinoko::collision;
@@ -25,7 +25,7 @@ template<class T> int32_t buffer_count(const Buffer<T>& buffer) {
 }
 template<class T> bool reserve(kinoko::native::RecordView<Buffer<T>> buffer, uint32_t count) {
     return count <= INT32_MAX / sizeof(T) &&
-        kinoko_native_buffer_ensure(address(buffer.data()), count * sizeof(T));
+        kinoko_native_buffer_ensure((void*)(buffer.data()), count * sizeof(T));
 }
 
 
@@ -72,7 +72,7 @@ extern "C" void *kinoko_collision_refresh(KinokoCollisionState *state) {
     const auto candidates = collision.view(&StateRecord::actors);
     if (guarded_buffer_count(candidates.load()) < count) {
         if (count > INT32_MAX / sizeof(KinokoActor *) ||
-            !kinoko_native_buffer_resize(address(candidates.data()), count * sizeof(KinokoActor *)))
+            !kinoko_native_buffer_resize((void*)(candidates.data()), count * sizeof(KinokoActor *)))
             return manager;
     }
     auto *output = candidates.get(&Buffer<KinokoActor *>::begin);
@@ -102,7 +102,7 @@ extern "C" int32_t kinoko_collision_reset(KinokoCollisionState *state, KinokoAct
     auto *begin = parents.get(&Buffer<ActorReference>::begin);
     auto *end = parents.get(&Buffer<ActorReference>::end);
     for (auto *cursor = begin; cursor != end; ++cursor)
-        kinoko_native_release_weak(address(ReferenceView(cursor).get(&ActorReference::control)));
+        kinoko_native_release_weak((void*)(ReferenceView(cursor).get(&ActorReference::control)));
     parents.set(&Buffer<ActorReference>::end, begin);
     collision.set(&StateRecord::manager, manager);
     collision.set(&StateRecord::actor_count, int32_t{0});
@@ -141,13 +141,13 @@ extern "C" KinokoActor *kinoko_collision_register_map(KinokoCollisionState *stat
     std::memmove(parent_records + 1, parent_records, count * sizeof(*parent_records));
     layout_records[0] = layout;
     parent_records[0] = ReferenceView(proxy.bytes(&ActorRecord::owner)).load();
-    kinoko_native_add_weak(address(parent_records[0].control));
+    kinoko_native_add_weak((void*)(parent_records[0].control));
     layouts.set(&Buffer<KinokoActLayout *>::end, layout_records + required);
     parents.set(&Buffer<ActorReference>::end, parent_records + required);
     auto *hit_ends = ends.get(&Buffer<int32_t>::begin);
     hit_ends[count] = 0;
     ends.set(&Buffer<int32_t>::end, hit_ends + required);
-    retdec_trace_i32("actor:collision-layout-count", count + 1);
+    kinoko_trace_i32("actor:collision-layout-count", count + 1);
     return actor;
 }
 

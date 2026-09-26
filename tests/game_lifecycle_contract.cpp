@@ -25,8 +25,8 @@ void expect(std::initializer_list<int> expected) { CHECK(calls==std::vector<int>
 }
 extern "C" {
 KinokoGraphics kinoko_graphics{};
-void retdec_trace(const char*) {}
-void retdec_trace_i32(const char*,int32_t) {}
+void kinoko_trace(const char*) {}
+void kinoko_trace_i32(const char*,int32_t) {}
 const KinokoGameObjects* kinoko_game_objects() { return &objects; }
 void kinoko_game_prepare_scripts() { calls.push_back(1); }
 int32_t kinoko_audio_initialize_playback() { calls.push_back(2); return 0; }
@@ -53,11 +53,11 @@ int32_t kinoko_render_set_cull(int32_t a) { CHECK(a==1); calls.push_back(31); re
 int32_t kinoko_render_set_blend(int32_t a) { CHECK(a==1); calls.push_back(32); return 0; }
 int32_t kinoko_render_set_filter(int32_t a) { CHECK(a==1); calls.push_back(33); return 0; }
 void kinoko_game_prepare_map(KinokoMapManager*,KinokoCamera*) { calls.push_back(34); }
-void kinoko_draw_render_queue(int32_t) { calls.push_back(35); }
+void kinoko_draw_render_queue(struct KinokoCamera*) { calls.push_back(35); }
 int32_t kinoko_stages_prepare_draw() { calls.push_back(36); return 0; }
 int32_t kinoko_stages_draw() { calls.push_back(37); return 0; }
-int32_t kinoko_render_queue_identity() { return 0; }
-int32_t kinoko_render_queue_first() { return 0; }
+void* kinoko_render_queue_identity() { return 0; }
+void* kinoko_render_queue_first() { return 0; }
 int32_t kinoko_graphics_begin_scene() { calls.push_back(40); return begin_result; }
 int32_t kinoko_graphics_clear() { calls.push_back(41); return 0; }
 int32_t kinoko_graphics_end_scene() { calls.push_back(42); return 0; }

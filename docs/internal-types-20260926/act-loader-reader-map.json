@@ -1,0 +1,52 @@
+{
+  "parameters": {
+    "kinoko_act_read_u8": {
+      "0": "KinokoArchiveReader*"
+    },
+    "kinoko_act_read_u32": {
+      "0": "KinokoArchiveReader*"
+    },
+    "kinoko_act_load_script": {
+      "1": "KinokoArchiveReader*"
+    },
+    "kinoko_act_make_layout": {
+      "0": "KinokoArchiveReader*"
+    },
+    "kinoko_act_make_map_layout": {
+      "0": "KinokoArchiveReader*"
+    },
+    "kinoko_act_read_map_records": {
+      "1": "KinokoArchiveReader*"
+    },
+    "kinoko_act_load_key": {
+      "1": "KinokoArchiveReader*"
+    },
+    "kinoko_act_make_key": {
+      "0": "KinokoArchiveReader*"
+    },
+    "kinoko_act_load_layer": {
+      "1": "KinokoArchiveReader*"
+    },
+    "kinoko_act_make_resource": {
+      "0": "KinokoArchiveReader*"
+    },
+    "kinoko_act_load": {
+      "1": "KinokoArchiveReader*"
+    },
+    "kinoko_act_read_script_properties": {
+      "1": "KinokoArchiveReader*"
+    },
+    "kinoko_method_read_act_script": {
+      "2": "KinokoArchiveReader**"
+    },
+    "kinoko_method_write_act_script": {
+      "2": "KinokoArchiveReader*"
+    }
+  },
+  "removed_unused_aliases": [
+    "kinoko_act_read_layer_properties",
+    "kinoko_act_read_key_properties",
+    "kinoko_act_read_map_properties",
+    "kinoko_act_read_properties"
+  ]
+}

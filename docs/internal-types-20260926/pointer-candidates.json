@@ -1,0 +1,666 @@
+[
+  {
+    "file": "src/squirrel/actor_state.cpp",
+    "function": "kinoko_actor_assign_instance",
+    "changes": {
+      "0": [
+        "destination",
+        "KinokoActor"
+      ],
+      "1": [
+        "source",
+        "KinokoActor"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/camera_map_binding.cpp",
+    "function": "kinoko_camera_update_entry",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/global_registration.cpp",
+    "function": "kinoko_register_global_methods",
+    "changes": {
+      "0": [
+        "root_table",
+        "void"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/native_property_bridge.cpp",
+    "function": "kinoko_acting_player_get_property",
+    "changes": {
+      "0": [
+        "id",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/native_property_bridge.cpp",
+    "function": "kinoko_acting_player_set_property",
+    "changes": {
+      "0": [
+        "id",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_array_bridge.cpp",
+    "function": "kinoko_sq_array_pop_api",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_array_bridge.cpp",
+    "function": "kinoko_sq_array_pop",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_array_bridge.cpp",
+    "function": "kinoko_sq_array_top",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_class_binding.cpp",
+    "function": "kinoko_sqplus_define_actor_class",
+    "changes": {
+      "2": [
+        "parent",
+        "const char"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_compile_bridge.cpp",
+    "function": "kinoko_sq_compile_proto",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "reader",
+        "void"
+      ],
+      "2": [
+        "context",
+        "void"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_compile_bridge.cpp",
+    "function": "kinoko_sq_compile_reader",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "reader",
+        "void"
+      ],
+      "2": [
+        "context",
+        "void"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_compile_bridge.cpp",
+    "function": "kinoko_sq_compile_buffer",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_compile_bridge.cpp",
+    "function": "kinoko_sq_compilestring",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_csv.cpp",
+    "function": "kinoko_csv_populate",
+    "changes": {
+      "0": [
+        "address",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_generator_bridge.cpp",
+    "function": "kinoko_sq_generator_yield",
+    "changes": {
+      "0": [
+        "generator",
+        "SQGenerator"
+      ],
+      "1": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_generator_bridge.cpp",
+    "function": "kinoko_sq_generator_resume",
+    "changes": {
+      "0": [
+        "generator",
+        "SQGenerator"
+      ],
+      "1": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_generator_bridge.cpp",
+    "function": "kinoko_sq_generator_kill",
+    "changes": {
+      "0": [
+        "generator",
+        "SQGenerator"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_generator_bridge.cpp",
+    "function": "kinoko_sq_array_remove",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_native_variables.cpp",
+    "function": "kinoko_sqplus_write_variable",
+    "changes": {
+      "2": [
+        "destination",
+        "void"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_native_variables.cpp",
+    "function": "kinoko_sqplus_resolve_instance_variable",
+    "changes": {
+      "0": [
+        "vm_address",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_operations.cpp",
+    "function": "kinoko_sq_get_vararg",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "target",
+        "SQObjectPtr"
+      ],
+      "2": [
+        "index",
+        "SQObjectPtr"
+      ],
+      "3": [
+        "call_info",
+        "SQVM::CallInfo"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_operations.cpp",
+    "function": "kinoko_sq_clone",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "source",
+        "SQObjectPtr"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_operations.cpp",
+    "function": "kinoko_sq_foreach",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "object",
+        "SQObjectPtr"
+      ],
+      "2": [
+        "key",
+        "SQObjectPtr"
+      ],
+      "3": [
+        "value",
+        "SQObjectPtr"
+      ],
+      "4": [
+        "iterator",
+        "SQObjectPtr"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_gc.cpp",
+    "function": "kinoko_sq_collect",
+    "changes": {
+      "0": [
+        "state",
+        "SQSharedState"
+      ],
+      "1": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_gc.cpp",
+    "function": "kinoko_sq_source_object_type",
+    "changes": {
+      "0": [
+        "object",
+        "SQCollectable"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_runtime.cpp",
+    "function": "kinoko_sq_construct_vm",
+    "changes": {
+      "0": [
+        "storage",
+        "void"
+      ],
+      "1": [
+        "state",
+        "SQSharedState"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_runtime.cpp",
+    "function": "kinoko_sq_create_thread",
+    "changes": {
+      "0": [
+        "parent",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_runtime.cpp",
+    "function": "kinoko_sq_call",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_runtime.cpp",
+    "function": "kinoko_sq_call_object",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "closure",
+        "SQObjectPtr"
+      ],
+      "4": [
+        "result",
+        "SQObjectPtr"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_runtime.cpp",
+    "function": "kinoko_sq_execute",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "closure",
+        "SQObjectPtr"
+      ],
+      "5": [
+        "result",
+        "SQObjectPtr"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_runtime.cpp",
+    "function": "kinoko_sq_call_native",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "closure",
+        "SQNativeClosure"
+      ],
+      "4": [
+        "result",
+        "SQObjectPtr"
+      ],
+      "5": [
+        "suspended",
+        "unsigned char"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_runtime.cpp",
+    "function": "kinoko_sq_pop",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_runtime.cpp",
+    "function": "kinoko_sq_get_up",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_runtime.cpp",
+    "function": "kinoko_sq_get_at",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_runtime.cpp",
+    "function": "kinoko_sq_shared_state",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_runtime.cpp",
+    "function": "kinoko_sq_delete_shared_state",
+    "changes": {
+      "0": [
+        "state",
+        "SQSharedState"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_runtime.cpp",
+    "function": "kinoko_sq_delete_refcounted",
+    "changes": {
+      "0": [
+        "object",
+        "SQRefCounted"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_source_runtime.cpp",
+    "function": "kinoko_sq_compile_act_source",
+    "changes": {
+      "0": [
+        "id",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_thread.cpp",
+    "function": "kinoko_sq_suspend",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_thread.cpp",
+    "function": "kinoko_sq_wakeup",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_thread.cpp",
+    "function": "kinoko_sq_thread_call",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_thread.cpp",
+    "function": "kinoko_sq_thread_wakeup",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_thread.cpp",
+    "function": "kinoko_sq_thread_status",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_thread.cpp",
+    "function": "kinoko_sq_newthread",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_value_bridge.cpp",
+    "function": "kinoko_sq_set_error_string",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "interned_string",
+        "SQString"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_value_bridge.cpp",
+    "function": "kinoko_sq_set_error_value",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_value_bridge.cpp",
+    "function": "kinoko_sq_reset_error",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_value_bridge.cpp",
+    "function": "kinoko_sq_assign_integer",
+    "changes": {
+      "0": [
+        "object",
+        "SQObjectPtr"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_value_bridge.cpp",
+    "function": "kinoko_sq_assign_float",
+    "changes": {
+      "0": [
+        "object",
+        "SQObjectPtr"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_value_bridge.cpp",
+    "function": "kinoko_sq_pair_assign",
+    "changes": {
+      "0": [
+        "destination",
+        "SQObjectPtr"
+      ],
+      "1": [
+        "source",
+        "SQObjectPtr"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_value_bridge.cpp",
+    "function": "kinoko_sq_pair_destroy",
+    "changes": {
+      "0": [
+        "object",
+        "SQObjectPtr"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_value_bridge.cpp",
+    "function": "kinoko_sq_closure_destroy",
+    "changes": {
+      "0": [
+        "closure",
+        "SQClosure"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_value_bridge.cpp",
+    "function": "kinoko_sq_class_destroy",
+    "changes": {
+      "0": [
+        "klass",
+        "SQClass"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/squirrel_value_bridge.cpp",
+    "function": "kinoko_sq_set_native_name",
+    "changes": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/table_diagnostics.cpp",
+    "function": "kinoko_trace_squirrel_table_entries",
+    "changes": {
+      "1": [
+        "table_address",
+        "TableHeader"
+      ]
+    }
+  },
+  {
+    "file": "src/squirrel/table_diagnostics.cpp",
+    "function": "kinoko_trace_ref_watch",
+    "changes": {
+      "3": [
+        "data",
+        "int32_t"
+      ]
+    }
+  }
+]

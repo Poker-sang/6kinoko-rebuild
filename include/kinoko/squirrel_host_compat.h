@@ -13,7 +13,7 @@ extern "C" {
    Type/data words remain integers because the value union is not always a pointer.
    Object-returning APIs return the supplied storage except reset, which returns
    the embedded HSQOBJECT address as the original does. */
-int32_t kinoko_squirrel_object_vtable(void);
+const void* kinoko_squirrel_object_vtable(void);
 void * kinoko_sqplus_object_initialize(void * object);
 void * kinoko_sqplus_object_copy_construct(void * object, const void * source);
 void * kinoko_sqplus_object_construct_value(void * object, int32_t type, int32_t data);

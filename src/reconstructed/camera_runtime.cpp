@@ -1,19 +1,19 @@
 #include "kinoko/camera_records.hpp"
 #include "kinoko/legacy_memory.hpp"
 extern "C" {
-extern int32_t g611[3],g722[3];
+extern int32_t kinoko_camera_class_storage[3],kinoko_script_root_storage[3];
 void* kinoko_sqplus_object_new_instance(void*, const void*);
 void * kinoko_sqplus_object_assign(void * , const void * );
 void*  kinoko_sqplus_object_destroy(void *);
 int32_t  kinoko_sqplus_object_set_instance(void * , void * );
 int32_t  kinoko_sqplus_object_raw_set_name(void * , const char *, const void * );
-void retdec_trace_i32(const char *,int32_t);
+void kinoko_trace_i32(const char *,int32_t);
 }
 namespace {
 using namespace kinoko::camera;
 using kinoko::legacy::address;
-inline auto camera_instance_class = g611;
-inline auto camera_root_object = g722;
+inline auto camera_instance_class = kinoko_camera_class_storage;
+inline auto camera_root_object = kinoko_script_root_storage;
 }
 extern "C" int32_t kinoko_camera_initialize(KinokoCamera *camera) {
     if (!camera) return 0;
@@ -30,8 +30,8 @@ extern "C" int32_t kinoko_camera_initialize(KinokoCamera *camera) {
     state.set(&Record::center_y,0.0f);state.set(&Record::center_x,0.0f);
     state.set(&Record::bounds,Bounds{});
     state.set(&Record::offset_x,0.0f);state.set(&Record::offset_y,0.0f);
-    retdec_trace_i32("actor:camera-init-left",0);
-    retdec_trace_i32("actor:camera-init-right",0);
+    kinoko_trace_i32("actor:camera-init-left",0);
+    kinoko_trace_i32("actor:camera-init-right",0);
     return result;
 }
 extern "C" KinokoCamera *kinoko_camera_copy(KinokoCamera *destination,KinokoCamera *source) {

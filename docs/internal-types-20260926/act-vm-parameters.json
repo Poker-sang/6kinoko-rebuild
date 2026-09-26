@@ -1,0 +1,173 @@
+{
+  "kinoko_method_register_mesh_resource": {
+    "2": "SQVM*"
+  },
+  "kinoko_publish_mesh_resource_class": {
+    "0": "SQVM*"
+  },
+  "mesh_replace_texture": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_string_layout_class": {
+    "0": "SQVM*"
+  },
+  "string_method": {
+    "0": "SQVM*"
+  },
+  "string_face_set": {
+    "0": "SQVM*"
+  },
+  "string_value_get": {
+    "0": "SQVM*"
+  },
+  "string_property_set": {
+    "0": "SQVM*"
+  },
+  "kinoko_root_table_construct_this": {
+    "1": "SQVM*"
+  },
+  "kinoko_register_runtime_act_script": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_act_layers": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_act_resource_pairs": {
+    "0": "SQVM*"
+  },
+  "kinoko_get_act_resource_class": {
+    "0": "SQVM*"
+  },
+  "kinoko_method_register_chip_resource": {
+    "2": "SQVM*"
+  },
+  "kinoko_publish_chip_resource_class": {
+    "0": "SQVM*"
+  },
+  "kinoko_resource_set_chip_flag": {
+    "0": "SQVM*"
+  },
+  "kinoko_resource_get_chip_info": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_c2dmaplayout_class": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_map_view_class": {
+    "0": "SQVM*"
+  },
+  "kinoko_map_get_right": {
+    "0": "SQVM*"
+  },
+  "kinoko_map_get_left": {
+    "0": "SQVM*"
+  },
+  "kinoko_chip_set_fractional_left": {
+    "0": "SQVM*"
+  },
+  "kinoko_map_prearrangement": {
+    "0": "SQVM*"
+  },
+  "kinoko_map_get_chip_id": {
+    "0": "SQVM*"
+  },
+  "kinoko_map_set_chip_id": {
+    "0": "SQVM*"
+  },
+  "kinoko_map_set_chip_layout": {
+    "0": "SQVM*"
+  },
+  "kinoko_map_set_chip_rect": {
+    "0": "SQVM*"
+  },
+  "kinoko_map_get_chip_by_position": {
+    "0": "SQVM*"
+  },
+  "kinoko_map_layout_argument": {
+    "0": "SQVM*"
+  },
+  "kinoko_map_get_chip_layout": {
+    "0": "SQVM*"
+  },
+  "kinoko_map_chip_count": {
+    "0": "SQVM*"
+  },
+  "kinoko_prepare_cact_layer_objects": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_act_script_constants": {
+    "0": "SQVM*"
+  },
+  "kinoko_local_compile_file_native": {
+    "0": "SQVM*"
+  },
+  "kinoko_compile_act_file": {
+    "0": "SQVM*"
+  },
+  "refresh_act_script_callbacks": {
+    "0": "SQVM*"
+  },
+  "kinoko_execute_act_source_script": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_acting_player": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_acting_player_class": {
+    "0": "SQVM*"
+  },
+  "create_layer_native": {
+    "0": "SQVM*"
+  },
+  "set_render_target_native": {
+    "0": "SQVM*"
+  },
+  "find_by_id_native": {
+    "0": "SQVM*"
+  },
+  "find_first_native": {
+    "0": "SQVM*"
+  },
+  "swap_layers_native": {
+    "0": "SQVM*"
+  },
+  "get_layer_order_native": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_acting_player_properties": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_cact_layer_class": {
+    "0": "SQVM*"
+  },
+  "kinoko_method_register_render_target": {
+    "2": "SQVM*"
+  },
+  "kinoko_method_register_texture_resource": {
+    "2": "SQVM*"
+  },
+  "kinoko_publish_cact_resource2d_class": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_texture_resource_class": {
+    "0": "SQVM*"
+  },
+  "kinoko_resource_load_texture": {
+    "0": "SQVM*"
+  },
+  "kinoko_cact_associate_resource": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_c2dlayout_class": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_c2dlayout_properties": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_cact_layer_members": {
+    "0": "SQVM*"
+  },
+  "kinoko_publish_cact_layer_property": {
+    "0": "SQVM*"
+  }
+}

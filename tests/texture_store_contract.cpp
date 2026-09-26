@@ -44,7 +44,7 @@ static HRESULT WINAPI set_texture(IDirect3DDevice9 *, DWORD stage,
 static IDirect3DBaseTexture9Vtbl texture_vtable = {};
 extern "C" {
 KinokoGraphics kinoko_graphics{};
-void retdec_trace_i32(const char*,int32_t) {}
+void kinoko_trace_i32(const char*,int32_t) {}
 HRESULT kinoko_texture_load_image(const char *path, IDirect3DTexture9 **out,
                       uint32_t *width, uint32_t *height) {
     if (std::strstr(path, "missing")) return E_FAIL;

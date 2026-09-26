@@ -6,7 +6,7 @@
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/squirrel_game_objects.h"
 
-extern "C" void retdec_trace(const char *);
+extern "C" void kinoko_trace(const char *);
 namespace {
 using namespace kinoko::actor;
 using kinoko::legacy::address;
@@ -24,7 +24,7 @@ int32_t invoke(KinokoActor *receiver, KinokoActor *other) {
         reinterpret_cast<KinokoOwnedObjectWords *>(argument), argument[1], argument[2]);
     kinoko_actor_trace_collision(receiver, 1);
     if (result < 0) {
-        retdec_trace("actor:collision-callback-failed");
+        kinoko_trace("actor:collision-callback-failed");
         sq_settop(vm, base);
         kinoko_actor_clear_failed_collision_callback(receiver);
     }

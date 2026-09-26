@@ -13,30 +13,30 @@
 using namespace kinoko::map;
 using kinoko::legacy::address;
 extern "C" {
-unsigned char g25,g23,g327,g328;
+unsigned char kinoko_chip_quad_methods_storage,kinoko_color_methods_storage,kinoko_map_layout_methods_storage,kinoko_map_color_methods_storage;
 KinokoGraphics kinoko_graphics{};
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY]{};
-retdec_mcd_data *kinoko_map_cached_chip_data(KinokoActLayout *layout) {
+kinoko_mcd_data *kinoko_map_cached_chip_data(KinokoActLayout *layout) {
     if(!layout) return nullptr;
     const auto *resource=LayoutView(layout).get(&LayoutRecord::cached_chip_resource);
     return resource ? ChipResourceView(const_cast<KinokoActResource*>(resource)).get(&ChipResourceRecord::data) : nullptr;
 }
-retdec_mcd_data *kinoko_map_query_chip_data(KinokoActLayout *layout) { return kinoko_map_cached_chip_data(layout); }
-retdec_mcd_chip *retdec_mcd_find_chip(retdec_mcd_data *data,uint32_t id) {
+kinoko_mcd_data *kinoko_map_query_chip_data(KinokoActLayout *layout) { return kinoko_map_cached_chip_data(layout); }
+kinoko_mcd_chip *kinoko_mcd_find_chip(kinoko_mcd_data *data,uint32_t id) {
     if(data) for(uint32_t i=0;i<data->chip_count;++i) if(data->chips[i].chip_id==id) return data->chips+i;
     return nullptr;
 }
-retdec_mcd_texture *retdec_mcd_find_texture(retdec_mcd_data *data,uint32_t id) {
+kinoko_mcd_texture *kinoko_mcd_find_texture(kinoko_mcd_data *data,uint32_t id) {
     if(data) for(uint32_t i=0;i<data->texture_count;++i) if(data->textures[i].texture_id==id) return data->textures+i;
     return nullptr;
 }
-void retdec_trace_i32(const char*,int32_t) {}
+void kinoko_trace_i32(const char*,int32_t) {}
 const KinokoActHostSymbols *kinoko_act_host_symbols() {
     static KinokoActHostSymbols symbols{};
-    symbols.map_layout_vtable = &g327;
-    symbols.map_view_vtable = &g328;
-    symbols.color_vtable = &g23;
-    symbols.chip_quad_vtable = &g25;
+    symbols.map_layout_vtable = &kinoko_map_layout_methods_storage;
+    symbols.map_view_vtable = &kinoko_map_color_methods_storage;
+    symbols.color_vtable = &kinoko_color_methods_storage;
+    symbols.chip_quad_vtable = &kinoko_chip_quad_methods_storage;
     return &symbols;
 }
 int32_t kinoko_render_set_depth(int32_t,int32_t) { return 0; }
@@ -46,18 +46,18 @@ int32_t kinoko_texture_bind_stage(int32_t,int32_t) { return 0; }
 int32_t kinoko_quad_submit(KinokoQuad*,float,float) { return 0; }
 }
 static void __fastcall world(KinokoActLayer*,void*,float *x,float *y,float *z) { *x=3;*y=4;*z=0; }
-static const ChipDefinition *definition(retdec_mcd_chip &chip) { return reinterpret_cast<const ChipDefinition*>(chip.bytes); }
+static const ChipDefinition *definition(kinoko_mcd_chip &chip) { return reinterpret_cast<const ChipDefinition*>(chip.bytes); }
 #define CHECK(x) do { if(!(x)) { std::fprintf(stderr,"MCD line %d\n",__LINE__);return 1; } } while(0)
 int main() {
-    retdec_mcd_chip chips[4]{};
+    kinoko_mcd_chip chips[4]{};
     const uint32_t ids[]={9,2,0,1};
     for(int i=0;i<4;++i) {
         chips[i].chip_id=ids[i];ChipDefinition value{};
         value.chip_id=ids[i];value.texture_id=10;value.width=16;value.height=24;
         std::memcpy(chips[i].bytes,&value,sizeof(value));
     }
-    retdec_mcd_texture textures[]={{10,1},{11,2}};
-    retdec_mcd_data data{4,chips,2,textures};
+    kinoko_mcd_texture textures[]={{10,1},{11,2}};
+    kinoko_mcd_data data{4,chips,2,textures};
     ChipResourceRecord resource{};resource.data=&data;
     LayoutRecord map{};map.maximum_chip_id=-1;
     map.cached_chip_resource=reinterpret_cast<KinokoActResource*>(&resource);
@@ -101,18 +101,18 @@ int main() {
     CHECK(find_chip_sprite(layout,definition(chips[3]))->texture==2); // retry missing texture
     CHECK(set_chip_rectangle(layout,1,16,0,32,16));
     Placement placement{};placement.chip_id=1;placement.visible=1;placement.alpha=0.5f;placement.left=10;placement.top=20;
-    kinoko_native_buffer_replace(address(&map.placements),&placement,sizeof(placement));
+    kinoko_native_buffer_replace((void*)(uintptr_t)(address(&map.placements)), &placement, sizeof(placement));
     map.alpha=1;map.scale=2;map.max_chip_width=map.max_chip_height=32;
     CHECK(kinoko_map_update_visible(layout,0,0,100,100)==0 && map.render_count==1);
     CHECK(map.render_quads.begin[0].positions[0].x==26 && map.render_quads.begin[0].positions[0].y==48);
     CHECK(map.render_quads.begin[0].vertices[0].color==0x7fffffffu);
     CHECK(map.chip_sprites.begin[1].quad.positions[0].x==0 && map.chip_sprites.begin[1].quad.vertices[0].color==0xffffffffu);
     CHECK(set_chip_rectangle(layout,1,32,0,32,16));
-    auto *clone=reinterpret_cast<LayoutRecord*>(kinoko_clone_map_layout(address(&map),nullptr));
+    auto *clone=reinterpret_cast<LayoutRecord*>((int32_t)(intptr_t)kinoko_clone_map_layout((KinokoActLayout*)(uintptr_t)(address(&map)), nullptr));
     CHECK(clone->chip_sprites.begin!=map.chip_sprites.begin && clone->chip_definitions.begin!=map.chip_definitions.begin);
     CHECK(clone->changed_chips.begin!=map.changed_chips.begin && clone->changed_chips.begin[0]==map.changed_chips.begin[0]);
     CHECK(clone->cached_chip_resource==map.cached_chip_resource && clone->suppress_next_binding==1);
-    kinoko_clear_map_layout(address(clone));std::free(clone);
+    kinoko_clear_map_layout((KinokoActLayout*)(uintptr_t)(address(clone)));std::free(clone);
     CHECK(map.chip_sprites.begin[1].valid && map.changed_chips.begin[0]==definition(chips[3]));
     flush_changed_chips(layout);
     auto *previous=map.chip_sprites.begin;
@@ -123,7 +123,7 @@ int main() {
     CHECK(set_chip_rectangle(layout,1,0,0,0,-16)); // signed/zero dimensions are valid original inputs
     flush_changed_chips(layout);
     CHECK(map.chip_sprites.begin[1].quad.positions[3].y==-16);
-    kinoko_clear_map_layout(address(&map));
+    kinoko_clear_map_layout((KinokoActLayout*)(uintptr_t)(address(&map)));
     CHECK(!map.chip_sprites.begin && !map.chip_definitions.begin && !map.changed_chips.begin && !map.chip_indices.begin);
     CHECK(resource.data==&data && textures[0].handle==1); // cache never owns MCD/textures
     return 0;

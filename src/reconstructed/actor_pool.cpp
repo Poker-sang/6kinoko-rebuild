@@ -8,9 +8,9 @@
 #include <memory>
 #include <stdexcept>
 
-extern "C" { extern int32_t g29, g28; }
+
 namespace {
-inline auto actor_pool_vtable = &g28;
+
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 struct Pool {
@@ -49,7 +49,7 @@ extern "C" KinokoActorPool *kinoko_actor_pool_construct(KinokoActorPool *receive
     auto* manager = receiver;
     auto state = std::make_unique<Pool>();
     InitializeCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(host(manager).bytes(&PoolHost::lock)));
-    host(manager).set(&PoolHost::methods,static_cast<const void *>(&g29));
+    host(manager).set(&PoolHost::methods,static_cast<const void *>(kinoko_actor_pool_methods()));
     host(manager).set(&PoolHost::state,state.release());
     return receiver;
 }
@@ -82,14 +82,14 @@ extern "C" KinokoActor *kinoko_actor_pool_acquire(KinokoActorPool *receiver, uin
 }
 
 
-// Integer slots survive only at the original virtual/fastcall entry points.
-extern "C" int32_t __fastcall kinoko_method_lookup_actor(int32_t manager, void*, uint32_t handle) {
-    auto* receiver = pointer<KinokoActorPool>(manager);
+// Virtual receivers and results retain their native pointer types.
+extern "C" KinokoActor* __fastcall kinoko_method_lookup_actor(KinokoActorPool* manager, void*, uint32_t handle) {
+    auto* receiver = manager;
     Lock lock(receiver);
     auto& state = pool(receiver);
     const uint32_t slot = handle & 0xffffu;
     if (slot >= state.generations.size() || state.generations[slot] != (handle >> 16)) return 0;
-    return address(state.actors.at(slot));
+    return state.actors.at(slot);
 }
 
 extern "C" int32_t kinoko_actor_pool_retire(KinokoActorPool *receiver, uint32_t handle) {
@@ -109,17 +109,17 @@ extern "C" int32_t kinoko_actor_pool_retire(KinokoActorPool *receiver, uint32_t 
 }
 
 
-extern "C" int32_t __fastcall kinoko_method_actor_pool_count(int32_t manager, void*) {
-    return static_cast<int32_t>(pool(pointer<KinokoActorPool>(manager)).actors.size());
+extern "C" int32_t __fastcall kinoko_method_actor_pool_count(KinokoActorPool* manager, void*) {
+    return static_cast<int32_t>(pool(manager).actors.size());
 }
-extern "C" int32_t __fastcall kinoko_method_actor_pool_base_delete(int32_t manager, void*, unsigned char flags) {
-    auto* receiver = pointer<KinokoActorPool>(manager);
-    host(receiver).set(&PoolHost::methods,static_cast<const void *>(actor_pool_vtable));
+extern "C" KinokoActorPool* __fastcall kinoko_method_actor_pool_base_delete(KinokoActorPool* manager, void*, unsigned char flags) {
+    auto* receiver = manager;
+    host(receiver).set(&PoolHost::methods,static_cast<const void *>(kinoko_actor_pool_base_methods()));
     if (flags & 1) std::free(receiver);
     return manager;
 }
-extern "C" int32_t __fastcall kinoko_method_actor_pool_delete(int32_t manager, void*, unsigned char flags) {
-    auto* receiver = pointer<KinokoActorPool>(manager);
+extern "C" KinokoActorPool* __fastcall kinoko_method_actor_pool_delete(KinokoActorPool* manager, void*, unsigned char flags) {
+    auto* receiver = manager;
     auto* state = host(receiver).get(&PoolHost::state);
     // 46A450 visits every allocated slot, including recycled ones, before
     // destroying the lock, free-list, generations, and actor-pointer vector.
@@ -131,14 +131,14 @@ extern "C" int32_t __fastcall kinoko_method_actor_pool_delete(int32_t manager, v
     return kinoko_method_actor_pool_base_delete(manager, nullptr, flags);
 }
 
-extern "C" void retdec_trace_i32(const char *,int32_t);
+extern "C" void kinoko_trace_i32(const char *,int32_t);
 extern "C" KinokoActor *kinoko_actor_pool_request(KinokoActorPool *pool,uint32_t *handle) {
     static uint32_t count;
-    if (count<3 || (count&63u)==0) retdec_trace_i32("actor:request",static_cast<int32_t>(count));
+    if (count<3 || (count&63u)==0) kinoko_trace_i32("actor:request",static_cast<int32_t>(count));
     auto *actor=kinoko_actor_pool_acquire(pool,handle);
     if (actor) {
         ++count;
-        if (count<=3 || (count&63u)==0) retdec_trace_i32("actor:created",static_cast<int32_t>(count));
+        if (count<=3 || (count&63u)==0) kinoko_trace_i32("actor:created",static_cast<int32_t>(count));
     }
     return actor;
 }

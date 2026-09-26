@@ -11,7 +11,7 @@
 #include "sqfuncproto.h"
 #include "sqcompiler.h"
 
-extern "C" void retdec_trace(const char *message);
+extern "C" void kinoko_trace(const char *message);
 
 namespace {
 SQInteger write_bytecode(SQUserPointer context, SQUserPointer data, SQInteger size) {
@@ -26,11 +26,11 @@ void compiler_error(HSQUIRRELVM, const SQChar *error, const SQChar *source,
     char message[1024];
     std::snprintf(message, sizeof(message), "stagevm:compile-error %s:%d:%d %s",
                   source, line, column, error);
-    retdec_trace(message);
+    kinoko_trace(message);
 }
 }
 
-extern "C" int32_t retdec_squirrel_compile_source(const char *source,
+extern "C" int32_t kinoko_squirrel_compile_source(const char *source,
     int32_t length, const char *name, unsigned char **bytecode, int32_t *bytecode_size) {
     *bytecode = nullptr;
     *bytecode_size = 0;
@@ -79,28 +79,28 @@ SQInteger read_source(SQUserPointer context) {
 extern "C" int32_t kinoko_sq_source_table_vtable(void) { return source_table_vtable; }
 
 // Compile in the current VM, preserving constants, debug info and errors.
-extern "C" int32_t kinoko_sq_compile_proto(int32_t vm, int32_t reader, int32_t context,
+extern "C" int32_t kinoko_sq_compile_proto(SQVM* vm, void* reader, void* context,
     const char *name, int32_t out[2], int32_t raiseerror, int32_t lineinfo) {
-    auto *v = pointer<SQVM>(vm);
+    auto *v = vm;
     recognize_compiler_tables(v);
-    return Compile(v, reinterpret_cast<SQLEXREADFUNC>(pointer<void>(reader)),
-        pointer<void>(context), name, *reinterpret_cast<SQObjectPtr *>(out),
+    return Compile(v, reinterpret_cast<SQLEXREADFUNC>(reader),
+        context, name, *reinterpret_cast<SQObjectPtr *>(out),
         raiseerror != 0, lineinfo != 0);
 }
-extern "C" int32_t kinoko_sq_compile_reader(int32_t vm, int32_t reader, int32_t context,
+extern "C" int32_t kinoko_sq_compile_reader(SQVM* vm, void* reader, void* context,
     const char *name, int32_t raiseerror) {
-    auto *v = pointer<SQVM>(vm);
+    auto *v = vm;
     recognize_compiler_tables(v);
-    return sq_compile(v, reinterpret_cast<SQLEXREADFUNC>(pointer<void>(reader)),
-                      pointer<void>(context), name, raiseerror != 0);
+    return sq_compile(v, reinterpret_cast<SQLEXREADFUNC>(reader),
+                      context, name, raiseerror != 0);
 }
-extern "C" int32_t kinoko_sq_compile_buffer(int32_t vm, const char *text, int32_t length,
+extern "C" int32_t kinoko_sq_compile_buffer(SQVM* vm, const char *text, int32_t length,
     const char *name, int32_t raiseerror) {
-    return sq_compilebuffer(pointer<SQVM>(vm), text, length, name, raiseerror != 0);
+    return sq_compilebuffer(vm, text, length, name, raiseerror != 0);
 }
 // 4A1B90 returns -1 on compile failure, +1 when the new closure is on the stack.
-extern "C" int32_t kinoko_sq_compilestring(int32_t vm) {
-    auto *v = pointer<SQVM>(vm);
+extern "C" int32_t kinoko_sq_compilestring(SQVM* vm) {
+    auto *v = vm;
     const SQChar *source = nullptr, *name = _SC("unnamedbuffer");
     sq_getstring(v, 2, &source);
     if (sq_gettop(v) > 2) sq_getstring(v, 3, &name);
