@@ -36,41 +36,37 @@ extern "C" {
 int32_t kinoko_act_append_list(int32_t list_slot, int32_t value);
 int32_t __fastcall kinoko_delete_layout_sprite(int32_t sprite, void *unused, int32_t flags);
 void kinoko_act_free_map_records(int32_t layout);
-int32_t kinoko_act_load(int32_t this_ptr, int32_t reader_ptr,
+int32_t kinoko_act_load(int32_t this_ptr, KinokoArchiveReader* reader_ptr,
                                int32_t version);
-int32_t kinoko_act_load_key(int32_t key, int32_t reader_ptr,
+int32_t kinoko_act_load_key(int32_t key, KinokoArchiveReader* reader_ptr,
                                    int32_t version);
-int32_t kinoko_act_read_layer_properties(int32_t layer, KinokoArchiveReader*  reader);
-int32_t kinoko_act_read_key_properties(int32_t key, KinokoArchiveReader*  reader);
-int32_t kinoko_act_read_map_properties(int32_t layout, KinokoArchiveReader*  reader);
-int32_t kinoko_act_read_properties(int32_t act, KinokoArchiveReader*  reader);
-int32_t kinoko_act_read_script_properties(int32_t script, int32_t reader);
+int32_t kinoko_act_read_script_properties(int32_t script, KinokoArchiveReader* reader);
 const char* kinoko_act_serialized_type_name(int32_t object);
-int32_t kinoko_act_load_layer(int32_t layer, int32_t reader_ptr,
+int32_t kinoko_act_load_layer(int32_t layer, KinokoArchiveReader* reader_ptr,
                                      int32_t version);
 int32_t kinoko_act_load_mcd(int32_t resource,
                                    const char *file_name);
-int32_t kinoko_act_load_script(int32_t object_ptr, int32_t reader_ptr);
-int32_t kinoko_act_make_key(int32_t reader_ptr, int32_t version);
+int32_t kinoko_act_load_script(int32_t object_ptr, KinokoArchiveReader* reader_ptr);
+int32_t kinoko_act_make_key(KinokoArchiveReader* reader_ptr, int32_t version);
 const void* kinoko_act_timeline_vtable(void);
 int32_t kinoko_act_new_timeline(void);
 int32_t kinoko_act_load_timeline(int32_t timeline, KinokoArchiveReader*  reader, int32_t version);
 int32_t kinoko_act_make_layer(void);
 int32_t kinoko_construct_cact_layer(int32_t layer, int32_t vm);
 int32_t kinoko_construct_c2dlayout(int32_t layout);
-int32_t kinoko_act_make_layout(int32_t reader_ptr);
+int32_t kinoko_act_make_layout(KinokoArchiveReader* reader_ptr);
 int32_t kinoko_act_make_list(int32_t *list_slot);
-int32_t kinoko_act_make_map_layout(int32_t reader_ptr);
-int32_t kinoko_act_make_resource(int32_t reader_ptr, uint32_t type);
+int32_t kinoko_act_make_map_layout(KinokoArchiveReader* reader_ptr);
+int32_t kinoko_act_make_resource(KinokoArchiveReader* reader_ptr, uint32_t type);
 int32_t kinoko_act_prepare_vector(int32_t object_ptr,
                                          uint32_t begin_offset,
                                          uint32_t end_offset,
                                          uint32_t capacity_offset,
                                          uint32_t count);
 int32_t kinoko_act_read_map_records(int32_t layout,
-                                           int32_t reader_ptr);
-int32_t kinoko_act_read_u32(int32_t reader_ptr, uint32_t *value);
-int32_t kinoko_act_read_u8(int32_t reader_ptr, uint8_t *value);
+                                           KinokoArchiveReader* reader_ptr);
+int32_t kinoko_act_read_u32(KinokoArchiveReader* reader_ptr, uint32_t *value);
+int32_t kinoko_act_read_u8(KinokoArchiveReader* reader_ptr, uint8_t *value);
 int32_t kinoko_begin_stage_this(int32_t resource_ptr, int32_t stage);
 int32_t kinoko_bind_act_resource_object(int32_t resource_ptr);
 int32_t kinoko_c2dlayout_draw_impl(int32_t layout,

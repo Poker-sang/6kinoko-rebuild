@@ -35,8 +35,8 @@ int32_t __fastcall kinoko_method_register_map_layout(int32_t receiver, void* unu
 
 int32_t __fastcall kinoko_method_delete_act_script(int32_t receiver, void* unused_edx);
 int32_t __fastcall kinoko_method_register_act_layer(int32_t receiver, void* unused_edx, int32_t parent, int32_t flags);
-int32_t __fastcall kinoko_method_read_act_script(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-int32_t __fastcall kinoko_method_write_act_script(int32_t receiver, void* unused_edx, int32_t writer);
+int32_t __fastcall kinoko_method_read_act_script(int32_t receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+int32_t __fastcall kinoko_method_write_act_script(int32_t receiver, void* unused_edx, KinokoArchiveReader* writer);
 int32_t __fastcall kinoko_method_write_act_layer(int32_t receiver, void* unused_edx, KinokoArchiveReader*  writer);
 int32_t __fastcall kinoko_method_write_act_key(int32_t receiver, void* unused_edx, KinokoArchiveReader*  writer);
 int32_t __fastcall kinoko_method_write_string_layout(int32_t receiver, void* unused_edx, KinokoArchiveReader*  writer);

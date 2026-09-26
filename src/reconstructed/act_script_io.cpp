@@ -1,4 +1,5 @@
 #include "kinoko/act_runtime.h"
+#include "kinoko/file_io_layout.h"
 #include "kinoko/act_host.h"
 #include "kinoko/act_script_payload.hpp"
 #include "kinoko/legacy_abi.h"
@@ -23,34 +24,29 @@ using kinoko::legacy::field;
 // their serialized values without assigning them. std::map supplies key order.
 std::map<std::string, uint32_t> script_schema{{"compiled",2}, {"filePath",3}};
 // 4175F0's stream has a vtable at +0, transfer at slot +12 and seek at +20.
-struct StreamMethods { void *destroy, *slot1, *slot2, *transfer, *slot4, *seek; };
-struct Stream { StreamMethods *methods; };
-static_assert(offsetof(StreamMethods, transfer) == 12 && offsetof(StreamMethods, seek) == 20);
-bool transfer(int32_t stream, void* bytes, uint32_t size) {
-    return stream && (kinoko_call_thiscall2_result(pointer<void>(stream),
-        pointer<Stream>(stream)->methods->transfer, address(bytes), size) & 0xff) != 0;
+bool transfer(KinokoArchiveReader* stream, void* bytes, uint32_t size) {
+    return stream && (stream->methods->transfer(stream,bytes,size)&0xff)!=0;
 }
-template<class T> bool transfer(int32_t stream, T& value) { return transfer(stream, &value, sizeof(value)); }
-int32_t seek(int32_t writer, int32_t offset, int32_t origin) {
-    return kinoko_call_thiscall2_result(pointer<void>(writer),
-        pointer<Stream>(writer)->methods->seek, offset, origin);
+template<class T> bool transfer(KinokoArchiveReader* stream, T& value) { return transfer(stream, &value, sizeof(value)); }
+int32_t seek(KinokoArchiveReader* writer, int32_t offset, int32_t origin) {
+    return static_cast<int32_t>(writer->methods->seek(writer,offset,origin));
 }
-bool read_string(int32_t reader, std::string& value, uint32_t maximum) {
+bool read_string(KinokoArchiveReader* reader, std::string& value, uint32_t maximum) {
     uint32_t length = 0;
     if (!transfer(reader, length) || length > maximum) return false;
     value.resize(length);
     return !length || transfer(reader, value.data(), length);
 }
-bool write_string(int32_t writer, const char* text, uint32_t length) {
+bool write_string(KinokoArchiveReader* writer, const char* text, uint32_t length) {
     return transfer(writer, length) && (!length || transfer(writer, const_cast<char*>(text), length));
 }
 SQInteger write_bytecode(SQUserPointer context, SQUserPointer bytes, SQInteger size) {
-    return transfer(address(context), bytes, size) ? size : 0;
+    return transfer(static_cast<KinokoArchiveReader*>(context), bytes, size) ? size : 0;
 }
 void quiet_print(HSQUIRRELVM, const SQChar*, ...) {}
 }
 
-extern "C" int32_t kinoko_act_read_script_properties(int32_t script, int32_t reader) {
+extern "C" int32_t kinoko_act_read_script_properties(int32_t script, KinokoArchiveReader* reader) {
     if (!script || !reader) return 0;
     try {
         uint8_t has_schema = 1;
@@ -87,10 +83,10 @@ extern "C" int32_t kinoko_act_read_script_properties(int32_t script, int32_t rea
 }
 
 extern "C" int32_t __fastcall kinoko_method_read_act_script(
-    int32_t script, void*, int32_t holder, int32_t version) {
+    int32_t script, void*, KinokoArchiveReader** holder, int32_t version) {
     if (!script || !holder || version != 1) return 0;
-    const auto reader = field<int32_t>(holder);
-    if (!kinoko_act_read_script_properties(script, reader)) return 0;
+    const auto reader = *holder;
+    if (!kinoko_act_read_script_properties(script, (KinokoArchiveReader*)(uintptr_t)(reader))) return 0;
     uint32_t size = 0;
     if (!transfer(reader, size) || size > 0x1000000) return 0;
     void* bytes = std::calloc(1, size ? size : 1);
@@ -104,7 +100,7 @@ extern "C" int32_t __fastcall kinoko_method_read_act_script(
     return 1;
 }
 
-extern "C" int32_t __fastcall kinoko_method_write_act_script(int32_t script, void*, int32_t writer) {
+extern "C" int32_t __fastcall kinoko_method_write_act_script(int32_t script, void*, KinokoArchiveReader* writer) {
     if (!script || !writer) return 0;
     kinoko::act::ScriptPayloadView payload(pointer<void>(script));
     const auto was_compiled = payload.get(&kinoko::act::ScriptPayloadRecord::compiled);
@@ -140,7 +136,7 @@ extern "C" int32_t __fastcall kinoko_method_write_act_script(int32_t script, voi
         const auto* end = text ? static_cast<const char*>(std::memchr(text, 0, size)) : nullptr;
         const auto length = end ? static_cast<size_t>(end - text) : size;
         const bool compiled = kinoko::script::upstream::sqrat_compile_and_write(
-            vm, text ? text : "", length, write_bytecode, pointer<void>(writer));
+            vm, text ? text : "", length, write_bytecode, writer);
         sq_close(vm);
         if (!compiled) return 0;
         // 416681 includes the four-byte placeholder in this length.

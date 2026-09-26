@@ -24,7 +24,7 @@ void require(bool value, const char *message) {
     if (!value) throw std::runtime_error(message);
 }
 uint8_t __fastcall read_document(KinokoActDocument *document, void *, int32_t *reader, int32_t version) {
-    return static_cast<uint8_t>(kinoko_act_load(address(document), *reader, version));
+    return static_cast<uint8_t>(kinoko_act_load(address(document), (KinokoArchiveReader*)(uintptr_t)(*reader), version));
 }
 void *vtable_identity[2] = {nullptr, reinterpret_cast<void *>(read_document)};
 KinokoActHostSymbols host{};
@@ -181,7 +181,7 @@ extern "C" int32_t kinoko_reader_seek_relative(KinokoArchiveReader *reader, uint
     if (!state.seek_ok || offset > archive.data.size() - archive.position) return 0;
     archive.position += offset; return 1;
 }
-extern "C" int32_t kinoko_act_load(int32_t document, int32_t reader, int32_t version) {
+extern "C" int32_t kinoko_act_load(int32_t document, KinokoArchiveReader* reader, int32_t version) {
     valid_reader(reader); ++state.payloads; state.events += 'P'; state.payload_position = archive.position;
     require(document == address(state.document) && version == 1, "typed document handed to existing payload parser");
     DocumentView(state.document).set(&DocumentRecord::screen_width, int32_t{777});
