@@ -70,7 +70,7 @@ int32_t kinoko_sq_throw_error(SQVM* machine, char * a2);
 int32_t kinoko_sq_write_closure(SQVM* machine, SQWRITEFUNC writer, SQUserPointer context);
 void kinoko_sq_finalize_userdata_entry(SQUserData* object, void* unused);
 
-int32_t kinoko_sq_raise_formatted_error(int32_t this_ptr, const char *format, ...);
+int32_t kinoko_sq_raise_formatted_error(SQVM* this_ptr, const char *format, ...);
 void kinoko_squirrel_addref(int32_t type, int32_t data);
 void kinoko_squirrel_release(int32_t type, int32_t data);
 void kinoko_squirrel_assign(int32_t *dst, const int32_t *src);
