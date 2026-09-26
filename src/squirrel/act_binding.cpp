@@ -1,3 +1,5 @@
+#include "sqpcheader.h"
+#include "sqclass.h"
 #include "kinoko/act_resource_records_io.hpp"
 #include "kinoko/act_key_records.hpp"
 #include "kinoko/act_layer_lifecycle.h"
@@ -14,8 +16,7 @@
 #include "kinoko/act_layer_lifecycle.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/squirrel_api_types.h"
-// Native C++ continuation of the recovered ACT path. Original function names
-// remain C ABI ports until the surrounding decompiled host is migrated.
+// Recovered ACT behavior with typed C++ storage and explicit script boundaries.
 #include "kinoko/act_runtime.h"
 #include "kinoko/act_host.h"
 #include "kinoko/diagnostics.h"
@@ -383,17 +384,18 @@ extern "C" int32_t kinoko_register_c2dlayout_class(SQVM* machine) {
 
 int32_t kinoko_cact_associate_resource(SQVM* vm)
 {
-    int32_t layer = 0, resource = 0;
+    KinokoActLayer* layer = nullptr; KinokoActResource* resource = nullptr;
     int32_t result = (int32_t)E_FAIL;
     if (sq_getinstanceup(vm, 1, (SQUserPointer*)(&layer), kinoko_pointer(0)) >= 0 && layer != 0 &&
         sq_getinstanceup(vm, 2, (SQUserPointer*)(&resource), kinoko_pointer(0)) >= 0 && resource != 0) {
         /* 424210 -> 4252E0 -> 41EF20: change only the resource and its ID. */
-        field<int32_t>(layer + 100) = resource;
-        field<int32_t>(layer + 96) = field<int32_t>(resource + 4);
+        const kinoko::native::RecordView<kinoko::act::LayerAssociationRecord> fields(layer);
+        fields.set(&kinoko::act::LayerAssociationRecord::resource, resource);
+        fields.set(&kinoko::act::LayerAssociationRecord::resource_id, ResourcePublicationView(resource).get(&ResourcePublicationRecord::id));
         kinoko_trace_squirrel_name("act:associate-layer",
-            address(kinoko_string_data(LayerPublicationView(pointer<void>(layer)).bytes(&LayerPublicationRecord::name))));
+            address(kinoko_string_data(LayerPublicationView(layer).bytes(&LayerPublicationRecord::name))));
         kinoko_trace_squirrel_name("act:associate-resource",
-            address(kinoko_string_data(ResourcePublicationView(pointer<void>(resource)).bytes(&ResourcePublicationRecord::name))));
+            address(kinoko_string_data(ResourcePublicationView(resource).bytes(&ResourcePublicationRecord::name))));
         result = 0;
     }
     sq_pushinteger(vm, result);
@@ -401,15 +403,16 @@ int32_t kinoko_cact_associate_resource(SQVM* vm)
 }
 
 int32_t kinoko_resource_load_texture(SQVM* vm) {
-    int32_t resource = 0;
+    KinokoActResource* resource = nullptr;
     const SQChar *prefix = nullptr;
     if (SQ_FAILED(sq_getinstanceup(vm, 1, reinterpret_cast<SQUserPointer *>(&resource), nullptr)) ||
         !resource || sq_gettop(vm) < 2) return 0;
     if (sq_gettype(vm, 2) != OT_NULL &&
         SQ_FAILED(sq_getstring(vm, 2, &prefix))) return 0;
     // 44FD20 forwards through virtual slot +40, retaining derived behavior.
-    const int32_t result = kinoko_call_thiscall1_result(pointer<void>(resource),
-        field<void *>(field<int32_t>(resource) + 40), address(prefix));
+    using Load = int32_t (__thiscall*)(KinokoActResource*, const char*);
+    const auto* methods = kinoko::legacy::load<const unsigned char*>(resource);
+    const int32_t result = kinoko::legacy::load<Load>(methods + 10*sizeof(void*))(resource, prefix);
     sq_pushbool(vm, (result & 0xff) != 0);
     return 1;
 }
@@ -664,22 +667,22 @@ bool swap_layers(KinokoActRuntime* player, int32_t first, int32_t second) {
 }
 
 int32_t get_layer_order_native(SQVM* vm) {
-    int32_t player=0, layer=0;
+    KinokoActRuntime* player=nullptr; KinokoActLayer* layer=nullptr;
     if (SQ_FAILED(sq_getinstanceup(vm,1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
         SQ_FAILED(sq_getinstanceup(vm,2,reinterpret_cast<SQUserPointer*>(&layer),nullptr)))
         return sq_throwerror(vm,"invalid GetLayerOrder arguments");
-    sq_pushinteger(vm,get_layer_order(pointer<KinokoActRuntime>(player), pointer<KinokoActLayer>(layer)));
+    sq_pushinteger(vm,get_layer_order(player, layer));
     return 1;
 }
 int32_t swap_layers_native(SQVM* vm) {
-    int32_t player=0;
+    KinokoActRuntime* player=nullptr;
     SQInteger first=0, second=0;
     if (SQ_FAILED(sq_getinstanceup(vm,1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
         SQ_FAILED(sq_getinteger(vm,2,&first)) ||
         SQ_FAILED(sq_getinteger(vm,3,&second)))
         return sq_throwerror(vm,"invalid SwapLayer arguments");
     try {
-        sq_pushbool(vm,swap_layers(pointer<KinokoActRuntime>(player), first, second));
+        sq_pushbool(vm,swap_layers(player, first, second));
         return 1;
     } catch (...) { return sq_throwerror(vm,"SwapLayer allocation failed"); }
 }
@@ -881,7 +884,7 @@ int32_t kinoko_publish_acting_player(SQVM* vm,
 {
     int32_t base;
     int32_t result;
-    int32_t instance_slot;
+    SQObjectPtr* instance_slot;
     int32_t actual[2] = { static_cast<int32_t>(OT_NULL), 0 };
     kinoko::act::LayerObjectRecord object_wrapper{kinoko_act_host_symbols()->sq_root_vtable, (SQVM*)(uintptr_t)(0), {static_cast<int32_t>(OT_NULL), 0}, 1, {}};
 
@@ -905,33 +908,33 @@ int32_t kinoko_publish_acting_player(SQVM* vm,
         return 0;
     }
     sq_remove(vm, -2);
-    instance_slot = ((int32_t)(uintptr_t)kinoko_sq_get_up(vm, -1));
-    kinoko_trace_i32("act:acting-instance-slot", instance_slot);
+    instance_slot = kinoko_sq_get_up(vm, -1);
+    kinoko_trace_i32("act:acting-instance-slot", address(instance_slot));
     kinoko_trace_i32("act:acting-instance-type",
-                     instance_slot != 0 ? field<int32_t>(instance_slot) : 0);
+                     instance_slot != 0 ? static_cast<int32_t>(type(*instance_slot)) : 0);
     kinoko_trace_i32("act:acting-instance-data",
-                     instance_slot != 0 ? field<int32_t>(instance_slot + 4) : 0);
+                     instance_slot != 0 ? kinoko::script::data_bits(*instance_slot) : 0);
     if (instance_slot != 0 &&
-        field<int32_t>(instance_slot) == 0x0A008000 &&
-        field<int32_t>(instance_slot + 4) != 0) {
-        int32_t instance = field<int32_t>(instance_slot + 4);
+        type(*instance_slot) == OT_INSTANCE &&
+        _instance(*instance_slot) != nullptr) {
+        auto* instance = _instance(*instance_slot);
         kinoko_trace_i32("act:acting-instance-class",
-                         field<int32_t>(instance + 28));
+                         address(instance->_class));
         kinoko_trace_i32("act:acting-instance-user-before",
-                         field<int32_t>(instance + 32));
+                         address(instance->_userpointer));
     }
     if (sq_setinstanceup(vm, -1, player_ptr) < 0) {
         kinoko_sqrat_trim_stack(vm, base);
         return 0;
     }
     if (instance_slot != 0 &&
-        field<int32_t>(instance_slot) == 0x0A008000 &&
-        field<int32_t>(instance_slot + 4) != 0) {
-        int32_t instance = field<int32_t>(instance_slot + 4);
+        type(*instance_slot) == OT_INSTANCE &&
+        _instance(*instance_slot) != nullptr) {
+        auto* instance = _instance(*instance_slot);
         kinoko_trace_i32("act:acting-instance-class-after",
-                         field<int32_t>(instance + 28));
+                         address(instance->_class));
         kinoko_trace_i32("act:acting-instance-user-after",
-                         field<int32_t>(instance + 32));
+                         address(instance->_userpointer));
     }
     sq_getstackobj(vm, -1, (HSQOBJECT*)(out_pair));
     kinoko_sqrat_retain_pair(vm, out_pair);
@@ -1030,10 +1033,10 @@ int32_t kinoko_compile_act_file(SQVM* vm, const char *path, const int32_t *envir
         kinoko_reader_close(reader);
         reader = 0;
         if (!read) return 0;
-        int32_t script[26] = {};
-        script[23] = address(buffer.data()); script[24] = size;
+        kinoko::act::ScriptStorageRecord script{};
+        script.bytes = buffer.data(); script.size = size;
         const bool compiled = size >= 2 && buffer[0] == 0xfa && buffer[1] == 0xfa;
-        const bool ok = compiled ? kinoko_execute_act_file_bytecode(vm, (void*)(script), environment)
+        const bool ok = compiled ? kinoko_execute_act_file_bytecode(vm, &script, environment)
             : kinoko_sq_compile_act_source(vm, reinterpret_cast<const char*>(buffer.data()), static_cast<int32_t>(strnlen(reinterpret_cast<const char*>(buffer.data()), size)), environment);
         if (!ok) return 0;
         const auto owner = act_script_owners.find(environment[1]);
@@ -1515,14 +1518,14 @@ extern "C" int32_t kinoko_register_map_layout_class(SQVM* machine) {
 
 
 int32_t kinoko_resource_get_chip_info(SQVM* vm) {
-    int32_t resource = 0, id = 0;
+    KinokoActResource* resource = nullptr; int32_t id = 0;
     kinoko::act::LayerObjectRecord root{};
     int32_t klass[2] = { static_cast<int32_t>(OT_NULL), 0 }, instance[2] = { static_cast<int32_t>(OT_NULL), 0 };
     struct kinoko_mcd_chip *chip;
     if (sq_getinstanceup(vm, 1, (SQUserPointer*)(&resource), kinoko_pointer(0)) < 0 || resource == 0 ||
         sq_getinteger(vm, 2, (SQInteger*)(&id)) < 0)
         return 0;
-    chip = kinoko_mcd_find_chip(field<kinoko_mcd_data *>(resource + 64), (uint32_t)id);
+    chip = kinoko_mcd_find_chip(kinoko::act::ChipResourceFields(resource).get(&kinoko::act::ChipResourceRecord::data), (uint32_t)id);
     if (chip == nullptr || !(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(&root), vm))) {
         sq_pushnull(vm);
         return 1;
@@ -2138,7 +2141,7 @@ extern "C" int32_t kinoko_sqrat_call_integer1(struct SQVM* a1) {
 namespace {
 int32_t string_property_set(SQVM* vm) {
     int32_t offset=0;
-    const int32_t object=(int32_t)(intptr_t)kinoko_c2dlayout_property_offset(vm, &offset);
+    auto* object=static_cast<unsigned char*>(kinoko_c2dlayout_property_offset(vm, &offset));
     if(!object) return 0;
     SQInteger value=0;
     if(!kinoko::script::upstream::sqrat_integer_argument(vm,2,value)) return 0;
@@ -2146,29 +2149,29 @@ int32_t string_property_set(SQVM* vm) {
     else if(offset==92) value=(std::max)(value,1);
     else if(offset>=96 && offset<=116) value=std::clamp(value,0,255);
     else if(offset==120 || offset==124) value=(std::max)(value,0);
-    field<int32_t>(object+offset)=value;
+    kinoko::legacy::store(object+offset, static_cast<int32_t>(value));
     return 0;
 }
 int32_t string_value_get(SQVM* vm) {
     int32_t offset=0;
-    const int32_t object=(int32_t)(intptr_t)kinoko_c2dlayout_property_offset(vm, &offset);
+    auto* object=static_cast<unsigned char*>(kinoko_c2dlayout_property_offset(vm, &offset));
     if(!object) return 0;
-    sq_pushstring(vm,kinoko::legacy::StringView(pointer<void>(object+offset)).data(),-1);
+    sq_pushstring(vm,kinoko::legacy::StringView(object+offset).data(),-1);
     return 1;
 }
 int32_t string_face_set(SQVM* vm) {
     int32_t offset=0;
-    const int32_t object=(int32_t)(intptr_t)kinoko_c2dlayout_property_offset(vm, &offset);
+    auto* object=static_cast<unsigned char*>(kinoko_c2dlayout_property_offset(vm, &offset));
     const SQChar* value=nullptr;
     if(!object || SQ_FAILED(sq_getstring(vm,2,&value))) return 0;
     static const char face[]="\x82\x6c\x82\x72\x20\x83\x53\x83\x56\x83\x62\x83\x4e";
     if(!*value) value=face;
-    kinoko::legacy::StringView(pointer<void>(object+60)).assign(value,static_cast<uint32_t>(std::strlen(value)));
+    kinoko::legacy::StringView(object+offsetof(kinoko::act::StringLayoutRecord, face)).assign(value,static_cast<uint32_t>(std::strlen(value)));
     return 0;
 }
 template<int Method> int32_t string_method(SQVM* vm) {
     const auto machine=vm;
-    int32_t object=0;
+    KinokoStringLayout* object=nullptr;
     if(SQ_FAILED(sq_getinstanceup(machine,1,reinterpret_cast<SQUserPointer*>(&object),nullptr)) || !object)
         return sq_throwerror(machine,"invalid CStringLayout receiver");
     if constexpr(Method==0 || Method==2 || Method==3 || Method==4 || Method==5)
@@ -2187,7 +2190,7 @@ template<int Method> int32_t string_method(SQVM* vm) {
             if(!kinoko::script::upstream::sqrat_integer_argument(machine,2,count)) return sq_throwerror(machine,"expected count");
             result=kinoko_string_pop((KinokoStringLayout*)(uintptr_t)(object), count, Method==2);
         } else if constexpr(Method==5) {
-            int32_t source=0;
+            KinokoStringLayout* source=nullptr;
             if(sq_gettype(machine,2)!=OT_NULL && SQ_FAILED(sq_getinstanceup(machine,2,reinterpret_cast<SQUserPointer*>(&source),nullptr)))
                 return sq_throwerror(machine,"expected CStringLayout");
             result=kinoko_string_replicate((KinokoStringLayout*)(uintptr_t)(object), (KinokoStringLayout*)(uintptr_t)(source));
