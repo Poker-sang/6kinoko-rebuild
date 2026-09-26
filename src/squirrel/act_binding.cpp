@@ -917,7 +917,7 @@ int32_t kinoko_publish_acting_player(int32_t vm,
         return 0;
     }
     sq_remove(kinoko_vm(vm), -2);
-    instance_slot = kinoko_sq_get_up(vm, -1);
+    instance_slot = ((int32_t)(uintptr_t)kinoko_sq_get_up((SQVM*)(uintptr_t)(vm), -1));
     kinoko_trace_i32("act:acting-instance-slot", instance_slot);
     kinoko_trace_i32("act:acting-instance-type",
                      instance_slot != 0 ? field<int32_t>(instance_slot) : 0);
@@ -981,8 +981,7 @@ int32_t kinoko_execute_act_source_script(
     const char *source = field<const char *>(script_ptr + 92);
     const int32_t size = field<int32_t>(script_ptr + 96);
     if (!source || size <= 0 || size > 0x1000000) return 0;
-    return kinoko_sq_compile_act_source(vm, source, static_cast<int32_t>(strnlen(source, size)),
-        environment_pair);
+    return kinoko_sq_compile_act_source((SQVM*)(uintptr_t)(vm), source, static_cast<int32_t>(strnlen(source, size)), environment_pair);
 }
 
 int32_t kinoko_execute_act_callback(int32_t script_ptr,
@@ -1061,8 +1060,7 @@ int32_t kinoko_compile_act_file(int32_t vm, const char *path, const int32_t *env
         script[23] = address(buffer.data()); script[24] = size;
         const bool compiled = size >= 2 && buffer[0] == 0xfa && buffer[1] == 0xfa;
         const bool ok = compiled ? kinoko_execute_act_file_bytecode((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(address(script)), environment)
-            : kinoko_sq_compile_act_source(vm, reinterpret_cast<const char*>(buffer.data()),
-                static_cast<int32_t>(strnlen(reinterpret_cast<const char*>(buffer.data()), size)), environment);
+            : kinoko_sq_compile_act_source((SQVM*)(uintptr_t)(vm), reinterpret_cast<const char*>(buffer.data()), static_cast<int32_t>(strnlen(reinterpret_cast<const char*>(buffer.data()), size)), environment);
         if (!ok) return 0;
         const auto owner = act_script_owners.find(environment[1]);
         if (owner != act_script_owners.end()) refresh_act_script_callbacks(vm, owner->second, environment);

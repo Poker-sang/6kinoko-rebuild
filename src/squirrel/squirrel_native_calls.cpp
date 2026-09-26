@@ -98,7 +98,7 @@ int32_t kinoko_native_property_dispatch(SQVM* id, bool write) {
     if (!vm || sq_gettop(vm) < (write ? 4 : 3)) return error(vm, "Member Variable not found");
     return upstream::sqrat_property_dispatch(vm, write, static_cast<SQBool>(sqrat_trace_slot),
         [](HSQUIRRELVM machine, SQInteger count, SQBool result, SQBool raiseerror) -> SQRESULT {
-            return kinoko_sq_call(address(machine), count, result, raiseerror);
+            return kinoko_sq_call(machine, count, result, raiseerror);
         });
 }
 }

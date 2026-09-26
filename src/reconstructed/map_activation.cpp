@@ -45,7 +45,7 @@ int32_t invoke_event(SQVM *vm, HSQOBJECT callback, HSQOBJECT environment,
     sq_pushinteger(vm, top);
     sq_pushinteger(vm, right);
     sq_pushinteger(vm, bottom);
-    return kinoko_sq_call(address(vm), 6, 1, 1);
+    return kinoko_sq_call(vm, 6, 1, 1);
 }
 }
 

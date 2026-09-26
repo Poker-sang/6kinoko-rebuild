@@ -133,7 +133,7 @@ extern "C" int32_t kinoko_cact_layer_get_string(int32_t id) {
     sq_pushstring(field.vm(), value ? value : "", -1);
     // Preserve the legacy signed stack-slot-address comparison, not an assumed
     // SQRESULT (sq_pushstring is void). Its unusual return ABI is not changed.
-    return kinoko_sq_get_up(id, -1) >= 0;
+    return ((int32_t)(uintptr_t)kinoko_sq_get_up((SQVM*)(uintptr_t)(id), -1)) >= 0;
 }
 extern "C" int32_t kinoko_cact_layer_set_string(int32_t id) {
     NativeField field(id, true, false, true);

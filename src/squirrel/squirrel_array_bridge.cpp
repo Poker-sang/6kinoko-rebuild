@@ -16,18 +16,18 @@ SQVM *machine(int32_t address) {
 
 // Original 48DD10 -> 48DAC0: push the last value, then pop/shrink the same array.
 // Use the supplied 2.2.2 API so ownership, vector shrinking and errors stay together.
-extern "C" int32_t kinoko_sq_array_pop_api(int32_t vm, int32_t index, int32_t push_value) {
-    return sq_arraypop(machine(vm), index, push_value);
+extern "C" int32_t kinoko_sq_array_pop_api(SQVM* vm, int32_t index, int32_t push_value) {
+    return sq_arraypop(vm, index, push_value);
 }
 
 // sqbaselib.cpp::array_pop / original 4A25A0 returns SQ_ERROR on failure.
-extern "C" int32_t kinoko_sq_array_pop(int32_t vm) {
-    return SQ_SUCCEEDED(sq_arraypop(machine(vm), 1, SQTrue)) ? 1 : SQ_ERROR;
+extern "C" int32_t kinoko_sq_array_pop(SQVM* vm) {
+    return SQ_SUCCEEDED(sq_arraypop(vm, 1, SQTrue)) ? 1 : SQ_ERROR;
 }
 
 // sqbaselib.cpp::array_top / original 4A30D0. Keep the explicit VM receiver.
-extern "C" int32_t kinoko_sq_array_top(int32_t vm) {
-    auto *v = machine(vm);
+extern "C" int32_t kinoko_sq_array_top(SQVM* vm) {
+    auto *v = vm;
     auto *array = _array(stack_get(v, 1));
     if (array->Size() > 0) {
         v->Push(array->Top());

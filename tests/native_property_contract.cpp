@@ -41,7 +41,7 @@ public:
     }
     void call(SQInteger arguments, bool result) {
         const auto previous = receiver;
-        const auto status = kinoko_sq_call(address(vm), arguments, result, SQFalse);
+        const auto status = kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), arguments, result, SQFalse);
         if (SQ_FAILED(status)) last_error(vm);
         require(SQ_SUCCEEDED(status), "property call succeeds");
         require(receiver == previous, "property call restores receiver");

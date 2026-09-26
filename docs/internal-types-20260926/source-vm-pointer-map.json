@@ -1,0 +1,389 @@
+{
+  "parameters": {
+    "kinoko_sq_array_pop_api": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_array_pop": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_array_top": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_compile_proto": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "reader",
+        "void"
+      ],
+      "2": [
+        "context",
+        "void"
+      ]
+    },
+    "kinoko_sq_compile_reader": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "reader",
+        "void"
+      ],
+      "2": [
+        "context",
+        "void"
+      ]
+    },
+    "kinoko_sq_compile_buffer": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_compilestring": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_generator_yield": {
+      "0": [
+        "generator",
+        "SQGenerator"
+      ],
+      "1": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_generator_resume": {
+      "0": [
+        "generator",
+        "SQGenerator"
+      ],
+      "1": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_generator_kill": {
+      "0": [
+        "generator",
+        "SQGenerator"
+      ]
+    },
+    "kinoko_sq_array_remove": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_get_vararg": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "target",
+        "SQObjectPtr"
+      ],
+      "2": [
+        "index",
+        "SQObjectPtr"
+      ],
+      "3": [
+        "call_info",
+        "SQVM::CallInfo"
+      ]
+    },
+    "kinoko_sq_clone": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "source",
+        "SQObjectPtr"
+      ],
+      "2": [
+        "target",
+        "SQObjectPtr"
+      ]
+    },
+    "kinoko_sq_foreach": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "object",
+        "SQObjectPtr"
+      ],
+      "2": [
+        "key",
+        "SQObjectPtr"
+      ],
+      "3": [
+        "value",
+        "SQObjectPtr"
+      ],
+      "4": [
+        "iterator",
+        "SQObjectPtr"
+      ]
+    },
+    "kinoko_sq_collect": {
+      "0": [
+        "state",
+        "SQSharedState"
+      ],
+      "1": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_source_object_type": {
+      "0": [
+        "object",
+        "SQCollectable"
+      ]
+    },
+    "kinoko_sq_construct_vm": {
+      "0": [
+        "storage",
+        "void"
+      ],
+      "1": [
+        "state",
+        "SQSharedState"
+      ]
+    },
+    "kinoko_sq_create_thread": {
+      "0": [
+        "parent",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_call": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_call_object": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "closure",
+        "SQObjectPtr"
+      ],
+      "4": [
+        "result",
+        "SQObjectPtr"
+      ]
+    },
+    "kinoko_sq_execute": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "closure",
+        "SQObjectPtr"
+      ],
+      "5": [
+        "result",
+        "SQObjectPtr"
+      ]
+    },
+    "kinoko_sq_call_native": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "closure",
+        "SQNativeClosure"
+      ],
+      "4": [
+        "result",
+        "SQObjectPtr"
+      ],
+      "5": [
+        "suspended",
+        "unsigned char"
+      ]
+    },
+    "kinoko_sq_pop": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_get_up": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_get_at": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_shared_state": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_delete_shared_state": {
+      "0": [
+        "state",
+        "SQSharedState"
+      ]
+    },
+    "kinoko_sq_delete_refcounted": {
+      "0": [
+        "object",
+        "SQRefCounted"
+      ]
+    },
+    "kinoko_sq_compile_act_source": {
+      "0": [
+        "id",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_suspend": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_wakeup": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_thread_call": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_thread_wakeup": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_thread_status": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_newthread": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_set_error_string": {
+      "0": [
+        "vm",
+        "SQVM"
+      ],
+      "1": [
+        "interned_string",
+        "SQString"
+      ]
+    },
+    "kinoko_sq_set_error_value": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_reset_error": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    },
+    "kinoko_sq_assign_integer": {
+      "0": [
+        "object",
+        "SQObjectPtr"
+      ]
+    },
+    "kinoko_sq_assign_float": {
+      "0": [
+        "object",
+        "SQObjectPtr"
+      ]
+    },
+    "kinoko_sq_pair_assign": {
+      "0": [
+        "destination",
+        "SQObjectPtr"
+      ],
+      "1": [
+        "source",
+        "SQObjectPtr"
+      ]
+    },
+    "kinoko_sq_pair_destroy": {
+      "0": [
+        "object",
+        "SQObjectPtr"
+      ]
+    },
+    "kinoko_sq_closure_destroy": {
+      "0": [
+        "closure",
+        "SQClosure"
+      ]
+    },
+    "kinoko_sq_class_destroy": {
+      "0": [
+        "klass",
+        "SQClass"
+      ]
+    },
+    "kinoko_sq_set_native_name": {
+      "0": [
+        "vm",
+        "SQVM"
+      ]
+    }
+  },
+  "returns": {
+    "kinoko_sq_open": "SQVM*",
+    "kinoko_sq_construct_vm": "SQVM*",
+    "kinoko_sq_create_thread": "SQVM*",
+    "kinoko_sq_pop": "SQVM*",
+    "kinoko_sq_get_up": "SQObjectPtr*",
+    "kinoko_sq_get_at": "SQObjectPtr*",
+    "kinoko_sq_shared_state": "SQSharedState*",
+    "kinoko_sq_delete_refcounted": "SQRefCounted*",
+    "kinoko_sq_pair_assign": "SQObjectPtr*"
+  }
+}

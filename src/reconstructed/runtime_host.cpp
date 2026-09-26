@@ -524,9 +524,9 @@ __declspec(noinline) void kinoko_trace_i32(const char *label,
 
 static int32_t kinoko_open_primary_script_vm(int32_t stack_size) {
     kinoko_sq_set_context_exchange(kinoko_exchange_source_receiver);
-    int32_t vm = kinoko_sq_open(stack_size);
+    int32_t vm = ((int32_t)(uintptr_t)kinoko_sq_open(stack_size));
     kinoko_active_vm = reinterpret_cast<SQVM*>(static_cast<uintptr_t>(vm));
-    kinoko_primary_shared_state = kinoko_sq_shared_state(vm);
+    kinoko_primary_shared_state = ((int32_t)(uintptr_t)kinoko_sq_shared_state((SQVM*)(uintptr_t)(vm)));
     return vm;
 }
 

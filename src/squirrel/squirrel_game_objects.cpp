@@ -67,7 +67,7 @@ extern "C" void* kinoko_push_script_object(SQVM* machine, void* object) {
     if (!machine || !object) return 0;
     ObjectView(object).push(machine);
     // Return the pushed stack slot address, as in the original VM ABI.
-    return pointer<void>(kinoko_sq_get_up(address(machine), -1));
+    return pointer<void>(((int32_t)(uintptr_t)kinoko_sq_get_up(machine, -1)));
 }
 
 extern "C" int32_t kinoko_script_read_memory(void* stream, void* destination, int32_t requested) {
@@ -182,7 +182,7 @@ static int32_t execute_embedded_act_script(struct SQVM* id, void* script, const 
     for (int run = 0; run < runs; ++run) {
         result = upstream::sqrat_run_script(vm, closure, read<HSQOBJECT>(environment),
             [](HSQUIRRELVM target, SQInteger count, SQBool value, SQBool errors) -> SQRESULT {
-                return kinoko_sq_call(address(target), count, value, errors);
+                return kinoko_sq_call(target, count, value, errors);
             });
     }
     kinoko_trace_i32("act-script:execute-result", result ? SQ_OK : SQ_ERROR);

@@ -19,7 +19,7 @@ inline SQVM*& current_vm_storage = kinoko_primary_vm;
 HSQUIRRELVM current_vm() noexcept { return reinterpret_cast<HSQUIRRELVM>(current_vm_storage); }
 int32_t pop(HSQUIRRELVM vm, SQInteger count = 1) {
     // Keep the embedding's existing underflow guard; ownership is source Pop.
-    return kinoko_sq_pop(address(vm), count);
+    return ((int32_t)(uintptr_t)kinoko_sq_pop(vm, count));
 }
 void cannot_release(ObjectView object) {
     const auto value = object.value();

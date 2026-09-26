@@ -1,3 +1,4 @@
+#include "kinoko/squirrel_native_types.h"
 #ifndef KINOKO_SQUIRREL_VM_LIFECYCLE_H
 #define KINOKO_SQUIRREL_VM_LIFECYCLE_H
 
@@ -10,7 +11,7 @@ extern "C" {
 /* sq_newthread semantics: share the parent's state and push the child onto
  * its stack. The returned address is borrowed; the stack owns the reference.
  * No game resources are loaded and no fallback VM is created here. */
-int32_t kinoko_sq_create_thread(int32_t parent, int32_t stack_size);
+SQVM* kinoko_sq_create_thread(SQVM* parent, int32_t stack_size);
 
 /* Mixed-runtime GC still identifies recovered objects by their vtables.
  * Return the source SQVM vtable once a source child has been constructed,

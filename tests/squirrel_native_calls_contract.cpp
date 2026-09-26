@@ -156,14 +156,14 @@ void ownership(HSQUIRRELVM vm) {
         push_owned_userdata(vm);
         if (fn != kinoko_native_string_object_callback) push_owned_userdata(vm);
         const auto arguments=fn == kinoko_native_string_object_callback ? 3 : 4;
-        require(SQ_SUCCEEDED(kinoko_sq_call(address(vm),arguments,SQFalse,SQTrue)),"by-value real native callback");
+        require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), arguments, SQFalse, SQTrue)),"by-value real native callback");
         top(vm,base+1,"sq_call retains native closure"); sq_pop(vm,1);
     }
     require(consumed == saved_consumed+5 && released == saved_released+5,"exactly once external consumption and internal final release");
     // Missing string must not transfer any handles or call the target.
     captured_closure(vm,kinoko_native_integer_pair_entry,address(reinterpret_cast<void*>(pair_id)));
     sq_pushroottable(vm); sq_pushfloat(vm,42); push_owned_userdata(vm); push_owned_userdata(vm);
-    require(SQ_FAILED(kinoko_sq_call(address(vm),4,SQFalse,SQFalse)),"wrong id rejected");
+    require(SQ_FAILED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 4, SQFalse, SQFalse)),"wrong id rejected");
     sq_pop(vm,1);
     require(consumed == saved_consumed+5 && released == saved_released+7,"failure does not create/leak external handles");
 }
@@ -188,14 +188,14 @@ void properties(HSQUIRRELVM vm) {
         sq_newclosure(vm,entry(write ? kinoko_native_property_get_callback : kinoko_native_property_set_callback),1);
         sq_pushroottable(vm); sq_pushstring(vm,"value",-1);
         if (write) sq_pushinteger(vm,779);
-        require(SQ_SUCCEEDED(kinoko_sq_call(address(vm),write ? 3 : 2,SQTrue,SQFalse)),"property dispatch call");
+        require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), write ? 3 : 2, SQTrue, SQFalse)),"property dispatch call");
         require(write ? sq_gettype(vm,-1)==OT_NULL : get_integer(vm)==property_value,"getter/setter returns");
         sq_settop(vm,base);
     }
     require(property_value==779,"setter passed value");
     property_table(vm,read_property); sq_newclosure(vm,entry(kinoko_native_property_set_callback),1);
     sq_pushroottable(vm); sq_pushstring(vm,"absent",-1);
-    require(SQ_FAILED(kinoko_sq_call(address(vm),2,SQFalse,SQFalse)),"missing member throws"); sq_pop(vm,1);
+    require(SQ_FAILED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 2, SQFalse, SQFalse)),"missing member throws"); sq_pop(vm,1);
     // Original native entry ignores inner sq_call failure. Assert that unusual
     // result/stack convention directly instead of silently 'fixing' behavior.
     const auto base=sq_gettop(vm);
@@ -251,10 +251,10 @@ void migrated_adapters(HSQUIRRELVM vm) {
 
     sq_settop(vm, base); captured_closure(vm, kinoko_native_integer_entry, address(reinterpret_cast<void*>(integer_callback)));
     sq_pushroottable(vm); sq_pushinteger(vm, -44);
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 2, SQFalse, SQFalse)), "captured integer wrapper");
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 2, SQFalse, SQFalse)), "captured integer wrapper");
     sq_settop(vm, base); captured_closure(vm, kinoko_native_two_floats_entry, address(reinterpret_cast<void*>(float_callback)));
     sq_pushroottable(vm); sq_pushfloat(vm, 1.5f); sq_pushfloat(vm, -2.25f);
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 3, SQFalse, SQFalse)), "captured float wrapper");
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 3, SQFalse, SQFalse)), "captured float wrapper");
     require(native_calls == before + 5, "all migrated callbacks invoked");
     sq_settop(vm, base);
 }

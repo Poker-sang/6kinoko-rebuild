@@ -46,7 +46,7 @@ int32_t exchange_vm(int32_t vm) {
 }
 class Machine final {
 public:
-    Machine() : vm_(pointer<SQVM>(kinoko_sq_open(64))) {
+    Machine() : vm_(pointer<SQVM>(((int32_t)(uintptr_t)kinoko_sq_open(64)))) {
         require(vm_ != nullptr, "open source VM");
         kinoko_primary_vm = reinterpret_cast<SQVM*>(vm_);
         kinoko_sq_set_context_exchange(exchange_vm);
@@ -86,7 +86,7 @@ void run_script(HSQUIRRELVM vm, const char* code) {
     if (SQ_FAILED(sq_compilebuffer(vm, code, std::strlen(code), "binding-contract", SQTrue)))
         throw std::runtime_error("compile real bytecode: " + last_error(vm));
     sq_pushroottable(vm);
-    if (SQ_FAILED(kinoko_sq_call(address(vm), 1, 0, 0))) {
+    if (SQ_FAILED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 1, 0, 0))) {
         throw std::runtime_error("execute real bytecode: " + last_error(vm));
     }
 }
@@ -151,16 +151,16 @@ void class_contract(HSQUIRRELVM vm) {
     kinoko_sqplus_bind_object_function(pointer<int32_t>(closure.location()), (void *)(intptr_t)(table.location()), (void *)(reinterpret_cast<void*>(&noop)), const_cast<char*>("default"), nullptr);
     require(closure.view().value()._type == OT_NATIVECLOSURE, "capture created closure");
     closure.view().push(vm); table.view().push(vm);
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 1, 0, 0)), "default receiver mask accepts table"); sq_pop(vm, 1);
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 1, 0, 0)), "default receiver mask accepts table"); sq_pop(vm, 1);
     Object wildcard(vm), typed(vm), overflow(vm);
     kinoko_sqplus_bind_object_function(pointer<int32_t>(wildcard.location()), (void *)(intptr_t)(table.location()), (void *)(reinterpret_cast<void*>(&noop)), const_cast<char*>("wild"), const_cast<char*>("*"));
     wildcard.view().push(vm); sq_pushinteger(vm, 1); sq_pushinteger(vm, 2);
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 2, 0, 0)), "wildcard omits all parameter checks"); sq_pop(vm, 1);
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 2, 0, 0)), "wildcard omits all parameter checks"); sq_pop(vm, 1);
     kinoko_sqplus_bind_object_function(pointer<int32_t>(typed.location()), (void *)(intptr_t)(table.location()), (void *)(reinterpret_cast<void*>(&noop)), const_cast<char*>("typed"), const_cast<char*>("i"));
     typed.view().push(vm); table.view().push(vm); sq_pushinteger(vm, 7);
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 2, 0, 0)), "typed closure accepts integer"); sq_pop(vm, 1);
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 2, 0, 0)), "typed closure accepts integer"); sq_pop(vm, 1);
     { StackTop call(vm); typed.view().push(vm); table.view().push(vm); sq_pushfloat(vm, 7);
-      require(SQ_FAILED(kinoko_sq_call(address(vm), 2, 0, 0)), "typed closure rejects float"); }
+      require(SQ_FAILED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 2, 0, 0)), "typed closure rejects float"); }
     const std::string longmask(100, 'i');
     require((int32_t)(intptr_t)(kinoko_sqplus_bind_object_function(pointer<int32_t>(overflow.location()), (void *)(intptr_t)(table.location()), (void *)(reinterpret_cast<void*>(&noop)), const_cast<char*>("overflow"), const_cast<char*>(longmask.c_str()))) == 0, "source rejects oversized parameter mask");
     require(overflow.view().value()._type == OT_NULL, "failed registration releases captured closure");
@@ -397,7 +397,7 @@ try { methodActor.xy(1,2.0);
     consume.view().push(vm); instance.view().push(vm);
     sq_newuserdata(vm, 16); sq_setreleasehook(vm, -1, released);
     const auto release_before = native_release_count;
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 2, 0, 0)), "invoke by-value method"); sq_pop(vm, 1);
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 2, 0, 0)), "invoke by-value method"); sq_pop(vm, 1);
     require(native_release_count == release_before + 1, "callee consumes wrapper exactly once");
     // This-adjustment is a byte offset and float arguments are passed as bits.
     sq_pushfloat(vm, -0.0f); sq_pushfloat(vm, 2.5f);
@@ -437,12 +437,12 @@ void table_callback_contract(HSQUIRRELVM vm) {
     store(metadata, Variable{address(&score), 0, 0, 0, 4, 0});
     sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(&kinoko_sqplus_table_get), 0);
     table.view().push(vm); sq_pushstring(vm, "score", -1);
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 2, 1, 0)) && integer(vm) == 73,
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 2, 1, 0)) && integer(vm) == 73,
         "source native table getter");
     sq_pop(vm, 2);
     sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(&kinoko_sqplus_table_set), 0);
     table.view().push(vm); sq_pushstring(vm, "score", -1); sq_pushinteger(vm, -91);
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 3, 1, 0)) && integer(vm) == -91 && score == -91,
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 3, 1, 0)) && integer(vm) == -91 && score == -91,
         "source native table setter");
     sq_pop(vm, 2);
     require(current_vm() == vm && sq_gettop(vm) == 0, "table callback context restored");
@@ -467,7 +467,7 @@ void mapped_method_contract(HSQUIRRELVM vm) {
     store(payload, Method{address(reinterpret_cast<void*>(&mapped_value)), 4});
     sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(&kinoko_sqplus_integer_result_method), 1);
     instance.view().push(vm);
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 1, 1, 0)) && integer(vm) == 78,
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 1, 1, 0)) && integer(vm) == 78,
         "foreign __ot mapping and descriptor receiver offset");
     sq_pop(vm, 2);
     require(native[0] == 12 && native[1] == 34 && mapped[0] == 56 && mapped[1] == 78,
@@ -545,7 +545,7 @@ void child_binding_contract(HSQUIRRELVM vm) {
         "compile child property bytecode");
     instance.view().push(child);
     require(current_vm() == vm, "parent context before child call");
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(child), 1, 1, 0)) && integer(child) == 908 && native == 908,
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(child)), 1, 1, 0)) && integer(child) == 908 && native == 908,
         "child executes native property getter and setter");
     require(current_vm() == vm, "child native callbacks restore parent context");
 }

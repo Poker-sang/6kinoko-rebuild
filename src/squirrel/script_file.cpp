@@ -37,7 +37,7 @@ HSQUIRRELVM primary_vm() { return reinterpret_cast<HSQUIRRELVM>(primary_vm_slot)
 bool compiled_assets() { return compiled_assets_slot != 0; }
 HWND debug_window() { return reinterpret_cast<HWND>(debug_window_slot); }
 SQRESULT invoke(HSQUIRRELVM vm, SQInteger count, SQBool result, SQBool errors) {
-    return kinoko_sq_call(address(vm), count, result, errors);
+    return kinoko_sq_call(vm, count, result, errors);
 }
 SQInteger read_bytecode(SQUserPointer stream, SQUserPointer destination, SQInteger count) {
     return kinoko_script_read_memory(stream, destination, count);

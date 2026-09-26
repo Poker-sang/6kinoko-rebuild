@@ -117,7 +117,7 @@ extern "C" void kinoko_sqrat_trim_stack(struct SQVM * id, int32_t base) {
     if (!id) return;
     auto vm = static_cast<SQVM *>(id);
     const SQInteger top = sq_gettop(vm);
-    if (top > base) kinoko_sq_pop(address(id), top - base);
+    if (top > base) ((int32_t)(uintptr_t)kinoko_sq_pop(id, top - base));
 }
 extern "C" void * kinoko_sqrat_root_construct(void * storage, struct SQVM * id) {
     if (!storage || !id) return 0;
@@ -300,7 +300,7 @@ extern "C" int32_t kinoko_sqrat_invoke_callback(const void * storage) {
     kinoko::script::upstream::sqrat_execute(callback.vm, callback.environment,
         callback.closure, native_trace_slot != 0,
         [](HSQUIRRELVM vm, SQInteger count, SQBool result, SQBool errors) -> SQRESULT {
-            return kinoko_sq_call(address(vm), count, result, errors);
+            return kinoko_sq_call(vm, count, result, errors);
         });
     return address(callback.vm);
 }

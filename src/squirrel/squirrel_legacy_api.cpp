@@ -343,7 +343,7 @@ extern "C" void kinoko_release_squirrel_value(int32_t *value_ptr) {
 }
 
 extern "C" int32_t kinoko_gc_object_type(int32_t object_ptr) {
-    return kinoko_sq_source_object_type(object_ptr);
+    return kinoko_sq_source_object_type((SQCollectable*)(uintptr_t)(object_ptr));
 }
 
 extern "C" void kinoko_gc_mark_value(const int32_t *value, int32_t *chain_head) {

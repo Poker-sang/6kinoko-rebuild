@@ -27,26 +27,26 @@ static_assert(offsetof(SQVM, _suspend_varargs) == 164);
 }
 
 // 490C40 / SQVM::Suspend, with the original explicit VM receiver.
-extern "C" int32_t kinoko_sq_suspend(int32_t vm) {
-    return machine(vm)->Suspend();
+extern "C" int32_t kinoko_sq_suspend(SQVM* vm) {
+    return vm->Suspend();
 }
 
 // 48ADB0 / sq_wakeupvm: source ownership and API ordering, current interpreter.
-extern "C" int32_t kinoko_sq_wakeup(int32_t vm, int32_t wakeupret,
+extern "C" int32_t kinoko_sq_wakeup(SQVM* vm, int32_t wakeupret,
                                       int32_t retval, int32_t raiseerror) {
-    return sq_wakeupvm(machine(vm), wakeupret != 0, retval != 0, raiseerror != 0);
+    return sq_wakeupvm(vm, wakeupret != 0, retval != 0, raiseerror != 0);
 }
 
 // 4A2C80 / thread_call. A local owner keeps the child alive across stack moves.
-extern "C" int32_t kinoko_sq_thread_call(int32_t vm) {
-    auto *v = machine(vm);
+extern "C" int32_t kinoko_sq_thread_call(SQVM* vm) {
+    auto *v = vm;
     SQObjectPtr object = stack_get(v, 1);
     if (type(object) != OT_THREAD) return sq_throwerror(v, _SC("wrong parameter"));
     auto *thread = _thread(object);
     const auto nargs = sq_gettop(v);
     thread->Push(thread->_roottable);
     for (SQInteger i = 2; i <= nargs; ++i) sq_move(thread, v, i);
-    if (SQ_SUCCEEDED(kinoko_sq_call(address(thread), nargs, SQTrue, SQFalse))) {
+    if (SQ_SUCCEEDED(kinoko_sq_call(thread, nargs, SQTrue, SQFalse))) {
         sq_move(v, thread, -1);
         sq_pop(thread, 1);
         return 1;
@@ -56,8 +56,8 @@ extern "C" int32_t kinoko_sq_thread_call(int32_t vm) {
 }
 
 // 4A2DF0 / thread_wakeup. In particular, 4A2F23 assigns to the PARENT error.
-extern "C" int32_t kinoko_sq_thread_wakeup(int32_t vm) {
-    auto *v = machine(vm);
+extern "C" int32_t kinoko_sq_thread_wakeup(SQVM* vm) {
+    auto *v = vm;
     SQObjectPtr object = stack_get(v, 1);
     if (type(object) != OT_THREAD) return sq_throwerror(v, _SC("wrong parameter"));
     auto *thread = _thread(object);
@@ -68,7 +68,7 @@ extern "C" int32_t kinoko_sq_thread_wakeup(int32_t vm) {
         return sq_throwerror(v, _SC("cannot wakeup a running thread"));
     const SQBool wakeupret = sq_gettop(v) > 1;
     if (wakeupret) sq_move(thread, v, 2);
-    if (SQ_SUCCEEDED(kinoko_sq_wakeup(address(thread), wakeupret, SQTrue, SQFalse))) {
+    if (SQ_SUCCEEDED(kinoko_sq_wakeup(thread, wakeupret, SQTrue, SQFalse))) {
         sq_move(v, thread, -1);
         sq_pop(thread, 1);
         if (sq_getvmstate(thread) == SQ_VMSTATE_IDLE) sq_settop(thread, 1);
@@ -79,8 +79,8 @@ extern "C" int32_t kinoko_sq_thread_wakeup(int32_t vm) {
     return SQ_ERROR;
 }
 
-extern "C" int32_t kinoko_sq_thread_status(int32_t vm) {
-    auto *v = machine(vm);
+extern "C" int32_t kinoko_sq_thread_status(SQVM* vm) {
+    auto *v = vm;
     switch (sq_getvmstate(_thread(stack_get(v, 1)))) {
     case SQ_VMSTATE_IDLE: sq_pushstring(v, _SC("idle"), -1); break;
     case SQ_VMSTATE_RUNNING: sq_pushstring(v, _SC("running"), -1); break;
@@ -89,10 +89,10 @@ extern "C" int32_t kinoko_sq_thread_status(int32_t vm) {
     return 1;
 }
 
-extern "C" int32_t kinoko_sq_newthread(int32_t vm) {
-    auto *v = machine(vm);
+extern "C" int32_t kinoko_sq_newthread(SQVM* vm) {
+    auto *v = vm;
     const auto size = (_funcproto(_closure(stack_get(v, 2))->_function)->_stacksize << 1) + 2;
-    auto *child = machine(kinoko_sq_create_thread(vm, size > 12 ? size : 12));
+    auto *child = machine(((int32_t)(uintptr_t)kinoko_sq_create_thread((SQVM*)(uintptr_t)(vm), size > 12 ? size : 12)));
     if (!child) return SQ_ERROR;
     sq_move(child, v, -2);
     return 1;

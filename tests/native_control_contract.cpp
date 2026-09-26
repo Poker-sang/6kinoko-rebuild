@@ -89,7 +89,7 @@ void callback_order_and_aliases() {
     Fixture fixture; initialize(fixture, 2, 2);
     kinoko_native_release_strong((void*)(uintptr_t)(address(&fixture)));
     require(fixture.use_count() == 1 && fixture.disposes == 0, "custom nonfinal strong release");
-    ReferenceRecord pair{0x11223344, static_cast<Address>(address(&fixture))};
+    ReferenceRecord pair{reinterpret_cast<void*>(0x11223344), &fixture};
     kinoko_native_weak_pair_lock((const void*)(uintptr_t)(address(&pair)), reinterpret_cast<int32_t*>(&pair));
     require(pair.allocation == 0 && pair.control == 0 && fixture.use_count() == 1,
             "retain historical clear-before-read for an aliased pair");
@@ -107,7 +107,7 @@ void callback_order_and_aliases() {
 void concurrent_locks(bool race_final_release) {
     for (int pass = 0; pass != 32; ++pass) {
         Fixture fixture; initialize(fixture);
-        const ReferenceRecord weak{0x11223344, static_cast<Address>(address(&fixture))};
+        const ReferenceRecord weak{reinterpret_cast<void*>(0x11223344), &fixture};
         std::atomic<bool> begin{false};
         std::atomic<unsigned> errors{0}, successes{0};
         std::vector<std::thread> workers;
@@ -119,7 +119,7 @@ void concurrent_locks(bool race_final_release) {
                 if (locked.control) {
                     if (locked.control != weak.control || locked.allocation != weak.allocation) ++errors;
                     ++successes;
-                    kinoko_native_release_strong((void*)(uintptr_t)(static_cast<int32_t>(locked.control)));
+                    kinoko_native_release_strong(locked.control);
                 } else if (locked.allocation || !race_final_release) ++errors;
             }
         });
@@ -133,7 +133,7 @@ void concurrent_locks(bool race_final_release) {
         }
         require(errors == 0 && fixture.use_count() == 0 && fixture.weak_count() == 1 &&
                 fixture.disposes == 1 && fixture.destroys == 0, "race releases exactly once, weak owner retains control");
-        ReferenceRecord expired{1, 1};
+        ReferenceRecord expired{reinterpret_cast<void*>(1), reinterpret_cast<void*>(1)};
         kinoko_native_weak_pair_lock((const void*)(uintptr_t)(address(&weak)), reinterpret_cast<int32_t*>(&expired));
         require(expired.allocation == 0 && expired.control == 0, "post-race lock fails without resurrection");
         kinoko_native_release_weak((void*)(uintptr_t)(address(&fixture)));

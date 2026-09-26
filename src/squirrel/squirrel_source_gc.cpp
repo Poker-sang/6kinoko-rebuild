@@ -83,14 +83,14 @@ extern "C" void kinoko_sq_finalize_object(int32_t object, int32_t type) {
     default: break;
     }
 }
-extern "C" int32_t kinoko_sq_collect(int32_t state, int32_t vm) {
-    return pointer<SQSharedState>(state)->CollectGarbage(pointer<SQVM>(vm));
+extern "C" int32_t kinoko_sq_collect(SQSharedState* state, SQVM* vm) {
+    return state->CollectGarbage(vm);
 }
-extern "C" int32_t kinoko_sq_source_object_type(int32_t object) {
+extern "C" int32_t kinoko_sq_source_object_type(SQCollectable* object) {
     // Only source-constructed objects reach this path. Recovered vtables have
     // no RTTI and must be classified by the caller BEFORE requesting typeid.
     if (!object) return 0;
-    const auto& type = typeid(*pointer<SQCollectable>(object));
+    const auto& type = typeid(*object);
     if (type == typeid(SQClosure)) return OT_CLOSURE;
     if (type == typeid(SQNativeClosure)) return OT_NATIVECLOSURE;
     if (type == typeid(SQUserData)) return OT_USERDATA;

@@ -36,7 +36,7 @@ int32_t exchange_vm(int32_t vm) {
 }
 class Machine final {
 public:
-    Machine() : vm_(pointer<SQVM>(kinoko_sq_open(64))) {
+    Machine() : vm_(pointer<SQVM>(((int32_t)(uintptr_t)kinoko_sq_open(64)))) {
         require(vm_ != nullptr, "open VM");
         kinoko_primary_vm = reinterpret_cast<SQVM*>(vm_);
         kinoko_sq_set_context_exchange(exchange_vm);
@@ -256,7 +256,7 @@ void threads(HSQUIRRELVM vm) {
     sq_pop(vm, 1); // External owner must now keep the child alive.
     require(SQ_SUCCEEDED(sq_compilebuffer(child, "return host_callback();", 23, "host-thread", SQFalse)), "child compile");
     sq_pushroottable(child);
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(child), 1, SQTrue, SQFalse)), "child invokes host wrapper on child VM");
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(child)), 1, SQTrue, SQFalse)), "child invokes host wrapper on child VM");
     SQInteger result = 0;
     require(SQ_SUCCEEDED(sq_getinteger(child, -1, &result)) && result == 1, "child result");
     require(kinoko_primary_vm == reinterpret_cast<SQVM*>(vm), "host receiver restored");
@@ -344,7 +344,7 @@ void native_arguments(HSQUIRRELVM vm) {
     const char program[] = "return native_arguments(19, 2.5, \"ok\");";
     require(SQ_SUCCEEDED(sq_compilebuffer(vm, program, sizeof(program) - 1, "native-arguments", SQFalse)), "compile native argument call");
     sq_pushroottable(vm);
-    require(SQ_SUCCEEDED(kinoko_sq_call(id, 1, SQTrue, SQFalse)), "execute real closure with captured userdata");
+    require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(id), 1, SQTrue, SQFalse)), "execute real closure with captured userdata");
     SQInteger result = 0;
     require(SQ_SUCCEEDED(sq_getinteger(vm, -1, &result)) && result == 21, "native argument result");
     // 2.2.2 sq_call pops its arguments, but retains the called closure.

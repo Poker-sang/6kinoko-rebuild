@@ -73,7 +73,7 @@ extern "C" int32_t kinoko_sqplus_install_variable_handlers(void * object) {
     return 1;
 }
 
-extern "C" void* kinoko_sqplus_setup_hierarchy(int32_t* root_object) {
+extern "C" void* kinoko_sqplus_setup_hierarchy(void* root_object) {
     const ObjectView root(root_object);
     const auto value = root.value();
     root.reset(); // transfer this by-value argument's owned reference
