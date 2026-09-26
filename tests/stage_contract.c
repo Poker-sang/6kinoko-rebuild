@@ -2899,7 +2899,7 @@ static int test_global_callback_destructor(int32_t vm) {
         CHECK(kinoko_host_append_render_item(&null_ptr));
         CHECK(kinoko_render_queue_size()==4);
         render_queue_visit_count=0;
-        kinoko_draw_render_queue(100);
+        kinoko_draw_render_queue((struct KinokoCamera*)(uintptr_t)(100));
         CHECK(render_queue_visit_count==3 && render_queue_visits[0]==107 &&
               render_queue_visits[1]==103 && render_queue_visits[2]==107);
         kinoko_script_clear_render_layers();

@@ -292,7 +292,7 @@ static int32_t kinoko_append_render_item(int32_t *item) {
         kinoko_trace_i32("46a210:value", item != NULL ? *item : 0);
         kinoko_trace_i32("46a210:g613", kinoko_render_queue_identity());
     }
-    return item ? kinoko_append_render_queue(*item) : 0;
+    return item ? (int32_t)(intptr_t)kinoko_render_queue_append((KinokoRenderLayer*)(uintptr_t)(*item)) : 0;
 }
 
 int32_t kinoko_host_append_render_item(int32_t * a1) {

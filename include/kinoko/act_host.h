@@ -1,3 +1,4 @@
+#include "kinoko/act_types.h"
 #include "kinoko/angle_math.h"
 #include "kinoko/script_file.h"
 #include "kinoko/file_io_legacy.h"

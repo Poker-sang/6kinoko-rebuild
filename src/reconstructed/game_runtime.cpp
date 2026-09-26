@@ -110,7 +110,7 @@ extern "C" int32_t kinoko_game_draw(void) {
     if (trace_index<=3) kinoko_game_trace_map(objects.map,1);
     kinoko_game_prepare_map(objects.map,objects.camera);
     // Legacy render queue API still accepts an address slot; no ownership transfer.
-    kinoko_draw_render_queue(kinoko::legacy::address(objects.camera));
+    kinoko_draw_render_queue((struct KinokoCamera*)(uintptr_t)(kinoko::legacy::address(objects.camera)));
     if (mask & KINOKO_GAME_STAGES) { kinoko_stages_prepare_draw(); kinoko_stages_draw(); }
     return 1;
 }

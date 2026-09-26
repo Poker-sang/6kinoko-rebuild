@@ -30,13 +30,10 @@ extern "C" void *kinoko_render_queue_append(KinokoRenderLayer *object) {
     layers.push_back(reinterpret_cast<RenderLayer *>(object));
     return &layers.back();
 }
-extern "C" int32_t kinoko_append_render_queue(int32_t object) {
-    return address(kinoko_render_queue_append(pointer<KinokoRenderLayer>(object)));
-}
-extern "C" void kinoko_draw_render_queue(int32_t camera) {
+extern "C" void kinoko_draw_render_queue(struct KinokoCamera* camera) {
     for(auto *object:layers) {
         if(!object) continue;
         const auto *methods=kinoko::legacy::load<const LayerMethods *>(object);
-        if(methods && methods->draw) methods->draw(object,pointer<KinokoCamera>(camera));
+        if(methods && methods->draw) methods->draw(object,camera);
     }
 }

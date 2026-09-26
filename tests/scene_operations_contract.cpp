@@ -90,7 +90,7 @@ void rendering() {
     manager.render_layers[1]=nullptr;
     CHECK(!kinoko_scene_create_render_layer("actor_middle"));
     CHECK(map_lookups==4 && kinoko_render_queue_size()==7);
-    kinoko_draw_render_queue(address(objects.camera));
+    kinoko_draw_render_queue((struct KinokoCamera*)(uintptr_t)(address(objects.camera)));
     CHECK((draw_order==std::vector<int>{0,1,2,3,4,4,5}));
     kinoko_clear_render_queue(); CHECK(kinoko_render_queue_size()==0);
     for(size_t i=0;i<layers.size();++i) CHECK(layers[i].id==static_cast<int>(i));

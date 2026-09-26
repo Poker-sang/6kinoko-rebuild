@@ -235,11 +235,11 @@ void values_contract(HSQUIRRELVM vm) {
         const Variable info{0, 0, 0, 0, static_cast<uint16_t>(size), 0}; store(info_addr, info);
         for (int32_t input : {-32769, -129, -1, 0, 127, 128, 32767, 65535, 65536}) {
             bytes.fill(0xA5); sq_settop(vm, 0); sq_pushnull(vm); sq_pushnull(vm); sq_pushinteger(vm, input);
-            require(kinoko_sqplus_write_variable(context, info_addr, value_addr) == 1, "integer setter returns one");
+            require(kinoko_sqplus_write_variable(context, (const void*)(uintptr_t)(info_addr), value_addr) == 1, "integer setter returns one");
             const int32_t expected = size == 1 ? static_cast<int8_t>(input) : size == 2 ? static_cast<int16_t>(input) : input;
             require(integer(vm) == expected, "original setter returns stored signed narrow value");
             sq_pop(vm, 1);
-            require(kinoko_sqplus_read_variable(context, info_addr, value_addr) == 1, "integer getter returns one");
+            require(kinoko_sqplus_read_variable(context, (const void*)(uintptr_t)(info_addr), value_addr) == 1, "integer getter returns one");
             require(integer(vm) == expected, "signed narrow integer round trip");
             require(bytes.front() == 0xA5 && bytes[size + 1] == 0xA5, "unaligned narrow store canaries");
         }
@@ -252,47 +252,47 @@ void values_contract(HSQUIRRELVM vm) {
         for (int32_t input : {-1, 0, 128, 65535, 0x12345678}) {
             bytes.fill(0xA5); sq_settop(vm, 0);
             sq_pushnull(vm); sq_pushnull(vm); sq_pushinteger(vm, input);
-            require(kinoko_sqplus_write_variable(context, info_addr, value_addr) == 1 && integer(vm) == input,
+            require(kinoko_sqplus_write_variable(context, (const void*)(uintptr_t)(info_addr), value_addr) == 1 && integer(vm) == input,
                     "unsigned32 setter preserves all 32 bits");
             require(load<int32_t>(value_addr) == input && bytes.front() == 0xA5 && bytes[5] == 0xA5,
                     "unsigned32 uses four bytes even when metadata size is narrow");
             sq_pop(vm, 1);
-            require(kinoko_sqplus_read_variable(context, info_addr, value_addr) == 1 && integer(vm) == input,
+            require(kinoko_sqplus_read_variable(context, (const void*)(uintptr_t)(info_addr), value_addr) == 1 && integer(vm) == input,
                     "unsigned32 getter ignores signed-small-integer width");
         }
     }
     Variable info{0, 0, 0, 0, 4, 0}; store(info_addr, info);
     sq_settop(vm, 0); sq_pushnull(vm); sq_pushnull(vm); sq_pushstring(vm, "not a number", -1);
-    require(kinoko_sqplus_write_variable(context, info_addr, value_addr) == 1 && load<int32_t>(value_addr) == 0, "legacy invalid integer conversion writes zero");
+    require(kinoko_sqplus_write_variable(context, (const void*)(uintptr_t)(info_addr), value_addr) == 1 && load<int32_t>(value_addr) == 0, "legacy invalid integer conversion writes zero");
     info.category = 2; store(info_addr, info);
     store(value_addr, 42.5f); sq_pop(vm, 1);
-    require(kinoko_sqplus_write_variable(context, info_addr, value_addr) == -1 && load<float>(value_addr) == 42.5f, "invalid float conversion leaves destination unchanged");
+    require(kinoko_sqplus_write_variable(context, (const void*)(uintptr_t)(info_addr), value_addr) == -1 && load<float>(value_addr) == 42.5f, "invalid float conversion leaves destination unchanged");
     sq_settop(vm, 2); sq_pushinteger(vm, 17);
-    require(kinoko_sqplus_write_variable(context, info_addr, value_addr) == 1 && numeric(vm) == 17, "float property accepts integer conversion");
+    require(kinoko_sqplus_write_variable(context, (const void*)(uintptr_t)(info_addr), value_addr) == 1 && numeric(vm) == 17, "float property accepts integer conversion");
     info.flags = Constant; store(info_addr, info);
-    require(kinoko_sqplus_read_variable(context, info_addr, -7) == 1 && numeric(vm) == -7, "constant float is integer conversion not bit reinterpretation");
+    require(kinoko_sqplus_read_variable(context, (const void*)(uintptr_t)(info_addr), -7) == 1 && numeric(vm) == -7, "constant float is integer conversion not bit reinterpretation");
     for (int flag : {ReadOnly, Constant}) {
         info.flags = static_cast<uint16_t>(flag); store(info_addr, info);
-        require(kinoko_sqplus_write_variable(context, info_addr, value_addr) == -1, "immutable metadata blocks stores");
+        require(kinoko_sqplus_write_variable(context, (const void*)(uintptr_t)(info_addr), value_addr) == -1, "immutable metadata blocks stores");
     }
     info = {0, 3, 0, 0, 1, 0}; store(info_addr, info);
     sq_settop(vm, 2); sq_pushinteger(vm, 1);
-    require(kinoko_sqplus_write_variable(context, info_addr, value_addr) == 1 && load<uint8_t>(value_addr) == 0, "boolean setter rejects truthy integer conversion");
+    require(kinoko_sqplus_write_variable(context, (const void*)(uintptr_t)(info_addr), value_addr) == 1 && load<uint8_t>(value_addr) == 0, "boolean setter rejects truthy integer conversion");
     sq_settop(vm, 2); sq_pushbool(vm, SQTrue);
-    require(kinoko_sqplus_write_variable(context, info_addr, value_addr) == 1 && load<uint8_t>(value_addr) == 1, "boolean true round trip");
+    require(kinoko_sqplus_write_variable(context, (const void*)(uintptr_t)(info_addr), value_addr) == 1 && load<uint8_t>(value_addr) == 1, "boolean true round trip");
     const char* string_pointer = "pointer string";
     info = {0, 4, 0, 0, 4, 0}; store(info_addr, info);
-    require(kinoko_sqplus_read_variable(context, info_addr, address(&string_pointer)) == 1 && text(vm) == string_pointer, "pointer string getter");
+    require(kinoko_sqplus_read_variable(context, (const void*)(uintptr_t)(info_addr), address(&string_pointer)) == 1 && text(vm) == string_pointer, "pointer string getter");
     info.flags = Constant; store(info_addr, info);
-    require(kinoko_sqplus_read_variable(context, info_addr, address("constant")) == 1 && text(vm) == "constant", "constant string getter");
+    require(kinoko_sqplus_read_variable(context, (const void*)(uintptr_t)(info_addr), address("constant")) == 1 && text(vm) == "constant", "constant string getter");
     info.category = 5; info.flags = 0; store(info_addr, info);
-    require(kinoko_sqplus_read_variable(context, info_addr, address("!buffer")) == 1 && text(vm) == "buffer", "buffer skips first byte");
+    require(kinoko_sqplus_read_variable(context, (const void*)(uintptr_t)(info_addr), address("!buffer")) == 1 && text(vm) == "buffer", "buffer skips first byte");
     std::array<unsigned char, 24> old_string{};
     std::memcpy(old_string.data(), "inline", 7); store(old_string.data() + 20, uint32_t{15});
     info.category = 8; store(info_addr, info);
-    require(kinoko_sqplus_read_variable(context, info_addr, address(old_string.data())) == 1 && text(vm) == "inline", "old MSVC small string layout");
+    require(kinoko_sqplus_read_variable(context, (const void*)(uintptr_t)(info_addr), address(old_string.data())) == 1 && text(vm) == "inline", "old MSVC small string layout");
     store(old_string.data(), address("heap string")); store(old_string.data() + 20, uint32_t{16});
-    require(kinoko_sqplus_read_variable(context, info_addr, address(old_string.data())) == 1 && text(vm) == "heap string", "old MSVC heap string layout");
+    require(kinoko_sqplus_read_variable(context, (const void*)(uintptr_t)(info_addr), address(old_string.data())) == 1 && text(vm) == "heap string", "old MSVC heap string layout");
     require(metadata.front() == 0x6B && metadata[21] == 0x6B, "20-byte metadata canaries");
 }
 
@@ -338,7 +338,7 @@ if(propertyActor.value != 123 || propertyActor.x != 7.25 || propertyActor.enable
     info.flags = 0; store(metadata, info);
     instance.view().push(vm); sq_pushstring(vm, "value", -1);
     int32_t resolved = 4, source = 4;
-    require(kinoko_sqplus_resolve_instance_variable(address(vm), 2, &resolved, &source) == 0 && !resolved && !source, "instance field rejects null native pointer");
+    require(kinoko_sqplus_resolve_instance_variable((struct SQVM*)(uintptr_t)(address(vm)), 2, &resolved, &source) == 0 && !resolved && !source, "instance field rejects null native pointer");
 }
 
 int native_release_count = 0;
@@ -494,7 +494,7 @@ void mapped_property_contract(HSQUIRRELVM vm) {
     require(SQ_SUCCEEDED(sq_rawset(vm, -3)), "install declaring base pointer"); sq_pop(vm, 1);
     instance.view().push(vm); sq_pushstring(vm, "value", -1);
     int32_t metadata = 0, source = 0;
-    require(kinoko_sqplus_resolve_instance_variable(address(vm), 2, &metadata, &source) == 1 &&
+    require(kinoko_sqplus_resolve_instance_variable((struct SQVM*)(uintptr_t)(address(vm)), 2, &metadata, &source) == 1 &&
         source == address(mapped + 1), "original property resolver uses declaring base from __ot");
     require(sq_gettop(vm) == 2 && metadata != 0, "mapped resolution preserves caller stack");
     require(kinoko_sqplus_instance_get((struct SQVM *)(vm)) == 1 && integer(vm) == 78, "mapped property getter");
@@ -511,7 +511,7 @@ void mapped_property_contract(HSQUIRRELVM vm) {
     require(SQ_SUCCEEDED(sq_deleteslot(vm, -2, SQFalse)), "remove declaring base pointer"); sq_pop(vm, 1);
     instance.view().push(vm); sq_pushstring(vm, "value", -1);
     metadata = source = 99;
-    require(!kinoko_sqplus_resolve_instance_variable(address(vm), 2, &metadata, &source) && !metadata && !source,
+    require(!kinoko_sqplus_resolve_instance_variable((struct SQVM*)(uintptr_t)(address(vm)), 2, &metadata, &source) && !metadata && !source,
         "missing base mapping cannot fall back to primary pointer");
     require(sq_gettop(vm) == 2, "failed base resolution preserves stack");
     sq_getlasterror(vm); require(text(vm) == "Invalid Instance Type", "source type error retained");
