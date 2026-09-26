@@ -64,21 +64,10 @@ namespace {
 // Byte-backed views of the fields consumed by ACT publication. The source
 // records remain owned by the ACT loader; these views never copy or destroy
 // their embedded strings or pointer vectors. Offsets match 450950/450F30.
-struct ActPublicationRecord {
-    unsigned char unknown0[4];
-    int32_t resolution_ms, screen_width, screen_height;
-    unsigned char name[24];
-    unsigned char unknown40[60];
-    unsigned char script[104];
-    int32_t unknown204;
-    int32_t layer_begin, layer_end, layer_capacity, unknown220, resource_begin, resource_end;
-};
-static_assert(offsetof(ActPublicationRecord, name) == 16);
-static_assert(offsetof(ActPublicationRecord, script) == 100);
-static_assert(offsetof(ActPublicationRecord, layer_begin) == 208);
-static_assert(offsetof(ActPublicationRecord, resource_begin) == 224);
+using ActPublicationRecord = kinoko::act::DocumentRecord;
 struct ResourcePublicationRecord {
-    int32_t vtable, id;
+    const void* vtable;
+    int32_t id;
     unsigned char name[24];
 };
 static_assert(offsetof(ResourcePublicationRecord, name) == 8);
@@ -172,16 +161,26 @@ int32_t retdec_publish_cact_layer_members(
     static const char *const direct_int_names[] = {
         "resourceID", "layerID", "parentID"
     };
-    static const int32_t direct_int_offsets[] = { 0x60, 0x68, 0x6c };
+    static const int32_t direct_int_offsets[] = {
+        offsetof(kinoko::act::LayerAssociationRecord, resource_id),
+        offsetof(kinoko::act::LayerAssociationRecord, layer_id),
+        offsetof(kinoko::act::LayerAssociationRecord, parent_id)
+    };
     static const char *const direct_float_names[] = {
         "dst_x", "dst_y", "dst_z", "x", "y", "z",
         "prev_x", "prev_y", "prev_z", "xPrev", "yPrev", "zPrev",
         "ox", "oy", "oz"
     };
+    constexpr auto layer_position = offsetof(kinoko::act::LayerStorageRecord, position);
+    constexpr auto layer_previous = offsetof(kinoko::act::LayerStorageRecord, previous_position);
+    // 41E790's ox/oy/oz fields; lifecycle preserves their raw float bit patterns.
+    constexpr auto layer_origin = offsetof(kinoko::act::LayerStorageRecord, unknown156);
     static const int32_t direct_float_offsets[] = {
-        0x90, 0x94, 0x98, 0x90, 0x94, 0x98,
-        0xa8, 0xac, 0xb0, 0xa8, 0xac, 0xb0,
-        0x9c, 0xa0, 0xa4
+        layer_position, layer_position+4, layer_position+8,
+        layer_position, layer_position+4, layer_position+8,
+        layer_previous, layer_previous+4, layer_previous+8,
+        layer_previous, layer_previous+4, layer_previous+8,
+        layer_origin, layer_origin+4, layer_origin+8
     };
     static const char *const pointer_float_names[] = {
         "roll_x", "roll_y", "roll_z", "cor_x", "cor_y", "cor_z",
@@ -212,7 +211,7 @@ int32_t retdec_publish_cact_layer_members(
             return false;
 
         if (!retdec_publish_cact_layer_property(
-                vm, "stName", 0x70,
+                vm, "stName", offsetof(kinoko::act::LayerStorageRecord, name),
                 address(retdec_cact_layer_get_string),
                 address(retdec_cact_layer_set_string)))
             return false;
@@ -225,11 +224,11 @@ int32_t retdec_publish_cact_layer_members(
                 return false;
         }
         if (!retdec_publish_cact_layer_property(
-                vm, "visible", 0x8c,
+                vm, "visible", offsetof(kinoko::act::LayerStorageRecord, visibility_flags),
                 address(retdec_cact_layer_get_bool),
                 address(retdec_cact_layer_set_bool)) ||
             !retdec_publish_cact_layer_property(
-                vm, "debugOnly", 0x8d,
+                vm, "debugOnly", offsetof(kinoko::act::LayerStorageRecord, visibility_flags)+1,
                 address(retdec_cact_layer_get_bool),
                 address(retdec_cact_layer_set_bool)))
             return false;

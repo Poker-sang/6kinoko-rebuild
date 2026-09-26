@@ -72,6 +72,7 @@ struct State {
 };
 extern State state;
 void activate_pending_scene();
+bool initialize_input_audio(const Configuration& configuration);
 void update_frame();
 bool draw_frame();
 LRESULT dispatch_message(HWND window, UINT message, WPARAM key, LPARAM parameter);

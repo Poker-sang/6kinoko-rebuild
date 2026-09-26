@@ -553,6 +553,15 @@ target_link_libraries(kinoko_upstream_bindings_contract PRIVATE kinoko_squirrel_
 add_test(NAME upstream_bindings_contract COMMAND kinoko_upstream_bindings_contract)
 set_tests_properties(upstream_bindings_contract PROPERTIES TIMEOUT 120)
 
+add_executable(kinoko_savedata_file_contract tests/savedata_file_contract.cpp
+    src/reconstructed/buffer_codec.cpp)
+target_include_directories(kinoko_savedata_file_contract PRIVATE
+    include "${KINOKO_SQUIRREL2_ROOT}/include")
+target_link_libraries(kinoko_savedata_file_contract PRIVATE kinoko_squirrel_cpp_vm)
+target_link_options(kinoko_savedata_file_contract PRIVATE /OPT:REF /OPT:ICF)
+add_test(NAME savedata_file_contract COMMAND kinoko_savedata_file_contract)
+set_tests_properties(savedata_file_contract PROPERTIES TIMEOUT 60)
+
 add_executable(kinoko_squirrel_source_vm_contract tests/squirrel_source_vm_contract.cpp)
 target_include_directories(kinoko_squirrel_source_vm_contract PRIVATE
     include "${KINOKO_SQUIRREL2_ROOT}/include")
@@ -918,6 +927,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_texture_store_contract
     kinoko_diagnostics_capture
     kinoko_squirrel_source_vm_contract
+    kinoko_savedata_file_contract
     kinoko_legacy_method_entries_contract kinoko_retdec_memory_contract
     kinoko_diagnostics_filter_contract kinoko_squirrel_refcount_contract
     kinoko_squirrel_host_object_contract

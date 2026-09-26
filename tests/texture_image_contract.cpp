@@ -15,7 +15,7 @@ static IDirect3DTexture9Vtbl methods{};
 static Texture texture{&methods};
 static uint8_t surface[64];
 static uint8_t depth=32;
-static HRESULT create_result=S_OK, lock_result=S_OK;
+static HRESULT create_result=S_OK, lock_result=S_OK, unlock_result=E_FAIL;
 static bool invalid_surface, missing, valid=true;
 static bool encoded_mode;
 static bool supply_palette=true;
@@ -28,7 +28,7 @@ static HRESULT WINAPI lock_texture(IDirect3DTexture9*,UINT level,D3DLOCKED_RECT*
     out->pBits=invalid_surface?nullptr:surface;out->Pitch=20;return lock_result;
 }
 static HRESULT WINAPI unlock_texture(IDirect3DTexture9*,UINT level) {
-    valid=valid && level==0; ++unlocks;return E_FAIL; // deliberately ignored by uploader
+    valid=valid && level==0; ++unlocks;return unlock_result; // original ignores this status
 }
 static ULONG WINAPI release_texture(IDirect3DTexture9*) { ++releases;return 0; }
 extern "C" {
@@ -116,14 +116,27 @@ int main() {
     result->lpVtbl->Release(result);result=nullptr;
     auto old_releases=releases, old_unlocks=unlocks, old_pixels=pixel_releases;
     lock_result=E_FAIL;
-    CHECK(kinoko_texture_load_image("lock.bmp",&result,nullptr,nullptr)==E_FAIL);
-    CHECK(!result && releases==old_releases+1 && unlocks==old_unlocks && pixel_releases==old_pixels+1);
+    CHECK(kinoko_texture_load_image("lock.bmp",&result,nullptr,nullptr)==S_OK);
+    CHECK(result && releases==old_releases && unlocks==old_unlocks && pixel_releases==old_pixels+1);
+    result->lpVtbl->Release(result); result=nullptr;
+    // A positive LockRect status also skips upload; preserve CreateTexture's status.
+    lock_result=S_FALSE; create_result=S_FALSE;
+    std::memset(surface,0xcc,sizeof(surface));
+    CHECK(kinoko_texture_load_image("nonzero-lock.bmp",&result,nullptr,nullptr)==S_FALSE);
+    CHECK(result && surface[0]==0xcc && unlocks==old_unlocks);
+    result->lpVtbl->Release(result); result=nullptr;
+    create_result=S_FALSE; lock_result=S_OK; unlock_result=S_OK;
+    CHECK(kinoko_texture_load_image("creation-status.bmp",&result,nullptr,nullptr)==S_FALSE);
+    CHECK(result && unlocks==old_unlocks+1);
+    result->lpVtbl->Release(result); result=nullptr;
+    create_result=S_OK; unlock_result=E_FAIL;
+    old_releases=releases; old_unlocks=unlocks;
     lock_result=S_OK;invalid_surface=true;
     CHECK(kinoko_texture_load_image("bits.bmp",&result,nullptr,nullptr)==E_FAIL);
-    CHECK(!result && releases==old_releases+2 && unlocks==old_unlocks+1);
+    CHECK(!result && releases==old_releases+1 && unlocks==old_unlocks+1);
     invalid_surface=false;create_result=E_OUTOFMEMORY;
     CHECK(kinoko_texture_load_image("create.bmp",&result,&width,&height)==E_OUTOFMEMORY);
-    CHECK(!result && releases==old_releases+2 && width==3 && height==2);
+    CHECK(!result && releases==old_releases+1 && width==3 && height==2);
     missing=true;const auto old_creates=creates;
     CHECK(kinoko_texture_load_image("missing.bmp",&result,nullptr,nullptr)==D3DERR_INVALIDCALL);
     CHECK(kinoko_texture_load_image("x",&result,nullptr,nullptr)==D3DERR_INVALIDCALL && creates==old_creates);

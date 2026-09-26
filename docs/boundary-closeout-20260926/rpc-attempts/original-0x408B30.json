@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"error\":\"Worker for session '18c78977' is not reachable\"}"
+    }
+  ],
+  "isError": true
+}

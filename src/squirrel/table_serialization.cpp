@@ -1,3 +1,4 @@
+#include "kinoko/savedata.h"
 #include "kinoko/base_utilities.h"
 #include "kinoko/squirrel_game_objects.h"
 #include "kinoko/squirrel_host_compat.h"
@@ -312,23 +313,23 @@ extern "C" int32_t function_472820(int32_t *stream, int32_t vtable,
                                       int32_t type, int32_t data) {
     return kinoko_savedata_write_table_entry(stream, vtable, type, data);
 }
-int32_t kinoko_savedata_load_file_entry(int32_t path, int32_t vtable,
+int32_t kinoko_savedata_load_file_entry(const char* path, int32_t vtable,
                                       int32_t type, int32_t data) {
-    return kinoko::savedata::load_file(
-        reinterpret_cast<const char *>(static_cast<uintptr_t>(static_cast<uint32_t>(path))),
-        {vtable, type, data});
+    return kinoko::savedata::load_file(path, {vtable, type, data});
 }
 extern "C" int32_t function_472c90(int32_t path, int32_t vtable,
                                       int32_t type, int32_t data) {
-    return kinoko_savedata_load_file_entry(path, vtable, type, data);
+    return kinoko_savedata_load_file_entry(
+        reinterpret_cast<const char*>(static_cast<uintptr_t>(static_cast<uint32_t>(path))),
+        vtable, type, data);
 }
-int32_t kinoko_savedata_save_file_entry(int32_t path, int32_t vtable,
+int32_t kinoko_savedata_save_file_entry(const char* path, int32_t vtable,
                                       int32_t type, int32_t data) {
-    return kinoko::savedata::save_file(
-        reinterpret_cast<const char *>(static_cast<uintptr_t>(static_cast<uint32_t>(path))),
-        {vtable, type, data});
+    return kinoko::savedata::save_file(path, {vtable, type, data});
 }
 extern "C" int32_t function_472e50(int32_t path, int32_t vtable,
                                       int32_t type, int32_t data) {
-    return kinoko_savedata_save_file_entry(path, vtable, type, data);
+    return kinoko_savedata_save_file_entry(
+        reinterpret_cast<const char*>(static_cast<uintptr_t>(static_cast<uint32_t>(path))),
+        vtable, type, data);
 }
