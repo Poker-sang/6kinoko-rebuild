@@ -1,0 +1,12 @@
+{
+  "source_commit": "4e8e81cfceef2f1ca30bb4632272f7323ec133d0",
+  "tree": "9f3f01f8a0989854a691cf2aa0fd44e09543a2b3",
+  "source_archive_sha256": "7b3e375105979896e8ff0f93ac48d3b4d170daf7d4cdf17ed44a97dc1c7dbce2",
+  "git_bundle_sha256": "763555d8db2a9392d441d8582ef93d6b9c5106bdc7e0dadf51ff832329ac6ecb",
+  "source_file_count": 2364,
+  "game_run": false,
+  "tests_run": false,
+  "assets_included": false,
+  "scope": "All tracked source/evidence/vendor files; no untracked local artifacts or user saves"
+}
+SOURCE_DIRECTORY C:\KinokoMigration\win32 baseline 4e8e81c\source

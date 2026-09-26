@@ -1,0 +1,95 @@
+{
+  "source_commit": "4e8e81cfceef2f1ca30bb4632272f7323ec133d0",
+  "source_tree": "9f3f01f8a0989854a691cf2aa0fd44e09543a2b3",
+  "package_directory": "C:\\KinokoMigration\\win32 baseline 4e8e81c",
+  "extracted_source_has_git": false,
+  "tracked_source_file_count": 2364,
+  "all_extracted_sources_unchanged_after_build": true,
+  "generated_configuration_files_checked": 102,
+  "old_workspace_path_hits": [],
+  "source_archive": {
+    "name": "source.zip",
+    "size": 7846596,
+    "sha256": "7b3e375105979896e8ff0f93ac48d3b4d170daf7d4cdf17ed44a97dc1c7dbce2"
+  },
+  "git_bundle": {
+    "name": "source.bundle",
+    "size": 11482023,
+    "sha256": "763555d8db2a9392d441d8582ef93d6b9c5106bdc7e0dadf51ff832329ac6ecb",
+    "complete_history_verified": true
+  },
+  "source_manifest_sha256": "9b7b7f9162880ef10eb1ffe00f70082931a6fe7a4f9533c779eff8f20755c5cd",
+  "build": {
+    "source_commit": "4e8e81cfceef2f1ca30bb4632272f7323ec133d0",
+    "configuration": "Win32 Release",
+    "trace_disabled": true,
+    "source_directory": "C:\\KinokoMigration\\win32 baseline 4e8e81c\\source",
+    "build_directory": "C:\\KinokoMigration\\win32 baseline 4e8e81c\\source\\build-runs\\migration-quiet",
+    "runtime_directory": "C:\\KinokoMigration\\win32 baseline 4e8e81c\\source\\runtime-builds\\migration-quiet",
+    "generator": "Visual Studio 17 2022",
+    "full_build_succeeded": true,
+    "dat_staging_verified": true,
+    "contracts_compiled": 65,
+    "game_run": false,
+    "tests_run": false,
+    "files": [
+      {
+        "name": "kinoko_retdec_rebuild.exe",
+        "size": 912384,
+        "sha256": "5B4FABDA4E5764A97DBFC3CD7227D9E3A2D303E666ECA450CC1BECAC2D53C542"
+      },
+      {
+        "name": "6kinoko_a.dat",
+        "size": 163424746,
+        "sha256": "DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64"
+      },
+      {
+        "name": "6kinoko_b.dat",
+        "size": 44681244,
+        "sha256": "4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2"
+      },
+      {
+        "name": "6kinoko_c.dat",
+        "size": 11796163,
+        "sha256": "80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E"
+      }
+    ]
+  },
+  "prior_user_validation": {
+    "source_commit": "c4d8bc507d78c594bd6687bd6dfe13e9196bf400",
+    "validation": "User reported normal; no per-scenario checklist or contract execution claim",
+    "files": [
+      {
+        "path": "runtime-builds/boundary-final/kinoko_retdec_rebuild.exe",
+        "size": 912384,
+        "sha256": "F08916258C1C6B6597CB171825BB6BB8A00FCBAE0D2C67B0239AECDA9D680DB9"
+      },
+      {
+        "path": "runtime-builds/boundary-final/6kinoko_a.dat",
+        "size": 163424746,
+        "sha256": "DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64"
+      },
+      {
+        "path": "runtime-builds/boundary-final/6kinoko_b.dat",
+        "size": 44681244,
+        "sha256": "4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2"
+      },
+      {
+        "path": "runtime-builds/boundary-final/6kinoko_c.dat",
+        "size": 11796163,
+        "sha256": "80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E"
+      }
+    ]
+  },
+  "toolchain": {
+    "cmake": "4.3.1-msvc1",
+    "generator": "Visual Studio 17 2022",
+    "installed_instance": "C:/Program Files/Microsoft Visual Studio/18/Community",
+    "msvc": "14.44.35207",
+    "target": "Win32"
+  },
+  "game_run": false,
+  "tests_run": false,
+  "pr_merged": false,
+  "untracked_historical_artifacts": "Preserved in original workspaces; not automatically included in source archive"
+}
