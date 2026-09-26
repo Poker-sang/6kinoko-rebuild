@@ -4521,14 +4521,14 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
     CHECK(((unsigned char*)object)[228]==1);
     int32_t atlas[109]={0};atlas[108]=2;
     for(int i=0;i<2;++i) {
-        int32_t* glyph=(int32_t*)(intptr_t)kinoko_string_append_glyph(PTR(object));
+        int32_t* glyph=(int32_t*)(intptr_t)kinoko_string_append_glyph((KinokoStringLayout*)(uintptr_t)(PTR(object)));
         glyph[0]=10+i;glyph[2]=0;glyph[63]=PTR(atlas);
     }
-    CHECK(kinoko_string_replicate(PTR(copy),PTR(object))==1 && atlas[108]==4 && kinoko_string_queue_size(PTR(copy))==2);
+    CHECK(kinoko_string_replicate((KinokoStringLayout*)(uintptr_t)(PTR(copy)), (KinokoStringLayout*)(uintptr_t)(PTR(object)))==1 && atlas[108]==4 && kinoko_string_queue_size((KinokoStringLayout*)(uintptr_t)(PTR(copy)))==2);
     CHECK(copy[44]!=object[44]);
-    CHECK(((int32_t*)(intptr_t)kinoko_string_queue_at(PTR(copy),0))[0]==10);
-    CHECK(kinoko_string_replicate(PTR(copy),PTR(copy))==1 && atlas[108]==4);
-    CHECK(kinoko_string_clear(PTR(copy))==1 && atlas[108]==4 && kinoko_string_queue_size(PTR(copy))==2);
+    CHECK(((int32_t*)(intptr_t)kinoko_string_queue_at((KinokoStringLayout*)(uintptr_t)(PTR(copy)), 0))[0]==10);
+    CHECK(kinoko_string_replicate((KinokoStringLayout*)(uintptr_t)(PTR(copy)), (KinokoStringLayout*)(uintptr_t)(PTR(copy)))==1 && atlas[108]==4);
+    CHECK(kinoko_string_clear((KinokoStringLayout*)(uintptr_t)(PTR(copy)))==1 && atlas[108]==4 && kinoko_string_queue_size((KinokoStringLayout*)(uintptr_t)(PTR(copy)))==2);
     kinoko_clear_string_layout(PTR(copy));CHECK(atlas[108]==2);
     CHECK(execute_source(vm,root+2,"delete ::StringProbe;\n"));
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), klass);kinoko_clear_string_layout(PTR(object));
@@ -4547,18 +4547,18 @@ static int test_string_layout_lifetime(void) {
     CHECK(layout[22]==16 && layout[23]==1 && layout[31]==2 && layout[36]==-1);
     CHECK(layout[27]==255 && layout[28]==255 && layout[29]==255);
     CHECK(((float*)layout)[34]==1 && ((float*)layout)[35]==1 && ((float*)layout)[38]==1);
-    CHECK(layout[44]!=0 && kinoko_string_queue_size(PTR(layout))==0);
+    CHECK(layout[44]!=0 && kinoko_string_queue_size((KinokoStringLayout*)(uintptr_t)(PTR(layout)))==0);
     kinoko_string_assign_cstr(layout+1,"rendered");
-    kinoko_string_push_back(PTR(layout),"pending");
+    kinoko_string_push_back((KinokoStringLayout*)(uintptr_t)(PTR(layout)), "pending");
     layout[50]=91;layout[51]=7;layout[52]=11;layout[53]=37;
     int32_t clone=kinoko_method_clone_string_layout(PTR(layout),NULL);CHECK(clone);
     int32_t* copied=(int32_t*)(intptr_t)clone;
     CHECK(copied[0]==PTR(&kinoko_string_layout_methods_storage) && copied[44]!=layout[44]);
     CHECK(copied[5]==8 && copied[12]==7 && copied[50]==91 && copied[53]==37);
-    CHECK(kinoko_string_atlas_size(clone)==0 && kinoko_string_queue_size(clone)==0);
-    CHECK(kinoko_method_set_string_layer(clone,NULL,0)<0);
-    CHECK(kinoko_method_update_string_layout(clone,NULL)<0);
-    CHECK(kinoko_method_draw_string_layout(clone,NULL,0,0)<0);
+    CHECK(kinoko_string_atlas_size(clone)==0 && kinoko_string_queue_size((KinokoStringLayout*)(uintptr_t)(clone))==0);
+    CHECK(kinoko_method_set_string_layer((KinokoStringLayout*)(uintptr_t)(clone), NULL, (KinokoActLayer*)(uintptr_t)(0))<0);
+    CHECK(kinoko_method_update_string_layout((KinokoStringLayout*)(uintptr_t)(clone), NULL)<0);
+    CHECK(kinoko_method_draw_string_layout((KinokoStringLayout*)(uintptr_t)(clone), NULL, 0, 0)<0);
     CHECK(kinoko_string_add_character(clone,"\t")==1 && copied[51]==64);
     CHECK(kinoko_string_add_character(clone,"\n")==1 && copied[51]==0 && copied[52]==27);
     kinoko_method_delete_string_layout(clone,NULL,1);
@@ -4586,13 +4586,13 @@ static int test_string_glyph_cache(void) {
     layout[22]=19;
     const int32_t storage=layout[44];
     for(int i=0;i<2;++i) {
-        int32_t* glyph=(int32_t*)(intptr_t)kinoko_string_append_glyph(PTR(layout));
+        int32_t* glyph=(int32_t*)(intptr_t)kinoko_string_append_glyph((KinokoStringLayout*)(uintptr_t)(PTR(layout)));
         glyph[2]=4;glyph[63]=PTR(atlas);
     }
     CHECK(kinoko_string_prune_atlases((KinokoStringLayout*)layout)==1 && kinoko_string_atlas_size(PTR(layout))==1);
     CHECK(kinoko_string_rebuild_queue((KinokoStringLayout*)layout)==1);
     CHECK(kinoko_string_atlas_size(PTR(layout))==0);
-    CHECK(layout[44]==storage && kinoko_string_queue_size(PTR(layout))==0);
+    CHECK(layout[44]==storage && kinoko_string_queue_size((KinokoStringLayout*)(uintptr_t)(PTR(layout)))==0);
     CHECK(layout[5]==0 && layout[12]==4 && memcmp(kinoko_string_data((const void*)(intptr_t)(PTR(layout)+32)),"ABCD",5)==0);
     CHECK(((unsigned char*)layout)[228]==1 && layout[51]==0 && layout[52]==0 && layout[53]==0 && layout[54]==19);
     kinoko_clear_string_layout(PTR(layout));

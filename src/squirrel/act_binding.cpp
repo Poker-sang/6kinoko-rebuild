@@ -751,7 +751,7 @@ template<bool string_layout> int32_t create_layer(int32_t player, const char* na
     field<int32_t>(layer+104) = maximum < 0 ? 1 : static_cast<int32_t>(static_cast<uint32_t>(maximum)+1);
     kinoko_act_array_append((void*)(uintptr_t)(act+208), (void*)(uintptr_t)(layer));
     owned.release(); // ACT owns the layer before either publication callback.
-    if constexpr(string_layout) kinoko_method_set_string_layer(native_layout,nullptr,layer);
+    if constexpr(string_layout) kinoko_method_set_string_layer((KinokoStringLayout*)(uintptr_t)(native_layout), nullptr, (KinokoActLayer*)(uintptr_t)(layer));
     else kinoko_method_layout_set_layer(native_layout, nullptr, layer);
     kinoko_method_register_act_layer(layer, nullptr, address(&parent.object), 0);
     if constexpr(string_layout) kinoko_method_register_string_layout(native_layout,nullptr);
@@ -2183,19 +2183,19 @@ template<int Method> int32_t string_method(SQVM* vm) {
             const SQChar* text=nullptr;
             if(sq_gettype(machine,2)!=OT_NULL && SQ_FAILED(sq_getstring(machine,2,&text)))
                 return sq_throwerror(machine,"expected text");
-            if constexpr(Method==0) result=kinoko_string_push_back(object,text);
+            if constexpr(Method==0) result=kinoko_string_push_back((KinokoStringLayout*)(uintptr_t)(object), text);
             else { sq_pushinteger(machine,kinoko_string_character_bytes(text));return 1; }
-        } else if constexpr(Method==1) result=kinoko_string_clear(object);
+        } else if constexpr(Method==1) result=kinoko_string_clear((KinokoStringLayout*)(uintptr_t)(object));
         else if constexpr(Method==2 || Method==3) {
             SQInteger count=0;
             if(!kinoko::script::upstream::sqrat_integer_argument(machine,2,count)) return sq_throwerror(machine,"expected count");
-            result=kinoko_string_pop(object,count,Method==2);
+            result=kinoko_string_pop((KinokoStringLayout*)(uintptr_t)(object), count, Method==2);
         } else if constexpr(Method==5) {
             int32_t source=0;
             if(sq_gettype(machine,2)!=OT_NULL && SQ_FAILED(sq_getinstanceup(machine,2,reinterpret_cast<SQUserPointer*>(&source),nullptr)))
                 return sq_throwerror(machine,"expected CStringLayout");
-            result=kinoko_string_replicate(object,source);
-        } else result=kinoko_string_mark_rebuild(object);
+            result=kinoko_string_replicate((KinokoStringLayout*)(uintptr_t)(object), (KinokoStringLayout*)(uintptr_t)(source));
+        } else result=kinoko_string_mark_rebuild((KinokoStringLayout*)(uintptr_t)(object));
         sq_pushbool(machine,result!=0);return 1;
     } catch(...) { return sq_throwerror(machine,"CStringLayout allocation failed"); }
 }

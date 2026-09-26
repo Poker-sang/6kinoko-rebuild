@@ -1,0 +1,50 @@
+{
+  "kinoko_string_push_back": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_string_mark_rebuild": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_string_clear": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_string_pop": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_string_replicate": {
+    "0": "KinokoStringLayout*",
+    "1": "KinokoStringLayout*"
+  },
+  "kinoko_string_append_glyph": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_string_copy_queue_storage": {
+    "0": "KinokoStringLayout*",
+    "1": "KinokoStringLayout*"
+  },
+  "kinoko_string_drop_queue_storage": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_string_queue_construct": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_string_queue_destroy": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_string_queue_size": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_string_queue_at": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_method_set_string_layer": {
+    "0": "KinokoStringLayout*",
+    "2": "KinokoActLayer*"
+  },
+  "kinoko_method_update_string_layout": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_method_draw_string_layout": {
+    "0": "KinokoStringLayout*"
+  }
+}

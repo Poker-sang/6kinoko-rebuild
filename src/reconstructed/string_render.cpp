@@ -99,7 +99,7 @@ extern "C" int32_t kinoko_string_add_character(int32_t layout,const char* charac
         // 440A9B-440BF4 is absent from IDA's decompilation: width/height are
         // output parameters of 405F80, not constants. Follow the assembly.
         atlas.set(&AtlasRecord::references,atlas.get(&AtlasRecord::references)+1);
-        const int32_t glyph=kinoko_string_append_glyph(layout),s=glyph+20;
+        const int32_t glyph=kinoko_string_append_glyph((KinokoStringLayout*)(uintptr_t)(layout)),s=glyph+20;
         rectangle(s,atlas.get(&AtlasRecord::texture),atlas.get(&AtlasRecord::cursor_x),
             atlas.get(&AtlasRecord::cursor_y),width,height);
         std::copy_n(pointer<unsigned char>(s+128),48,pointer<unsigned char>(s+176));

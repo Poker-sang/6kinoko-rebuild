@@ -26,8 +26,8 @@ int32_t kinoko_texture_bind_stage(int32_t,int32_t texture) { calls.push_back(500
 int32_t kinoko_quad_submit(KinokoQuad*,float,float) { ++submitted;calls.push_back(900);return E_FAIL; }
 void kinoko_trace_i32(const char*,int32_t) {}
 KinokoActLayer *__fastcall kinoko_act_layer_world_position(KinokoActLayer *layer,void*,float *x,float *y,float *z) { *x=3;*y=4;*z=5;return layer; }
-uint32_t kinoko_string_queue_size(int32_t) { return 1; }
-int32_t kinoko_string_queue_at(int32_t,uint32_t) { return address(&glyph); }
+uint32_t kinoko_string_queue_size(KinokoStringLayout*) { return 1; }
+int32_t kinoko_string_queue_at(KinokoStringLayout*,uint32_t) { return address(&glyph); }
 int32_t kinoko_string_add_character(int32_t,const char*) { ++appended;return 1; }
 int32_t kinoko_string_rebuild_queue(KinokoStringLayout*) { return 0; }
 }
@@ -91,14 +91,14 @@ int main() {
     pending.assign("A",1);
     glyph.x=10;glyph.y=6;glyph.height=20;
     glyph.quad.base_positions={{{0,0,0},{8,0,0},{0,20,0},{8,20,0}}};
-    layer.visible=0;CHECK(kinoko_method_update_string_layout(address(&text),nullptr)==0);
+    layer.visible=0;CHECK(kinoko_method_update_string_layout((KinokoStringLayout*)(uintptr_t)(address(&text)), nullptr)==0);
     CHECK(appended==1 && pending.length()==0 && displayed.length()==1);
-    layer.visible=1;CHECK(kinoko_method_update_string_layout(address(&text),nullptr)==0);
+    layer.visible=1;CHECK(kinoko_method_update_string_layout((KinokoStringLayout*)(uintptr_t)(address(&text)), nullptr)==0);
     CHECK(glyph.quad.positions[0].x==19 && glyph.quad.positions[0].y==12);
     CHECK(glyph.quad.vertices[0].color==0xff00ff01u);
     state_values[19]=9;state_values[20]=8;state_values[171]=7;state_values[27]=6;
     calls.clear();const auto before=world_calls;
-    CHECK(kinoko_method_draw_string_layout(address(&text),nullptr,0,0)==0);
+    CHECK(kinoko_method_draw_string_layout((KinokoStringLayout*)(uintptr_t)(address(&text)), nullptr, 0, 0)==0);
     CHECK(world_calls==before && kinoko_renderer.state.filter==2);
     CHECK(state_values[19]==9 && state_values[20]==8 && state_values[27]==6);
     pending.destroy();displayed.destroy();
