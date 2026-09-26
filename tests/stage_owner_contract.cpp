@@ -71,8 +71,8 @@ void *operator new(std::size_t size) {
 void operator delete(void *p) noexcept { std::free(p); }
 void operator delete(void *p, std::size_t) noexcept { std::free(p); }
 extern "C" {
-int32_t g603 = 0, g604 = 0, g639 = 0;
-KinokoIntegerMap* g638 = nullptr;
+int32_t kinoko_stage_list_slot = 0, kinoko_stage_count = 0, kinoko_sound_lookup_count = 0;
+KinokoIntegerMap* kinoko_sound_lookup = nullptr;
 struct SQVM *kinoko_primary_vm = nullptr;
 KinokoActDocument *kinoko_act_document_create() {
     if (state.fail_document) return nullptr;
@@ -136,7 +136,7 @@ int main() {
     kinoko_stage_owner_destroy(state.owner);
     reset();
     state.owner = kinoko_stage_load("caller-owned");
-    CHECK(state.owner && !g603 && state.deletes == 0 && state.runtimes == 1);
+    CHECK(state.owner && !kinoko_stage_list_slot && state.deletes == 0 && state.runtimes == 1);
     CHECK(kinoko_act_source_layer_count(OwnerView(state.owner).get(&OwnerRecord::holder)) == 0);
     kinoko_stage_owner_destroy(state.owner);
     CHECK(state.deletes == 1 && state.runtime_deletes == 1);
@@ -148,10 +148,10 @@ int main() {
     kinoko_stage_list_construct();
     reset();
     state.owner = kinoko_stage_load("published");
-    CHECK(state.owner && g604 == 1 && state.deletes == 0);
+    CHECK(state.owner && kinoko_stage_count == 1 && state.deletes == 0);
     CHECK(kinoko_stage_list_value(kinoko_stage_list_first()) == state.owner);
     kinoko_clear_global_stages();
-    CHECK(g604 == 0 && state.deletes == 1 && state.runtime_deletes == 1);
+    CHECK(kinoko_stage_count == 0 && state.deletes == 1 && state.runtime_deletes == 1);
     kinoko_clear_global_stages();
     CHECK(state.deletes == 1);
     kinoko_stage_list_destroy();

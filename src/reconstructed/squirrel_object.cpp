@@ -6,7 +6,7 @@
 #include <intrin.h>
 
 extern "C" {
-void _3f__3f_3_40_YAXPAX_40_Z(int32_t* object);
+void kinoko_host_free_allocation(int32_t* object);
 void retdec_trace(const char* message);
 void retdec_trace_i32(const char* message, int32_t value);
 }
@@ -50,6 +50,6 @@ extern "C" int32_t kinoko_squirrel_object_destroy(int32_t object, int32_t vm_add
 
 extern "C" int32_t __fastcall kinoko_squirrel_object_delete(int32_t object, void*, int32_t flags) {
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(object)));
-    if (flags & 1) _3f__3f_3_40_YAXPAX_40_Z(pointer<int32_t>(object));
+    if (flags & 1) kinoko_host_free_allocation(pointer<int32_t>(object));
     return object;
 }

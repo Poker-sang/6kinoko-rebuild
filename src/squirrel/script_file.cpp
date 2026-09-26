@@ -13,9 +13,9 @@
 
 extern "C" {
 extern struct SQVM *kinoko_primary_vm;
-extern char* g767;
+extern char* kinoko_game_window_slot;
 extern char kinoko_packed_assets;
-extern int32_t g664, kinoko_script_root_storage[3];
+extern int32_t kinoko_act_vm_abi_slot, kinoko_script_root_storage[3];
 void retdec_trace(const char*);
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_name(const char*, int32_t);
@@ -25,10 +25,10 @@ int32_t kinoko_squirrel_object_vtable(void);
 
 namespace {
 using namespace kinoko::script;
-inline int32_t& bytecode_vm_slot = g664;
+inline int32_t& bytecode_vm_slot = kinoko_act_vm_abi_slot;
 inline SQVM*& primary_vm_slot = kinoko_primary_vm;
 inline char& compiled_assets_slot = kinoko_packed_assets;
-inline char*& debug_window_slot = g767;
+inline char*& debug_window_slot = kinoko_game_window_slot;
 inline int32_t (&script_root_slot)[3] = kinoko_script_root_storage;
 // Separate VM slots are intentional: compiled LocalScript bytecode uses the
 // Sqrat VM captured at root registration; plain scripts use SqPlus's VM.

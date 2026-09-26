@@ -6,7 +6,7 @@
 #include <limits>
 
 extern "C" {
-char g560 = 0;
+char kinoko_sqrat_trace_enabled = 0;
 int32_t kinoko_sqrat_object_vtable(void) { return 0x12121212; }
 int32_t kinoko_sqrat_root_vtable(void) { return 0x34343434; }
 void retdec_trace_i32(const char*, int32_t) {}

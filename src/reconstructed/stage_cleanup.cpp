@@ -13,9 +13,9 @@
 #include "kinoko/legacy_memory.hpp"
 
 extern "C" {
-extern int32_t g603, g604;
-extern KinokoIntegerMap* g638;
-extern int32_t g639;
+extern int32_t kinoko_stage_list_slot, kinoko_stage_count;
+extern KinokoIntegerMap* kinoko_sound_lookup;
+extern int32_t kinoko_sound_lookup_count;
 int32_t kinoko_audio_shutdown_resources(void);
 }
 
@@ -23,10 +23,10 @@ using StageList = std::list<KinokoStageNode>;
 struct KinokoStageNode { KinokoStageOwner *owner; StageList::iterator position; };
 
 namespace {
-inline int32_t& stage_list_slot = g603;
-inline int32_t& stage_count_slot = g604;
-inline KinokoIntegerMap*& sound_lookup_slot = g638;
-inline int32_t& sound_lookup_count_slot = g639;
+inline int32_t& stage_list_slot = kinoko_stage_list_slot;
+inline int32_t& stage_count_slot = kinoko_stage_count;
+inline KinokoIntegerMap*& sound_lookup_slot = kinoko_sound_lookup;
+inline int32_t& sound_lookup_count_slot = kinoko_sound_lookup_count;
 // The C ABI slots are retained for original callers and contract fixtures.
 // Only this file owns the list allocation and sound lookup tree.
 int32_t& stage_list_word() { return stage_list_slot; }

@@ -9,13 +9,13 @@
 #include <cstdlib>
 
 extern "C" {
-extern char g560;
+extern char kinoko_sqrat_trace_enabled;
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_name(const char*, int32_t);
 }
 
 namespace {
-inline char& native_trace_slot = g560;
+inline char& native_trace_slot = kinoko_sqrat_trace_enabled;
 using kinoko::script::address;
 using kinoko::script::pointer;
 using kinoko::script::data_bits;

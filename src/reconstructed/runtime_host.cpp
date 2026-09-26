@@ -8,6 +8,8 @@
 #include <cstddef>
 
 namespace {
+// Retain the established host extents; record sizes are verified prefixes,
+// not guesses at the original complete C++ class sizes. All storage is trivial.
 template<class Record, size_t Extent> struct alignas(8) HostStorage {
     Record record;
     std::array<unsigned char, Extent - sizeof(Record)> reserved;
@@ -44,28 +46,7 @@ int32_t retdec_is_release_watch_data(int32_t data) {
     return 0;
 }
 
-void retdec_mcd_free(struct retdec_mcd_data *data);
-
-int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
-                                          int32_t resource_ptr,
-                                          int32_t *active_count);
-
-int32_t retdec_load_act_texture(const char *texture_name);
-
-void retdec_trace(const char *message);
-
-
-
 int32_t kinoko_host_get_delegate_abi(int32_t source_ptr, int32_t *target_ptr);
-
-static int32_t (*resolve_root_binding)(int32_t, int32_t *) = kinoko_host_get_delegate_abi;
-
-int32_t (__fastcall *kinoko_color_methods_storage)(int32_t, void*, char) = kinoko_color_destroy;
-
-// Original 44FD30 installs IColor methods, optionally frees, returns receiver.
-int32_t (__fastcall *kinoko_chip_quad_methods_storage)(int32_t, void*, char) = kinoko_color_destroy;
-
-int32_t (__fastcall *kinoko_actor_pool_base_methods_storage)(int32_t, void*, unsigned char) = kinoko_method_actor_pool_base_delete;
 
 const char * kinoko_application_error_text = "\x8f\x89\x8a\xfa\x89\xbb\x8e\xb8\x94s";
 
@@ -73,50 +54,29 @@ const char * kinoko_application_title_text = "\x96\x82\x97\x9d\x8d\xb9\x82\xc6\x
 
 const char * kinoko_audio_error_text = "DirectSound\x83I\x83u\x83W\x83\x46\x83N\x83g\x82\xcc\x8d\xec\x90\xac\x82\xc9\x8e\xb8\x94s";
 
-struct MapColorMethods kinoko_layout_color_methods_storage = {
-    kinoko_delete_layout_sprite,
-    kinoko_quad_set_color,
-    kinoko_quad_set_vertex_colors,
-    kinoko_quad_modulate_color
-};
-
-struct StringLayoutMethods kinoko_string_layout_methods_storage = {
-    kinoko_method_write_string_layout,
-    kinoko_method_read_string_layout,
-    kinoko_method_query_serializable,
-    kinoko_method_destroy_string_layout,
-    kinoko_method_string_layout_type,
-    kinoko_method_clone_string_layout,
-    kinoko_method_set_string_layer,
-    kinoko_method_update_string_layout,
-    kinoko_method_draw_string_layout,
-    kinoko_method_register_string_layout,
-    kinoko_method_delete_string_layout
-};
-
 int32_t kinoko_null_object_type = 0x01000001;
 
 int32_t kinoko_null_object_value = 0;
 
-int32_t g534 = 0;
+int32_t kinoko_ime_context_slot = 0;
 
-int32_t g535 = 0;
+int32_t kinoko_ime_default_window_slot = 0;
 
-int32_t g545 = 1023;
+int32_t kinoko_ime_text_limit = 1023;
 
-int32_t g546 = 0;
+int32_t kinoko_ime_commit_pending = 0;
 
-char g547 = 0;
+char kinoko_ime_text_changed = 0;
 
-char g548 = 0;
+char kinoko_ime_composition_changed = 0;
 
-char g549 = 0;
+char kinoko_ime_enabled = 0;
 
-int32_t g550 = 0;
+int32_t kinoko_ime_cursor = 0;
 
 int32_t kinoko_act_script_extension[7] = {0, 0, 0, 0, 0, 15, 0};
 
-char g560 = 1;
+char kinoko_sqrat_trace_enabled = 1;
 
 int32_t kinoko_actor_user_key_storage[3] = { 0, 0, 0 };
 
@@ -124,21 +84,11 @@ int32_t kinoko_actor_step_key_storage[3] = { 0, 0, 0 };
 
 int32_t kinoko_actor_class_storage[3] = { 0, 0, 0 };
 
-int32_t g603 = 0;
+int32_t kinoko_stage_list_slot = 0;
 
-int32_t g604 = 0;
+int32_t kinoko_stage_count = 0;
 
 int32_t kinoko_camera_class_storage[3] = { 0, 0, 0 };
-
-
-
-
-
-
-
-
-
-
 
 int32_t kinoko_render_layer_owner_slot = 0;
 
@@ -146,25 +96,25 @@ int32_t kinoko_input_class_storage[3] = { 0, 0, 0 };
 
 int32_t kinoko_map_class_storage[3] = { 0, 0, 0 };
 
-int32_t g637 = 0;
+int32_t kinoko_active_bgm_slot = 0;
 
-KinokoIntegerMap* g638 = NULL;
+KinokoIntegerMap* kinoko_sound_lookup = NULL;
 
-int32_t g639 = 0;
+int32_t kinoko_sound_lookup_count = 0;
 
-char g642 = 0;
+char kinoko_skip_vm_owner_reset = 0;
 
-int32_t g643 = 0;
+int32_t kinoko_newest_shared_state = 0;
 
 #pragma data_seg(".g644")
 __declspec(align(4096)) struct SQVM *kinoko_primary_vm = NULL;
 #pragma data_seg()
 
-int32_t g645 = 0;
+int32_t kinoko_cached_root_slot = 0;
 
-int32_t unk_5149EC[3] = { 0, 0, 0 };
+int32_t kinoko_vm_thread_wrapper[3] = { 0, 0, 0 };
 
-int32_t g664 = 0;
+int32_t kinoko_act_vm_abi_slot = 0;
 
 char kinoko_compile_act_output = 0;
 
@@ -176,17 +126,17 @@ KinokoCriticalSection kinoko_graphics_lock = { 0 };
 
 int32_t kinoko_script_root_storage[3] = { 0, 0, 0 };
 
-char * g767;
+char * kinoko_game_window_slot;
 
 unsigned char g_retdec_keyboard_state[256];
 
 char kinoko_packed_assets = 0;
 
-int32_t g876 = 0;
+int32_t kinoko_audio_primary_device_slot = 0;
 
-char * g877;
+char * kinoko_audio_device_slot;
 
-int32_t g878 = 0;
+int32_t kinoko_audio_listener_slot = 0;
 
 int32_t kinoko_layout_type_identity = 0;
 
@@ -194,7 +144,7 @@ int32_t kinoko_chip_type_identity = 0;
 
 int32_t kinoko_map_type_identity = 0;
 
-int32_t g926 = 0;
+int32_t kinoko_string_layout_type_identity = 0;
 
 int32_t kinoko_texture_type_identity = 0;
 
@@ -218,197 +168,7 @@ int32_t kinoko_layer_set_pair[2] = {0, 0};
 
 int32_t kinoko_layer_get_pair[2] = {0, 0};
 
-int32_t g1224;
-
-struct SquirrelObjectMethods kinoko_squirrel_object_methods_storage = {
-    kinoko_squirrel_object_delete
-};
-
-struct ActorMethods kinoko_actor_methods_storage = {
-    kinoko_actor_delete_method
-};
-
-struct ActorRenderLayerMethods kinoko_actor_render_layer_methods_storage = {
-    kinoko_method_render_layer_update
-};
-
-struct ActorPoolMethods kinoko_actor_pool_methods_storage = {
-    kinoko_method_actor_pool_delete,
-    kinoko_method_actor_manager_top,
-    kinoko_method_actor_manager_remove,
-    kinoko_method_lookup_actor,
-    kinoko_method_actor_pool_count
-};
-
-struct ActorOwnerMethods kinoko_actor_owner_methods_storage = {
-    kinoko_method_actor_owner_delete,
-    kinoko_method_actor_manager_push
-};
-
-struct MapRenderLayerMethods kinoko_map_render_layer_methods_storage = {
-    kinoko_map_render_layer_entry
-};
-
-struct SqratObjectMethods kinoko_sqrat_object_methods_storage = {
-    kinoko_sqrat_delete_object,
-    kinoko_sqrat_object_reference,
-    kinoko_sqrat_copy_object
-};
-
-struct SqratRootMethods kinoko_sqrat_root_methods_storage = {
-    kinoko_sqrat_delete_object,
-    kinoko_sqrat_object_reference,
-    kinoko_sqrat_copy_object
-};
-
-struct RendererMethods kinoko_renderer_methods_storage = {
-    kinoko_renderer_before_reset,
-    kinoko_renderer_after_reset
-};
-
-struct ActScriptMethods kinoko_act_script_methods_storage = {
-    kinoko_method_write_act_script,
-    kinoko_method_read_act_script,
-    kinoko_method_query_serializable,
-    kinoko_method_delete_act_script
-};
-
-struct ActLayerReferenceMethods kinoko_act_layer_reference_methods_storage = {
-    kinoko_sqrat_delete_object,
-    kinoko_sqrat_object_reference,
-    kinoko_sqrat_copy_object
-};
-
-struct ActLayerMethods kinoko_act_layer_methods_storage = {
-    kinoko_method_write_act_layer,
-    kinoko_method_read_act_layer,
-    kinoko_method_query_serializable,
-    kinoko_method_destroy_serializable,
-    kinoko_method_delete_act_layer,
-    kinoko_method_clone_act_layer,
-    kinoko_act_layer_set_resource,
-    kinoko_act_layer_world_position,
-    kinoko_method_register_act_layer
-};
-
-struct ActLayerLayoutMethods kinoko_act_layer_layout_methods_storage = {
-    kinoko_sqrat_delete_object,
-    kinoko_sqrat_object_reference,
-    kinoko_sqrat_copy_object
-};
-
-struct ActKeyMethods kinoko_act_key_methods_storage = {
-    kinoko_method_write_act_key,
-    kinoko_method_read_act_key,
-    kinoko_method_query_serializable,
-    kinoko_method_destroy_serializable,
-    kinoko_method_delete_act_key,
-    kinoko_method_clone_act_key
-};
-
-struct ActDocumentMethods kinoko_act_document_methods_storage = {
-    kinoko_method_write_act,
-    kinoko_method_read_act,
-    kinoko_method_query_serializable,
-    kinoko_method_destroy_serializable,
-    kinoko_method_destroy_act,
-    kinoko_act_clone,
-    kinoko_method_load_act_resources,
-    kinoko_method_suspend_act_resources,
-    kinoko_method_resume_act_resources
-};
-
-struct ActLayoutMethods kinoko_act_layout_methods_storage = {
-    kinoko_method_write_layout_properties,
-    kinoko_method_read_layout_properties,
-    kinoko_method_query_serializable,
-    kinoko_method_destroy_layout,
-    kinoko_c2d_layout_type,
-    kinoko_method_clone_c2d_layout,
-    kinoko_method_layout_set_layer,
-    kinoko_method_layout_update,
-    kinoko_method_layout_draw,
-    kinoko_method_register_layout
-};
-
-struct ChipResourceMethods kinoko_chip_resource_methods_storage = {
-    kinoko_method_write_chip_resource,
-    kinoko_method_read_chip_resource,
-    kinoko_method_query_serializable,
-    kinoko_method_destroy_serializable,
-    kinoko_method_delete_act_resource,
-    kinoko_chip_resource_type,
-    kinoko_method_register_chip_resource,
-    kinoko_method_resource_42f800,
-    kinoko_method_resource_42f6c0,
-    kinoko_method_clone_chip_resource,
-    kinoko_method_load_chip_resource
-};
-
-struct MapLayoutMethods kinoko_map_layout_methods_storage = {
-    kinoko_method_write_map_layout,
-    kinoko_method_read_map_layout,
-    kinoko_method_query_serializable,
-    kinoko_method_destroy_layout,
-    kinoko_map_layout_type,
-    kinoko_clone_map_layout,
-    kinoko_method_map_set_layer,
-    kinoko_map_update_all_entry,
-    kinoko_map_draw_entry,
-    kinoko_method_register_map_layout,
-    kinoko_map_update_visible_entry
-};
-
-struct MapColorMethods kinoko_map_color_methods_storage = {
-    kinoko_delete_map_sprite,
-    kinoko_quad_set_color,
-    kinoko_quad_set_vertex_colors,
-    kinoko_quad_modulate_color
-};
-
-struct TextureResourceMethods kinoko_texture_resource_methods_storage = {
-    kinoko_method_write_texture_resource,
-    kinoko_method_read_texture_resource,
-    kinoko_method_query_serializable,
-    kinoko_method_destroy_serializable,
-    kinoko_method_delete_act_resource,
-    kinoko_texture_resource_type,
-    kinoko_method_register_texture_resource,
-    kinoko_method_resource_446920,
-    kinoko_method_resource_4467e0,
-    kinoko_method_clone_texture_resource,
-    kinoko_method_load_resource_texture,
-    kinoko_method_unload_resource_texture
-};
-
-struct RenderTargetMethods kinoko_render_target_methods_storage = {
-    kinoko_method_write_render_target,
-    kinoko_method_read_render_target,
-    kinoko_method_query_serializable,
-    kinoko_method_destroy_serializable,
-    kinoko_method_delete_act_resource,
-    kinoko_render_target_type,
-    kinoko_method_register_render_target,
-    kinoko_method_resource_4499a0,
-    kinoko_method_resource_449860,
-    kinoko_method_clone_render_target,
-    kinoko_method_load_resource_texture,
-    kinoko_method_unload_resource_texture,
-    kinoko_method_create_render_target
-};
-
-struct SpriteMethods kinoko_sprite_methods_storage = {
-    kinoko_color_destroy,
-    kinoko_quad_set_color,
-    kinoko_quad_set_vertex_colors,
-    kinoko_quad_modulate_color,
-    kinoko_sprite_set_rect_pivot,
-    kinoko_sprite_set_rect,
-    kinoko_sprite_draw_bounds,
-    kinoko_sprite_draw_404770,
-    kinoko_sprite_draw_404bc0,
-    kinoko_sprite_draw_4049c0
-};
+int32_t kinoko_script_void_result_identity;
 
 int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
                                           float32_t x, float32_t y)
@@ -425,7 +185,7 @@ int32_t kinoko_host_register_act_script_abi(int32_t script, int32_t environment)
 }
 
 static int32_t kinoko_construct_layer_global_vm(void* storage) {
-    return retdec_construct_cact_layer((int32_t)(intptr_t)storage, g664);
+    return retdec_construct_cact_layer((int32_t)(intptr_t)storage, kinoko_act_vm_abi_slot);
 }
 
 int32_t kinoko_host_construct_layer_abi(int32_t storage) {
@@ -462,7 +222,7 @@ int32_t *kinoko_render_target_type(void) {
 
 int32_t __fastcall kinoko_color_destroy(int32_t receiver, void* unused_edx, char flags) {
     *(int32_t *)(intptr_t)receiver = (int32_t)(intptr_t)&kinoko_color_methods_storage;
-    if (flags & 1) _3f__3f_3_40_YAXPAX_40_Z((int32_t *)(intptr_t)receiver);
+    if (flags & 1) kinoko_host_free_allocation((int32_t *)(intptr_t)receiver);
     return receiver;
 }
 
@@ -555,37 +315,37 @@ static int32_t kinoko_install_root_integer_delegate(int32_t a1) {
     int32_t setdelegate_result;
 
     retdec_trace_i32("470d00:enter-g582", (*kinoko_native_binding_type(0)));
-    resolve_root_binding(a1, binding_object);
+    kinoko_host_get_delegate_abi(a1, binding_object);
     retdec_trace_i32("470d00:after-4aa210-g582", (*kinoko_native_binding_type(0)));
     retdec_trace_i32("470d00:delegate-type", binding_object[1]);
     retdec_trace_i32("470d00:delegate-data", binding_object[2]);
-    if (kinoko_sqplus_object_exists((void *)(uintptr_t)(uint32_t)(uintptr_t)binding_object, "_set") == 0) {
+    if (kinoko_sqplus_object_exists(binding_object, "_set") == 0) {
         retdec_trace_i32("470d00:after-4aa1a0-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_object_new_table((void *)(uintptr_t)(uint32_t)(uintptr_t)temporary_object);
+        kinoko_sqplus_object_new_table(temporary_object);
         retdec_trace_i32("470d00:after-4a91c0-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_object_assign((void *)(uintptr_t)(uint32_t)(uintptr_t)binding_object, (const void *)(uintptr_t)(uint32_t)(uintptr_t)temporary_object);
+        kinoko_sqplus_object_assign(binding_object, temporary_object);
         retdec_trace_i32("470d00:after-4a95c0-g582", (*kinoko_native_binding_type(0)));
-        (int32_t)(uintptr_t)kinoko_sqplus_object_destroy((void *)(uintptr_t)(uint32_t)(uintptr_t)temporary_object);
+        kinoko_sqplus_object_destroy(temporary_object);
         retdec_trace_i32("470d00:after-first-dtor-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_bind_object_function(temporary_object, (void *)(uintptr_t)(uint32_t)(uintptr_t)binding_object, (void *)(uintptr_t)(uint32_t)(uintptr_t)&kinoko_sqplus_table_set, "_set", "sn|b|s");
+        kinoko_sqplus_bind_object_function(temporary_object, binding_object, reinterpret_cast<void*>(&kinoko_sqplus_table_set), "_set", "sn|b|s");
         retdec_trace_i32("470d00:after-set-binding-g582", (*kinoko_native_binding_type(0)));
-        (int32_t)(uintptr_t)kinoko_sqplus_object_destroy((void *)(uintptr_t)(uint32_t)(uintptr_t)temporary_object);
+        kinoko_sqplus_object_destroy(temporary_object);
         retdec_trace_i32("470d00:after-second-dtor-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_bind_object_function(temporary_object, (void *)(uintptr_t)(uint32_t)(uintptr_t)binding_object, (void *)(uintptr_t)(uint32_t)(uintptr_t)&kinoko_sqplus_table_get, "_get", "s");
+        kinoko_sqplus_bind_object_function(temporary_object, binding_object, reinterpret_cast<void*>(&kinoko_sqplus_table_get), "_get", "s");
         retdec_trace_i32("470d00:after-get-binding-g582", (*kinoko_native_binding_type(0)));
-        (int32_t)(uintptr_t)kinoko_sqplus_object_destroy((void *)(uintptr_t)(uint32_t)(uintptr_t)temporary_object);
+        kinoko_sqplus_object_destroy(temporary_object);
         retdec_trace_i32("470d00:after-third-dtor-g582", (*kinoko_native_binding_type(0)));
-        setdelegate_result = kinoko_sqplus_object_set_delegate((void *)(uintptr_t)(uint32_t)a1, (const void *)(uintptr_t)(uint32_t)(uintptr_t)binding_object);
+        setdelegate_result = kinoko_sqplus_object_set_delegate((void *)(uintptr_t)(uint32_t)a1, binding_object);
         retdec_trace_i32("470d00:setdelegate-result", setdelegate_result);
         retdec_trace_i32("470d00:after-4a9f60-g582", (*kinoko_native_binding_type(0)));
     }
-    int32_t result = (int32_t)(uintptr_t)kinoko_sqplus_object_destroy((void *)(uintptr_t)(uint32_t)(uintptr_t)binding_object);
+    int32_t result = (int32_t)(uintptr_t)kinoko_sqplus_object_destroy(binding_object);
     retdec_trace_i32("470d00:exit-g582", (*kinoko_native_binding_type(0)));
     return result;
 }
 
 static int32_t kinoko_script_show_message(const char* text) {
-    return MessageBoxA((HWND)g767, text, "Message", 0);
+    return MessageBoxA((HWND)kinoko_game_window_slot, text, "Message", 0);
 }
 
 int32_t kinoko_host_show_message_abi(int32_t a1) {
@@ -594,7 +354,7 @@ int32_t kinoko_host_show_message_abi(int32_t a1) {
 
 static int32_t kinoko_script_sleep(DWORD milliseconds) {
     Sleep(milliseconds);
-    return (int32_t)(intptr_t)&g1224;
+    return (int32_t)(intptr_t)&kinoko_script_void_result_identity;
 }
 
 int32_t kinoko_host_sleep_abi(int32_t dwMilliseconds) {
@@ -610,7 +370,7 @@ int32_t kinoko_host_milliseconds(void) {
 }
 
 static int32_t kinoko_script_close_window(void) {
-    return (int32_t)SendMessageA((HWND)g767, WM_CLOSE, 0, 0);
+    return (int32_t)SendMessageA((HWND)kinoko_game_window_slot, WM_CLOSE, 0, 0);
 }
 
 int32_t kinoko_host_close_window(void) {
@@ -671,15 +431,15 @@ __declspec(noinline) int32_t retdec_stack_vm(void) {
     
     if (kinoko_primary_vm != NULL) {
         int32_t vm = (int32_t)(intptr_t)kinoko_primary_vm;
-        uint32_t stack_block =
-            (uint32_t)*(int32_t *)(intptr_t)(vm + 24);
+        const auto stack = kinoko_sq_stack_snapshot(kinoko_primary_vm);
+        const uintptr_t stack_block = reinterpret_cast<uintptr_t>(stack.storage);
         if ((stack_block == 0 || stack_block < 0x02000000u ||
              stack_block >= 0x70000000u) &&
             null_stack_trace_count < 16) {
             retdec_trace_i32("stack-vm-invalid", vm);
             retdec_trace_i32("stack-vm-block", (int32_t)stack_block);
-            retdec_trace_i32("stack-vm-top", *(int32_t *)(vm + 48));
-            retdec_trace_i32("stack-vm-base", *(int32_t *)(vm + 52));
+            retdec_trace_i32("stack-vm-top", stack.top);
+            retdec_trace_i32("stack-vm-base", stack.base);
             retdec_trace_i32("stack-vm-caller",
                              (int32_t)(uintptr_t)_ReturnAddress());
             ++null_stack_trace_count;
@@ -764,7 +524,7 @@ static int32_t kinoko_open_primary_script_vm(int32_t stack_size) {
 }
 
 const KinokoSqplusVmSlots *kinoko_sqplus_vm_slots(void) {
-    static KinokoSqplusVmSlots slots = { &g642, &g643, &kinoko_primary_vm, &g645, unk_5149EC };
+    static KinokoSqplusVmSlots slots = { &kinoko_skip_vm_owner_reset, &kinoko_newest_shared_state, &kinoko_primary_vm, &kinoko_cached_root_slot, kinoko_vm_thread_wrapper };
     return &slots;
 }
 
@@ -789,7 +549,8 @@ int32_t kinoko_squirrel_object_vtable(void) {
 }
 
 int32_t kinoko_host_get_delegate_abi(int32_t source_ptr, int32_t *target_ptr) {
-    return (int32_t)(intptr_t)(int32_t*)(intptr_t)(kinoko_sqplus_object_get_delegate((void *)(intptr_t)(source_ptr), (void *)(intptr_t)((int32_t)(intptr_t)target_ptr)));
+    return (int32_t)(intptr_t)kinoko_sqplus_object_get_delegate(
+        (void *)(intptr_t)source_ptr, target_ptr);
 }
 
 int32_t *kinoko_native_binding_type(int32_t category) {
@@ -808,11 +569,11 @@ int32_t kinoko_host_create_native_instance_abi(int32_t vm, int32_t class_name,
         release_hook, (int32_t)(intptr_t)&kinoko_squirrel_object_methods_storage);
 }
 
-void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1) {
+void kinoko_host_free_allocation(int32_t * a1) {
     free(a1);
 }
 
-int32_t function_4d4860(void) {
+int32_t kinoko_host_destroy_global_callback(void) {
     return kinoko_destroy_script_callback(&global_callback);
 }
 
@@ -954,7 +715,7 @@ void kinoko_application_open_archives(void) {
     kinoko_archive_mount("6kinoko_a.dat");
     kinoko_archive_mount("6kinoko_b.dat");
     kinoko_archive_mount("6kinoko_c.dat");
-    kinoko_string_assign_n(&g554, ".cv4", 4);
+    kinoko_string_assign_n(kinoko_act_script_extension, ".cv4", 4);
 }
 
 const KinokoGameObjects *kinoko_game_objects(void) {
@@ -977,7 +738,7 @@ void kinoko_game_prepare_scripts(void) {
 void kinoko_game_register_scripts(void) {
     retdec_trace("469640:sqrat-begin");
     retdec_trace("469640:before-473010");
-    function_473010();
+    kinoko_register_root_bindings_entry();
     retdec_trace("469640:after-473010");
     if (kinoko_primary_vm) game_startup_vm = (struct SQVM *)kinoko_primary_vm;
     else if (game_startup_vm) kinoko_primary_vm = (struct SQVM *)game_startup_vm;
@@ -1060,10 +821,5 @@ void kinoko_game_split_path(const char *path, char *directory) {
     kinoko_path_split(path, directory, NULL);
 }
 
-
-
 int32_t kinoko_host_explicit_vm(void) { return retdec_explicit_vm; }
 
-const void *kinoko_string_layout_methods(void) { return &kinoko_string_layout_methods_storage; }
-const void *kinoko_actor_pool_methods(void) { return &kinoko_actor_pool_methods_storage; }
-const void *kinoko_actor_pool_base_methods(void) { return &kinoko_actor_pool_base_methods_storage; }

@@ -249,8 +249,8 @@ extern "C" int32_t __fastcall kinoko_method_clone_string_layout(int32_t source,v
 extern "C" int32_t __fastcall kinoko_method_destroy_string_layout(int32_t object,void*) {
     return object?kinoko_method_delete_string_layout(object,nullptr,1):0;
 }
-extern "C" int32_t g926;
-namespace { inline auto string_layout_type_info = &g926; }
+extern "C" int32_t kinoko_string_layout_type_identity;
+namespace { inline auto string_layout_type_info = &kinoko_string_layout_type_identity; }
 extern "C" int32_t __fastcall kinoko_method_string_layout_type(int32_t,void*) {
     return kinoko::legacy::address(string_layout_type_info);
 }

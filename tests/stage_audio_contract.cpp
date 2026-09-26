@@ -75,11 +75,11 @@ struct Module {
 extern "C" int kinoko_test_bgm_pause(void) {
     AudioTestBuffer buffer;
     BgmTrack saved = std::move(g_retdec_bgm_track);
-    const int32_t old_handle = g637;
+    const int32_t old_handle = kinoko_active_bgm_slot;
     g_retdec_bgm_track = BgmTrack{};
     auto& track = g_retdec_bgm_track;
     track.buffer.reset(&buffer);
-    track.handle = g637 = 123;
+    track.handle = kinoko_active_bgm_slot = 123;
     track.buffer_bytes = 65536;
     track.started = track.playing = track.looping = 1;
     track.play_offset = buffer.position = 4096;
@@ -97,7 +97,7 @@ extern "C" int kinoko_test_bgm_pause(void) {
     retdec_bgm_stop_for_handle(123);
     const bool stopped = buffer.position == 0 && !track.started && !track.playing;
     g_retdec_bgm_track = std::move(saved);
-    g637 = old_handle;
+    kinoko_active_bgm_slot = old_handle;
     CHECK(paused && serviced && resumed && stopped);
     CHECK(buffer.releases == 1);
     std::puts("PASS: PauseBgm toggles without rewind or service restart; StopBgm still rewinds");

@@ -12,7 +12,7 @@
 
 extern "C" {
 extern struct SQVM *kinoko_primary_vm;
-void _3f__3f_3_40_YAXPAX_40_Z(int32_t* allocation);
+void kinoko_host_free_allocation(int32_t* allocation);
 }
 
 namespace {
@@ -148,7 +148,7 @@ extern "C" KinokoActor *__fastcall kinoko_actor_dispose_method(KinokoActor *acto
 }
 extern "C" KinokoActor *__fastcall kinoko_actor_delete_method(KinokoActor *actor, void*, unsigned char flags) {
     kinoko_actor_dispose(actor);
-    if (flags & 1) _3f__3f_3_40_YAXPAX_40_Z(reinterpret_cast<int32_t *>(actor));
+    if (flags & 1) kinoko_host_free_allocation(reinterpret_cast<int32_t *>(actor));
     return actor;
 }
 extern "C" int32_t __fastcall kinoko_actor_set_step_method(KinokoActor *actor, void*, KinokoOwnedObjectWords object) {

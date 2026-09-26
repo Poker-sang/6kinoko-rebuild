@@ -6,20 +6,20 @@
 #include <cstring>
 
 extern "C" {
-extern int32_t g534, g535, g545, g546, g550;
-extern char *g767;
-extern char g547, g548, g549;
+extern int32_t kinoko_ime_context_slot, kinoko_ime_default_window_slot, kinoko_ime_text_limit, kinoko_ime_commit_pending, kinoko_ime_cursor;
+extern char *kinoko_game_window_slot;
+extern char kinoko_ime_text_changed, kinoko_ime_composition_changed, kinoko_ime_enabled;
 }
 namespace {
-inline int32_t& input_context_slot = g534;
-inline int32_t& default_window_slot = g535;
-inline int32_t& text_limit_slot = g545;
-inline int32_t& commit_pending_slot = g546;
-inline char& text_changed_slot = g547;
-inline char& composition_changed_slot = g548;
-inline char& enabled_slot = g549;
-inline int32_t& cursor_slot = g550;
-inline char*& game_window_slot = g767;
+inline int32_t& input_context_slot = kinoko_ime_context_slot;
+inline int32_t& default_window_slot = kinoko_ime_default_window_slot;
+inline int32_t& text_limit_slot = kinoko_ime_text_limit;
+inline int32_t& commit_pending_slot = kinoko_ime_commit_pending;
+inline char& text_changed_slot = kinoko_ime_text_changed;
+inline char& composition_changed_slot = kinoko_ime_composition_changed;
+inline char& enabled_slot = kinoko_ime_enabled;
+inline int32_t& cursor_slot = kinoko_ime_cursor;
+inline char*& game_window_slot = kinoko_game_window_slot;
 // The original IME ABI exposes scalar control slots to the host. This view
 // gives those borrowed slots field names while this module owns the text,
 // composition and attribute buffers below.

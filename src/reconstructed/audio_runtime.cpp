@@ -125,11 +125,11 @@ SoundEntry g_retdec_se_entries[RETDEC_SE_MAX_ENTRIES];
 int g_retdec_se_entry_count = 0;
 BgmTrack g_retdec_bgm_track;
 std::list<BgmTrack> fading_tracks;
-inline int32_t& active_bgm_slot = g637;
+inline int32_t& active_bgm_slot = kinoko_active_bgm_slot;
 inline char& packed_assets_slot = kinoko_packed_assets;
-inline int32_t& primary_device_slot = g876;
-inline char*& dsound_device_slot = g877;
-inline int32_t& listener_slot = g878;
+inline int32_t& primary_device_slot = kinoko_audio_primary_device_slot;
+inline char*& dsound_device_slot = kinoko_audio_device_slot;
+inline int32_t& listener_slot = kinoko_audio_listener_slot;
 // Own both workers, their wake events and the lock protecting playback state.
 // Events and the lock outlive the joined workers, including partial startup.
 struct AudioWorkers {

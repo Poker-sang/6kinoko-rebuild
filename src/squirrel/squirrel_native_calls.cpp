@@ -12,13 +12,13 @@ extern "C" int32_t function_46b6f0(int32_t, int32_t, int32_t, int32_t);
 extern "C" int32_t function_471720(int32_t, int32_t, int32_t);
 
 extern "C" {
-extern char g560;
+extern char kinoko_sqrat_trace_enabled;
 void retdec_trace_i32(const char*, int32_t);
 }
 
 namespace {
 using namespace kinoko::script;
-inline char& sqrat_trace_slot = g560;
+inline char& sqrat_trace_slot = kinoko_sqrat_trace_enabled;
 constexpr const char* argument_error = "Incorrect function argument";
 constexpr const char* conversion_error = "sq_get*() failed (type error)";
 int32_t error(HSQUIRRELVM vm, const char* message) {

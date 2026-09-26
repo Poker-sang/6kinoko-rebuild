@@ -17,13 +17,13 @@
 #include <list>
 
 extern "C" {
-extern char *g767;
+extern char *kinoko_game_window_slot;
 
 HRESULT WINAPI D3DXCreateTexture(IDirect3DDevice9*,UINT,UINT,UINT,DWORD,
                                 D3DFORMAT,D3DPOOL,IDirect3DTexture9**);
 }
 namespace {
-inline char*& game_window_slot = g767;
+inline char*& game_window_slot = kinoko_game_window_slot;
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::StringView;

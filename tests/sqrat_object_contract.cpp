@@ -3,7 +3,7 @@
 #include <cstdlib>
 
 extern "C" {
-char g560 = 0;
+char kinoko_sqrat_trace_enabled = 0;
 int32_t kinoko_sqrat_object_vtable(void) { return 0x12121212; }
 int32_t kinoko_sqrat_root_vtable(void) { return 0x34343434; }
 void retdec_trace_i32(const char*, int32_t) {}
@@ -186,11 +186,11 @@ void callback(HSQUIRRELVM vm) {
     words[3] = failing.words[0]; words[4] = failing.words[1];
     sq_newclosure(vm, handler, 0); sq_seterrorhandler(vm);
     const int errors = error_handler_calls;
-    g560 = 0;
+    kinoko_sqrat_trace_enabled = 0;
     require(kinoko_sqrat_invoke_callback((const void *)(words.data())) == address(vm), "failing call still returns VM");
     require(error_handler_calls == errors, "zero error handler flag");
     sq_getlasterror(vm); require(get_string(vm) == "callback-failure", "failed callback preserves source error"); sq_pop(vm, 1);
-    g560 = 1; kinoko_sqrat_invoke_callback((const void *)(words.data())); g560 = 0;
+    kinoko_sqrat_trace_enabled = 1; kinoko_sqrat_invoke_callback((const void *)(words.data())); kinoko_sqrat_trace_enabled = 0;
     require(error_handler_calls == errors + 1, "original handler flag honored");
     require(kinoko_sqrat_invoke_callback((const void *)(intptr_t)(0)) == -1, "null callback guard");
     top(vm, base, "failure callback stack");

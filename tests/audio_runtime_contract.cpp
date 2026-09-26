@@ -23,8 +23,8 @@ static_assert(std::is_nothrow_move_constructible_v<BgmTrack>);
 }
 
 extern "C" {
-int32_t g637 = 0, kinoko_archive_count = 1, g876 = 0, g878 = 0;
-char* g877 = nullptr;
+int32_t kinoko_active_bgm_slot = 0, kinoko_archive_count = 1, kinoko_audio_primary_device_slot = 0, kinoko_audio_listener_slot = 0;
+char* kinoko_audio_device_slot = nullptr;
 char kinoko_packed_assets = 0;
 const KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
     static const KinokoAudioHostSymbols symbols{&critical_section_identity, "test"};
@@ -169,14 +169,14 @@ int main() {
     g_retdec_bgm_track.buffer.reset(&retired_buffer);
     g_retdec_bgm_track.handle = first;
     g_retdec_bgm_track.retirement_requested = true;
-    g637 = first;
+    kinoko_active_bgm_slot = first;
     manager.active.head->push_back(first);
     retdec_bgm_service_all_locked();
     CHECK(manager.active.head->empty() && manager.retired.head->size() == 1);
     CHECK(retdec_audio_handle_lookup(&manager.handles, first) && retired_buffer.releases == 0);
     release_retired_requests_locked();
     CHECK(!retdec_audio_handle_lookup(&manager.handles, first));
-    CHECK(manager.retired.head->empty() && retired_buffer.releases == 1 && !g637);
+    CHECK(manager.retired.head->empty() && retired_buffer.releases == 1 && !kinoko_active_bgm_slot);
 
     // More than 32 overlapping BGM streams must not evict an unrelated owner.
     std::array<Buffer, 34> overlapping;

@@ -11,12 +11,12 @@
 #include <memory>
 #include <unordered_set>
 
-extern "C" int32_t g664;
+extern "C" int32_t kinoko_act_vm_abi_slot;
 
 namespace {
 using kinoko::legacy::address;
 using kinoko::legacy::pointer;
-inline int32_t& act_layer_vm_slot = g664;
+inline int32_t& act_layer_vm_slot = kinoko_act_vm_abi_slot;
 using kinoko::legacy::field;
 namespace sqrat = kinoko::script::upstream;
 

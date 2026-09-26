@@ -2,8 +2,8 @@
    Exercise actual document/layer/key/map virtual clones, without manually
    performing the second SetLayer that masked the missing consumer behavior. */
 static int test_map_lazy_binding(int32_t vm, int32_t *root) {
-    const int32_t previous_default_vm = g664;
-    g664 = vm;
+    const int32_t previous_default_vm = kinoko_act_vm_abi_slot;
+    kinoko_act_vm_abi_slot = vm;
     int32_t source[60] = {0};
     int32_t *resource = (int32_t*)calloc(1,100);
     struct retdec_mcd_data *data = (struct retdec_mcd_data*)calloc(1,sizeof(*data));
@@ -198,7 +198,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
         retdec_destroy_cact_with_flags(PTR(copy),1);
     }
     retdec_destroy_cact_object(PTR(source));
-    g664 = previous_default_vm;
+    kinoko_act_vm_abi_slot = previous_default_vm;
     puts("PASS: virtual ACT clone lazy map binding and publication property aliases");
     return 0;
 }

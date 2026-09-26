@@ -7,7 +7,7 @@
 namespace {
 using namespace kinoko::script;
 using namespace kinoko::script::binding;
-inline int32_t& primary_vm_slot = g664;
+inline int32_t& primary_vm_slot = kinoko_act_vm_abi_slot;
 inline auto show_call_stack_entry = function_470ee0;
 inline auto register_root_table_entry = function_48a400;
 inline auto register_root_bindings_entry = function_48a430;
@@ -147,4 +147,4 @@ int32_t kinoko_register_root_bindings() {
     return register_root_bindings_entry(vm_address, address(&root.value));
 }
 } // namespace
-extern "C" int32_t function_473010(void) { return kinoko_register_root_bindings(); }
+extern "C" int32_t kinoko_register_root_bindings_entry(void) { return kinoko_register_root_bindings(); }

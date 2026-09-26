@@ -28,8 +28,8 @@ static int test_act_document_file_lifetime(void) {
     struct script_io_stream stream = {0}; stream.vtable = methods;
     const unsigned char saved_compact = kinoko_compile_act_output;
     const int32_t saved_archives = kinoko_archive_count;
-    char *saved_vm = kinoko_primary_vm;
-    int32_t (*saved_delete)(unsigned char) = kinoko_act_document_methods_storage.delete_object;
+    struct SQVM *saved_vm = kinoko_primary_vm;
+    int32_t (__fastcall *saved_delete)(int32_t, void *, unsigned char) = kinoko_act_document_methods_storage.delete_object;
     const char *valid_path = "act-document-generated.bin";
     const char *short_path = "act-document-truncated.bin";
     unsigned char encoded[8192 + 19] = {0};
@@ -67,11 +67,11 @@ static int test_act_document_file_lifetime(void) {
 
     /* Observe the real virtual deleting destructor, forwarding to its normal
        implementation. An exclusive file open proves the reader closed first. */
-    kinoko_act_document_methods_storage.delete_object = (int32_t (*)(unsigned char))act_file_delete_probe;
+    kinoko_act_document_methods_storage.delete_object = act_file_delete_probe;
     act_file_deletes = act_file_close_error = 0;
     act_file_probe_path = valid_path;
-    int32_t (*saved_set_layer)(int32_t) = kinoko_act_layout_methods_storage.associate;
-    kinoko_act_layout_methods_storage.associate = (int32_t (*)(int32_t))act_file_set_layer_probe;
+    int32_t (__fastcall *saved_set_layer)(int32_t, void *, int32_t) = kinoko_act_layout_methods_storage.associate;
+    kinoko_act_layout_methods_storage.associate = act_file_set_layer_probe;
     act_file_layout_binds = 0;
     KinokoActDocument *loaded = kinoko_act_document_create();
     CHECK(loaded && kinoko_act_document_load(loaded, valid_path));
@@ -100,27 +100,27 @@ static int test_act_document_file_lifetime(void) {
         const int before = act_file_deletes;
         /* 466100 continues after failed parse; cleanup occurs only on clear. */
         CHECK(kinoko_stage_load(short_path));
-        CHECK(act_file_deletes == before && g604 == 1);
+        CHECK(act_file_deletes == before && kinoko_stage_count == 1);
         kinoko_clear_global_stages();
         CHECK(act_file_deletes == before + 1 && !act_file_close_error);
-        CHECK(g604 == 0 && kinoko_stage_list_first() == kinoko_stage_list_end());
+        CHECK(kinoko_stage_count == 0 && kinoko_stage_list_first() == kinoko_stage_list_end());
     }
     /* The entire accepted document remains owned after list publication; a
        clear destroys it exactly once, including its layer/script allocations. */
     act_file_probe_path = valid_path;
     const int before = act_file_deletes;
     KinokoStageOwner *published = kinoko_stage_load(valid_path);
-    CHECK(published && g604 == 1 && act_file_deletes == before);
+    CHECK(published && kinoko_stage_count == 1 && act_file_deletes == before);
     CHECK(kinoko_stage_list_value(kinoko_stage_list_first()) == published);
     kinoko_clear_global_stages();
-    CHECK(g604 == 0 && act_file_deletes == before + 1 && !act_file_close_error);
+    CHECK(kinoko_stage_count == 0 && act_file_deletes == before + 1 && !act_file_close_error);
     kinoko_clear_global_stages();
     CHECK(act_file_deletes == before + 1);
     kinoko_stage_list_destroy();
 
     /* With no global list, the caller owns the same complete cleanup path. */
     KinokoStageOwner *unpublished = kinoko_stage_load(valid_path);
-    CHECK(unpublished && g603 == 0 && act_file_deletes == before + 1);
+    CHECK(unpublished && kinoko_stage_list_slot == 0 && act_file_deletes == before + 1);
     kinoko_stage_owner_destroy(unpublished);
     CHECK(act_file_deletes == before + 2 && !act_file_close_error);
     kinoko_stage_owner_destroy(NULL);

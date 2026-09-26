@@ -23,7 +23,8 @@ from audit_legacy_reachability import definitions, PROTOTYPE
 from audit_unused_crt import mask, sha, definitions as named_definitions
 
 ROOT = Path(__file__).resolve().parents[1]
-MAIN = 'src/decompiled/6kinoko_rebuilt.c'
+MAIN = 'src/reconstructed/runtime_host.cpp'
+HISTORICAL_MAIN = 'src/decompiled/6kinoko_rebuilt.c'
 REFERENCE = 'src/decompiled/6kinoko.exe.c'
 NAMED_TOKEN = re.compile(r'\b[A-Za-z_]\w*\b')
 NAMED_PROTOTYPE = re.compile(
@@ -212,10 +213,14 @@ def git(*args):
 
 
 def audit(source_ref, maps, seeds, *, include_named_functions=False):
+    global MAIN
     commit = git('rev-parse', '--verify', source_ref + '^{commit}').decode().strip()
+    paths = sorted(git('ls-tree', '-r', '--name-only', commit).decode().splitlines())
+    MAIN = ('src/reconstructed/runtime_host.cpp' if 'src/reconstructed/runtime_host.cpp' in paths
+            else HISTORICAL_MAIN)
     text = git('show', commit + ':' + MAIN).decode()
     external, corpus = {}, {}
-    for path in sorted(git('ls-tree', '-r', '--name-only', commit).decode().splitlines()):
+    for path in paths:
         if path == REFERENCE or not (path.startswith(('src/', 'include/', 'tests/', 'third_party/', 'tools/', 'cmake/', '.github/'))
                                     or path == 'CMakeLists.txt'):
             continue

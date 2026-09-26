@@ -85,7 +85,6 @@
 #include <d3d9.h>
 #include <dinput.h>
 #include <zlib.h>
-#include "retdec_asm_stubs.h"
 #include "kinoko/squirrel_compile_bridge.h"
 #include "kinoko/squirrel_vm_bootstrap.h"
 #include "kinoko/squirrel_value_bridge.h"
@@ -120,80 +119,19 @@ extern "C" {
 
 extern int32_t kinoko_script_assets_packed(void);
 
-void retdec_trace_ref_watch(const char *label, int32_t shared_state,
-                                   int32_t type, int32_t data);
-
 extern int32_t retdec_primary_shared_state;
 
 extern int32_t retdec_release_watch_data[8];
 
 extern int32_t retdec_release_watch_count;
 
-int32_t retdec_is_release_watch_data(int32_t data);
-
 struct retdec_mcd_data;
-
-extern void retdec_mcd_free(struct retdec_mcd_data *data);
-
-void retdec_act_free_map_records(int32_t layout);
-
-int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
-                               int32_t version);
-
-int32_t retdec_begin_stage_this(int32_t resource_ptr,
-                                        int32_t stage);
-
-extern int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
-                                          int32_t resource_ptr,
-                                          int32_t *active_count);
-
-int32_t retdec_publish_cact_resource2d_class(int32_t vm,
-                                                     int32_t root_object);
-
-extern int32_t retdec_load_act_texture(const char *texture_name);
-
-int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
-                                          float x, float y);
-
-int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
-                                                int32_t layer);
-
-int32_t retdec_c2dlayout_draw_impl(int32_t layout,
-                                           float x, float y);
 
 void retdec_trace_star_state(const char *phase, int32_t actor);
 
 uint32_t timeGetTime(void);
 
-uint32_t timeBeginPeriod(uint32_t period);
-
-extern void retdec_trace(const char *message);
-
-__declspec(noinline) void retdec_trace_i32(const char *label,
-                                                  int32_t value);
-
-void retdec_trace_squirrel_name(const char *label, int32_t name_ptr);
-
-void retdec_trace_squirrel_table_entries(const char *label,
-                                                int32_t table_ptr);
-
-void retdec_destroy_cact_script(int32_t script_ptr);
-
-void retdec_destroy_cact_object(int32_t object_ptr);
-
-int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
-                                               unsigned char flags);
-
-void retdec_trace_hresult(const char *label, long value);
-
-int _vsprintf_compat(char *buffer, const char *format, va_list args);
-
 typedef float float32_t;
-
-typedef long double float80_t;
-
-
-
 
 struct SquirrelObjectMethods {
     int32_t (__fastcall *destroy)(int32_t object, void *unused,
@@ -265,9 +203,9 @@ struct ActLayerMethods {
     int32_t (__fastcall *clone)(int32_t receiver, void* unused_edx);
     int32_t (__fastcall *associate)(
     KinokoActLayer *layer, void *unused, KinokoActResource *resource);
-    KinokoActLayer * (__fastcall *set_parent)(KinokoActLayer *layer,
+    KinokoActLayer * (__fastcall *world_position)(KinokoActLayer *layer,
     void *unused, float *x, float *y, float *z);
-    int32_t (__fastcall *get_parent)(int32_t receiver, void* unused_edx, int32_t parent, int32_t flags);
+    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, int32_t parent, int32_t flags);
 };
 
 struct ActLayerLayoutMethods {
@@ -292,9 +230,9 @@ struct ActDocumentMethods {
     int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
     int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
     KinokoActDocument * (__fastcall *clone)(KinokoActDocument *source, void *unused);
-    int32_t (__fastcall *associate)(KinokoActDocument *document, void *unused, const char *prefix);
-    int32_t (__fastcall *begin)(KinokoActDocument *document, void *unused);
-    int32_t (__fastcall *end)(KinokoActDocument *document, void *unused);
+    int32_t (__fastcall *load_resources)(KinokoActDocument *document, void *unused, const char *prefix);
+    int32_t (__fastcall *suspend_resources)(KinokoActDocument *document, void *unused);
+    int32_t (__fastcall *resume_resources)(KinokoActDocument *document, void *unused);
 };
 
 struct ActLayoutMethods {
@@ -318,8 +256,8 @@ struct ChipResourceMethods {
     int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
     int32_t * (*type)(void);
     int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, int32_t vm);
-    int32_t (__fastcall *resource_a)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-    int32_t (__fastcall *resource_b)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    int32_t (__fastcall *resource_42f800)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    int32_t (__fastcall *resource_42f6c0)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
     int32_t (__fastcall *clone)(int32_t receiver, void* unused_edx);
     int32_t (__fastcall *load)(int32_t receiver, void* unused_edx, const char* prefix);
 };
@@ -340,7 +278,7 @@ struct MapLayoutMethods {
     int32_t left, int32_t top, int32_t right, int32_t bottom);
 };
 
-struct MapColorMethods {
+struct QuadColorMethods {
     int32_t (__fastcall *destroy)(int32_t sprite, void *unused, int32_t flags);
     uint32_t (__fastcall *set_color)(KinokoColoredQuad *quad, void *unused, uint32_t color);
     uint32_t (__fastcall *set_vertex_colors)(KinokoColoredQuad *quad, void *unused, const uint32_t *colors);
@@ -355,8 +293,8 @@ struct TextureResourceMethods {
     int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
     int32_t * (*type)(void);
     int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, int32_t vm);
-    int32_t (__fastcall *resource_a)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-    int32_t (__fastcall *resource_b)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    int32_t (__fastcall *resource_446920)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    int32_t (__fastcall *resource_4467e0)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
     int32_t (__fastcall *clone)(int32_t receiver, void* unused_edx);
     int32_t (__fastcall *load)(int32_t receiver, void* unused_edx, const char* prefix);
     int32_t (__fastcall *unload)(int32_t receiver, void* unused_edx);
@@ -370,8 +308,8 @@ struct RenderTargetMethods {
     int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
     int32_t * (*type)(void);
     int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, int32_t vm);
-    int32_t (__fastcall *resource_a)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-    int32_t (__fastcall *resource_b)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    int32_t (__fastcall *resource_4499a0)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    int32_t (__fastcall *resource_449860)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
     int32_t (__fastcall *clone)(int32_t receiver, void* unused_edx);
     int32_t (__fastcall *load)(int32_t receiver, void* unused_edx, const char* prefix);
     int32_t (__fastcall *unload)(int32_t receiver, void* unused_edx);
@@ -391,27 +329,18 @@ struct SpriteMethods {
     int32_t texture, int32_t x, int32_t y, int32_t width, int32_t height);
     int32_t (__fastcall *draw_bounds)(KinokoSprite *sprite, void *unused,
     float left, float top, float right, float bottom);
-    int32_t (__fastcall *draw)(KinokoSprite *sprite, void *unused, float x, float y);
-    int32_t (__fastcall *draw_affine)(KinokoSprite *sprite, void *unused, float x, float y);
-    int32_t (__fastcall *draw_transform)(KinokoSprite *sprite, void *unused, float x, float y);
+    int32_t (__fastcall *draw_404770)(KinokoSprite *sprite, void *unused, float x, float y);
+    int32_t (__fastcall *draw_404bc0)(KinokoSprite *sprite, void *unused, float x, float y);
+    int32_t (__fastcall *draw_4049c0)(KinokoSprite *sprite, void *unused, float x, float y);
 };
 
-void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1);
-
-
-int32_t kinoko_script_close_vm(void);
-
-
-void* kinoko_script_root(void);
-
+void kinoko_host_free_allocation(int32_t * a1);
 
 int32_t kinoko_host_register_act_script_abi(int32_t a1, int32_t a2);
 
 int32_t kinoko_host_construct_layer_abi(int32_t a1);
 
 int32_t function_41eff0(int32_t a1);
-
-int32_t __fastcall kinoko_act_layer_associate_method(int32_t receiver, void* unused_edx);
 
 int32_t *kinoko_c2d_layout_type(void);
 
@@ -437,17 +366,6 @@ int32_t function_4495a0(int32_t a1);
 
 int32_t __fastcall kinoko_color_destroy(int32_t receiver, void* unused_edx, char flags);
 
-int32_t kinoko_clear_global_stages(void);
-
-int32_t kinoko_clear_global_sound(void);
-
-int32_t retdec_root_table_register_resource(int32_t root_object,
-                                                    int32_t resource_ptr);
-
-int32_t retdec_root_table_construct_this(int32_t resource_ptr,
-                                                 int32_t vm,
-                                                 int32_t output_ptr);
-
 int32_t kinoko_actor_register_script_class(void);
 
 int32_t kinoko_host_clear_stages(void);
@@ -456,31 +374,19 @@ int32_t kinoko_host_initialize_camera(void);
 
 int32_t kinoko_camera_class_copy_abi(int32_t a1, int32_t a2);
 
-int32_t function_466770(int32_t * a1, int32_t a2, int32_t a3, int32_t a4);
-
-int32_t kinoko_camera_update_entry(int32_t a1);
-
 int32_t function_4669d0(void);
 
 int32_t kinoko_host_register_collision_map_abi(int32_t a1);
 
 int32_t kinoko_host_append_render_item(int32_t * a1);
 
-int32_t kinoko_register_input_class(void);
-
 int32_t kinoko_host_find_map_layout_abi(int32_t a1);
-
-int32_t function_46f200(int32_t * a1, int32_t a2, int32_t a3, int32_t a4);
 
 int32_t function_46fac0(void);
 
 int32_t kinoko_host_create_map_layer_abi(int32_t a1);
 
 int32_t kinoko_host_clear_sound(void);
-
-int32_t function_470df0(int32_t a1, int32_t a2);
-
-int32_t function_470ee0(int32_t a1);
 
 int32_t kinoko_host_show_message_abi(int32_t a1);
 
@@ -490,42 +396,9 @@ int32_t kinoko_host_milliseconds(void);
 
 int32_t kinoko_host_close_window(void);
 
-int32_t function_471160(int32_t callback_ptr, int32_t vm, int32_t index);
-
-int32_t function_471330(int32_t callback_ptr, int32_t vm, int32_t index);
-
-int32_t function_471880(int32_t callback_ptr, int32_t vm, int32_t index);
-
-int32_t function_471960(int32_t callback_ptr, int32_t vm, int32_t index);
-
-
-int32_t function_471bc0(int32_t a1);
-
-int32_t function_471c10(int32_t a1);
-
-int32_t function_471d90(int32_t a1);
-
-int32_t function_471eb0(int32_t a1);
-
-int32_t function_471f10(int32_t a1);
-
-int32_t function_471fd0(int32_t a1);
-
-int32_t function_472080(int32_t a1);
-
-int32_t function_4720e0(int32_t a1);
-
-int32_t function_472140(int32_t a1);
-
 int32_t kinoko_script_bind_root_value(int32_t * a1, int32_t * a2, char * a3, int32_t a4);
 
 int32_t kinoko_script_bind_root_integer(int32_t * a1, int32_t a2, char * a3);
-
-int32_t function_4722e0(int32_t *stream_ptr, int32_t object_vtable,
-                        int32_t object_type, int32_t object_data);
-
-int32_t function_472820(int32_t stream_ptr, int32_t object_vtable,
-                        int32_t object_type, int32_t object_data);
 
 int32_t function_472c90(int32_t path_ptr, int32_t object_vtable,
                         int32_t object_type, int32_t object_data);
@@ -533,37 +406,13 @@ int32_t function_472c90(int32_t path_ptr, int32_t object_vtable,
 int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,
                         int32_t object_type, int32_t object_data);
 
-int32_t function_473010(void);
-
 int32_t kinoko_host_open_vm_abi(int32_t a1);
-
-int32_t  kinoko_sqplus_release_vm_wrappers(void);
-
-int32_t  kinoko_sqplus_print(struct SQVM * vm, const char *format, ...);
-
-void * kinoko_sqplus_root_object(void);
-
-int32_t  kinoko_sqplus_select_vm(struct SQVM * a1);
 
 extern int32_t kinoko_host_get_delegate_abi(int32_t source_ptr, int32_t *target_ptr);
 
 int32_t kinoko_host_create_native_instance_abi(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 
-int32_t kinoko_register_stage_list_cleanup(void);
-
-int32_t kinoko_register_render_queue_cleanup(void);
-
-int32_t kinoko_register_sound_tree_cleanup(void);
-
-int32_t function_4d47f0(void);
-
-int32_t function_4d4860(void);
-
-extern int32_t (__fastcall *kinoko_color_methods_storage)(int32_t, void*, char);
-
-extern int32_t (__fastcall *kinoko_chip_quad_methods_storage)(int32_t, void*, char);
-
-extern int32_t (__fastcall *kinoko_actor_pool_base_methods_storage)(int32_t, void*, unsigned char);
+int32_t kinoko_host_destroy_global_callback(void);
 
 extern const char * kinoko_application_error_text;
 
@@ -571,7 +420,7 @@ extern const char * kinoko_application_title_text;
 
 extern const char * kinoko_audio_error_text;
 
-extern struct MapColorMethods kinoko_layout_color_methods_storage;
+extern struct QuadColorMethods kinoko_layout_color_methods_storage;
 
 struct StringLayoutMethods {
     int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
@@ -592,25 +441,25 @@ extern int32_t kinoko_null_object_type;
 
 extern int32_t kinoko_null_object_value;
 
-extern int32_t g534;
+extern int32_t kinoko_ime_context_slot;
 
-extern int32_t g535;
+extern int32_t kinoko_ime_default_window_slot;
 
-extern int32_t g545;
+extern int32_t kinoko_ime_text_limit;
 
-extern int32_t g546;
+extern int32_t kinoko_ime_commit_pending;
 
-extern char g547;
+extern char kinoko_ime_text_changed;
 
-extern char g548;
+extern char kinoko_ime_composition_changed;
 
-extern char g549;
+extern char kinoko_ime_enabled;
 
-extern int32_t g550;
+extern int32_t kinoko_ime_cursor;
 
 extern int32_t kinoko_act_script_extension[7];
 
-extern char g560;
+extern char kinoko_sqrat_trace_enabled;
 
 extern int32_t kinoko_actor_user_key_storage[3];
 
@@ -618,16 +467,11 @@ extern int32_t kinoko_actor_step_key_storage[3];
 
 extern int32_t kinoko_actor_class_storage[3];
 
-extern int32_t g603;
+extern int32_t kinoko_stage_list_slot;
 
-extern int32_t g604;
+extern int32_t kinoko_stage_count;
 
 extern int32_t kinoko_camera_class_storage[3];
-
-
-
-
-
 
 extern int32_t kinoko_render_layer_owner_slot;
 
@@ -635,23 +479,23 @@ extern int32_t kinoko_input_class_storage[3];
 
 extern int32_t kinoko_map_class_storage[3];
 
-extern int32_t g637;
+extern int32_t kinoko_active_bgm_slot;
 
-extern KinokoIntegerMap* g638;
+extern KinokoIntegerMap* kinoko_sound_lookup;
 
-extern int32_t g639;
+extern int32_t kinoko_sound_lookup_count;
 
-extern char g642;
+extern char kinoko_skip_vm_owner_reset;
 
-extern int32_t g643;
+extern int32_t kinoko_newest_shared_state;
 
 extern __declspec(align(4096)) struct SQVM *kinoko_primary_vm;
 
-extern int32_t g645;
+extern int32_t kinoko_cached_root_slot;
 
-extern int32_t unk_5149EC[3];
+extern int32_t kinoko_vm_thread_wrapper[3];
 
-extern int32_t g664;
+extern int32_t kinoko_act_vm_abi_slot;
 
 extern char kinoko_compile_act_output;
 
@@ -663,17 +507,17 @@ extern KinokoCriticalSection kinoko_graphics_lock;
 
 extern int32_t kinoko_script_root_storage[3];
 
-extern char * g767;
+extern char * kinoko_game_window_slot;
 
 extern unsigned char g_retdec_keyboard_state[256];
 
 extern char kinoko_packed_assets;
 
-extern int32_t g876;
+extern int32_t kinoko_audio_primary_device_slot;
 
-extern char * g877;
+extern char * kinoko_audio_device_slot;
 
-extern int32_t g878;
+extern int32_t kinoko_audio_listener_slot;
 
 extern int32_t kinoko_layout_type_identity;
 
@@ -681,7 +525,7 @@ extern int32_t kinoko_chip_type_identity;
 
 extern int32_t kinoko_map_type_identity;
 
-extern int32_t g926;
+extern int32_t kinoko_string_layout_type_identity;
 
 extern int32_t kinoko_texture_type_identity;
 
@@ -705,7 +549,7 @@ extern int32_t kinoko_layer_set_pair[2];
 
 extern int32_t kinoko_layer_get_pair[2];
 
-extern int32_t g1224;
+extern int32_t kinoko_script_void_result_identity;
 
 extern struct SquirrelObjectMethods kinoko_squirrel_object_methods_storage;
 
@@ -743,7 +587,7 @@ extern struct ChipResourceMethods kinoko_chip_resource_methods_storage;
 
 extern struct MapLayoutMethods kinoko_map_layout_methods_storage;
 
-extern struct MapColorMethods kinoko_map_color_methods_storage;
+extern struct QuadColorMethods kinoko_map_color_methods_storage;
 
 extern struct TextureResourceMethods kinoko_texture_resource_methods_storage;
 
@@ -751,26 +595,9 @@ extern struct RenderTargetMethods kinoko_render_target_methods_storage;
 
 extern struct SpriteMethods kinoko_sprite_methods_storage;
 
-
-
-
-
-
-
-int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
-                                          float32_t x, float32_t y);
-
 int32_t kinoko_host_register_act_script_abi(int32_t script, int32_t environment);
 
 int32_t kinoko_host_construct_layer_abi(int32_t storage);
-
-uint32_t kinoko_actor_motion_update_mask(void);
-
-void kinoko_actor_render_set_blend(int32_t mode);
-
-int32_t kinoko_actor_render_submit(KinokoAnimationFrame *frame);
-
-const void *kinoko_pat_frame_methods(void);
 
 int32_t kinoko_collision_refresh_abi(int32_t this_ptr);
 
@@ -790,127 +617,20 @@ int32_t kinoko_script_bind_root_integer(int32_t *object, int32_t value, char *na
 
 __declspec(noinline) int32_t retdec_stack_vm(void);
 
-const KinokoSqplusVmSlots *kinoko_sqplus_vm_slots(void);
-
-struct SQVM *kinoko_script_open_primary_vm(int32_t stack_size);
-
-typedef int32_t (*retdec_stream_callback)(int32_t, int32_t, int32_t);
-
-typedef int32_t (__cdecl *retdec_native_fn)(void);
-
-typedef struct retdec_native_entry {
-    const char *name;
-    retdec_native_fn function_ptr;
-    int32_t argument_size;
-    const char *type_mask;
-} retdec_native_entry;
-
-int32_t kinoko_sqrat_object_vtable(void);
-
-int32_t kinoko_sqrat_root_vtable(void);
-
-int32_t kinoko_actor_vtable(void);
-
-int32_t kinoko_actor_step_key(void);
-
-int32_t kinoko_squirrel_object_vtable(void);
-
 int32_t kinoko_host_get_delegate_abi(int32_t source_ptr, int32_t *target_ptr);
-
-int32_t *kinoko_native_binding_type(int32_t category);
 
 int32_t kinoko_native_void_type(void);
 
 int32_t kinoko_host_create_native_instance_abi(int32_t vm, int32_t class_name,
                         int32_t native_pointer, int32_t release_hook);
 
-typedef void (__cdecl *retdec_sq_print_fn)(int32_t vm, const char *format, ...);
-
 int32_t kinoko_csv_load_bytes(const char *path, char **bytes);
 
-int32_t kinoko_act_script_output_compiled(void);
+extern int32_t (__fastcall *kinoko_color_methods_storage)(int32_t, void*, char);
 
-const struct KinokoActHostSymbols* kinoko_act_host_symbols(void);
+extern int32_t (__fastcall *kinoko_chip_quad_methods_storage)(int32_t, void*, char);
 
-const struct KinokoAudioHostSymbols* kinoko_audio_host_symbols(void);
-
-const KinokoCameraMapScriptSymbols *kinoko_camera_map_script_symbols(void);
-
-const KinokoInputScriptSymbols *kinoko_input_script_symbols(void);
-
-int32_t *kinoko_input_binding_type(void);
-
-int32_t *kinoko_camera_binding_type(void);
-
-int32_t *kinoko_map_binding_type(void);
-
-const void *kinoko_actor_owner_methods(void);
-
-const void *kinoko_actor_render_layer_methods(void);
-
-void *kinoko_actor_class_object(void);
-
-void *kinoko_actor_user_key(void);
-
-struct SQVM *kinoko_actor_default_vm(void);
-
-void kinoko_actor_motion_host(KinokoActor *actor);
-
-int32_t kinoko_actor_render_host(KinokoActor *actor, KinokoCamera *camera);
-
-void kinoko_actor_manager_refresh_collision(void);
-
-const KinokoRuntimeBootSymbols *kinoko_runtime_boot_symbols(void);
-
-void kinoko_application_initialize_host(void);
-
-const char *kinoko_application_title(void);
-
-const char *kinoko_application_error(void);
-
-void kinoko_application_set_archive_mode(int32_t enabled);
-
-void kinoko_application_open_archives(void);
-
-const KinokoGameObjects *kinoko_game_objects(void);
-
-void kinoko_game_prepare_scripts(void);
-
-void kinoko_game_register_scripts(void);
-
-int32_t kinoko_game_initialize_input(KinokoInputManager *input);
-
-int32_t kinoko_game_update_input(KinokoInputManager *input);
-
-int32_t kinoko_game_load_boot_script(void);
-
-void kinoko_game_update_callback(int32_t trace_index);
-
-int32_t kinoko_game_update_map(KinokoMapManager *map);
-
-void kinoko_game_prepare_map(KinokoMapManager *map, KinokoCamera *camera);
-
-void kinoko_game_clear_map(KinokoMapManager *map);
-
-void kinoko_game_clear_actors(KinokoActorManager *actors);
-
-void kinoko_game_trace_map(KinokoMapManager *map, int32_t drawing);
-
-void kinoko_game_release_script_reference(uint32_t index);
-
-int32_t kinoko_game_close_vm(void);
-
-KinokoScriptCallback *kinoko_game_global_callback(void);
-
-KinokoCollisionState *kinoko_game_collision_state(void);
-
-void kinoko_game_initialize_callback(KinokoScriptCallback *callback);
-
-int32_t kinoko_game_load_map_file(const char *path);
-
-int32_t kinoko_game_release_map_state(void);
-
-void kinoko_game_split_path(const char *path, char *directory);
+extern int32_t (__fastcall *kinoko_actor_pool_base_methods_storage)(int32_t, void*, unsigned char);
 
 #ifdef __cplusplus
 }

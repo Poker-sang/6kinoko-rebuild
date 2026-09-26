@@ -73,20 +73,20 @@ static int test_act_virtual_clone(void) {
         const struct ActLayoutMethods layout_table = kinoko_act_layout_methods_storage;
         const struct ActKeyMethods key_table = kinoko_act_key_methods_storage;
         /* Preserve actual table types without reproducing their layouts. */
-        const void *resource_clone = (const void *)kinoko_texture_resource_methods_storage.clone;
-        const void *layer_clone = (const void *)kinoko_act_layer_methods_storage.clone;
-        const void *set_resource = (const void *)kinoko_act_layer_methods_storage.associate;
-        kinoko_texture_resource_methods_storage.clone = (int32_t (*)(void))probe_clone_resource;
-        kinoko_act_layer_methods_storage.clone = (int32_t (*)(void))probe_clone_layer;
-        kinoko_act_layer_methods_storage.associate = (int32_t (*)(int32_t))probe_clone_set_resource;
-        kinoko_act_key_methods_storage.clone = (int32_t (*)(void))probe_clone_key;
-        kinoko_act_layout_methods_storage.clone = (int32_t (*)(void))probe_clone_layout;
-        kinoko_act_layout_methods_storage.associate = (int32_t (*)(int32_t))probe_clone_bind_layout;
+        int32_t (__fastcall *resource_clone)(int32_t, void *) = kinoko_texture_resource_methods_storage.clone;
+        int32_t (__fastcall *layer_clone)(int32_t, void *) = kinoko_act_layer_methods_storage.clone;
+        int32_t (__fastcall *set_resource)(KinokoActLayer *, void *, KinokoActResource *) = kinoko_act_layer_methods_storage.associate;
+        kinoko_texture_resource_methods_storage.clone = probe_clone_resource;
+        kinoko_act_layer_methods_storage.clone = probe_clone_layer;
+        kinoko_act_layer_methods_storage.associate = probe_clone_set_resource;
+        kinoko_act_key_methods_storage.clone = probe_clone_key;
+        kinoko_act_layout_methods_storage.clone = probe_clone_layout;
+        kinoko_act_layout_methods_storage.associate = probe_clone_bind_layout;
         act_clone_event_count = 0; act_clone_bound_resource = 0;
         KinokoActDocument *copy = kinoko_act_clone((KinokoActDocument *)source, NULL);
-        kinoko_texture_resource_methods_storage.clone = (int32_t (*)(void))resource_clone;
-        kinoko_act_layer_methods_storage.clone = (int32_t (*)(void))layer_clone;
-        kinoko_act_layer_methods_storage.associate = (int32_t (*)(int32_t))set_resource;
+        kinoko_texture_resource_methods_storage.clone = resource_clone;
+        kinoko_act_layer_methods_storage.clone = layer_clone;
+        kinoko_act_layer_methods_storage.associate = set_resource;
         kinoko_act_key_methods_storage = key_table; kinoko_act_layout_methods_storage = layout_table;
 
         CHECK(copy);

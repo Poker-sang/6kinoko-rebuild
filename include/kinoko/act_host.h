@@ -59,7 +59,7 @@ extern int32_t kinoko_act_script_extension[7];
 #define g554 (kinoko_act_script_extension[0])
 #define g555 (kinoko_act_script_extension[4])
 #define g556 (kinoko_act_script_extension[5])
-extern int32_t  g1224;
+extern int32_t  kinoko_script_void_result_identity;
 extern int32_t  kinoko_null_object_type;
 extern int32_t  kinoko_null_object_value;
 extern int32_t retdec_primary_shared_state;

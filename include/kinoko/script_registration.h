@@ -26,7 +26,7 @@ int32_t *kinoko_map_binding_type(void);
 int32_t kinoko_register_input_class(void);
 int32_t kinoko_register_camera_binding(void);
 int32_t kinoko_register_map_binding(void);
-int32_t function_473010(void);
+int32_t kinoko_register_root_bindings_entry(void);
 void kinoko_register_global_methods(int32_t root_table);
 #ifdef __cplusplus
 }

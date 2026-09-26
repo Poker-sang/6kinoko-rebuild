@@ -133,7 +133,8 @@ static bool restored() {
 
 extern "C" {
 KinokoGraphics kinoko_graphics{};
-int32_t kinoko_string_layout_methods_storage[11]{}; // CStringLayout identity used by the diagnostic texture view.
+int32_t kinoko_string_layout_methods_storage[11]{};
+const void *kinoko_string_layout_methods() { return kinoko_string_layout_methods_storage; } // CStringLayout identity used by the diagnostic texture view.
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY]{};
 int32_t kinoko_set_render_target(int32_t handle) {
     test::target_events.push_back(handle); return S_OK;

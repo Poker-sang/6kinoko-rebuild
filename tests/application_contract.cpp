@@ -19,7 +19,7 @@ extern "C" {
 KinokoRenderer kinoko_renderer{};
 KinokoCriticalSection kinoko_graphics_lock{};
 KinokoGraphics kinoko_graphics{};
-int32_t g534 = 0;
+int32_t kinoko_ime_context_slot = 0;
 char kinoko_packed_assets = 0;
 // Isolated host/device ports. No game startup, timer or device is invoked by
 // this contract; only the callback/state functions below are under examination.

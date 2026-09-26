@@ -12,7 +12,7 @@ static_assert(!noexcept(kinoko_script_compile_file_argument(0, 0, 0, 0, 0, 0)), 
 
 extern "C" {
 struct SQVM *kinoko_primary_vm = nullptr;
-char g560 = 0;
+char kinoko_sqrat_trace_enabled = 0;
 int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
 int32_t kinoko_sqrat_object_vtable(void) { return 0x12121212; }
 int32_t kinoko_sqrat_root_vtable(void) { return 0x34343434; }
@@ -20,7 +20,7 @@ int32_t kinoko_native_void_type(void) { return 0x13572468; }
 void retdec_trace(const char*) {}
 void retdec_trace_i32(const char*, int32_t) {}
 void retdec_trace_squirrel_name(const char*, int32_t) {}
-void _3f__3f_3_40_YAXPAX_40_Z(int32_t* value) { std::free(value); }
+void kinoko_host_free_allocation(int32_t* value) { std::free(value); }
 }
 namespace {
 using namespace bridge_test;

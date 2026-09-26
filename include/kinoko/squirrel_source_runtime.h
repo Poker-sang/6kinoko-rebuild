@@ -9,6 +9,14 @@ extern "C" {
  * This is an ABI adapter, not another VM or an alternate execution path. */
 typedef int32_t (*kinoko_sq_context_exchange)(int32_t vm);
 void kinoko_sq_set_context_exchange(kinoko_sq_context_exchange exchange);
+struct SQVM;
+typedef struct KinokoVmStackSnapshot {
+    const void *storage;
+    int32_t top, base;
+} KinokoVmStackSnapshot;
+/* Diagnostic view of the source VM; borrows storage and does not mutate it. */
+KinokoVmStackSnapshot kinoko_sq_stack_snapshot(const struct SQVM *vm);
+
 int32_t kinoko_sq_open(int32_t stack_size);
 int32_t kinoko_sq_compile_act_source(int32_t vm, const char *text, int32_t length, const int32_t environment[2]);
 int32_t kinoko_sq_shared_state(int32_t vm);

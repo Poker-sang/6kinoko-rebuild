@@ -21,7 +21,7 @@ int32_t kinoko_native_void_type(void) { return 0x13572468; }
 void retdec_trace(const char*) {}
 void retdec_trace_i32(const char*, int32_t) {}
 void retdec_trace_squirrel_name(const char*, int32_t) {}
-void _3f__3f_3_40_YAXPAX_40_Z(int32_t* p) { std::free(p); }
+void kinoko_host_free_allocation(int32_t* p) { std::free(p); }
 }
 namespace {
 using Bytes = std::vector<unsigned char>;

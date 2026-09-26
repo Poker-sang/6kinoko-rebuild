@@ -169,3 +169,7 @@ extern "C" int32_t kinoko_sq_compile_act_source(int32_t id, const char *text,
             return kinoko_sq_call(address(target), count, result, errors);
         });
 }
+
+extern "C" KinokoVmStackSnapshot kinoko_sq_stack_snapshot(const SQVM *vm) {
+    return {vm->_stack._vals, vm->_top, vm->_stackbase};
+}
