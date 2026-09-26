@@ -21,7 +21,7 @@ int32_t  kinoko_sqplus_create_class(struct SQVM * a1, void * a2, int32_t * a3, c
 int32_t  kinoko_sqplus_install_variable_handlers(void * a1);
 void*  kinoko_sqplus_setup_hierarchy(void *root_object);
 void * kinoko_sqplus_create_variable(void * a1, const char * a2);
-void * kinoko_sqplus_initialize_variable(void *this_ptr, int32_t a1, int32_t a2, int32_t a3, int32_t *a4, int32_t a5, int32_t a6);
+void * kinoko_sqplus_initialize_variable(void *this_ptr, int32_t a1, int32_t a2, void *a3, void *a4, int32_t a5, int32_t a6);
 int32_t kinoko_sqplus_bind_integer(int32_t * a1, int32_t * a2, int32_t a3, char * a4, int32_t a5);
 int32_t kinoko_sqplus_bind_float(int32_t * a1, int32_t * a2, int32_t a3, char * a4, int32_t a5);
 int32_t kinoko_sqplus_bind_boolean(int32_t * a1, int32_t * a2, int32_t a3, char * a4, int32_t a5);

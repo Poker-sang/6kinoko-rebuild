@@ -37,7 +37,7 @@ int32_t kinoko_publish_mesh_resource_class(struct SQVM*,void*,int32_t *);
 int32_t __fastcall kinoko_method_read_mesh_resource(KinokoActResource*,void *,KinokoArchiveReader** ,int32_t);
 int32_t __fastcall kinoko_method_write_mesh_resource(KinokoActResource*,void *,KinokoArchiveReader* );
 int32_t __fastcall kinoko_method_write_layout_3d(KinokoActLayout*,void *,KinokoArchiveReader* );
-int32_t __fastcall kinoko_method_register_mesh_resource(int32_t,void *,struct SQVM*);
+int32_t __fastcall kinoko_method_register_mesh_resource(void*,void *,struct SQVM*);
 int32_t __fastcall kinoko_method_bind_mesh_object(KinokoActResource*,void *,void*,const char *);
 int32_t __fastcall kinoko_method_bind_mesh_table(KinokoActResource*,void *,void*,const char *);
 int32_t __fastcall kinoko_method_register_layout_3d(KinokoActLayout*,void *);

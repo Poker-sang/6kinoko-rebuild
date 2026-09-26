@@ -3,13 +3,13 @@
 #include <cstdint>
 
 namespace kinoko::script::binding {
-// A serialized/recovered Win32 record, not a constructed SqPlus::VarRef.
-// Descriptors are borrowed identity tokens, not native ClassTypeBase objects.
+// Recovered Win32 VarRef layout. Descriptor identities are borrowed pointers;
+// offset is deliberately numeric: it also stores constants and byte offsets.
 struct Variable {
     int32_t offset;
     int32_t category;
-    int32_t instance_type;
-    int32_t value_type;
+    void* instance_type;
+    void* value_type;
     uint16_t size;
     uint16_t flags;
 };

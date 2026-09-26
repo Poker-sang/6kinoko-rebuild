@@ -29,7 +29,7 @@ bool resolve(SQVM* vm, ResolvedMethod& output) {
     kinoko_sqplus_resolve_method(&result, vm);
     if (!result.receiver || !result.payload) return false;
     const auto method=load<Method>(result.payload);
-    output={result.receiver,pointer(method.function),method.receiver_offset};
+    output={result.receiver,method.function,method.receiver_offset};
     return true;
 }
 int32_t instance_error(SQVM* vm) {

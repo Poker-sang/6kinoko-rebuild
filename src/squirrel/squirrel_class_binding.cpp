@@ -17,7 +17,7 @@ int32_t bind_variable(int32_t* object, int32_t* instance_type, int32_t offset,
     // type/short payload is an invalid binding, not permission to corrupt it.
     if (!payload) return 0;
     Variable info{};
-    kinoko_sqplus_initialize_variable(&info, offset, category, address(instance_type), kinoko_native_binding_type(category), size, flags);
+    kinoko_sqplus_initialize_variable(&info, offset, category, instance_type, kinoko_native_binding_type(category), size, flags);
     store(payload, info);
     return kinoko_sqplus_install_variable_handlers(object);
 }
@@ -85,8 +85,8 @@ extern "C" void * kinoko_sqplus_create_variable(void * object, const char * name
     return upstream::sqplus_create_variable(current_vm(), ObjectView(object).value(), name_address);
 }
 
-extern "C" void* kinoko_sqplus_initialize_variable(void* output, int32_t offset, int32_t category, int32_t instance_type, int32_t* value_type, int32_t size, int32_t flags) {
-    const Variable info{offset, category, instance_type, address(value_type),
+extern "C" void* kinoko_sqplus_initialize_variable(void* output, int32_t offset, int32_t category, void* instance_type, void* value_type, int32_t size, int32_t flags) {
+    const Variable info{offset, category, instance_type, value_type,
         static_cast<uint16_t>(size), static_cast<uint16_t>(flags)};
     upstream::sqplus_variable_metadata(current_vm(),
         ObjectView((int32_t)(intptr_t)(kinoko_sqplus_root_object())).value(), info, output);
@@ -153,7 +153,7 @@ extern "C" void kinoko_sqplus_register_actor_method(struct SQVM * vm_address, in
     auto* vm = static_cast<SQVM *>(vm_address);
     ObjectView(object).push(vm);
     sq_pushstring(vm, name, -1);
-    const Method method{address(native), 0};
+    const Method method{native, 0};
     if (auto* payload = sq_newuserdata(vm, sizeof(method))) store(payload, method);
     sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(wrapper), 1);
     // This last argument is sq_newslot's static flag, NOT a parameter count.

@@ -418,7 +418,7 @@ try { methodActor.xy(1,2.0);
     }
     instance.view().push(vm);
     auto* payload = sq_newuserdata(vm, sizeof(Method));
-    store(payload, Method{address(reinterpret_cast<void*>(&no_args)), 0});
+    store(payload, Method{reinterpret_cast<void*>(&no_args), 0});
     sq_settypetag(vm, -1, reinterpret_cast<void*>(1));
     require(kinoko_sqplus_void_method((struct SQVM *)(vm)) == -1, "tagged method descriptor rejected"); sq_settop(vm, 0);
     int32_t output[2] = {99,99};
@@ -464,7 +464,7 @@ void mapped_method_contract(HSQUIRRELVM vm) {
     sq_pushuserpointer(vm, mapped);
     require(SQ_SUCCEEDED(sq_rawset(vm, -3)), "install mapped actor receiver"); sq_pop(vm, 1);
     auto* payload = sq_newuserdata(vm, sizeof(Method));
-    store(payload, Method{address(reinterpret_cast<void*>(&mapped_value)), 4});
+    store(payload, Method{reinterpret_cast<void*>(&mapped_value), 4});
     sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(&kinoko_sqplus_integer_result_method), 1);
     instance.view().push(vm);
     require(SQ_SUCCEEDED(kinoko_sq_call((SQVM*)(uintptr_t)(address(vm)), 1, 1, 0)) && integer(vm) == 78,
