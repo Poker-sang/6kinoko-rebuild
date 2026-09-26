@@ -1,3 +1,4 @@
+#include "kinoko/file_io.h"
 #pragma once
 #include "kinoko/act_types.h"
 #include <stdint.h>
@@ -7,7 +8,7 @@ extern "C" {
 /* 43C860 borrows a 3D layout and a holder of the active reader. It does
    not consume either object; only version 1 is accepted. */
 int32_t kinoko_act_read_layout3d_properties(KinokoActLayout *layout,
-                                             int32_t *reader_holder, int32_t version);
+                                             KinokoArchiveReader** reader_holder, int32_t version);
 #ifdef __cplusplus
 }
 #endif

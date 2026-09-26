@@ -57,9 +57,7 @@ extern "C" int32_t __fastcall kinoko_method_layout_draw(int32_t receiver, void* 
 // function_43c860
 extern "C" int32_t __fastcall kinoko_method_layout3d_assign(int32_t receiver, void* /* unused_edx */,
     int32_t source, int32_t mode) {
-    return kinoko_act_read_layout3d_properties(
-        kinoko::legacy::pointer<KinokoActLayout>(receiver),
-        kinoko::legacy::pointer<int32_t>(source),mode);
+    return kinoko_act_read_layout3d_properties(kinoko::legacy::pointer<KinokoActLayout>(receiver), (KinokoArchiveReader**)(uintptr_t)(kinoko::legacy::pointer<int32_t>(source)), mode);
 }
 
 // function_450950

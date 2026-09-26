@@ -55,7 +55,7 @@ extern "C" int32_t kinoko_c2dlayout_draw_impl(int32_t receiver, float x, float y
 }
 
 extern "C" int32_t kinoko_act_read_layout3d_properties(KinokoActLayout *receiver,
-                                                         int32_t *source, int32_t mode) {
+                                                         KinokoArchiveReader** source, int32_t mode) {
     return record(5, {static_cast<uint32_t>(reinterpret_cast<uintptr_t>(receiver)),
         static_cast<uint32_t>(reinterpret_cast<uintptr_t>(source)), bits(mode)});
 }

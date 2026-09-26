@@ -1,3 +1,4 @@
+#include "kinoko/file_io.h"
 struct SQVM;
 #pragma once
 #include <stdint.h>
@@ -9,7 +10,7 @@ extern "C" {
 const void *kinoko_string_layout_methods(void);
 KinokoStringLayout* __fastcall kinoko_method_clone_string_layout(KinokoStringLayout* object, void *unused);
 KinokoStringLayout* __fastcall kinoko_method_destroy_string_layout(KinokoStringLayout* object, void *unused);
-int32_t __fastcall kinoko_method_string_layout_type(int32_t object, void *unused);
+int32_t __fastcall kinoko_method_string_layout_type(KinokoStringLayout* object, void *unused);
 int32_t __fastcall kinoko_method_register_string_layout(int32_t object, void *unused);
 void kinoko_string_queue_construct(KinokoStringLayout* object);
 void kinoko_string_queue_destroy(KinokoStringLayout* object);
@@ -35,8 +36,8 @@ int32_t kinoko_string_mark_rebuild(KinokoStringLayout* object);
 int32_t kinoko_string_prune_atlases(KinokoStringLayout *layout);
 int32_t kinoko_string_rebuild_queue(KinokoStringLayout *layout);
 int32_t kinoko_publish_string_layout_class(struct SQVM* vm, int32_t root, int32_t *class_pair);
-int32_t kinoko_string_read_properties(KinokoStringLayout *layout, int32_t *reader_holder, int32_t version);
-int32_t __fastcall kinoko_method_read_string_layout(int32_t object, void *unused, int32_t holder, int32_t version);
+int32_t kinoko_string_read_properties(KinokoStringLayout *layout, KinokoArchiveReader** reader_holder, int32_t version);
+int32_t __fastcall kinoko_method_read_string_layout(int32_t object, void *unused, KinokoArchiveReader** holder, int32_t version);
 KinokoStringLayout* __fastcall kinoko_method_delete_string_layout(KinokoStringLayout* object, void *unused, unsigned char flags);
 #ifdef __cplusplus
 }

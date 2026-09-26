@@ -30,7 +30,7 @@ void assign_renderer(int32_t out,int32_t in) {
     field<uint8_t>(out+364)=field<uint8_t>(in+364);
     field<uint8_t>(out+365)=field<uint8_t>(in+365);
     using Renderer=kinoko::text::FontRendererRecord;
-    const kinoko::native::RecordView<Renderer> target(out), source(pointer<void>(in));
+    const kinoko::native::RecordView<Renderer> target(pointer<void>(out)), source(pointer<void>(in));
     StringView(target.bytes(&Renderer::label)).assign(StringView(source.bytes(&Renderer::label)),0,UINT32_MAX);
     field<uint32_t>(out+396)=field<uint32_t>(in+396);
     field<uint32_t>(out+400)=field<uint32_t>(in+400);

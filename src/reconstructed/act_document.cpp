@@ -130,7 +130,7 @@ int32_t kinoko_act_make_layout(int32_t reader_ptr)
         &std::free);
     if (!layout || !kinoko_construct_c2dlayout(address(layout.get()))) return 0;
     // 42C030's holder is still an integer ABI slot; the layout is borrowed.
-    if (!kinoko_act_read_layout2d_properties(layout.get(), &reader_ptr, 1)) return 0;
+    if (!kinoko_act_read_layout2d_properties(layout.get(), (KinokoArchiveReader**)(uintptr_t)(&reader_ptr), 1)) return 0;
     return address(layout.release());
 }
 
@@ -240,7 +240,7 @@ int32_t kinoko_act_load_key(int32_t key, int32_t reader_ptr,
     }
     if(layout_type==kinoko::mesh::layout_type()) {
         layout = reinterpret_cast<KinokoActLayout *>(kinoko::mesh::create_layout());
-        if (layout && !kinoko_act_read_layout3d_properties(layout, &reader_ptr, version)) {
+        if (layout && !kinoko_act_read_layout3d_properties(layout, (KinokoArchiveReader**)(uintptr_t)(&reader_ptr), version)) {
             std::free(layout);
             layout = nullptr;
         }
@@ -250,8 +250,7 @@ int32_t kinoko_act_load_key(int32_t key, int32_t reader_ptr,
         layout = static_cast<KinokoActLayout *>(std::calloc(1, sizeof(kinoko::act::StringLayoutRecord)));
         if (layout) {
             (int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(address(layout)));
-            if (!kinoko_string_read_properties(reinterpret_cast<KinokoStringLayout *>(layout),
-                    &reader_ptr, version)) {
+            if (!kinoko_string_read_properties(reinterpret_cast<KinokoStringLayout *>(layout), (KinokoArchiveReader**)(uintptr_t)(&reader_ptr), version)) {
                 kinoko_clear_string_layout((KinokoStringLayout*)(uintptr_t)(address(layout)));
                 std::free(layout);
                 layout = nullptr;
@@ -351,7 +350,7 @@ int32_t kinoko_act_load_layer(int32_t layer, int32_t reader_ptr,
             return 0;
         }
         const auto timeline = kinoko_act_new_timeline();
-        if (!timeline || !kinoko_act_load_timeline(timeline, reader_ptr, version) ||
+        if (!timeline || !kinoko_act_load_timeline(timeline, (KinokoArchiveReader*)(uintptr_t)(reader_ptr), version) ||
             !kinoko_act_append_list(
                 address(layer_record.bytes(&kinoko::act::LayerKeys::timeline_head)), timeline)) {
             kinoko_destroy_cact_key(timeline);
@@ -618,7 +617,7 @@ int32_t kinoko_act_make_resource(int32_t reader_ptr, uint32_t type)
 {
     if (type == kinoko::mesh::resource_type()) {
         auto *mesh = kinoko::mesh::create_resource();
-        if (mesh && !kinoko::mesh::read_resource_properties(mesh, &reader_ptr, 1)) {
+        if (mesh && !kinoko::mesh::read_resource_properties(mesh, (KinokoArchiveReader**)(uintptr_t)(&reader_ptr), 1)) {
             kinoko::mesh::clear_resource(mesh);
             std::free(mesh);
             return 0;
@@ -668,10 +667,10 @@ int32_t kinoko_act_make_resource(int32_t reader_ptr, uint32_t type)
         fields.set(&kinoko::act::ChipResourceRecord::unknown60, uint32_t{15});
     }
     const auto loaded = render_target
-        ? kinoko_act_read_render_target_properties(resource.get(), &reader_ptr, 1)
+        ? kinoko_act_read_render_target_properties(resource.get(), (KinokoArchiveReader**)(uintptr_t)(&reader_ptr), 1)
         : !texture
-        ? kinoko_act_read_chip_properties(resource.get(), &reader_ptr, 1)
-        : kinoko_act_read_texture_properties(resource.get(), &reader_ptr, 1);
+        ? kinoko_act_read_chip_properties(resource.get(), (KinokoArchiveReader**)(uintptr_t)(&reader_ptr), 1)
+        : kinoko_act_read_texture_properties(resource.get(), (KinokoArchiveReader**)(uintptr_t)(&reader_ptr), 1);
     if (!loaded) {
         kinoko_trace("act:resource-properties-failed");
         return 0;

@@ -1,0 +1,98 @@
+{
+  "kinoko_act_read_texture_properties": {
+    "1": "KinokoArchiveReader**"
+  },
+  "kinoko_method_read_texture_resource": {
+    "2": "KinokoArchiveReader**"
+  },
+  "kinoko_method_write_texture_resource": {
+    "2": "KinokoArchiveReader*"
+  },
+  "kinoko_act_read_render_target_properties": {
+    "1": "KinokoArchiveReader**"
+  },
+  "kinoko_method_read_render_target": {
+    "2": "KinokoArchiveReader**"
+  },
+  "kinoko_method_write_render_target": {
+    "2": "KinokoArchiveReader*"
+  },
+  "kinoko_act_read_chip_properties": {
+    "1": "KinokoArchiveReader**"
+  },
+  "kinoko_method_read_chip_resource": {
+    "2": "KinokoArchiveReader**"
+  },
+  "kinoko_method_write_chip_resource": {
+    "2": "KinokoArchiveReader*"
+  },
+  "kinoko_act_read_layout2d_properties": {
+    "1": "KinokoArchiveReader**"
+  },
+  "kinoko_method_read_layout_properties": {
+    "2": "KinokoArchiveReader**"
+  },
+  "kinoko_method_write_layout_properties": {
+    "2": "KinokoArchiveReader*"
+  },
+  "kinoko_act_read_layout3d_properties": {
+    "1": "KinokoArchiveReader**"
+  },
+  "kinoko_method_write_layout_3d": {
+    "2": "KinokoArchiveReader*"
+  },
+  "kinoko_method_read_mesh_resource": {
+    "2": "KinokoArchiveReader**"
+  },
+  "kinoko_method_write_mesh_resource": {
+    "2": "KinokoArchiveReader*"
+  },
+  "kinoko_method_read_map_layout": {
+    "2": "KinokoArchiveReader**"
+  },
+  "kinoko_method_write_map_layout": {
+    "2": "KinokoArchiveReader*"
+  },
+  "kinoko_act_load_timeline": {
+    "1": "KinokoArchiveReader*"
+  },
+  "kinoko_method_write_act_layer": {
+    "2": "KinokoArchiveReader*"
+  },
+  "kinoko_act_read_layer_properties": {
+    "1": "KinokoArchiveReader*"
+  },
+  "kinoko_act_read_key_properties": {
+    "1": "KinokoArchiveReader*"
+  },
+  "kinoko_act_read_map_properties": {
+    "1": "KinokoArchiveReader*"
+  },
+  "kinoko_method_read_act_layer": {
+    "2": "KinokoArchiveReader**"
+  },
+  "kinoko_method_read_act_key": {
+    "2": "KinokoArchiveReader**"
+  },
+  "kinoko_method_write_act_key": {
+    "2": "KinokoArchiveReader*"
+  },
+  "kinoko_method_write_string_layout": {
+    "2": "KinokoArchiveReader*"
+  },
+  "kinoko_string_read_properties": {
+    "1": "KinokoArchiveReader**"
+  },
+  "kinoko_method_read_string_layout": {
+    "2": "KinokoArchiveReader**"
+  },
+  "kinoko_act_read_properties": {
+    "1": "KinokoArchiveReader*"
+  },
+  "kinoko_method_read_act": {
+    "2": "KinokoArchiveReader**"
+  },
+  "kinoko_method_write_act": {
+    "2": "KinokoArchiveReader*"
+  }
+}

@@ -269,7 +269,7 @@ int32_t __fastcall update_layout(act::Layout3DRecord *layout,void *) {return act
 int32_t __fastcall draw_layout(act::Layout3DRecord *layout,void *,float,float) {return act::draw_layout_3d(layout);}
 void *__fastcall destroy_layout(act::Layout3DRecord *layout,void *,uint32_t flags) {if(flags&1)std::free(layout);return layout;}
 int32_t __fastcall dispose_layout(act::Layout3DRecord *layout,void *) {std::free(layout);return 0;}
-int32_t __fastcall read_layout(int32_t layout,void *,int32_t holder,int32_t version) {return kinoko_act_read_layout3d_properties(legacy::pointer<KinokoActLayout>(layout),legacy::pointer<int32_t>(holder),version);}
+int32_t __fastcall read_layout(int32_t layout,void *,int32_t holder,int32_t version) {return kinoko_act_read_layout3d_properties(legacy::pointer<KinokoActLayout>(layout), (KinokoArchiveReader**)(uintptr_t)(legacy::pointer<int32_t>(holder)), version);}
 // Named serialization supplies type hashes directly; retain usable GetType/
 // GetName metadata for legacy callers rather than a numeric-address binder.
 struct TypeInfo {const void *methods;const char *name;};

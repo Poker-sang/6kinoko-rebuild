@@ -4966,7 +4966,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
                 CHECK(stream.size==(compact?29:68));
                 CHECK(stream.bytes[0]==!compact);
                 stream.position=0; stream.reading=1;
-                CHECK(kinoko_act_load_timeline(loaded,PTR(&stream),1)==1);
+                CHECK(kinoko_act_load_timeline(loaded, (KinokoArchiveReader*)(uintptr_t)(PTR(&stream)), 1)==1);
                 CHECK(stream.position==stream.size && restored[1]==17 && restored[2]==51);
                 CHECK(restored[4]-restored[3]==16*(compact+1));
                 CHECK(memcmp((void*)(intptr_t)(restored[3]+16*compact),timeline_pairs,16)==0);
@@ -4989,7 +4989,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
                     reader[3]=stream.size; reader[4]=reader[5]=package?32:0;
                     ((unsigned char*)reader)[24]=package?0xa7:0;
                     int32_t actual=kinoko_act_new_timeline(); CHECK(actual);
-                    CHECK(kinoko_act_load_timeline(actual,PTR(reader),1));
+                    CHECK(kinoko_act_load_timeline(actual, (KinokoArchiveReader*)(uintptr_t)(PTR(reader)), 1));
                     int32_t* value=(int32_t*)(intptr_t)actual;
                     CHECK(value[1]==17 && value[2]==51 && value[4]-value[3]==16);
                     CHECK(memcmp((void*)(intptr_t)value[3],timeline_pairs,16)==0);
@@ -4999,9 +4999,9 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
             }
             const int32_t before=restored[3];
             stream.position=0; --stream.size;
-            CHECK(!kinoko_act_load_timeline(loaded,PTR(&stream),1));
+            CHECK(!kinoko_act_load_timeline(loaded, (KinokoArchiveReader*)(uintptr_t)(PTR(&stream)), 1));
             CHECK(restored[3]==before && restored[4]-restored[3]==32);
-            CHECK(!kinoko_act_load_timeline(loaded,PTR(&stream),2));
+            CHECK(!kinoko_act_load_timeline(loaded, (KinokoArchiveReader*)(uintptr_t)(PTR(&stream)), 2));
             kinoko_compile_act_output=saved;
             kinoko_destroy_cact_key(loaded);
         }

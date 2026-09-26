@@ -1,3 +1,4 @@
+#include "kinoko/file_io.h"
 #include "kinoko/act_types.h"
 struct SQVM;
 #pragma once
@@ -36,29 +37,29 @@ int32_t __fastcall kinoko_method_delete_act_script(int32_t receiver, void* unuse
 int32_t __fastcall kinoko_method_register_act_layer(int32_t receiver, void* unused_edx, int32_t parent, int32_t flags);
 int32_t __fastcall kinoko_method_read_act_script(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
 int32_t __fastcall kinoko_method_write_act_script(int32_t receiver, void* unused_edx, int32_t writer);
-int32_t __fastcall kinoko_method_write_act_layer(int32_t receiver, void* unused_edx, int32_t writer);
-int32_t __fastcall kinoko_method_write_act_key(int32_t receiver, void* unused_edx, int32_t writer);
-int32_t __fastcall kinoko_method_write_string_layout(int32_t receiver, void* unused_edx, int32_t writer);
-int32_t __fastcall kinoko_method_read_texture_resource(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-int32_t __fastcall kinoko_method_write_texture_resource(int32_t receiver, void* unused_edx, int32_t writer);
-int32_t __fastcall kinoko_method_read_render_target(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-int32_t __fastcall kinoko_method_write_render_target(int32_t receiver, void* unused_edx, int32_t writer);
-int32_t __fastcall kinoko_method_read_chip_resource(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-int32_t __fastcall kinoko_method_write_chip_resource(int32_t receiver, void* unused_edx, int32_t writer);
-int32_t __fastcall kinoko_method_read_layout_properties(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-int32_t __fastcall kinoko_method_read_act_layer(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-int32_t __fastcall kinoko_method_read_act_key(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-int32_t __fastcall kinoko_method_read_act(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-int32_t __fastcall kinoko_method_write_act(int32_t receiver, void* unused_edx, int32_t writer);
+int32_t __fastcall kinoko_method_write_act_layer(int32_t receiver, void* unused_edx, KinokoArchiveReader*  writer);
+int32_t __fastcall kinoko_method_write_act_key(int32_t receiver, void* unused_edx, KinokoArchiveReader*  writer);
+int32_t __fastcall kinoko_method_write_string_layout(int32_t receiver, void* unused_edx, KinokoArchiveReader*  writer);
+int32_t __fastcall kinoko_method_read_texture_resource(int32_t receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+int32_t __fastcall kinoko_method_write_texture_resource(int32_t receiver, void* unused_edx, KinokoArchiveReader*  writer);
+int32_t __fastcall kinoko_method_read_render_target(int32_t receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+int32_t __fastcall kinoko_method_write_render_target(int32_t receiver, void* unused_edx, KinokoArchiveReader*  writer);
+int32_t __fastcall kinoko_method_read_chip_resource(int32_t receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+int32_t __fastcall kinoko_method_write_chip_resource(int32_t receiver, void* unused_edx, KinokoArchiveReader*  writer);
+int32_t __fastcall kinoko_method_read_layout_properties(int32_t receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+int32_t __fastcall kinoko_method_read_act_layer(int32_t receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+int32_t __fastcall kinoko_method_read_act_key(int32_t receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+int32_t __fastcall kinoko_method_read_act(int32_t receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+int32_t __fastcall kinoko_method_write_act(int32_t receiver, void* unused_edx, KinokoArchiveReader*  writer);
 int32_t __fastcall kinoko_method_query_serializable(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
 int32_t __fastcall kinoko_method_destroy_serializable(int32_t receiver, void* unused_edx);
 int32_t __fastcall kinoko_method_delete_act_key(int32_t receiver, void* unused_edx, unsigned char flags);
 int32_t __fastcall kinoko_method_delete_act_layer(int32_t receiver, void* unused_edx, unsigned char flags);
 int32_t __fastcall kinoko_method_delete_act_resource(int32_t receiver, void* unused_edx, unsigned char flags);
 int32_t __fastcall kinoko_method_destroy_layout(int32_t receiver, void* unused_edx);
-int32_t __fastcall kinoko_method_write_layout_properties(int32_t receiver, void* unused_edx, int32_t writer);
-int32_t __fastcall kinoko_method_read_map_layout(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-int32_t __fastcall kinoko_method_write_map_layout(int32_t receiver, void* unused_edx, int32_t writer);
+int32_t __fastcall kinoko_method_write_layout_properties(int32_t receiver, void* unused_edx, KinokoArchiveReader*  writer);
+int32_t __fastcall kinoko_method_read_map_layout(int32_t receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+int32_t __fastcall kinoko_method_write_map_layout(int32_t receiver, void* unused_edx, KinokoArchiveReader*  writer);
 int32_t __fastcall kinoko_method_map_set_layer(int32_t receiver, void* unused_edx, int32_t layer);
 KinokoActLayout* __fastcall kinoko_method_clone_c2d_layout(KinokoActLayout* receiver, void* unused_edx);
 KinokoActKey* __fastcall kinoko_method_clone_act_key(KinokoActKey* receiver, void* unused_edx);

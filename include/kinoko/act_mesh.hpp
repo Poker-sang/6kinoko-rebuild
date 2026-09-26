@@ -1,3 +1,5 @@
+#include "kinoko/file_io.h"
+struct KinokoArchiveReader;
 struct SQVM;
 #pragma once
 #include "kinoko/act_layout_records.hpp"
@@ -20,7 +22,7 @@ struct Resource {
 };
 static_assert(sizeof(Resource)==248 && offsetof(Resource,renders)==236);
 Resource *create_resource();
-int32_t read_resource_properties(Resource *resource,int32_t *reader_holder,int32_t version);
+int32_t read_resource_properties(Resource *resource,KinokoArchiveReader** reader_holder,int32_t version);
 void clear_resource(Resource *resource);
 uint8_t load_resource(Resource *resource,const char *prefix);
 int32_t replace_texture(Resource *resource,const char *name,KinokoActResource *texture);
@@ -32,9 +34,9 @@ uint32_t layout_type();
 }
 extern "C" {
 int32_t kinoko_publish_mesh_resource_class(struct SQVM*,int32_t,int32_t *);
-int32_t __fastcall kinoko_method_read_mesh_resource(int32_t,void *,int32_t,int32_t);
-int32_t __fastcall kinoko_method_write_mesh_resource(int32_t,void *,int32_t);
-int32_t __fastcall kinoko_method_write_layout_3d(int32_t,void *,int32_t);
+int32_t __fastcall kinoko_method_read_mesh_resource(int32_t,void *,KinokoArchiveReader** ,int32_t);
+int32_t __fastcall kinoko_method_write_mesh_resource(int32_t,void *,KinokoArchiveReader* );
+int32_t __fastcall kinoko_method_write_layout_3d(int32_t,void *,KinokoArchiveReader* );
 int32_t __fastcall kinoko_method_register_mesh_resource(int32_t,void *,struct SQVM*);
 int32_t __fastcall kinoko_method_bind_mesh_object(int32_t,void *,int32_t,const char *);
 int32_t __fastcall kinoko_method_bind_mesh_table(int32_t,void *,int32_t,const char *);

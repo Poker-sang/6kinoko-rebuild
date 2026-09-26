@@ -1,3 +1,4 @@
+#include "kinoko/file_io.h"
 struct SQVM;
 #pragma once
 #include <stdint.h>
@@ -39,10 +40,10 @@ int32_t kinoko_act_load(int32_t this_ptr, int32_t reader_ptr,
                                int32_t version);
 int32_t kinoko_act_load_key(int32_t key, int32_t reader_ptr,
                                    int32_t version);
-int32_t kinoko_act_read_layer_properties(int32_t layer, int32_t reader);
-int32_t kinoko_act_read_key_properties(int32_t key, int32_t reader);
-int32_t kinoko_act_read_map_properties(int32_t layout, int32_t reader);
-int32_t kinoko_act_read_properties(int32_t act, int32_t reader);
+int32_t kinoko_act_read_layer_properties(int32_t layer, KinokoArchiveReader*  reader);
+int32_t kinoko_act_read_key_properties(int32_t key, KinokoArchiveReader*  reader);
+int32_t kinoko_act_read_map_properties(int32_t layout, KinokoArchiveReader*  reader);
+int32_t kinoko_act_read_properties(int32_t act, KinokoArchiveReader*  reader);
 int32_t kinoko_act_read_script_properties(int32_t script, int32_t reader);
 const char* kinoko_act_serialized_type_name(int32_t object);
 int32_t kinoko_act_load_layer(int32_t layer, int32_t reader_ptr,
@@ -53,7 +54,7 @@ int32_t kinoko_act_load_script(int32_t object_ptr, int32_t reader_ptr);
 int32_t kinoko_act_make_key(int32_t reader_ptr, int32_t version);
 const void* kinoko_act_timeline_vtable(void);
 int32_t kinoko_act_new_timeline(void);
-int32_t kinoko_act_load_timeline(int32_t timeline, int32_t reader, int32_t version);
+int32_t kinoko_act_load_timeline(int32_t timeline, KinokoArchiveReader*  reader, int32_t version);
 int32_t kinoko_act_make_layer(void);
 int32_t kinoko_construct_cact_layer(int32_t layer, int32_t vm);
 int32_t kinoko_construct_c2dlayout(int32_t layout);

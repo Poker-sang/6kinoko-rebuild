@@ -1,3 +1,4 @@
+#include "kinoko/file_io.h"
 /* Included after stage_contract.c's byte-stream fixture. This mode exercises
    the actual file reader/payload parser, not the isolated I/O contract mocks. */
 static const char *act_file_probe_path;
@@ -57,7 +58,7 @@ static int test_act_document_file_lifetime(void) {
     ++*(int32_t *)(intptr_t)(layer + 184);
     kinoko_string_assign_cstr((int32_t *)(intptr_t)(layer + 112),
         "heap-owned layer from generated ACT");
-    CHECK(kinoko_method_write_act(PTR(source), NULL, PTR(&stream)));
+    CHECK(kinoko_method_write_act(PTR(source), NULL, (KinokoArchiveReader*)(uintptr_t)(PTR(&stream))));
     memcpy(encoded, header, sizeof(header));
     memset(encoded + sizeof(header), 0xa5, 7); /* relative skip, not an absolute offset */
     memcpy(encoded + 19, stream.bytes, stream.size);
