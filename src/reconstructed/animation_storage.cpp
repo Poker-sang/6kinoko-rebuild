@@ -4,6 +4,8 @@
 #include "kinoko/integer_vector.h"
 #include "kinoko/legacy_memory.hpp"
 #include <list>
+#include <map>
+struct KinokoAnimationLookup { std::map<int32_t, KinokoAnimation*> values; };
 #include <vector>
 #include <memory>
 namespace {
@@ -52,22 +54,36 @@ extern "C" void kinoko_animation_release(KinokoAnimation *animation) {
 extern "C" void kinoko_animation_manager_adopt(KinokoActorManager *manager,KinokoAnimation *animation) {
     adopt(ListView(ManagerView(manager).bytes(&ManagerPrefix::animations)),reinterpret_cast<Animation *>(animation));
 }
+extern "C" void kinoko_animation_lookup_construct(KinokoActorManager* manager) {
+    ManagerView(manager).view(&ManagerPrefix::animation_lookup).set(&AnimationIndex::owner,new KinokoAnimationLookup);
+}
+extern "C" void kinoko_animation_lookup_clear(KinokoActorManager* manager) {
+    const auto index=ManagerView(manager).view(&ManagerPrefix::animation_lookup);
+    if(auto* owner=index.get(&AnimationIndex::owner)) owner->values.clear();
+    index.set(&AnimationIndex::count,int32_t{0});
+}
+extern "C" void kinoko_animation_lookup_destroy(KinokoActorManager* manager) {
+    const auto index=ManagerView(manager).view(&ManagerPrefix::animation_lookup);
+    delete index.get(&AnimationIndex::owner);
+    index.set(&AnimationIndex::owner,static_cast<KinokoAnimationLookup*>(nullptr));
+    index.set(&AnimationIndex::count,int32_t{0});
+}
 extern "C" int32_t kinoko_animation_bind(KinokoActorManager *manager,int32_t take,KinokoAnimation *animation) {
     const auto index=ManagerView(manager).view(&ManagerPrefix::animation_lookup);
-    auto head=index.get(&KinokoIntegerMapIndex::owner);
-    if (!head) {
-        head=kinoko_integer_map_create();index.set(&KinokoIntegerMapIndex::owner,head);
+    auto* owner=index.get(&AnimationIndex::owner);
+    if (!owner) {
+        owner=new KinokoAnimationLookup; index.set(&AnimationIndex::owner,owner);
     }
-    // The legacy map owns integer slots, not the pointed-to animations.
-    const auto result=kinoko_integer_map_put(head,take,address(animation));
-    index.set(&KinokoIntegerMapIndex::count,static_cast<int32_t>(kinoko_integer_map_size(head)));
-    return result!=0;
+    // Nodes own only borrowed animation pointers. The animation list owns data.
+    owner->values[take]=animation;
+    index.set(&AnimationIndex::count,static_cast<int32_t>(owner->values.size()));
+    return 1;
 }
 extern "C" KinokoAnimation *kinoko_animation_find(KinokoActorManager *manager,int32_t take) {
-    const auto head=ManagerView(manager).get(&ManagerPrefix::animation_lookup).owner;
-    if (!head) return nullptr;
-    const auto slot=kinoko_integer_map_find(head,take);
-    return slot?pointer<KinokoAnimation>(*slot):nullptr;
+    const auto* owner=ManagerView(manager).get(&ManagerPrefix::animation_lookup).owner;
+    if (!owner) return nullptr;
+    const auto found=owner->values.find(take);
+    return found==owner->values.end()?nullptr:found->second;
 }
 extern "C" void kinoko_animation_add_texture(KinokoActorManager *manager,int32_t handle) {
     kinoko_integer_vector_append((KinokoIntegerVector*)(ManagerView(manager).bytes(&ManagerPrefix::textures)), handle);

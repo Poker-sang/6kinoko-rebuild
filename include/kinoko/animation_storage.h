@@ -5,6 +5,9 @@ typedef struct KinokoActorManager KinokoActorManager;
 #ifdef __cplusplus
 extern "C" {
 #endif
+void kinoko_animation_lookup_construct(KinokoActorManager* manager);
+void kinoko_animation_lookup_clear(KinokoActorManager* manager);
+void kinoko_animation_lookup_destroy(KinokoActorManager* manager);
 KinokoAnimation *kinoko_animation_allocate(uint32_t frames);
 void kinoko_animation_release(KinokoAnimation *animation);
 /* On success manager owns the allocation; on exception caller still owns it. */

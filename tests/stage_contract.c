@@ -2365,8 +2365,8 @@ static int test_shutdown_tree_cleanup(void) {
     *(int32_t *)(frames + 248 + 244) = PTR(malloc(20));
     CHECK(*(int32_t *)(frames + 244) && *(int32_t *)(frames + 492));
     /* No live Actor in this fixture; the priority node is still reclaimed. */
-    manager[10]=(int32_t)(intptr_t)kinoko_integer_map_create();
-    kinoko_integer_map_put((KinokoIntegerMap*)(intptr_t)(manager[10]), 42, PTR(animation));manager[11]=1;
+    kinoko_animation_lookup_construct((KinokoActorManager*)manager);
+    kinoko_animation_bind((KinokoActorManager*)manager, 42, animation);
     kinoko_integer_vector_construct((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68));
     for(int i=0;i<2;++i) kinoko_integer_vector_append((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68), textures[i]);
     kinoko_priority_construct((void *)(intptr_t)(PTR(manager)+84));
@@ -2376,7 +2376,7 @@ static int test_shutdown_tree_cleanup(void) {
     manager[29] = 8; ((unsigned char *)manager)[120] = 1;
     for (int repeat = 0; repeat < 2; ++repeat) {
         CHECK((int32_t)(intptr_t)(kinoko_actor_manager_clear_resources((KinokoActorManager *)(intptr_t)(PTR(manager)))) == PTR(iteration));
-        CHECK(kinoko_integer_map_size((KinokoIntegerMap*)(intptr_t)(manager[10]))==0);
+        CHECK(kinoko_animation_find((KinokoActorManager*)manager,42)==NULL);
         CHECK(manager[11] == 0 && manager[14] == 0 && manager[23] == 0);
         CHECK(kinoko_integer_vector_size((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68))==0);
         CHECK(manager[26] == PTR(iteration) && manager[27] == PTR(iteration + 3));
@@ -2384,7 +2384,7 @@ static int test_shutdown_tree_cleanup(void) {
     }
     kinoko_integer_vector_destroy((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68));
     kinoko_animation_list_destroy((void*)(uintptr_t)(PTR(manager)+52));
-    kinoko_integer_map_destroy((KinokoIntegerMap*)(intptr_t)(manager[10]));
+    kinoko_animation_lookup_destroy((KinokoActorManager*)manager);
     kinoko_priority_destroy((void *)(intptr_t)(PTR(manager)+84));
     {
         int32_t tree[3]={0},actors[4][58]={{0}},nodes[4],result[2];

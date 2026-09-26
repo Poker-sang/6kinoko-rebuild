@@ -2103,12 +2103,12 @@ extern "C" int32_t kinoko_sqrat_call_integer1(struct SQVM* a1) {
        status from 48A7D0 instead. */
     trace_index = InterlockedIncrement(&trace_count);
     if (trace_index <= 128)
-        kinoko_trace_i32("450950:wrapper-entry", address(a1);
+        kinoko_trace_i32("450950:wrapper-entry", address(a1));
     outer_status = sq_getuserdata(a1, -1, (SQUserPointer*)(&outer_payload), (SQUserPointer*)kinoko_pointer(0));
     if (trace_index <= 128) {
         kinoko_trace_i32("450950:wrapper-top", sq_gettop(a1));
         kinoko_trace_i32("450950:wrapper-outer-status", outer_status);
-        kinoko_trace_i32("450950:wrapper-outer", address(outer_payload);
+        kinoko_trace_i32("450950:wrapper-outer", address(outer_payload));
     }
     if (outer_payload == 0 || kinoko::legacy::load<void*>(outer_payload) == 0)
         return 0;
@@ -2118,9 +2118,9 @@ extern "C" int32_t kinoko_sqrat_call_integer1(struct SQVM* a1) {
     if (argument_status < 0)
         return 0;
     if (trace_index <= 128) {
-        kinoko_trace_i32("450950:wrapper-method", address(method);
+        kinoko_trace_i32("450950:wrapper-method", address(method));
         kinoko_trace_i32("450950:wrapper-instance-status", instance_status);
-        kinoko_trace_i32("450950:wrapper-instance", address(instance_ptr);
+        kinoko_trace_i32("450950:wrapper-instance", address(instance_ptr));
         kinoko_trace_i32("450950:wrapper-argument-status", argument_status);
         kinoko_trace_i32("450950:wrapper-argument", argument);
         if (method == reinterpret_cast<void*>(kinoko_method_begin_stage))

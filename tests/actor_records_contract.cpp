@@ -55,7 +55,7 @@ int main() {
     ManagerPrefix manager{};
     const ManagerView manager_view(&manager);
     const auto lookup = manager_view.view(&ManagerPrefix::animation_lookup);
-    lookup.set(&KinokoIntegerMapIndex::owner,kinoko_integer_map_create());
+    kinoko_animation_lookup_construct(reinterpret_cast<KinokoActorManager*>(&manager));
     ManagerPrefix global_manager{};
     objects.actors=reinterpret_cast<KinokoActorManager*>(&global_manager);
     actor.set(&ActorRecord::manager, reinterpret_cast<KinokoActorManager*>(&manager));
@@ -69,7 +69,7 @@ int main() {
     animation.frames_end = reinterpret_cast<KinokoAnimationFrame *>(frames.data()+frames.size());
     animation.left = 1; animation.top = 2; animation.right = 5; animation.bottom = 8;
     animation.duration_total = 0x1234; animation.has_bounds = 1;
-    kinoko_integer_map_put(lookup.get(&KinokoIntegerMapIndex::owner),37,address(&animation));
+    kinoko_animation_bind(reinterpret_cast<KinokoActorManager*>(&manager),37,reinterpret_cast<KinokoAnimation*>(&animation));
     CHECK(kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor_address), 37) == address(frames.data()));
     CHECK(actor.get(&ActorRecord::take) == 37);
     const auto local = actor.get(&ActorRecord::local_bounds);
@@ -92,15 +92,15 @@ int main() {
     CHECK(actor.get(&ActorRecord::frame_index) == 0 && actor.get(&ActorRecord::current_frame) == animation.frames_begin);
     // The flipped take must resolve before its bounds can be recomputed.
     // Keep the genuinely missing take (999) below as a separate contract.
-    kinoko_integer_map_put(lookup.get(&KinokoIntegerMapIndex::owner), 38, address(&animation));
-    const auto flipped_slot = kinoko_integer_map_find(lookup.get(&KinokoIntegerMapIndex::owner), 38);
+    kinoko_animation_bind(reinterpret_cast<KinokoActorManager*>(&manager),38,reinterpret_cast<KinokoAnimation*>(&animation));
+    const auto flipped_slot = kinoko_animation_find(reinterpret_cast<KinokoActorManager*>(&manager),38);
     CHECK(flipped_slot != nullptr);
-    CHECK(*flipped_slot == address(&animation));
+    CHECK(flipped_slot == reinterpret_cast<KinokoAnimation*>(&animation));
     actor.set(&ActorRecord::direction, 1.0f);
     kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor_address), 38);
     CHECK(actor.get(&ActorRecord::world_bounds).left == 4.75f);
     CHECK(actor.get(&ActorRecord::world_bounds).right == 9.75f);
-    lookup_result = address(lookup.get(&KinokoIntegerMapIndex::owner));
+    lookup_result = address(lookup.get(&AnimationIndex::owner));
     const auto previous_animation = actor.get(&ActorRecord::animation);
     CHECK(kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor_address), 999) == lookup_result);
     CHECK(actor.get(&ActorRecord::take) == 999 && actor.get(&ActorRecord::frame_time) == 0);

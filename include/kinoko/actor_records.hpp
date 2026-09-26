@@ -14,6 +14,7 @@ struct KinokoActor;
 struct KinokoActorPool;
 struct KinokoActorManager;
 struct KinokoAnimation;
+struct KinokoAnimationLookup;
 struct KinokoAnimationFrame;
 struct SQVM;
 
@@ -131,13 +132,15 @@ struct RenderLayerRecord {
 using CameraBoundsRecord = kinoko::camera::Record;
 // Only the verified prefix of the manager is described, not a new allocation
 // size. Index nodes and animation lists have distinct ownership semantics.
+struct AnimationIndex { uint32_t policy; KinokoAnimationLookup* owner; int32_t count; };
+static_assert(sizeof(AnimationIndex) == 12);
 struct ManagerPrefix {
     const void *methods;
     KinokoActorPool *pool;
     void *owner_list;
     std::array<unsigned char, 8> unknown12;
     std::array<RenderLayerRecord *, 4> render_layers;
-    KinokoIntegerMapIndex animation_lookup; // owns nodes; values borrow animation list items
+    AnimationIndex animation_lookup; // owns nodes; values borrow animation list items
     std::array<unsigned char, 4> unknown48;
     ListIndex animations;       // owns animation items, frames and payloads
     uint32_t unknown60;
