@@ -36,6 +36,7 @@ static int test_act_document_file_lifetime(void) {
     unsigned char encoded[8192 + 19] = {0};
     const uint32_t header[] = {0x31544341u, 1u, 7u};
     kinoko_compile_act_output = 0; kinoko_archive_count = 0; kinoko_primary_vm = NULL;
+    fprintf(stderr, "ACT lifetime: KinokoActDocument *source =\n");
     KinokoActDocument *source = kinoko_act_document_create();
     CHECK(source);
     const int32_t layer = (int32_t)(intptr_t)kinoko_act_make_layer();
@@ -58,12 +59,14 @@ static int test_act_document_file_lifetime(void) {
     ++*(int32_t *)(intptr_t)(layer + 184);
     kinoko_string_assign_cstr((int32_t *)(intptr_t)(layer + 112),
         "heap-owned layer from generated ACT");
+    fprintf(stderr, "ACT lifetime: CHECK(kinoko_method_write_act(\n");
     CHECK(kinoko_method_write_act((KinokoActDocument*)(uintptr_t)(PTR(source)), NULL, (KinokoArchiveReader*)(uintptr_t)(PTR(&stream))));
     memcpy(encoded, header, sizeof(header));
     memset(encoded + sizeof(header), 0xa5, 7); /* relative skip, not an absolute offset */
     memcpy(encoded + 19, stream.bytes, stream.size);
     const DWORD total = 19 + stream.size;
     CHECK(act_file_write(valid_path, encoded, total));
+    fprintf(stderr, "ACT lifetime: (int32_t)(intptr_t)kinoko_destroy_cact_with_flags(\n");
     (int32_t)(intptr_t)kinoko_destroy_cact_with_flags((KinokoActDocument*)(uintptr_t)(PTR(source)), 1);
 
     /* Observe the real virtual deleting destructor, forwarding to its normal
@@ -74,7 +77,9 @@ static int test_act_document_file_lifetime(void) {
     int32_t (__fastcall *saved_set_layer)(int32_t, void *, int32_t) = kinoko_act_layout_methods_storage.associate;
     kinoko_act_layout_methods_storage.associate = act_file_set_layer_probe;
     act_file_layout_binds = 0;
+    fprintf(stderr, "ACT lifetime: KinokoActDocument *loaded =\n");
     KinokoActDocument *loaded = kinoko_act_document_create();
+    fprintf(stderr, "ACT lifetime: CHECK(loaded &&\n");
     CHECK(loaded && kinoko_act_document_load(loaded, valid_path));
     CHECK(act_file_layout_binds == 1); /* 41F8B9 only, no second document pass */
     kinoko_act_layout_methods_storage.associate = saved_set_layer;
@@ -94,12 +99,14 @@ static int test_act_document_file_lifetime(void) {
     CHECK(kinoko_call_thiscall1_result(loaded, (void *)kinoko_act_document_methods_storage.delete_object, 1));
     CHECK(act_file_deletes == 1 && !act_file_close_error);
 
+    fprintf(stderr, "ACT lifetime: kinoko_stage_list_construct();\n");
     kinoko_stage_list_construct();
     act_file_probe_path = short_path;
     for (DWORD length = 0; length < total; ++length) {
         CHECK(act_file_write(short_path, encoded, length));
         const int before = act_file_deletes;
         /* 466100 continues after failed parse; cleanup occurs only on clear. */
+    fprintf(stderr, "ACT lifetime: CHECK(kinoko_stage_load(short_path));\n");
         CHECK(kinoko_stage_load(short_path));
         CHECK(act_file_deletes == before && kinoko_stage_count == 1);
         kinoko_clear_global_stages();

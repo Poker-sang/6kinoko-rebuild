@@ -1086,7 +1086,7 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
     CHECK(kinoko_publish_cact_layer_class((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(root))));
     CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
     CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root + 2, kinoko_string_data((const void*)(intptr_t)(PTR(act) + 16)), parent));
-    CHECK(execute_source(vm, parent, "resource <- {}; global <- {};"));
+    CHECK(execute_source(vm, parent, "resource <- {};\nglobal <- {};"));
     resource[39] = root[2];
     resource[40] = root[3];
     act[52] = PTR(&hidden);
@@ -3753,7 +3753,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     CHECK(kinoko_publish_cact_layer_class((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(root))));
     CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
     CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, kinoko_string_data((const void*)(intptr_t)(PTR(act)+16)), parent));
-    CHECK(execute_source(vm,parent,"resource <- {}; global <- {};"));
+    CHECK(execute_source(vm,parent,"resource <- {};\nglobal <- {};"));
     resource[39]=root[2]; resource[40]=root[3];
     act[52]=PTR(&moving_layer); act[53]=PTR(&moving_layer+1);
     CHECK(kinoko_publish_act_layers((struct SQVM*)(uintptr_t)(vm), (KinokoActDocument*)(uintptr_t)(PTR(act)), (KinokoActRuntime*)(uintptr_t)(PTR(resource)), &active));

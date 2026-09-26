@@ -74,7 +74,7 @@ D3D9 像素中心、alpha、纹理过滤和目标切换需对照。高分辨率�
 建议原 DAT 只读，作为统一资源入口的一个来源。直接读取与编辑器导出可以并存，不强制全盘转换。
 兼容分为容器格式、查找／覆盖顺序、内容加载后语义三层；成功解包不是成功兼容。
 
-当前基线实际按 a → b → c 挂载，见 [host 入口](../../src/decompiled/6kinoko_rebuilt.c)。
+当前基线实际按 a → b → c 挂载，见 [host 入口](../../src/reconstructed/runtime_host.cpp)。
 查找层仍有包含 NUL 的 CRC、Windows 大小写规则、碰撞链和单条目快捷行为。
 [reader](../../src/reconstructed/file_io.cpp) 还有 payload XOR 与两种不同流协议。
 本次发现工具 DatArchive 会 ASCII 小写、反复去 ./，且 read 返回未做 runtime XOR 的原始条目字节；
