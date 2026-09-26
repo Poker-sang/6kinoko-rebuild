@@ -5527,7 +5527,7 @@ static int test_original_layer_constructor(int32_t vm) {
             "if(Layer_.script.registered!=73 || Layer_.script.sawLayer) throw \"layer order\";\n"
             "if(Layer_.script.thisAct!=this || Layer_.script.layer==Layer_) throw \"layer identity\";\n"
             "if(\"filePath\" in Layer_.script) throw \"invented script field\";\n"));
-        CHECK(kinoko_method_register_act_layer(PTR(layer),NULL,0,0)==(int32_t)E_FAIL);
+        CHECK(kinoko_method_register_act_layer((KinokoActLayer*)(uintptr_t)(PTR(layer)), NULL, (void*)(uintptr_t)(0), 0)==(int32_t)E_FAIL);
         kinoko_sqrat_object_release((void *)(intptr_t)(PTR(parent)));
     }
     kinoko_act_layer_clear((KinokoActLayer*)(uintptr_t)(PTR(layer))); free(layer);
@@ -5542,12 +5542,12 @@ static int test_layout_registration_entries(int32_t vm) {
     int32_t layer[87] = {0}, layout[100] = {0}, environment[2];
     CHECK(kinoko_prepare_cact_layer_objects((struct SQVM*)(uintptr_t)(vm), (KinokoActLayer*)(uintptr_t)(PTR(layer)), environment));
     CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), layer+84));
-    CHECK(kinoko_method_register_layout(PTR(layout), NULL) == (int32_t)E_FAIL);
+    CHECK(kinoko_method_register_layout((KinokoActLayout*)(uintptr_t)(PTR(layout)), NULL) == (int32_t)E_FAIL);
     layout[76] = PTR(layer);
     for (int map = 0; map < 2; ++map) {
         if (map) layout[78] = PTR(layer);
-        CHECK((map ? kinoko_method_register_map_layout(PTR(layout), NULL) :
-            kinoko_method_register_layout(PTR(layout), NULL)) == 0);
+        CHECK((map ? kinoko_method_register_map_layout((KinokoActLayout*)(uintptr_t)(PTR(layout)), NULL) :
+            kinoko_method_register_layout((KinokoActLayout*)(uintptr_t)(PTR(layout)), NULL)) == 0);
         int32_t outer[2] = {kinoko_null_object_type,kinoko_null_object_value}, script[2] = {kinoko_null_object_type,kinoko_null_object_value};
         CHECK(kinoko_sqrat_get((void *)(intptr_t)(PTR(layer+82)), "layout", (void *)(intptr_t)(PTR(outer))));
         CHECK(kinoko_sqrat_get((void *)(intptr_t)(PTR(layer+77)), "layout", (void *)(intptr_t)(PTR(script))));
