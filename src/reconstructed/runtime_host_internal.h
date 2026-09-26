@@ -133,204 +133,193 @@ uint32_t timeGetTime(void);
 typedef float float32_t;
 
 struct SquirrelObjectMethods {
-    int32_t (__fastcall *destroy)(int32_t object, void *unused,
-                                                int32_t flags);
+    decltype(&kinoko_squirrel_object_delete) destroy;
 };
 
 struct ActorMethods {
-    KinokoActor * (__fastcall *destroy)(KinokoActor *actor, void* unused_edx, unsigned char flags);
+    decltype(&kinoko_actor_delete_method) destroy;
 };
 
 struct ActorRenderLayerMethods {
-    int32_t (__fastcall *update)(int32_t receiver, void* unused_edx, int32_t argument);
+    decltype(&kinoko_method_render_layer_update) update;
 };
 
 struct ActorPoolMethods {
-    int32_t (__fastcall *destroy)(int32_t manager, void *unused, unsigned char flags);
-    int32_t (__fastcall *top)(int32_t receiver, void* unused_edx, int32_t output);
-    int32_t (__fastcall *remove)(int32_t receiver, void* unused_edx, uint32_t handle);
-    int32_t (__fastcall *lookup)(int32_t manager, void *unused, uint32_t handle);
-    int32_t (__fastcall *count)(int32_t manager, void *unused);
+    decltype(&kinoko_method_actor_pool_delete) destroy;
+    decltype(&kinoko_method_actor_manager_top) top;
+    decltype(&kinoko_method_actor_manager_remove) remove;
+    decltype(&kinoko_method_lookup_actor) lookup;
+    decltype(&kinoko_method_actor_pool_count) count;
 };
 
 struct ActorOwnerMethods {
-    int32_t (__fastcall *destroy)(int32_t manager, void *unused, unsigned char flags);
-    int32_t (__fastcall *push)(int32_t receiver, void* unused_edx);
+    decltype(&kinoko_method_actor_owner_delete) destroy;
+    decltype(&kinoko_method_actor_manager_push) push;
 };
 
 struct MapRenderLayerMethods {
-    int32_t (__fastcall *update)(int32_t layer, void *unused,
-    int32_t camera);
+    decltype(&kinoko_map_render_layer_entry) update;
 };
 
 struct SqratObjectMethods {
-    void * (__fastcall *destroy)(void * receiver, void *unused, int32_t flags);
-    void * (__fastcall *reference)(void * receiver, void *unused);
-    void * (__fastcall *copy)(void * receiver, void *unused, void * output);
+    decltype(&kinoko_sqrat_delete_object) destroy;
+    decltype(&kinoko_sqrat_object_reference) reference;
+    decltype(&kinoko_sqrat_copy_object) copy;
 };
 
 struct SqratRootMethods {
-    void * (__fastcall *destroy)(void * receiver, void *unused, int32_t flags);
-    void * (__fastcall *reference)(void * receiver, void *unused);
-    void * (__fastcall *copy)(void * receiver, void *unused, void * output);
+    decltype(&kinoko_sqrat_delete_object) destroy;
+    decltype(&kinoko_sqrat_object_reference) reference;
+    decltype(&kinoko_sqrat_copy_object) copy;
 };
 
 struct RendererMethods {
-    int32_t (__fastcall *before_reset)(KinokoRenderer *object, void *unused);
-    int32_t (__fastcall *after_reset)(KinokoRenderer *object, void *unused);
+    decltype(&kinoko_renderer_before_reset) before_reset;
+    decltype(&kinoko_renderer_after_reset) after_reset;
 };
 
 struct ActScriptMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
+    decltype(&kinoko_method_write_act_script) write;
+    decltype(&kinoko_method_read_act_script) read;
+    decltype(&kinoko_method_query_serializable) query;
+    decltype(&kinoko_method_delete_act_script) destroy;
 };
 
 struct ActLayerReferenceMethods {
-    void * (__fastcall *destroy)(void * receiver, void *unused, int32_t flags);
-    void * (__fastcall *reference)(void * receiver, void *unused);
-    void * (__fastcall *copy)(void * receiver, void *unused, void * output);
+    decltype(&kinoko_sqrat_delete_object) destroy;
+    decltype(&kinoko_sqrat_object_reference) reference;
+    decltype(&kinoko_sqrat_copy_object) copy;
 };
 
 struct ActLayerMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
-    int32_t (__fastcall *clone)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *associate)(
-    KinokoActLayer *layer, void *unused, KinokoActResource *resource);
-    KinokoActLayer * (__fastcall *world_position)(KinokoActLayer *layer,
-    void *unused, float *x, float *y, float *z);
-    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, int32_t parent, int32_t flags);
+    decltype(&kinoko_method_write_act_layer) write;
+    decltype(&kinoko_method_read_act_layer) read;
+    decltype(&kinoko_method_query_serializable) query;
+    decltype(&kinoko_method_destroy_serializable) destroy;
+    decltype(&kinoko_method_delete_act_layer) delete_object;
+    decltype(&kinoko_method_clone_act_layer) clone;
+    decltype(&kinoko_act_layer_set_resource) associate;
+    decltype(&kinoko_act_layer_world_position) world_position;
+    decltype(&kinoko_method_register_act_layer) register_class;
 };
 
 struct ActLayerLayoutMethods {
-    void * (__fastcall *destroy)(void * receiver, void *unused, int32_t flags);
-    void * (__fastcall *reference)(void * receiver, void *unused);
-    void * (__fastcall *copy)(void * receiver, void *unused, void * output);
+    decltype(&kinoko_sqrat_delete_object) destroy;
+    decltype(&kinoko_sqrat_object_reference) reference;
+    decltype(&kinoko_sqrat_copy_object) copy;
 };
 
 struct ActKeyMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
-    int32_t (__fastcall *clone)(int32_t receiver, void* unused_edx);
+    decltype(&kinoko_method_write_act_key) write;
+    decltype(&kinoko_method_read_act_key) read;
+    decltype(&kinoko_method_query_serializable) query;
+    decltype(&kinoko_method_destroy_serializable) destroy;
+    decltype(&kinoko_method_delete_act_key) delete_object;
+    decltype(&kinoko_method_clone_act_key) clone;
 };
 
 struct ActDocumentMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
-    KinokoActDocument * (__fastcall *clone)(KinokoActDocument *source, void *unused);
-    int32_t (__fastcall *load_resources)(KinokoActDocument *document, void *unused, const char *prefix);
-    int32_t (__fastcall *suspend_resources)(KinokoActDocument *document, void *unused);
-    int32_t (__fastcall *resume_resources)(KinokoActDocument *document, void *unused);
+    decltype(&kinoko_method_write_act) write;
+    decltype(&kinoko_method_read_act) read;
+    decltype(&kinoko_method_query_serializable) query;
+    decltype(&kinoko_method_destroy_serializable) destroy;
+    decltype(&kinoko_method_destroy_act) delete_object;
+    decltype(&kinoko_act_clone) clone;
+    decltype(&kinoko_method_load_act_resources) load_resources;
+    decltype(&kinoko_method_suspend_act_resources) suspend_resources;
+    decltype(&kinoko_method_resume_act_resources) resume_resources;
 };
 
 struct ActLayoutMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t * (*type)(void);
-    int32_t (__fastcall *clone)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *associate)(int32_t receiver, void* unused_edx, int32_t layer);
-    int32_t (__fastcall *update)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *draw)(int32_t receiver, void* unused_edx, float x, float y);
-    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx);
+    decltype(&kinoko_method_write_layout_properties) write;
+    decltype(&kinoko_method_read_layout_properties) read;
+    decltype(&kinoko_method_query_serializable) query;
+    decltype(&kinoko_method_destroy_layout) destroy;
+    decltype(&kinoko_c2d_layout_type) type;
+    decltype(&kinoko_method_clone_c2d_layout) clone;
+    decltype(&kinoko_method_layout_set_layer) associate;
+    decltype(&kinoko_method_layout_update) update;
+    decltype(&kinoko_method_layout_draw) draw;
+    decltype(&kinoko_method_register_layout) register_class;
 };
 
 struct ChipResourceMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
-    int32_t * (*type)(void);
-    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, int32_t vm);
-    int32_t (__fastcall *resource_42f800)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-    int32_t (__fastcall *resource_42f6c0)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-    int32_t (__fastcall *clone)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *load)(int32_t receiver, void* unused_edx, const char* prefix);
+    decltype(&kinoko_method_write_chip_resource) write;
+    decltype(&kinoko_method_read_chip_resource) read;
+    decltype(&kinoko_method_query_serializable) query;
+    decltype(&kinoko_method_destroy_serializable) destroy;
+    decltype(&kinoko_method_delete_act_resource) delete_object;
+    decltype(&kinoko_chip_resource_type) type;
+    decltype(&kinoko_method_register_chip_resource) register_class;
+    decltype(&kinoko_method_resource_42f800) resource_42f800;
+    decltype(&kinoko_method_resource_42f6c0) resource_42f6c0;
+    decltype(&kinoko_method_clone_chip_resource) clone;
+    decltype(&kinoko_method_load_chip_resource) load;
 };
 
 struct MapLayoutMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t * (*type)(void);
-    int32_t (__fastcall *clone)(int32_t source, void *unused);
-    int32_t (__fastcall *associate)(int32_t receiver, void* unused_edx, int32_t layer);
-    int32_t (__fastcall *update)(int32_t layout, void *unused);
-    int32_t (__fastcall *draw)(int32_t layout, void *unused,
-    float x, float y);
-    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *update_visible)(int32_t layout, void *unused,
-    int32_t left, int32_t top, int32_t right, int32_t bottom);
+    decltype(&kinoko_method_write_map_layout) write;
+    decltype(&kinoko_method_read_map_layout) read;
+    decltype(&kinoko_method_query_serializable) query;
+    decltype(&kinoko_method_destroy_layout) destroy;
+    decltype(&kinoko_map_layout_type) type;
+    decltype(&kinoko_clone_map_layout) clone;
+    decltype(&kinoko_method_map_set_layer) associate;
+    decltype(&kinoko_map_update_all_entry) update;
+    decltype(&kinoko_map_draw_entry) draw;
+    decltype(&kinoko_method_register_map_layout) register_class;
+    decltype(&kinoko_map_update_visible_entry) update_visible;
 };
 
 struct QuadColorMethods {
-    int32_t (__fastcall *destroy)(int32_t sprite, void *unused, int32_t flags);
-    uint32_t (__fastcall *set_color)(KinokoColoredQuad *quad, void *unused, uint32_t color);
-    uint32_t (__fastcall *set_vertex_colors)(KinokoColoredQuad *quad, void *unused, const uint32_t *colors);
-    uint32_t (__fastcall *modulate_color)(KinokoColoredQuad *quad, void *unused, uint32_t color);
+    decltype(&kinoko_delete_layout_sprite) destroy;
+    decltype(&kinoko_quad_set_color) set_color;
+    decltype(&kinoko_quad_set_vertex_colors) set_vertex_colors;
+    decltype(&kinoko_quad_modulate_color) modulate_color;
 };
 
 struct TextureResourceMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
-    int32_t * (*type)(void);
-    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, int32_t vm);
-    int32_t (__fastcall *resource_446920)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-    int32_t (__fastcall *resource_4467e0)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-    int32_t (__fastcall *clone)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *load)(int32_t receiver, void* unused_edx, const char* prefix);
-    int32_t (__fastcall *unload)(int32_t receiver, void* unused_edx);
+    decltype(&kinoko_method_write_texture_resource) write;
+    decltype(&kinoko_method_read_texture_resource) read;
+    decltype(&kinoko_method_query_serializable) query;
+    decltype(&kinoko_method_destroy_serializable) destroy;
+    decltype(&kinoko_method_delete_act_resource) delete_object;
+    decltype(&kinoko_texture_resource_type) type;
+    decltype(&kinoko_method_register_texture_resource) register_class;
+    decltype(&kinoko_method_resource_446920) resource_446920;
+    decltype(&kinoko_method_resource_4467e0) resource_4467e0;
+    decltype(&kinoko_method_clone_texture_resource) clone;
+    decltype(&kinoko_method_load_resource_texture) load;
+    decltype(&kinoko_method_unload_resource_texture) unload;
 };
 
 struct RenderTargetMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
-    int32_t * (*type)(void);
-    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, int32_t vm);
-    int32_t (__fastcall *resource_4499a0)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-    int32_t (__fastcall *resource_449860)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-    int32_t (__fastcall *clone)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *load)(int32_t receiver, void* unused_edx, const char* prefix);
-    int32_t (__fastcall *unload)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *create)(KinokoActResource *resource, void *unused,
-                                                      int32_t width, int32_t height);
+    decltype(&kinoko_method_write_render_target) write;
+    decltype(&kinoko_method_read_render_target) read;
+    decltype(&kinoko_method_query_serializable) query;
+    decltype(&kinoko_method_destroy_serializable) destroy;
+    decltype(&kinoko_method_delete_act_resource) delete_object;
+    decltype(&kinoko_render_target_type) type;
+    decltype(&kinoko_method_register_render_target) register_class;
+    decltype(&kinoko_method_resource_4499a0) resource_4499a0;
+    decltype(&kinoko_method_resource_449860) resource_449860;
+    decltype(&kinoko_method_clone_render_target) clone;
+    decltype(&kinoko_method_load_resource_texture) load;
+    decltype(&kinoko_method_unload_resource_texture) unload;
+    decltype(&kinoko_method_create_render_target) create;
 };
 
 struct SpriteMethods {
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx, char flags);
-    uint32_t (__fastcall *set_color)(KinokoColoredQuad *quad, void *unused, uint32_t color);
-    uint32_t (__fastcall *set_vertex_colors)(KinokoColoredQuad *quad, void *unused, const uint32_t *colors);
-    uint32_t (__fastcall *modulate_color)(KinokoColoredQuad *quad, void *unused, uint32_t color);
-    int32_t (__fastcall *set_rect_pivot)(KinokoSprite *sprite, void *unused,
-    int32_t texture, int32_t x, int32_t y, int32_t width, int32_t height,
-    int32_t pivot_x, int32_t pivot_y);
-    int32_t (__fastcall *set_rect)(KinokoSprite *sprite, void *unused,
-    int32_t texture, int32_t x, int32_t y, int32_t width, int32_t height);
-    int32_t (__fastcall *draw_bounds)(KinokoSprite *sprite, void *unused,
-    float left, float top, float right, float bottom);
-    int32_t (__fastcall *draw_404770)(KinokoSprite *sprite, void *unused, float x, float y);
-    int32_t (__fastcall *draw_404bc0)(KinokoSprite *sprite, void *unused, float x, float y);
-    int32_t (__fastcall *draw_4049c0)(KinokoSprite *sprite, void *unused, float x, float y);
+    decltype(&kinoko_color_destroy) destroy;
+    decltype(&kinoko_quad_set_color) set_color;
+    decltype(&kinoko_quad_set_vertex_colors) set_vertex_colors;
+    decltype(&kinoko_quad_modulate_color) modulate_color;
+    decltype(&kinoko_sprite_set_rect_pivot) set_rect_pivot;
+    decltype(&kinoko_sprite_set_rect) set_rect;
+    decltype(&kinoko_sprite_draw_bounds) draw_bounds;
+    decltype(&kinoko_sprite_draw_404770) draw_404770;
+    decltype(&kinoko_sprite_draw_404bc0) draw_404bc0;
+    decltype(&kinoko_sprite_draw_4049c0) draw_4049c0;
 };
 
 void kinoko_host_free_allocation(int32_t * a1);
@@ -418,17 +407,17 @@ extern const char * kinoko_audio_error_text;
 extern struct QuadColorMethods kinoko_layout_color_methods_storage;
 
 struct StringLayoutMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t object, void *unused, int32_t holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t object, void *unused);
-    int32_t (__fastcall *type)(int32_t object, void *unused);
-    int32_t (__fastcall *clone)(int32_t object, void *unused);
-    int32_t (__fastcall *set_layer)(int32_t object, void *unused, int32_t layer);
-    int32_t (__fastcall *update)(int32_t object, void *unused);
-    int32_t (__fastcall *draw)(int32_t object, void *unused, float x, float y);
-    int32_t (__fastcall *register_class)(int32_t object, void *unused);
-    int32_t (__fastcall *delete_object)(int32_t object, void *unused, unsigned char flags);
+    decltype(&kinoko_method_write_string_layout) write;
+    decltype(&kinoko_method_read_string_layout) read;
+    decltype(&kinoko_method_query_serializable) query;
+    decltype(&kinoko_method_destroy_string_layout) destroy;
+    decltype(&kinoko_method_string_layout_type) type;
+    decltype(&kinoko_method_clone_string_layout) clone;
+    decltype(&kinoko_method_set_string_layer) set_layer;
+    decltype(&kinoko_method_update_string_layout) update;
+    decltype(&kinoko_method_draw_string_layout) draw;
+    decltype(&kinoko_method_register_string_layout) register_class;
+    decltype(&kinoko_method_delete_string_layout) delete_object;
 };
 extern struct StringLayoutMethods kinoko_string_layout_methods_storage;
 

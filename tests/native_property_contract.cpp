@@ -15,7 +15,7 @@ void kinoko_trace_squirrel_name(const char*, int32_t) {}
 }
 namespace {
 using namespace bridge_test;
-using Callback = int32_t(*)(int32_t);
+using Callback = int32_t(*)(SQVM*);
 int32_t callback_address(Callback cb) { return address(reinterpret_cast<void*>(cb)); }
 class Fixture final {
 public:
@@ -273,26 +273,26 @@ void coercing_string_fields(HSQUIRRELVM vm) {
 void malformed_descriptors(HSQUIRRELVM vm) {
     Top restore(vm); const auto base = sq_gettop(vm); Fixture f(vm);
     // Directly exercise malformed ABI inputs that source APIs do not bounds-check.
-    require(!kinoko_cact_layer_get_int(0), "null VM guard");
-    require(!kinoko_c2dlayout_get_int(address(vm)), "empty stack guard");
+    require(!kinoko_cact_layer_get_int((struct SQVM*)(uintptr_t)(0)), "null VM guard");
+    require(!kinoko_c2dlayout_get_int((struct SQVM*)(uintptr_t)(address(vm))), "empty stack guard");
     int32_t offset = -999;
-    f.instance.push(); require(!kinoko_c2dlayout_property_offset(address(vm), &offset), "missing descriptor guard");
+    f.instance.push(); require(!(int32_t)(intptr_t)kinoko_c2dlayout_property_offset((struct SQVM*)(uintptr_t)(address(vm)), &offset), "missing descriptor guard");
     require(offset == -999, "failed descriptor leaves output unchanged");
     sq_newuserdata(vm, 1);
-    require(!kinoko_cact_layer_property_offset(address(vm), &offset), "short descriptor cannot read four bytes");
+    require(!(int32_t)(intptr_t)kinoko_cact_layer_property_offset((struct SQVM*)(uintptr_t)(address(vm)), &offset), "short descriptor cannot read four bytes");
     require(offset == -999, "short descriptor leaves output unchanged");
     sq_pop(vm, 1); sq_pushinteger(vm, 123);
-    require(!kinoko_c2dlayout_get_float(address(vm)), "wrong descriptor type rejected");
+    require(!kinoko_c2dlayout_get_float((struct SQVM*)(uintptr_t)(address(vm))), "wrong descriptor type rejected");
     sq_pop(vm, 1); auto descriptor = sq_newuserdata(vm, 4); store<int32_t>(descriptor, 21);
     const auto before = f.native;
-    require(!kinoko_cact_layer_set_bool(address(vm)), "missing setter value rejected");
+    require(!kinoko_cact_layer_set_bool((struct SQVM*)(uintptr_t)(address(vm))), "missing setter value rejected");
     require(f.native == before, "malformed setter did not write native memory");
     sq_settop(vm, base);
     sq_pushnull(vm); sq_newuserdata(vm, 4);
-    require(!kinoko_c2dlayout_property_offset(address(vm), &offset), "wrong receiver type rejected");
+    require(!(int32_t)(intptr_t)kinoko_c2dlayout_property_offset((struct SQVM*)(uintptr_t)(address(vm)), &offset), "wrong receiver type rejected");
     sq_settop(vm, base);
     f.instance.push(); sq_setinstanceup(vm, -1, nullptr); sq_newuserdata(vm, 4);
-    require(!kinoko_c2dlayout_property_offset(address(vm), &offset), "null native pointer rejected");
+    require(!(int32_t)(intptr_t)kinoko_c2dlayout_property_offset((struct SQVM*)(uintptr_t)(address(vm)), &offset), "null native pointer rejected");
     sq_settop(vm, base); f.require_canaries();
 }
 }

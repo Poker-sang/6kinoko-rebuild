@@ -14,6 +14,7 @@ constexpr int32_t return_value = 0x13579bdf;
 std::array<uint32_t, 12> observed{};
 std::size_t observed_count = 0;
 int observed_entry = 0;
+template<class T> uint32_t bits(T* value) { return static_cast<uint32_t>(reinterpret_cast<uintptr_t>(value)); }
 uint32_t bits(float value) { uint32_t result; std::memcpy(&result, &value, 4); return result; }
 uint32_t bits(int32_t value) { return static_cast<uint32_t>(value); }
 uint32_t bits(uint32_t value) { return value; }

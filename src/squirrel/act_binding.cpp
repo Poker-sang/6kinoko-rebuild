@@ -1694,10 +1694,10 @@ namespace {
 struct StageTables {
     SQVM *vm;
     int32_t act[5]{}, global[5]{}, resources[5]{};
-    explicit StageTables(int32_t machine) : vm(pointer<SQVM>(machine)) {
+    explicit StageTables(SQVM* machine) : vm(machine) {
         for (auto *object : {act, global, resources}) {
             object[0] = address(kinoko_act_host_symbols()->sq_object_vtable);
-            object[1] = machine; object[2] = static_cast<int32_t>(OT_NULL);
+            object[1] = address(machine); object[2] = static_cast<int32_t>(OT_NULL);
         }
     }
     ~StageTables() {
@@ -1756,7 +1756,7 @@ int publish_stage_objects(int32_t act, int32_t runtime, StageTables &tables, int
 int32_t kinoko_publish_act_layers(SQVM* vm, int32_t act, int32_t runtime, int32_t *active_count) {
     if (active_count) *active_count = 0;
     if (!vm || !act || !runtime) return 0;
-    StageTables tables(vm);
+    StageTables tables((SQVM*)(uintptr_t)vm);
     if (!tables.resolve(runtime, kinoko_act_document_name(pointer<KinokoActDocument>(act)))) return 0;
     return publish_stage_objects(act, runtime, tables, active_count);
 }
@@ -1850,7 +1850,7 @@ int32_t kinoko_begin_stage_this(int32_t resource_ptr, int32_t stage)
         kinoko::legacy::load<Resume>(methods + 32)(source); // 45099D, result ignored
     }
     vm = field<int32_t>(resource_ptr + 152);
-    StageTables tables(vm);
+    StageTables tables((SQVM*)(uintptr_t)vm);
     if (field<unsigned char>(resource_ptr + 8) != 1 && vm &&
         field<int32_t>(resource_ptr + 156) != static_cast<int32_t>(OT_NULL) && tables.resolve(resource_ptr)) {
         if (stage >= 0) field<int32_t>(resource_ptr + 4) = stage;
@@ -2036,7 +2036,7 @@ int32_t kinoko_root_table_construct_this(int32_t resource_ptr,
     /* 450E30 accepts an optional pre-existing Sqrat object only to verify
        that it belongs to the same VM.  The normal loader passes nullptr. */
     if (output_ptr != 0 &&
-        field<int32_t>(output_ptr + 4) != vm) {
+        field<SQVM*>(output_ptr + 4) != vm) {
         kinoko_sqrat_object_release((void *)(root_object));
         return (int32_t)0x80070057u;
     }
@@ -2144,7 +2144,7 @@ extern "C" int32_t kinoko_sqrat_call_integer1(int32_t a1) {
 namespace {
 int32_t string_property_set(SQVM* vm) {
     int32_t offset=0;
-    const int32_t object=kinoko_c2dlayout_property_offset(vm,&offset);
+    const int32_t object=(int32_t)(intptr_t)kinoko_c2dlayout_property_offset((struct SQVM*)(uintptr_t)(vm), &offset);
     if(!object) return 0;
     SQInteger value=0;
     if(!kinoko::script::upstream::sqrat_integer_argument(vm,2,value)) return 0;
@@ -2157,14 +2157,14 @@ int32_t string_property_set(SQVM* vm) {
 }
 int32_t string_value_get(SQVM* vm) {
     int32_t offset=0;
-    const int32_t object=kinoko_c2dlayout_property_offset(vm,&offset);
+    const int32_t object=(int32_t)(intptr_t)kinoko_c2dlayout_property_offset((struct SQVM*)(uintptr_t)(vm), &offset);
     if(!object) return 0;
     sq_pushstring(vm,kinoko::legacy::StringView(pointer<void>(object+offset)).data(),-1);
     return 1;
 }
 int32_t string_face_set(SQVM* vm) {
     int32_t offset=0;
-    const int32_t object=kinoko_c2dlayout_property_offset(vm,&offset);
+    const int32_t object=(int32_t)(intptr_t)kinoko_c2dlayout_property_offset((struct SQVM*)(uintptr_t)(vm), &offset);
     const SQChar* value=nullptr;
     if(!object || SQ_FAILED(sq_getstring(vm,2,&value))) return 0;
     static const char face[]="\x82\x6c\x82\x72\x20\x83\x53\x83\x56\x83\x62\x83\x4e";
@@ -2231,7 +2231,7 @@ extern "C" int32_t kinoko_publish_string_layout_class(SQVM* vm,int32_t root,int3
         if(ok) ok=kinoko_sqrat_set_offset_closure(vm, getters, p.name, p.offset, (void *)(intptr_t)(getter)) &&
             (p.readonly || kinoko_sqrat_set_offset_closure(vm, setters, p.name, p.offset, (void *)(intptr_t)(setter)));
     }
-    struct Method { const char* name; int32_t (*call)(int32_t); };
+    struct Method { const char* name; int32_t (*call)(SQVM*); };
     static const Method methods[]={
         {"PushBack",string_method<0>},{"Clear",string_method<1>},{"PopFront",string_method<2>},
         {"PopBack",string_method<3>},{"GetCharacterBytes",string_method<4>},
