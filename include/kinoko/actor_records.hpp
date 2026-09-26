@@ -105,7 +105,7 @@ struct FrameAppearance {
 };
 using Position3 = kinoko::render::Position3;
 struct FrameRecord {
-    Address vtable;
+    const void* vtable;
     std::int32_t texture; // borrowed handle; manager releases texture owners
     std::array<KinokoSpriteVertex, 4> vertices;
     float texture_width, texture_height;

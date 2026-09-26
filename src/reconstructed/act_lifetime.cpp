@@ -126,7 +126,7 @@ static void clear_resource(int32_t resource)
         const ChipResourceFields chip(pointer<void>(resource));
         // 42F1B0: loaded path, shared MCD, source name, then base name.
         clear_string(chip.bytes(&ChipResourceRecord::loaded_path));
-        if (kinoko_act_release_chip_data(resource))
+        if (kinoko_act_release_chip_data((KinokoActResource*)(uintptr_t)(resource)))
             kinoko_mcd_free(chip.get(&ChipResourceRecord::data));
         chip.set(&ChipResourceRecord::data, static_cast<kinoko_mcd_data *>(nullptr));
         clear_string(chip.bytes(&ChipResourceRecord::source_name));
@@ -140,7 +140,7 @@ static void clear_resource(int32_t resource)
             kinoko_set_render_target(0);
         // Native clones retain a store reference separately from the original
         // borrowed bit. A borrowed handle without that reference is not ours.
-        if (!kinoko_act_release_cloned_texture(resource) && !borrowed && handle)
+        if (!kinoko_act_release_cloned_texture((KinokoActResource*)(uintptr_t)(resource)) && !borrowed && handle)
             kinoko_texture_release(handle);
         texture.set(&TextureResourceRecord::texture, int32_t{0});
         clear_string(texture.bytes(&TextureResourceRecord::texture_name));

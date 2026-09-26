@@ -524,7 +524,7 @@ extern "C" int32_t __fastcall kinoko_method_unload_resource_texture(int32_t rece
     if (!resource) return 0;
     kinoko::act::TextureResourceFields fields(resource);
     const auto handle = fields.get(&kinoko::act::TextureResourceRecord::texture);
-    if (!kinoko_act_release_cloned_texture(receiver) &&
+    if (!kinoko_act_release_cloned_texture((KinokoActResource*)(uintptr_t)(receiver)) &&
         !fields.get(&kinoko::act::TextureResourceRecord::borrows_texture) && handle)
         kinoko_texture_release(handle);
     fields.set(&kinoko::act::TextureResourceRecord::texture, int32_t{0});
@@ -564,7 +564,7 @@ extern "C" int32_t __fastcall kinoko_method_load_chip_resource(
         if (!load_chip_archive(temporary.get(), path.c_str())) return 0;
         kinoko_string_assign_cstr(reinterpret_cast<int32_t *>(
             fields.bytes(&kinoko::act::ChipResourceRecord::loaded_path)), base.c_str());
-        if (kinoko_act_release_chip_data(receiver))
+        if (kinoko_act_release_chip_data((KinokoActResource*)(uintptr_t)(receiver)))
             kinoko_mcd_free(fields.get(&kinoko::act::ChipResourceRecord::data));
         fields.set(&kinoko::act::ChipResourceRecord::data,
             scratch.get(&kinoko::act::ChipResourceRecord::data));

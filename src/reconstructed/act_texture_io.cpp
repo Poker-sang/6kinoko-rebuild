@@ -116,7 +116,7 @@ Schema map_schema{
     {"mapChipTop", {0,0,offsetof(kinoko::map::LayoutRecord, chip_top)}}, {"mapChipRight", {0,0,offsetof(kinoko::map::LayoutRecord, chip_right)}},
     {"mapChipBottom", {0,0,offsetof(kinoko::map::LayoutRecord, chip_bottom)}}, {"alpha", {1,1,offsetof(kinoko::map::LayoutRecord, alpha)}}, {"scale", {1,1,offsetof(kinoko::map::LayoutRecord, scale)}}
 };
-using MapRecord = std::array<int32_t, 8>;
+using MapRecord = kinoko::map::Placement;
 uint32_t record_count(int32_t layout) {
     const auto begin = field<uint32_t>(layout+264), end = field<uint32_t>(layout+268);
     if (end < begin || (end-begin)%32 || (!begin && end) || (end-begin)/32 > 0x10000)
@@ -328,10 +328,10 @@ extern "C" int32_t __fastcall kinoko_method_read_map_layout(
         for (uint32_t i=0; i<count; ++i) {
             MapRecord record{};
             // Original reads min(size,32), without skipping any excess bytes.
-            if (!transfer(reader, record.data(), std::min(size,32u))) return 0;
-            record[5] = i;
-            reinterpret_cast<unsigned char*>(record.data())[24] = 1;
-            record[7] = 0x3f800000;
+            if (!transfer(reader, &record, std::min(size,32u))) return 0;
+            record.load_ordinal = i;
+            record.visible = 1;
+            record.alpha = 1.0f;
             records.push_back(record);
         }
         if (count) kinoko_native_buffer_replace(layout+264, records.data(),
@@ -350,7 +350,7 @@ extern "C" int32_t __fastcall kinoko_method_write_map_layout(
         if (!transfer(writer, count) || !transfer(writer, size)) return 0;
         auto records = pointer<MapRecord>(field<int32_t>(layout+264));
         for (uint32_t i=0; i<count; ++i)
-            if (!transfer(writer, records[i].data(), size)) return 0;
+            if (!transfer(writer, &records[i], size)) return 0;
         return 1;
     } catch (...) { return 0; }
 }
@@ -389,7 +389,7 @@ extern "C" int32_t __fastcall kinoko_method_map_set_layer(
         if (end < begin || (end-begin)%4 || (end-begin)/4 > 0x10000 || (!begin && end)) return fail;
         if (end != begin) texture_refs.assign(pointer<int32_t>(begin), pointer<int32_t>(end));
         for (uint32_t i=0; i<count; ++i) {
-            auto chip = kinoko_mcd_find_chip(data, static_cast<uint32_t>(records[i][0]));
+            auto chip = kinoko_mcd_find_chip(data, static_cast<uint32_t>(records[i].chip_id));
             auto texture = chip ? kinoko_mcd_find_texture(data, kinoko::legacy::load<uint32_t>(chip->bytes+4)) : nullptr;
             chip_refs.push_back(chip ? address(chip->bytes) : 0);
             texture_refs.push_back(address(texture));

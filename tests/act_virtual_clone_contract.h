@@ -1,3 +1,4 @@
+#include "kinoko/act_types.h"
 /* Real CAct -> resource/layer -> key/layout virtuals, compiled only in R132. */
 static char act_clone_events[32];
 static int act_clone_event_count;
@@ -8,7 +9,7 @@ static void act_clone_event(char event) {
 }
 static int32_t __fastcall probe_clone_resource(int32_t self, void *unused) {
     act_clone_event('R');
-    return kinoko_method_clone_texture_resource(self, unused);
+    return (int32_t)(intptr_t)kinoko_method_clone_texture_resource((KinokoActResource*)(uintptr_t)(self), unused);
 }
 static int32_t __fastcall probe_clone_layer(int32_t self, void *unused) {
     act_clone_event('L');
@@ -16,11 +17,11 @@ static int32_t __fastcall probe_clone_layer(int32_t self, void *unused) {
 }
 static int32_t __fastcall probe_clone_key(int32_t self, void *unused) {
     act_clone_event('K');
-    return kinoko_method_clone_act_key(self, unused);
+    return (int32_t)(intptr_t)kinoko_method_clone_act_key((KinokoActKey*)(uintptr_t)(self), unused);
 }
 static int32_t __fastcall probe_clone_layout(int32_t self, void *unused) {
     act_clone_event('O');
-    return kinoko_method_clone_c2d_layout(self, unused);
+    return (int32_t)(intptr_t)kinoko_method_clone_c2d_layout((KinokoActLayout*)(uintptr_t)(self), unused);
 }
 static int32_t __fastcall probe_clone_bind_layout(int32_t self, void *unused, int32_t layer) {
     (void)unused;

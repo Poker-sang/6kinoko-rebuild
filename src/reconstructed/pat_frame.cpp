@@ -56,7 +56,7 @@ extern "C" int32_t kinoko_pat_build_frame(KinokoActorManager *manager,KinokoAnim
         handle=handles[resource_base+fields->resource_index];
     const RecordView<FrameRecord> frame(receiver);
     frame.clear();
-    frame.set(&FrameRecord::vtable,static_cast<Address>(address(kinoko_pat_frame_methods())));
+    frame.set(&FrameRecord::vtable,kinoko_pat_frame_methods());
     frame.set(&FrameRecord::sprite_x,fields->sprite_x);frame.set(&FrameRecord::sprite_y,fields->sprite_y);
     frame.set(&FrameRecord::pivot_x,fields->offset_x);frame.set(&FrameRecord::pivot_y,fields->offset_y);
     frame.set(&FrameRecord::duration,fields->duration);

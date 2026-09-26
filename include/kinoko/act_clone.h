@@ -8,10 +8,10 @@ extern "C" {
 KinokoActDocument *__fastcall kinoko_act_clone(KinokoActDocument *source, void *unused);
 /* Returns true only for uncounted data the caller must free directly.
    Counted data is destroyed by the upstream control's final strong release. */
-int32_t kinoko_act_release_chip_data(int32_t resource);
+int32_t kinoko_act_release_chip_data((KinokoActResource*)(uintptr_t)(KinokoActResource* resource));
 /* Consume the native texture reference retained by a borrowed virtual clone.
    Returns true when this clone's reference was handled here. */
-int32_t kinoko_act_release_cloned_texture(int32_t resource);
+int32_t kinoko_act_release_cloned_texture((KinokoActResource*)(uintptr_t)(KinokoActResource* resource));
 #ifdef __cplusplus
 }
 #endif

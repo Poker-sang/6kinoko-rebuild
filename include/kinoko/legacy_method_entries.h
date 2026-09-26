@@ -1,3 +1,4 @@
+#include "kinoko/act_types.h"
 struct SQVM;
 #pragma once
 #include <stdint.h>
@@ -59,12 +60,12 @@ int32_t __fastcall kinoko_method_write_layout_properties(int32_t receiver, void*
 int32_t __fastcall kinoko_method_read_map_layout(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
 int32_t __fastcall kinoko_method_write_map_layout(int32_t receiver, void* unused_edx, int32_t writer);
 int32_t __fastcall kinoko_method_map_set_layer(int32_t receiver, void* unused_edx, int32_t layer);
-int32_t __fastcall kinoko_method_clone_c2d_layout(int32_t receiver, void* unused_edx);
-int32_t __fastcall kinoko_method_clone_act_key(int32_t receiver, void* unused_edx);
+KinokoActLayout* __fastcall (int32_t)(intptr_t)kinoko_method_clone_c2d_layout((KinokoActLayout*)(uintptr_t)(KinokoActLayout* receiver), void* unused_edx);
+KinokoActKey* __fastcall (int32_t)(intptr_t)kinoko_method_clone_act_key((KinokoActKey*)(uintptr_t)(KinokoActKey* receiver), void* unused_edx);
 int32_t __fastcall kinoko_method_clone_act_layer(int32_t receiver, void* unused_edx);
-int32_t __fastcall kinoko_method_clone_chip_resource(int32_t receiver, void* unused_edx);
-int32_t __fastcall kinoko_method_clone_texture_resource(int32_t receiver, void* unused_edx);
-int32_t __fastcall kinoko_method_clone_render_target(int32_t receiver, void* unused_edx);
+KinokoActResource* __fastcall (int32_t)(intptr_t)kinoko_method_clone_chip_resource((KinokoActResource*)(uintptr_t)(KinokoActResource* receiver), void* unused_edx);
+KinokoActResource* __fastcall (int32_t)(intptr_t)kinoko_method_clone_texture_resource((KinokoActResource*)(uintptr_t)(KinokoActResource* receiver), void* unused_edx);
+KinokoActResource* __fastcall (int32_t)(intptr_t)kinoko_method_clone_render_target((KinokoActResource*)(uintptr_t)(KinokoActResource* receiver), void* unused_edx);
 
 // kinoko_register_chip_resource_class
 int32_t __fastcall kinoko_method_register_chip_resource(int32_t receiver, void* unused_edx, struct SQVM* vm);

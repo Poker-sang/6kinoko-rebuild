@@ -579,7 +579,7 @@ struct DynamicLayerLock {
 };
 struct DynamicLayerParent {
     int32_t object[5];
-    explicit DynamicLayerParent(int32_t vm) : object{kinoko_sqrat_object_vtable(),vm,static_cast<int32_t>(OT_NULL),0,0} {}
+    explicit DynamicLayerParent(SQVM* vm) : object{kinoko_sqrat_object_vtable(),address(vm),static_cast<int32_t>(OT_NULL),0,0} {}
     ~DynamicLayerParent() { kinoko_sqrat_release_pair(pointer<SQVM>(object[1]), object+2); }
 };
 
@@ -715,7 +715,7 @@ template<bool string_layout> int32_t create_layer(int32_t player, const char* na
     const auto act = holder ? field<int32_t>(holder) : 0;
     const auto vm = field<int32_t>(player+152);
     if (!act || !vm) return 0;
-    DynamicLayerParent parent(vm);
+    DynamicLayerParent parent(pointer<SQVM>(vm));
     if (!get_pair(player+148, kinoko_string_data(pointer<const void>(player + 164)), parent.object+2) ||
         parent.object[2] != 0x0a000020) return 0;
     kinoko::legacy::Allocation<unsigned char> storage(static_cast<unsigned char*>(std::calloc(1,sizeof(kinoko::act::LayerStorageRecord))));

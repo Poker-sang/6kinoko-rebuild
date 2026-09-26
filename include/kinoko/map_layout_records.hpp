@@ -18,7 +18,7 @@ struct Placement {
     uint32_t chip_id;
     int32_t left, top;
     float fractional_left, fractional_top;
-    uint32_t unknown20;
+    uint32_t load_ordinal; // ordinal assigned by the current map read operation
     uint8_t visible;
     std::array<uint8_t, 3> padding25;
     float alpha;
