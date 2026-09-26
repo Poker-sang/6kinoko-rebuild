@@ -33,10 +33,6 @@ Position3 world_position(KinokoActLayer *layer) {
 }
 }
 
-extern "C" int32_t kinoko_map_sprite_init(int32_t sprite, int32_t handle, const unsigned char *bytes) {
-    return initialize_chip_quad(pointer<QuadRecord>(sprite),handle,reinterpret_cast<const ChipDefinition *>(bytes));
-}
-
 extern "C" int32_t kinoko_map_update_visible(KinokoActLayout *layout,
     int32_t left, int32_t top, int32_t right, int32_t bottom) {
     if (!layout) return E_FAIL;

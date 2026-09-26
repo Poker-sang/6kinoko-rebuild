@@ -5763,13 +5763,13 @@ static int test_map_virtual_clone(void) {
         CHECK(memcmp(copied+widths[i]+skip,original+widths[i]+skip,length-skip)==0);
         if(skip) CHECK(*(int32_t*)copied==PTR(&kinoko_chip_quad_methods_storage));
     }
-    CHECK(kinoko_delete_map_sprite(clone+4,NULL,0)==clone);
+    CHECK((int32_t)(intptr_t)kinoko_delete_map_sprite((void*)(uintptr_t)(clone+4), NULL, 0)==clone);
     for(i=0;i<10;++i) CHECK(*(int32_t*)(intptr_t)(clone+offsets[i])==0);
-    free((void*)(intptr_t)clone);kinoko_clear_map_layout(PTR(source));free(source);
+    free((void*)(intptr_t)clone);kinoko_clear_map_layout((KinokoActLayout*)(uintptr_t)(PTR(source)));free(source);
     {
         unsigned char *array=(unsigned char*)calloc(1,4+2*464);CHECK(array);
         *(uint32_t*)array=2;
-        CHECK(kinoko_delete_map_sprite(PTR(array+8),NULL,2)==PTR(array));
+        CHECK((int32_t)(intptr_t)kinoko_delete_map_sprite((void*)(uintptr_t)(PTR(array+8)), NULL, 2)==PTR(array));
         CHECK(*(uint32_t*)array==2);free(array);
     }
     return 0;
@@ -5840,7 +5840,7 @@ static int test_layout_secondary_lifetime(void) {
     CHECK(kinoko_call_thiscall1_result(layout+4,(void*)kinoko_layout_color_methods_storage.destroy,0)==PTR(layout));
     CHECK(*(int32_t*)layout==PTR(&kinoko_act_layout_methods_storage));CHECK(*(int32_t*)(layout+4)==PTR(&kinoko_color_methods_storage));
     free(layout);*(uint32_t*)array=2;
-    CHECK(kinoko_delete_layout_sprite(PTR(array+8),NULL,2)==PTR(array));
+    CHECK((int32_t)(intptr_t)kinoko_delete_layout_sprite((void*)(uintptr_t)(PTR(array+8)), NULL, 2)==PTR(array));
     CHECK(*(int32_t*)(array+8)==PTR(&kinoko_color_methods_storage));
     CHECK(*(int32_t*)(array+8+316)==PTR(&kinoko_color_methods_storage));free(array);
     return 0;

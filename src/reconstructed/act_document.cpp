@@ -158,15 +158,15 @@ KinokoActLayout* kinoko_act_make_map_layout(KinokoArchiveReader* reader_ptr)
     return layout.release();
 }
 
-void kinoko_act_free_map_records(int32_t layout)
+void kinoko_act_free_map_records(KinokoActLayout* layout)
 {
     if (layout) {
-        kinoko::act::MapLayoutView record(pointer<void>(layout));
+        kinoko::act::MapLayoutView record(layout);
         kinoko_native_buffer_destroy((void*)(record.bytes(&kinoko::act::MapLayoutRecord::records_begin)));
     }
 }
 
-int32_t kinoko_act_read_map_records(int32_t layout,
+int32_t kinoko_act_read_map_records(KinokoActLayout* layout,
                                            KinokoArchiveReader* reader_ptr)
 {
     uint32_t count;
@@ -180,16 +180,16 @@ int32_t kinoko_act_read_map_records(int32_t layout,
         !kinoko_act_read_u32(reader_ptr, &serialized_size) ||
         count > 0x10000u || serialized_size > 0x20u)
         return 0;
-    kinoko::act::MapLayoutView map(pointer<void>(layout));
-    const auto records_slot = address(map.bytes(&kinoko::act::MapLayoutRecord::records_begin));
-    kinoko_native_buffer_destroy((void*)(uintptr_t)(records_slot));
+    kinoko::act::MapLayoutView map(layout);
+    auto* records_slot = map.bytes(&kinoko::act::MapLayoutRecord::records_begin);
+    kinoko_native_buffer_destroy(records_slot);
     if (count == 0)
         return 1;
 
     if (serialized_size > 0x20u ||
         count > UINT32_MAX / 0x20u)
         return 0;
-    if(!kinoko_native_buffer_resize((void*)(uintptr_t)(records_slot), count*sizeof(kinoko::act::MapCellRecord))) return 0;
+    if(!kinoko_native_buffer_resize(records_slot, count*sizeof(kinoko::act::MapCellRecord))) return 0;
     records=static_cast<unsigned char *>(map.get(&kinoko::act::MapLayoutRecord::records_begin) ?
         static_cast<void *>(map.get(&kinoko::act::MapLayoutRecord::records_begin)) : nullptr);
     read_size = serialized_size;
@@ -197,7 +197,7 @@ int32_t kinoko_act_read_map_records(int32_t layout,
         unsigned char *record = records + (size_t)index * 0x20u;
         if (read_size != 0 &&
             !kinoko_reader_read_exact(reader_ptr, record, read_size)) {
-            kinoko_native_buffer_destroy((void*)(uintptr_t)(records_slot));
+            kinoko_native_buffer_destroy(records_slot);
             return 0;
         }
         kinoko::act::MapCellView cell(record);
@@ -260,8 +260,8 @@ int32_t kinoko_act_load_key(KinokoActKey* key, KinokoArchiveReader* reader_ptr,
         }
     } else if (layout_type == 0xc9ca5c20u) {
         layout = reinterpret_cast<KinokoActLayout*>(kinoko_act_make_map_layout(reader_ptr));
-        if (layout && !kinoko_act_read_map_records(address(layout), reader_ptr)) {
-            kinoko_act_free_map_records(address(layout));
+        if (layout && !kinoko_act_read_map_records((KinokoActLayout*)(uintptr_t)(address(layout)), reader_ptr)) {
+            kinoko_act_free_map_records((KinokoActLayout*)(uintptr_t)(address(layout)));
             std::free(layout);
             layout = nullptr;
         }
@@ -681,38 +681,6 @@ KinokoActResource* kinoko_act_make_resource(KinokoArchiveReader* reader_ptr, uin
     }
     // 428150 publishes the object now; 4289C0 loads actual resources later.
     return resource.release();
-}
-
-int32_t kinoko_c2dmaplayout_set_layer_impl(int32_t layout,
-                                                   int32_t layer)
-{
-    int32_t resource;
-
-    if (layout == 0 || layer == 0)
-        return -0x7fffbffb;
-    resource = field<int32_t>(layer + 0x64);
-    field<int32_t>(layout + 312) = layer;
-    field<int32_t>(layout + 316) = resource;
-    /* 4341F0 exposes alpha/blend through CActLayer's pointer properties. */
-    field<int32_t>(layer + 52) = layout + 320;
-    field<int32_t>(layer + 56) = layout + 328;
-    kinoko_native_buffer_destroy((void*)(uintptr_t)(layout+332));
-    field<int32_t>(layout + 380) = 0;
-    kinoko_trace_i32("map-layout:bind-layer", layer);
-    kinoko_trace_i32("map-layout:bind-resource", resource);
-    kinoko_trace_i32("map-layout:mcd", resource != 0
-                     ? field<int32_t>(resource + 64) : 0);
-    return 0;
-}
-
-int32_t kinoko_act_prepare_vector(int32_t object_ptr,
-                                         uint32_t begin_offset,
-                                         uint32_t end_offset,
-                                         uint32_t capacity_offset,
-                                         uint32_t count)
-{
-    if (end_offset!=begin_offset+4 || capacity_offset!=begin_offset+8) return 0;
-    return kinoko_act_array_prepare((void*)(uintptr_t)(object_ptr+begin_offset), count);
 }
 
 int32_t kinoko_act_load(KinokoActDocument* this_ptr, KinokoArchiveReader* reader_ptr,

@@ -71,7 +71,7 @@ void clear_layout(KinokoActLayout* layout) {
     if (!layout) return;
     const auto methods = kinoko::legacy::load<const void*>(layout);
     if (methods == kinoko_string_layout_methods()) { kinoko_clear_string_layout(reinterpret_cast<KinokoStringLayout*>(layout)); return; }
-    if (methods == kinoko_act_host_symbols()->map_layout_vtable) kinoko_clear_map_layout(address(layout));
+    if (methods == kinoko_act_host_symbols()->map_layout_vtable) kinoko_clear_map_layout((KinokoActLayout*)(uintptr_t)(address(layout)));
 }
 void clear_key(KinokoActKey* value) {
     if (!value) return;
@@ -225,22 +225,16 @@ extern "C" void* __fastcall kinoko_method_delete_act_resource(KinokoActResource*
 }
 
 
-extern "C" int32_t __fastcall kinoko_delete_layout_sprite(int32_t sprite,void*,int32_t flags) {
-    const int32_t layout=sprite-4;
-    const auto destroy=[](int32_t object) {
-        field<int32_t>(object)=address(kinoko_act_host_symbols()->layout_vtable);
-        field<int32_t>(object+4)=address(kinoko_act_host_symbols()->color_vtable);
-    };
-    // Original 42E6E0 -> 42D1C0: secondary this adjustment and array cookie.
-    // C2DLayout has no owned nested buffers; its texture handle is borrowed.
-    if(flags&2) {
-        const int32_t allocation=layout-4;
-        const uint32_t count=field<uint32_t>(allocation);
-        for(uint32_t i=count;i>0;--i) destroy(layout+316*(i-1));
-        if(flags&1) std::free(pointer<void>(allocation));
-        return allocation;
-    }
-    destroy(layout);
-    if(flags&1) std::free(pointer<void>(layout));
-    return layout;
+namespace {
+void clear_layout_identity(KinokoActLayout* layout) {
+    using namespace kinoko::act;
+    const kinoko::native::RecordView<Layout2DRecord> record(layout);
+    record.set(&Layout2DRecord::methods, kinoko_act_host_symbols()->layout_vtable);
+    record.view(&Layout2DRecord::quad).set(&kinoko::render::QuadRecord::vtable, kinoko_act_host_symbols()->color_vtable);
+}
+}
+extern "C" void* __fastcall kinoko_delete_layout_sprite(void* sprite, void*, int32_t flags) {
+    // Original secondary this adjustment; array cookie precedes the full layout.
+    auto* layout = reinterpret_cast<KinokoActLayout*>(static_cast<unsigned char*>(sprite) - offsetof(kinoko::act::Layout2DRecord, quad));
+    return delete_with_flags<KinokoActLayout, clear_layout_identity>(layout, sizeof(kinoko::act::Layout2DRecord), static_cast<unsigned char>(flags));
 }

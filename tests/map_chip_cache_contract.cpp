@@ -108,11 +108,11 @@ int main() {
     CHECK(map.render_quads.begin[0].vertices[0].color==0x7fffffffu);
     CHECK(map.chip_sprites.begin[1].quad.positions[0].x==0 && map.chip_sprites.begin[1].quad.vertices[0].color==0xffffffffu);
     CHECK(set_chip_rectangle(layout,1,32,0,32,16));
-    auto *clone=reinterpret_cast<LayoutRecord*>(kinoko_clone_map_layout(address(&map),nullptr));
+    auto *clone=reinterpret_cast<LayoutRecord*>((int32_t)(intptr_t)kinoko_clone_map_layout((KinokoActLayout*)(uintptr_t)(address(&map)), nullptr));
     CHECK(clone->chip_sprites.begin!=map.chip_sprites.begin && clone->chip_definitions.begin!=map.chip_definitions.begin);
     CHECK(clone->changed_chips.begin!=map.changed_chips.begin && clone->changed_chips.begin[0]==map.changed_chips.begin[0]);
     CHECK(clone->cached_chip_resource==map.cached_chip_resource && clone->suppress_next_binding==1);
-    kinoko_clear_map_layout(address(clone));std::free(clone);
+    kinoko_clear_map_layout((KinokoActLayout*)(uintptr_t)(address(clone)));std::free(clone);
     CHECK(map.chip_sprites.begin[1].valid && map.changed_chips.begin[0]==definition(chips[3]));
     flush_changed_chips(layout);
     auto *previous=map.chip_sprites.begin;
@@ -123,7 +123,7 @@ int main() {
     CHECK(set_chip_rectangle(layout,1,0,0,0,-16)); // signed/zero dimensions are valid original inputs
     flush_changed_chips(layout);
     CHECK(map.chip_sprites.begin[1].quad.positions[3].y==-16);
-    kinoko_clear_map_layout(address(&map));
+    kinoko_clear_map_layout((KinokoActLayout*)(uintptr_t)(address(&map)));
     CHECK(!map.chip_sprites.begin && !map.chip_definitions.begin && !map.changed_chips.begin && !map.chip_indices.begin);
     CHECK(resource.data==&data && textures[0].handle==1); // cache never owns MCD/textures
     return 0;

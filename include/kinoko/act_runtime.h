@@ -35,8 +35,8 @@ extern "C" {
 #endif
 
 int32_t kinoko_act_append_list(void* list_slot, void* value);
-int32_t __fastcall kinoko_delete_layout_sprite(int32_t sprite, void *unused, int32_t flags);
-void kinoko_act_free_map_records(int32_t layout);
+void* __fastcall kinoko_delete_layout_sprite(void* sprite, void *unused, int32_t flags);
+void kinoko_act_free_map_records(KinokoActLayout* layout);
 int32_t kinoko_act_load(KinokoActDocument* this_ptr, KinokoArchiveReader* reader_ptr,
                                int32_t version);
 int32_t kinoko_act_load_key(KinokoActKey* key, KinokoArchiveReader* reader_ptr,
@@ -58,12 +58,7 @@ KinokoActLayout* kinoko_act_make_layout(KinokoArchiveReader* reader_ptr);
 int32_t kinoko_act_make_list(void* list_slot);
 KinokoActLayout* kinoko_act_make_map_layout(KinokoArchiveReader* reader_ptr);
 KinokoActResource* kinoko_act_make_resource(KinokoArchiveReader* reader_ptr, uint32_t type);
-int32_t kinoko_act_prepare_vector(int32_t object_ptr,
-                                         uint32_t begin_offset,
-                                         uint32_t end_offset,
-                                         uint32_t capacity_offset,
-                                         uint32_t count);
-int32_t kinoko_act_read_map_records(int32_t layout,
+int32_t kinoko_act_read_map_records(KinokoActLayout* layout,
                                            KinokoArchiveReader* reader_ptr);
 int32_t kinoko_act_read_u32(KinokoArchiveReader* reader_ptr, uint32_t *value);
 int32_t kinoko_act_read_u8(KinokoArchiveReader* reader_ptr, uint8_t *value);
@@ -79,8 +74,6 @@ void kinoko_c2dlayout_world_position(int32_t layer,
                                              float *x,
                                              float *y,
                                              float *z);
-int32_t kinoko_c2dmaplayout_set_layer_impl(int32_t layout,
-                                                   int32_t layer);
 int32_t kinoko_cact_associate_resource(struct SQVM* vm);
 void* kinoko_construct_cact_script(void* this_ptr);
 void kinoko_destroy_cact_key(void* key);
@@ -110,8 +103,6 @@ int32_t kinoko_map_record_at(int32_t layout, int32_t index);
 int32_t kinoko_map_set_chip_id(struct SQVM* vm);
 int32_t kinoko_map_set_chip_layout(struct SQVM* vm);
 int32_t kinoko_map_set_chip_rect(struct SQVM* vm);
-int32_t kinoko_map_sprite_init(int32_t sprite, int32_t handle,
-                                      const unsigned char *chip_bytes);
 struct kinoko_mcd_chip *kinoko_mcd_find_chip(
     struct kinoko_mcd_data *data, uint32_t chip_id);
 struct kinoko_mcd_texture *kinoko_mcd_find_texture(
