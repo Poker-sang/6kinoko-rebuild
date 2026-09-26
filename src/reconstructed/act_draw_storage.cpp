@@ -63,11 +63,6 @@ extern "C" int32_t kinoko_act_append_blit(KinokoActRuntime* self, int32_t x, int
     }
     return 0;
 }
-extern "C" int32_t kinoko_act_bitblt_this(int32_t self,int32_t x,int32_t y,
-    int32_t width,int32_t height,int32_t texture,int32_t sx,int32_t sy,int32_t blend,float alpha) {
-    return kinoko_act_append_blit(pointer<KinokoActRuntime>(self),x,y,width,height,
-        pointer<KinokoActResource>(texture),sx,sy,blend,alpha);
-}
 extern "C" int32_t kinoko_act_resize_sprites(KinokoActSpriteStorage* storage,uint32_t requested) {
     if(!storage || requested>0x1642c85u) return 0;
     try {

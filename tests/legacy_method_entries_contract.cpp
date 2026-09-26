@@ -69,8 +69,8 @@ extern "C" int32_t kinoko_root_table_construct_this(KinokoActRuntime* receiver, 
     return record(7, {bits(receiver), bits(vm), bits(output)});
 }
 
-extern "C" int32_t kinoko_act_bitblt_this(int32_t receiver, int32_t x, int32_t y, int32_t width,
-    int32_t height, int32_t resource, int32_t source_x, int32_t source_y, int32_t blend, float alpha) {
+extern "C" int32_t kinoko_act_append_blit(KinokoActRuntime* receiver, int32_t x, int32_t y, int32_t width,
+    int32_t height, KinokoActResource* resource, int32_t source_x, int32_t source_y, int32_t blend, float alpha) {
     return record(8, {bits(receiver), bits(x), bits(y), bits(width), bits(height), bits(resource),
             bits(source_x), bits(source_y), bits(blend), bits(alpha)});
 }

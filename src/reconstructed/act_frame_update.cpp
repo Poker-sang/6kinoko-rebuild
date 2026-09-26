@@ -49,13 +49,13 @@ extern "C" int32_t kinoko_act_layer_update(KinokoActLayer *object) {
 
 // Original 451640: the root callback belongs to the source ACT, while layer
 // holders come from the active runtime. Callbacks can change either container.
-extern "C" int32_t kinoko_act_update_frame(int32_t self) {
-    const RuntimeView resource(pointer(self));
+extern "C" int32_t kinoko_act_update_frame(KinokoActRuntime* self) {
+    const RuntimeView resource(self);
     static volatile LONG trace_count;
     const auto trace_index = InterlockedIncrement(&trace_count);
     if (trace_index <= 48) {
         const auto act = self ? resource.get(&RuntimeRecord::active_document) : 0;
-        kinoko_trace_i32("451640:resource", self);
+        kinoko_trace_i32("451640:resource", address(self));
         kinoko_trace_i32("451640:active", self ? load<int32_t>(resource.bytes(&RuntimeRecord::stage_active)) : 0);
         kinoko_trace_i32("451640:suspend", self ? load<int32_t>(resource.bytes(&RuntimeRecord::hidden)) : 0);
         kinoko_trace_i32("451640:time", self ? resource.get(&RuntimeRecord::wake_time) : 0);

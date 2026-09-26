@@ -66,7 +66,7 @@ extern "C" int32_t kinoko_map_manager_update(KinokoMapManager *storage) {
     }
     kinoko_act_increment_frame(player, nullptr);
     // 46F0C5 reloads the receiver after IncrementFrame.
-    const auto result = kinoko_act_update_frame(address(manager.get(&ManagerRecord::player)));
+    const auto result = kinoko_act_update_frame((KinokoActRuntime*)(uintptr_t)(address(manager.get(&ManagerRecord::player))));
     if (trace) kinoko_trace_i32("46f0b0:result", result);
     return result;
 }

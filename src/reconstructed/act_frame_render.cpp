@@ -125,7 +125,7 @@ void trace_draw(int32_t self, const RuntimeView& resource, LONG actor_index, LON
     }
     if (trace_index <= 8) {
         kinoko_trace("4525d0:live-entry");
-        kinoko_trace_i32("4525d0:live-resource", self);
+        kinoko_trace_i32("4525d0:live-resource", address(self));
         kinoko_trace_i32("4525d0:live-act", address(act));
         if (act) kinoko_trace_squirrel_name("4525d0:live-act-name", address(kinoko_string_data((const void*)(document.bytes(&DocumentRecord::name)))));
         kinoko_trace_squirrel_name("4525d0:live-resource-name", address(kinoko_string_data((const void*)(resource.bytes(&RuntimeRecord::name)))));
@@ -133,9 +133,9 @@ void trace_draw(int32_t self, const RuntimeView& resource, LONG actor_index, LON
 }
 }
 
-extern "C" int32_t kinoko_act_prepare_draw(int32_t self) {
+extern "C" int32_t kinoko_act_prepare_draw(KinokoActRuntime* self) {
     if (!self) return E_FAIL;
-    const RuntimeView resource(pointer(self));
+    const RuntimeView resource(self);
     if (resource.get(&RuntimeRecord::hidden)) return 0;
     kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION*>(resource.bytes(&RuntimeRecord::lock)));
     const auto act = resource.get(&RuntimeRecord::active_document);
@@ -145,7 +145,7 @@ extern "C" int32_t kinoko_act_prepare_draw(int32_t self) {
     int32_t result = 0;
     const auto layers = document.get(&DocumentRecord::layers);
     for (int32_t i = layer_distance(layers) - 1; i >= 0; --i) {
-        const auto layout = address(kinoko_act_layer_layout(pointer<KinokoActRuntime>(self), i));
+        const auto layout = address(kinoko_act_layer_layout(self, i));
         if (layout) {
             const auto update = method(layout, 7);
             if (update && kinoko_call_thiscall0_result(pointer(layout), update) < 0) result = E_FAIL;
@@ -162,10 +162,10 @@ extern "C" int32_t kinoko_act_prepare_draw(int32_t self) {
     return result;
 }
 
-extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
+extern "C" int32_t kinoko_act_draw(KinokoActRuntime* self, float x, float y) {
     auto* device = kinoko_graphics.device;
     if (!self) return E_FAIL;
-    const RuntimeView resource(pointer(self));
+    const RuntimeView resource(self);
     if (resource.get(&RuntimeRecord::hidden)) return 0;
     static volatile LONG actor_trace_count, trace_count;
     const auto actor_index = InterlockedIncrement(&actor_trace_count);
@@ -185,7 +185,7 @@ extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
     DrawStates states(device);
     int32_t result = 0;
     for (int32_t i = layer_distance(layers) - 1; i >= 0; --i) {
-        const auto layout = address(kinoko_act_layer_layout(pointer<KinokoActRuntime>(self), i));
+        const auto layout = address(kinoko_act_layer_layout(self, i));
         if (!layout) continue;
         const auto draw = method(layout, 8);
         if (!draw) { result = E_FAIL; continue; }

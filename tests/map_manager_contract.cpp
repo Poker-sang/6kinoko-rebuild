@@ -40,7 +40,7 @@ void kinoko_act_runtime_dispose(KinokoActRuntime *player) {
 int32_t __fastcall kinoko_act_increment_frame(KinokoActRuntime *player, void *) {
     CHECK(player == expected_player); calls.push_back(5); return 0;
 }
-int32_t kinoko_act_update_frame(int32_t player) {
+int32_t kinoko_act_update_frame(KinokoActRuntime* player) {
     CHECK(player == address(expected_player)); calls.push_back(6); return 17;
 }
 }

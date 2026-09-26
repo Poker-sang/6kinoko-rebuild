@@ -1,3 +1,7 @@
+struct KinokoActor;
+struct KinokoActorPool;
+struct KinokoActorManager;
+struct KinokoCamera;
 #include "kinoko/file_io.h"
 #include "kinoko/act_types.h"
 struct SQVM;
@@ -80,7 +84,7 @@ int32_t __fastcall kinoko_method_layout_update(KinokoActLayout* receiver, void* 
 // function_42c300
 int32_t __fastcall kinoko_method_layout_draw(KinokoActLayout* receiver, void* unused_edx, float x, float y);
 // function_43c860
-int32_t __fastcall kinoko_method_layout3d_assign(int32_t receiver, void* unused_edx, int32_t source,
+int32_t __fastcall kinoko_method_layout3d_assign(KinokoActLayout* receiver, void* unused_edx, KinokoArchiveReader** source,
     int32_t mode);
 // function_450950
 int32_t __fastcall kinoko_method_begin_stage(KinokoActRuntime* receiver, void* unused_edx, int32_t stage);
@@ -88,26 +92,26 @@ int32_t __fastcall kinoko_method_begin_stage(KinokoActRuntime* receiver, void* u
 int32_t __fastcall kinoko_method_root_table_construct(KinokoActRuntime* receiver, void* unused_edx, struct SQVM* vm,
     void* output);
 // function_4514a0
-int32_t __fastcall kinoko_method_act_bitblt(int32_t receiver, void* unused_edx, int32_t x, int32_t y,
-    int32_t width, int32_t height, int32_t resource, int32_t source_x, int32_t source_y, int32_t blend,
+int32_t __fastcall kinoko_method_act_bitblt(KinokoActRuntime* receiver, void* unused_edx, int32_t x, int32_t y,
+    int32_t width, int32_t height, KinokoActResource* resource, int32_t source_x, int32_t source_y, int32_t blend,
     float alpha);
 // function_457a10
-int32_t __fastcall kinoko_method_update_children(int32_t receiver, void* unused_edx, int32_t argument);
+int32_t __fastcall kinoko_method_update_children(void* receiver, void* unused_edx, int32_t argument);
 
 // function_45dbd0
-int32_t __fastcall kinoko_method_actor_move(int32_t receiver, void* unused_edx, float dx, float dy);
+int32_t __fastcall kinoko_method_actor_move(struct KinokoActor* receiver, void* unused_edx, float dx, float dy);
 // function_45eb00
-int32_t __fastcall kinoko_actor_reset_method(int32_t receiver, void* unused_edx);
+int32_t __fastcall kinoko_actor_reset_method(struct KinokoActor* receiver, void* unused_edx);
 // function_466490
 int32_t __fastcall kinoko_method_class_type(int32_t receiver, void* unused_edx);
 // function_469620
-int32_t __fastcall kinoko_method_render_layer_update(int32_t receiver, void* unused_edx, int32_t argument);
+int32_t __fastcall kinoko_method_render_layer_update(void* receiver, void* unused_edx, struct KinokoCamera* argument);
 // function_46a6f0
-int32_t __fastcall kinoko_method_actor_manager_remove(int32_t receiver, void* unused_edx, uint32_t handle);
+int32_t __fastcall kinoko_method_actor_manager_remove(struct KinokoActorPool* receiver, void* unused_edx, uint32_t handle);
 // retdec_actor_manager_vtable_push
-int32_t __fastcall kinoko_method_actor_manager_push(int32_t receiver, void* unused_edx);
+int32_t __fastcall kinoko_method_actor_manager_push(struct KinokoActorManager* receiver, void* unused_edx);
 // function_46ab10
-int32_t __fastcall kinoko_method_actor_manager_top(int32_t receiver, void* unused_edx, int32_t output);
+int32_t __fastcall kinoko_method_actor_manager_top(struct KinokoActorPool* receiver, void* unused_edx, uint32_t* output);
 
 #ifdef __cplusplus
 }

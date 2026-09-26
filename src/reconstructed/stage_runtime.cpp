@@ -69,7 +69,7 @@ extern "C" int32_t kinoko_stages_update() {
                 if (act) kinoko_trace_squirrel_name("466050:act-name", address(document_name(act)));
             }
             kinoko_act_increment_frame(resource, nullptr);
-            result = kinoko_act_update_frame(address(resource));
+            result = kinoko_act_update_frame((KinokoActRuntime*)(uintptr_t)(address(resource)));
             if (trace_index <= 8) kinoko_trace_i32("466050:update-result", result);
         }
         // Advance after the callback, as in the original traversal.
@@ -90,7 +90,7 @@ extern "C" int32_t kinoko_stages_prepare_draw() {
     int32_t result = stage_list_identity();
     for (auto node = kinoko_stage_list_first(); node != kinoko_stage_list_end(); node = kinoko_stage_list_next(node)) {
         const auto resource = stage_runtime(node);
-        result = resource ? kinoko_act_prepare_draw(address(resource)) : 0;
+        result = resource ? kinoko_act_prepare_draw((KinokoActRuntime*)(uintptr_t)(address(resource))) : 0;
     }
     return result;
 }
@@ -118,7 +118,7 @@ extern "C" int32_t kinoko_stages_draw() {
             kinoko_trace_i32("4660c0:act", address(act));
             if (act) kinoko_trace_squirrel_name("4660c0:act-name", address(document_name(act)));
         }
-        result = kinoko_act_draw(address(resource), 0.0f, 0.0f);
+        result = kinoko_act_draw((KinokoActRuntime*)(uintptr_t)(address(resource)), 0.0f, 0.0f);
     }
     return result;
 }

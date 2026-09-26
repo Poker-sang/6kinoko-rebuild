@@ -174,7 +174,7 @@ static int test_update() {
         {0x80000000u,0x7fffffffu,1}, {0xffffffffu,0,1}, {0,0xffffffffu,0}};
     for (const auto& sample : deadlines) {
         frame_clock = sample[0]; fixture.runtime[25] = sample[1]; callbacks.clear();
-        CHECK(kinoko_act_update_frame(address(fixture.runtime)) == 0);
+        CHECK(kinoko_act_update_frame((KinokoActRuntime*)(uintptr_t)(address(fixture.runtime))) == 0);
         CHECK(callbacks.size() == (sample[2] ? 2u : 0u));
     }
     frame_clock = 100; fixture.runtime[25] = 0;
@@ -184,7 +184,7 @@ static int test_update() {
         replacement_source[53] = replacement_source[52] + 4;
         replacement_holder = address(replacement_source);
         callbacks.clear(); mutation = mode;
-        CHECK(kinoko_act_update_frame(address(fixture.runtime)) == (mode == fail ? E_FAIL : 0));
+        CHECK(kinoko_act_update_frame((KinokoActRuntime*)(uintptr_t)(address(fixture.runtime))) == (mode == fail ? E_FAIL : 0));
         CHECK(callbacks.size() == (mode == append ? 3u : 1u));
         CHECK(fixture.a[42] == 100 && fixture.a[43] == 200 && fixture.a[44] == 300);
         // LeaveCriticalSection ran on every failure/early-return path.
@@ -193,12 +193,12 @@ static int test_update() {
     mutation = none; fixture.count(2); fixture.runtime[2] = 1;
     fixture.runtime[0] = address(&fixture.source_holder);
     allocation_fails = true; callbacks.clear();
-    CHECK(kinoko_act_update_frame(address(fixture.runtime)) == 0 && callbacks.empty());
+    CHECK(kinoko_act_update_frame((KinokoActRuntime*)(uintptr_t)(address(fixture.runtime))) == 0 && callbacks.empty());
     allocation_fails = false;
     fixture.runtime[26] = 1;
-    CHECK(kinoko_act_update_frame(address(fixture.runtime)) == 0 && callbacks.empty());
+    CHECK(kinoko_act_update_frame((KinokoActRuntime*)(uintptr_t)(address(fixture.runtime))) == 0 && callbacks.empty());
     fixture.runtime[26] = 0; fixture.runtime[2] = 0;
-    CHECK(kinoko_act_update_frame(address(fixture.runtime)) == E_FAIL);
+    CHECK(kinoko_act_update_frame((KinokoActRuntime*)(uintptr_t)(address(fixture.runtime))) == E_FAIL);
     return 0;
 }
 
@@ -217,7 +217,7 @@ static int test_storage_and_draw() {
     const auto* commands = reinterpret_cast<BlitCommand*>(kinoko_act_command_span((KinokoActRuntime*)(fixture.runtime)).begin);
     CHECK(commands[0].alpha == 0 && commands[5].alpha == 1 && commands[2].alpha == 0.5f);
     draws.clear(); draw_result = 0;
-    CHECK(kinoko_act_prepare_draw(address(fixture.runtime)) == 0);
+    CHECK(kinoko_act_prepare_draw((KinokoActRuntime*)(uintptr_t)(address(fixture.runtime))) == 0);
     CHECK(draws.size() == 2 && draws[0] == address(fixture.layouts[1]) && draws[1] == address(fixture.layouts[0]));
     auto* sprites = reinterpret_cast<BlitSprite*>(kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime)).begin);
     CHECK(kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime)).end-kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime)).begin==6*184);
@@ -233,7 +233,7 @@ static int test_storage_and_draw() {
     CHECK(kinoko_act_resize_sprites((KinokoActSpriteStorage*)(fixture.runtime + 15), UINT32_MAX) == 0);
     const auto after=kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime));
     CHECK(std::memcmp(&saved,&after,sizeof(saved))==0);
-    CHECK(kinoko_act_prepare_draw(address(fixture.runtime))==0);
+    CHECK(kinoko_act_prepare_draw((KinokoActRuntime*)(uintptr_t)(address(fixture.runtime)))==0);
     BlitSprite copies[2]{};
     copies[0].sprite.vtable = &color_identity; copies[1].sprite.vtable = &target_identity;
     CHECK(kinoko_act_copy_blit_sprites((const KinokoBlitSprite*)(sprites), (const KinokoBlitSprite*)(sprites + 2), (KinokoBlitSprite*)(copies)) == copies + 2);
@@ -241,14 +241,14 @@ static int test_storage_and_draw() {
     CHECK(copies[1].sprite.texture == 1 && copies[1].sprite.vertices[0].color == sprites[1].sprite.vertices[0].color);
     CHECK(kinoko_act_copy_blit_sprites((const KinokoBlitSprite*)(sprites), (const KinokoBlitSprite*)(sprites), (KinokoBlitSprite*)(copies)) == copies);
     kinoko_graphics.device = reinterpret_cast<IDirect3DDevice9 *>(&device); setup_device(); draws.clear(); sprite_draws = texture_unbinds = 0;
-    CHECK(kinoko_act_draw(address(fixture.runtime), 100, 200) == 0);
+    CHECK(kinoko_act_draw((KinokoActRuntime*)(uintptr_t)(address(fixture.runtime)), 100, 200) == 0);
     CHECK(draw_state_valid && restored() && draws.size() == 2 && draws[0] == address(fixture.layouts[1]));
     CHECK(sprite_draws == 6 && texture_unbinds == 1 && observed_x == 113 && observed_y == 224);
     int32_t target[25]{}; target[17]=123;
     fixture.runtime[19]=address(target);
     device_vtable.Clear=clear_target;
     target_events.clear(); target_clear_valid=false;
-    CHECK(kinoko_act_draw(address(fixture.runtime),100,200)==0);
+    CHECK(kinoko_act_draw((KinokoActRuntime*)(uintptr_t)(address(fixture.runtime)), 100, 200)==0);
     CHECK(target_clear_valid && target_events==std::vector<int32_t>({123,-1,0}));
     CHECK(restored());
     fixture.runtime[19]=0;
@@ -260,11 +260,11 @@ static int test_storage_and_draw() {
         {D3DBLEND_DESTCOLOR,D3DBLEND_ONE,D3DBLENDOP_ADD}};
     CHECK(std::memcmp(blends, observed_blends, sizeof(blends)) == 0);
     draw_result = E_FAIL; setup_device();
-    CHECK(kinoko_act_draw(address(fixture.runtime), 0, 0) == E_FAIL && restored());
+    CHECK(kinoko_act_draw((KinokoActRuntime*)(uintptr_t)(address(fixture.runtime)), 0, 0) == E_FAIL && restored());
     CHECK(reinterpret_cast<CRITICAL_SECTION*>(fixture.runtime + 5)->RecursionCount == 0);
     fixture.active[24] = 0; draws.clear(); sprite_draws = 0;
-    CHECK(kinoko_act_prepare_draw(address(fixture.runtime)) == 0);
-    CHECK(kinoko_act_draw(address(fixture.runtime), 0, 0) == 0 && draws.empty() && sprite_draws == 0);
+    CHECK(kinoko_act_prepare_draw((KinokoActRuntime*)(uintptr_t)(address(fixture.runtime))) == 0);
+    CHECK(kinoko_act_draw((KinokoActRuntime*)(uintptr_t)(address(fixture.runtime)), 0, 0) == 0 && draws.empty() && sprite_draws == 0);
     fixture.active[24] = 1; draw_result = 0;
     CHECK(kinoko_act_clear_sprites((KinokoActSpriteStorage*)(fixture.runtime + 15)) == allocation);
     CHECK(kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime)).end==allocation && kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime)).capacity==saved.capacity);

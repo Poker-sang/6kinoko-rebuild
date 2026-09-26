@@ -6609,10 +6609,10 @@ int main(int argc, char **argv) {
         act_resource[3] = PTR(act);
         act[24] = 0;
         InitializeCriticalSection((CRITICAL_SECTION *)(act_resource + 5));
-        CHECK(kinoko_act_draw(PTR(act_resource), 0, 0) == 0);
+        CHECK(kinoko_act_draw((KinokoActRuntime*)(uintptr_t)(PTR(act_resource)), 0, 0) == 0);
         CHECK(draw_count == 0);
         act[24] = 1;
-        CHECK(kinoko_act_draw(PTR(act_resource), 0, 0) == 0);
+        CHECK(kinoko_act_draw((KinokoActRuntime*)(uintptr_t)(PTR(act_resource)), 0, 0) == 0);
         CHECK(draw_count == 1);
         DeleteCriticalSection((CRITICAL_SECTION *)(act_resource + 5));
     }

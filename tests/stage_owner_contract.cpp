@@ -117,9 +117,9 @@ void kinoko_trace(const char *) {}
 void kinoko_trace_i32(const char *, int32_t) {}
 void kinoko_trace_squirrel_name(const char *, int32_t) {}
 int32_t __fastcall kinoko_act_increment_frame(KinokoActRuntime *, void *) { return 0; }
-int32_t kinoko_act_update_frame(int32_t) { return 0; }
-int32_t kinoko_act_prepare_draw(int32_t) { return 0; }
-int32_t kinoko_act_draw(int32_t, float, float) { return 0; }
+int32_t kinoko_act_update_frame(KinokoActRuntime*) { return 0; }
+int32_t kinoko_act_prepare_draw(KinokoActRuntime*) { return 0; }
+int32_t kinoko_act_draw(KinokoActRuntime*, float, float) { return 0; }
 KinokoIntegerMap* kinoko_integer_map_create() { return 0; }
 void kinoko_integer_map_destroy(KinokoIntegerMap*) {}
 void kinoko_integer_map_clear(KinokoIntegerMap*) {}
