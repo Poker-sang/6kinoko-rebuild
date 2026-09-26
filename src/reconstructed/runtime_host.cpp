@@ -211,8 +211,9 @@ int32_t *kinoko_render_target_type(void) {
     return &kinoko_render_target_type_identity;
 }
 
-int32_t __fastcall kinoko_color_destroy(int32_t receiver, void* unused_edx, char flags) {
-    *(int32_t *)(intptr_t)receiver = (int32_t)(intptr_t)&kinoko_color_methods_storage;
+void* __fastcall kinoko_color_destroy(void* receiver, void* unused_edx, char flags) {
+    const void* methods = &kinoko_color_methods_storage;
+    std::memcpy(receiver, &methods, sizeof methods);
     if (flags & 1) kinoko_host_free_allocation((int32_t *)(intptr_t)receiver);
     return receiver;
 }
@@ -255,20 +256,6 @@ void kinoko_camera_class_copy(void* a1, void* a2) {
         (KinokoCamera *)(intptr_t)a1, (KinokoCamera *)(intptr_t)a2);
 }
 
-int32_t kinoko_collision_refresh_abi(int32_t this_ptr) {
-    return (int32_t)(intptr_t)kinoko_collision_refresh((KinokoCollisionState *)(intptr_t)this_ptr);
-}
-
-int32_t kinoko_collision_reset_abi(int32_t this_ptr, int32_t actor_ptr) {
-    return kinoko_collision_reset((KinokoCollisionState *)(intptr_t)this_ptr,
-        (KinokoActorManager *)(intptr_t)actor_ptr);
-}
-
-int32_t kinoko_host_register_collision_map_abi(int32_t layout) {
-    return (int32_t)(intptr_t)kinoko_collision_register_map(
-        reinterpret_cast<KinokoCollisionState*>(&collision_state.record), (KinokoActLayout *)(intptr_t)layout);
-}
-
 static int32_t kinoko_append_render_item(int32_t *item) {
     static volatile LONG trace_count;
     LONG trace_index = InterlockedIncrement(&trace_count);
@@ -282,15 +269,6 @@ static int32_t kinoko_append_render_item(int32_t *item) {
 
 int32_t kinoko_host_append_render_item(int32_t * a1) {
     return kinoko_append_render_item(a1);
-}
-
-int32_t kinoko_host_find_map_layout_abi(int32_t name_ptr) {
-    return (int32_t)(intptr_t)kinoko_map_lookup_layout((KinokoMapManager*)(uintptr_t)((int32_t)(intptr_t)&map_state.record), (const char *)(intptr_t)name_ptr);
-}
-
-int32_t kinoko_host_create_map_layer_abi(int32_t name_ptr)
-{
-    return (int32_t)(intptr_t)kinoko_map_make_render_layer((KinokoMapManager*)(uintptr_t)((int32_t)(intptr_t)&map_state.record), (const char *)(intptr_t)name_ptr);
 }
 
 int32_t kinoko_host_clear_sound(void) {

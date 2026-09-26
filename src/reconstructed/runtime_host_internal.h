@@ -136,7 +136,7 @@ int32_t *kinoko_chip_resource_type(void);
 int32_t *kinoko_map_layout_type(void);
 int32_t *kinoko_texture_resource_type(void);
 int32_t *kinoko_render_target_type(void);
-int32_t __fastcall kinoko_color_destroy(int32_t receiver, void* unused_edx, char flags);
+void* __fastcall kinoko_color_destroy(void* receiver, void* unused_edx, char flags);
 
 #ifdef __cplusplus
 struct SquirrelObjectMethods {
@@ -144,7 +144,7 @@ struct SquirrelObjectMethods {
 };
 #else
 struct SquirrelObjectMethods {
-    int32_t (__fastcall *destroy)(int32_t object, void *unused,
+    void* (__fastcall *destroy)(void* object, void *unused,
                                                 int32_t flags);
 };
 #endif
@@ -165,7 +165,7 @@ struct ActorRenderLayerMethods {
 };
 #else
 struct ActorRenderLayerMethods {
-    int32_t (__fastcall *update)(int32_t receiver, void* unused_edx, int32_t argument);
+    int32_t (__fastcall *update)(void* receiver, void* unused_edx, struct KinokoCamera* argument);
 };
 #endif
 
@@ -179,11 +179,11 @@ struct ActorPoolMethods {
 };
 #else
 struct ActorPoolMethods {
-    KinokoActorPool* (__fastcall *destroy)(KinokoActorPool*, void*, unsigned char);
-    KinokoActor* (__fastcall *top)(KinokoActorPool*, void*, uint32_t*);
-    int32_t (__fastcall *remove)(KinokoActorPool*, void*, uint32_t);
-    KinokoActor* (__fastcall *lookup)(KinokoActorPool*, void*, uint32_t);
-    int32_t (__fastcall *count)(KinokoActorPool*, void*);
+    KinokoActorPool* (__fastcall *destroy)(KinokoActorPool* manager, void *unused, unsigned char flags);
+    struct KinokoActor* (__fastcall *top)(struct KinokoActorPool* receiver, void* unused_edx, uint32_t* output);
+    int32_t (__fastcall *remove)(struct KinokoActorPool* receiver, void* unused_edx, uint32_t handle);
+    KinokoActor* (__fastcall *lookup)(KinokoActorPool* manager, void *unused, uint32_t handle);
+    int32_t (__fastcall *count)(KinokoActorPool* manager, void *unused);
 };
 #endif
 
@@ -194,8 +194,8 @@ struct ActorOwnerMethods {
 };
 #else
 struct ActorOwnerMethods {
-    KinokoActorManager* (__fastcall *destroy)(KinokoActorManager*, void*, unsigned char);
-    KinokoActor* (__fastcall *push)(KinokoActorManager*, void*);
+    KinokoActorManager* (__fastcall *destroy)(KinokoActorManager* manager, void *unused, unsigned char flags);
+    struct KinokoActor* (__fastcall *push)(struct KinokoActorManager* receiver, void* unused_edx);
 };
 #endif
 
@@ -205,8 +205,8 @@ struct MapRenderLayerMethods {
 };
 #else
 struct MapRenderLayerMethods {
-    int32_t (__fastcall *update)(int32_t layer, void *unused,
-    int32_t camera);
+    int32_t (__fastcall *update)(KinokoRenderLayer* layer, void *unused,
+    KinokoCamera* camera);
 };
 #endif
 
@@ -259,10 +259,10 @@ struct ActScriptMethods {
 };
 #else
 struct ActScriptMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *write)(void* receiver, void* unused_edx, KinokoArchiveReader* writer);
+    int32_t (__fastcall *read)(void* receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+    int32_t (__fastcall *query)(void* receiver, void* unused_edx, const void* type, void* output);
+    int32_t (__fastcall *destroy)(void* receiver, void* unused_edx);
 };
 #endif
 
@@ -294,17 +294,17 @@ struct ActLayerMethods {
 };
 #else
 struct ActLayerMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
-    int32_t (__fastcall *clone)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *write)(KinokoActLayer* receiver, void* unused_edx, KinokoArchiveReader*  writer);
+    int32_t (__fastcall *read)(KinokoActLayer* receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+    int32_t (__fastcall *query)(void* receiver, void* unused_edx, const void* type, void* output);
+    int32_t (__fastcall *destroy)(void* receiver, void* unused_edx);
+    void* (__fastcall *delete_object)(KinokoActLayer* receiver, void* unused_edx, unsigned char flags);
+    KinokoActLayer* (__fastcall *clone)(KinokoActLayer* receiver, void* unused_edx);
     int32_t (__fastcall *associate)(
     KinokoActLayer *layer, void *unused, KinokoActResource *resource);
     KinokoActLayer * (__fastcall *world_position)(KinokoActLayer *layer,
     void *unused, float *x, float *y, float *z);
-    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, int32_t parent, int32_t flags);
+    int32_t (__fastcall *register_class)(KinokoActLayer* receiver, void* unused_edx, void* parent, int32_t flags);
 };
 #endif
 
@@ -333,11 +333,11 @@ struct ActKeyMethods {
 };
 #else
 struct ActKeyMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
+    int32_t (__fastcall *write)(KinokoActKey* receiver, void* unused_edx, KinokoArchiveReader*  writer);
+    int32_t (__fastcall *read)(KinokoActKey* receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+    int32_t (__fastcall *query)(void* receiver, void* unused_edx, const void* type, void* output);
+    int32_t (__fastcall *destroy)(void* receiver, void* unused_edx);
+    void* (__fastcall *delete_object)(KinokoActKey* receiver, void* unused_edx, unsigned char flags);
     KinokoActKey* (__fastcall *clone)(KinokoActKey* receiver, void* unused_edx);
 };
 #endif
@@ -356,11 +356,11 @@ struct ActDocumentMethods {
 };
 #else
 struct ActDocumentMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
+    int32_t (__fastcall *write)(KinokoActDocument* receiver, void* unused_edx, KinokoArchiveReader*  writer);
+    int32_t (__fastcall *read)(KinokoActDocument* receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+    int32_t (__fastcall *query)(void* receiver, void* unused_edx, const void* type, void* output);
+    int32_t (__fastcall *destroy)(void* receiver, void* unused_edx);
+    void* (__fastcall *delete_object)(KinokoActDocument* receiver, void* unused_edx, unsigned char flags);
     KinokoActDocument * (__fastcall *clone)(KinokoActDocument *source, void *unused);
     int32_t (__fastcall *load_resources)(KinokoActDocument *document, void *unused, const char *prefix);
     int32_t (__fastcall *suspend_resources)(KinokoActDocument *document, void *unused);
@@ -383,16 +383,16 @@ struct ActLayoutMethods {
 };
 #else
 struct ActLayoutMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *write)(KinokoActLayout* receiver, void* unused_edx, KinokoArchiveReader*  writer);
+    int32_t (__fastcall *read)(KinokoActLayout* receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+    int32_t (__fastcall *query)(void* receiver, void* unused_edx, const void* type, void* output);
+    void* (__fastcall *destroy)(KinokoActLayout* receiver, void* unused_edx);
     int32_t * (*type)(void);
     KinokoActLayout* (__fastcall *clone)(KinokoActLayout* receiver, void* unused_edx);
-    int32_t (__fastcall *associate)(int32_t receiver, void* unused_edx, int32_t layer);
-    int32_t (__fastcall *update)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *draw)(int32_t receiver, void* unused_edx, float x, float y);
-    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *associate)(KinokoActLayout* receiver, void* unused_edx, KinokoActLayer* layer);
+    int32_t (__fastcall *update)(KinokoActLayout* receiver, void* unused_edx);
+    int32_t (__fastcall *draw)(KinokoActLayout* receiver, void* unused_edx, float x, float y);
+    int32_t (__fastcall *register_class)(KinokoActLayout* receiver, void* unused_edx);
 };
 #endif
 
@@ -412,17 +412,17 @@ struct ChipResourceMethods {
 };
 #else
 struct ChipResourceMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
+    int32_t (__fastcall *write)(KinokoActResource* receiver, void* unused_edx, KinokoArchiveReader*  writer);
+    int32_t (__fastcall *read)(KinokoActResource* receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+    int32_t (__fastcall *query)(void* receiver, void* unused_edx, const void* type, void* output);
+    int32_t (__fastcall *destroy)(void* receiver, void* unused_edx);
+    void* (__fastcall *delete_object)(KinokoActResource* receiver, void* unused_edx, unsigned char flags);
     int32_t * (*type)(void);
-    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, struct SQVM* vm);
-    int32_t (__fastcall *resource_42f800)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-    int32_t (__fastcall *resource_42f6c0)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    int32_t (__fastcall *register_class)(void* receiver, void* unused_edx, struct SQVM* vm);
+    int32_t (__fastcall *resource_42f800)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+    int32_t (__fastcall *resource_42f6c0)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
     KinokoActResource* (__fastcall *clone)(KinokoActResource* receiver, void* unused_edx);
-    int32_t (__fastcall *load)(int32_t receiver, void* unused_edx, const char* prefix);
+    int32_t (__fastcall *load)(KinokoActResource* receiver, void* unused_edx, const char* prefix);
 };
 #endif
 
@@ -442,18 +442,18 @@ struct MapLayoutMethods {
 };
 #else
 struct MapLayoutMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *write)(KinokoActLayout* receiver, void* unused_edx, KinokoArchiveReader*  writer);
+    int32_t (__fastcall *read)(KinokoActLayout* receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+    int32_t (__fastcall *query)(void* receiver, void* unused_edx, const void* type, void* output);
+    void* (__fastcall *destroy)(KinokoActLayout* receiver, void* unused_edx);
     int32_t * (*type)(void);
-    int32_t (__fastcall *clone)(int32_t source, void *unused);
-    int32_t (__fastcall *associate)(int32_t receiver, void* unused_edx, int32_t layer);
-    int32_t (__fastcall *update)(int32_t layout, void *unused);
-    int32_t (__fastcall *draw)(int32_t layout, void *unused,
+    KinokoActLayout* (__fastcall *clone)(KinokoActLayout* source, void *unused);
+    int32_t (__fastcall *associate)(KinokoActLayout* receiver, void* unused_edx, KinokoActLayer* layer);
+    int32_t (__fastcall *update)(KinokoActLayout* layout, void *unused);
+    int32_t (__fastcall *draw)(KinokoActLayout* layout, void *unused,
     float x, float y);
-    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *update_visible)(int32_t layout, void *unused,
+    int32_t (__fastcall *register_class)(KinokoActLayout* receiver, void* unused_edx);
+    int32_t (__fastcall *update_visible)(KinokoActLayout* layout, void *unused,
     int32_t left, int32_t top, int32_t right, int32_t bottom);
 };
 #endif
@@ -467,7 +467,7 @@ struct QuadColorMethods {
 };
 #else
 struct QuadColorMethods {
-    int32_t (__fastcall *destroy)(int32_t sprite, void *unused, int32_t flags);
+    void* (__fastcall *destroy)(void* sprite, void *unused, int32_t flags);
     uint32_t (__fastcall *set_color)(KinokoColoredQuad *quad, void *unused, uint32_t color);
     uint32_t (__fastcall *set_vertex_colors)(KinokoColoredQuad *quad, void *unused, const uint32_t *colors);
     uint32_t (__fastcall *modulate_color)(KinokoColoredQuad *quad, void *unused, uint32_t color);
@@ -491,18 +491,18 @@ struct TextureResourceMethods {
 };
 #else
 struct TextureResourceMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
+    int32_t (__fastcall *write)(KinokoActResource* receiver, void* unused_edx, KinokoArchiveReader*  writer);
+    int32_t (__fastcall *read)(KinokoActResource* receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+    int32_t (__fastcall *query)(void* receiver, void* unused_edx, const void* type, void* output);
+    int32_t (__fastcall *destroy)(void* receiver, void* unused_edx);
+    void* (__fastcall *delete_object)(KinokoActResource* receiver, void* unused_edx, unsigned char flags);
     int32_t * (*type)(void);
-    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, struct SQVM* vm);
-    int32_t (__fastcall *resource_446920)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-    int32_t (__fastcall *resource_4467e0)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    int32_t (__fastcall *register_class)(void* receiver, void* unused_edx, struct SQVM* vm);
+    int32_t (__fastcall *resource_446920)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+    int32_t (__fastcall *resource_4467e0)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
     KinokoActResource* (__fastcall *clone)(KinokoActResource* receiver, void* unused_edx);
-    int32_t (__fastcall *load)(int32_t receiver, void* unused_edx, const char* prefix);
-    int32_t (__fastcall *unload)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *load)(KinokoActResource* receiver, void* unused_edx, const char* prefix);
+    int32_t (__fastcall *unload)(KinokoActResource* receiver, void* unused_edx);
 };
 #endif
 
@@ -524,18 +524,18 @@ struct RenderTargetMethods {
 };
 #else
 struct RenderTargetMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
-    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
+    int32_t (__fastcall *write)(KinokoActResource* receiver, void* unused_edx, KinokoArchiveReader*  writer);
+    int32_t (__fastcall *read)(KinokoActResource* receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
+    int32_t (__fastcall *query)(void* receiver, void* unused_edx, const void* type, void* output);
+    int32_t (__fastcall *destroy)(void* receiver, void* unused_edx);
+    void* (__fastcall *delete_object)(KinokoActResource* receiver, void* unused_edx, unsigned char flags);
     int32_t * (*type)(void);
-    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, struct SQVM* vm);
-    int32_t (__fastcall *resource_4499a0)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-    int32_t (__fastcall *resource_449860)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    int32_t (__fastcall *register_class)(void* receiver, void* unused_edx, struct SQVM* vm);
+    int32_t (__fastcall *resource_4499a0)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+    int32_t (__fastcall *resource_449860)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
     KinokoActResource* (__fastcall *clone)(KinokoActResource* receiver, void* unused_edx);
-    int32_t (__fastcall *load)(int32_t receiver, void* unused_edx, const char* prefix);
-    int32_t (__fastcall *unload)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *load)(KinokoActResource* receiver, void* unused_edx, const char* prefix);
+    int32_t (__fastcall *unload)(KinokoActResource* receiver, void* unused_edx);
     int32_t (__fastcall *create)(KinokoActResource *resource, void *unused,
                                                       int32_t width, int32_t height);
 };
@@ -556,7 +556,7 @@ struct SpriteMethods {
 };
 #else
 struct SpriteMethods {
-    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx, char flags);
+    void* (__fastcall *destroy)(void* receiver, void* unused_edx, char flags);
     uint32_t (__fastcall *set_color)(KinokoColoredQuad *quad, void *unused, uint32_t color);
     uint32_t (__fastcall *set_vertex_colors)(KinokoColoredQuad *quad, void *unused, const uint32_t *colors);
     uint32_t (__fastcall *modulate_color)(KinokoColoredQuad *quad, void *unused, uint32_t color);
@@ -613,15 +613,12 @@ void kinoko_camera_class_copy(void* a1, void* a2);
 
 int32_t kinoko_register_camera_binding(void);
 
-int32_t kinoko_host_register_collision_map_abi(int32_t a1);
 
 int32_t kinoko_host_append_render_item(int32_t * a1);
 
-int32_t kinoko_host_find_map_layout_abi(int32_t a1);
 
 int32_t kinoko_register_map_binding(void);
 
-int32_t kinoko_host_create_map_layer_abi(int32_t a1);
 
 int32_t kinoko_host_clear_sound(void);
 
@@ -669,17 +666,17 @@ struct StringLayoutMethods {
 };
 #else
 struct StringLayoutMethods {
-    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
-    int32_t (__fastcall *read)(int32_t object, void *unused, int32_t holder, int32_t version);
-    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-    int32_t (__fastcall *destroy)(int32_t object, void *unused);
-    int32_t (__fastcall *type)(int32_t object, void *unused);
-    int32_t (__fastcall *clone)(int32_t object, void *unused);
-    int32_t (__fastcall *set_layer)(int32_t object, void *unused, int32_t layer);
-    int32_t (__fastcall *update)(int32_t object, void *unused);
-    int32_t (__fastcall *draw)(int32_t object, void *unused, float x, float y);
-    int32_t (__fastcall *register_class)(int32_t object, void *unused);
-    int32_t (__fastcall *delete_object)(int32_t object, void *unused, unsigned char flags);
+    int32_t (__fastcall *write)(KinokoStringLayout* receiver, void* unused_edx, KinokoArchiveReader*  writer);
+    int32_t (__fastcall *read)(KinokoStringLayout* object, void *unused, KinokoArchiveReader** holder, int32_t version);
+    int32_t (__fastcall *query)(void* receiver, void* unused_edx, const void* type, void* output);
+    KinokoStringLayout* (__fastcall *destroy)(KinokoStringLayout* object, void *unused);
+    int32_t (__fastcall *type)(KinokoStringLayout* object, void *unused);
+    KinokoStringLayout* (__fastcall *clone)(KinokoStringLayout* object, void *unused);
+    int32_t (__fastcall *set_layer)(KinokoStringLayout* object, void *unused, KinokoActLayer* layer);
+    int32_t (__fastcall *update)(KinokoStringLayout* object, void *unused);
+    int32_t (__fastcall *draw)(KinokoStringLayout* object, void *unused, float x, float y);
+    int32_t (__fastcall *register_class)(KinokoStringLayout* object, void *unused);
+    KinokoStringLayout* (__fastcall *delete_object)(KinokoStringLayout* object, void *unused, unsigned char flags);
 };
 #endif
 extern struct StringLayoutMethods kinoko_string_layout_methods_storage;
@@ -844,15 +841,10 @@ extern struct SpriteMethods kinoko_sprite_methods_storage;
 
 
 
-int32_t kinoko_collision_refresh_abi(int32_t this_ptr);
 
-int32_t kinoko_collision_reset_abi(int32_t this_ptr, int32_t actor_ptr);
 
-int32_t kinoko_host_register_collision_map_abi(int32_t layout);
 
-int32_t kinoko_host_find_map_layout_abi(int32_t name_ptr);
 
-int32_t kinoko_host_create_map_layer_abi(int32_t name_ptr);
 
 int32_t kinoko_compile_file_native(struct SQVM* vm);
 
@@ -870,9 +862,9 @@ int32_t kinoko_host_create_native_instance(struct SQVM* vm, const char* class_na
 
 int32_t kinoko_csv_load_bytes(const char *path, char **bytes);
 
-extern int32_t (__fastcall *kinoko_color_methods_storage)(int32_t, void*, char);
+extern void* (__fastcall *kinoko_color_methods_storage)(void*, void*, char);
 
-extern int32_t (__fastcall *kinoko_chip_quad_methods_storage)(int32_t, void*, char);
+extern void* (__fastcall *kinoko_chip_quad_methods_storage)(void*, void*, char);
 
 extern KinokoActorPool* (__fastcall *kinoko_actor_pool_base_methods_storage)(KinokoActorPool*, void*, unsigned char);
 

@@ -2,9 +2,9 @@
 // Pointer initializers remain link-time relocations; no integer-address initialization.
 #include "runtime_host_internal.h"
 
-int32_t (__fastcall *kinoko_color_methods_storage)(int32_t, void*, char) = kinoko_color_destroy;
+void* (__fastcall *kinoko_color_methods_storage)(void*, void*, char) = kinoko_color_destroy;
 
-int32_t (__fastcall *kinoko_chip_quad_methods_storage)(int32_t, void*, char) = kinoko_color_destroy;
+void* (__fastcall *kinoko_chip_quad_methods_storage)(void*, void*, char) = kinoko_color_destroy;
 
 KinokoActorPool* (__fastcall *kinoko_actor_pool_base_methods_storage)(KinokoActorPool*, void*, unsigned char) = kinoko_method_actor_pool_base_delete;
 

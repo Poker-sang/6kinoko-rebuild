@@ -457,10 +457,10 @@ extern "C" int32_t kinoko_register_render_target_class(SQVM* machine) {
 }
 
 
-extern "C" int32_t __fastcall kinoko_method_register_texture_resource(int32_t, void *, SQVM* vm) {
+extern "C" int32_t __fastcall kinoko_method_register_texture_resource(void*, void *, SQVM* vm) {
     return kinoko_register_texture_resource_class(vm);
 }
-extern "C" int32_t __fastcall kinoko_method_register_render_target(int32_t, void *, SQVM* vm) {
+extern "C" int32_t __fastcall kinoko_method_register_render_target(void*, void *, SQVM* vm) {
     return kinoko_register_render_target_class(vm);
 }
 
@@ -1593,18 +1593,18 @@ extern "C" int32_t kinoko_register_chip_resource_class(SQVM* machine) {
 
 
 extern "C" int32_t __fastcall kinoko_method_register_chip_resource(
-    int32_t receiver, void *, SQVM* vm) {
+    void* receiver, void *, SQVM* vm) {
     return kinoko_register_chip_resource_class(vm);
 }
 
-int32_t kinoko_get_act_resource_class(SQVM* vm, int32_t resource, int32_t out[2]) {
-    if(field<const void*>(resource)==kinoko::mesh::resource_methods()) {
+int32_t kinoko_get_act_resource_class(SQVM* vm, KinokoActResource* resource, int32_t out[2]) {
+    if(kinoko::legacy::load<const void*>(resource)==kinoko::mesh::resource_methods()) {
         kinoko::act::LayerObjectRecord root{};
         if(!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(&root), vm))) return 0;
         const auto ok=kinoko_publish_mesh_resource_class(vm, (void*)(uintptr_t)(address(&root)), out);
         kinoko_sqrat_object_release((void *)(&root));return ok;
     }
-    if (field<int32_t>(resource) != address(kinoko_act_host_symbols()->chip_resource_vtable)) {
+    if (kinoko::legacy::load<const void*>(resource) != kinoko_act_host_symbols()->chip_resource_vtable) {
         out[0] = kinoko_resource2d_class_pair[0];
         out[1] = kinoko_resource2d_class_pair[1];
         kinoko_sqrat_retain_pair(vm, out);
@@ -1658,7 +1658,7 @@ int32_t kinoko_bind_original_resource(KinokoActResource* resource, void* object,
 
 int32_t kinoko_publish_act_resource_pairs(
     SQVM* vm, const int32_t layer_pair[2],
-    const int32_t script_pair[2], int32_t resource)
+    const int32_t script_pair[2], KinokoActResource* resource)
 {
     int32_t outer_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t script_resource_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
@@ -2291,7 +2291,7 @@ extern "C" int32_t kinoko_publish_mesh_resource_class(SQVM* vm,void* root,int32_
         kinoko_sqrat_set_native_closure(vm, out, "LoadMesh", (void *)(intptr_t)(address(kinoko_resource_load_texture)), nullptr, 0) &&
         kinoko_sqrat_set_native_closure(vm, out, "SetReplaceTexture", (void *)(intptr_t)(address(mesh_replace_texture)), nullptr, 0);
 }
-extern "C" int32_t __fastcall kinoko_method_register_mesh_resource(int32_t,void *,SQVM* vm) {
+extern "C" int32_t __fastcall kinoko_method_register_mesh_resource(void*,void *,SQVM* vm) {
     if(!vm) return E_INVALIDARG;
     kinoko::act::LayerObjectRecord root{}; int32_t klass[2]={static_cast<int32_t>(OT_NULL),0};
     if(!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(&root), vm))) return E_FAIL;

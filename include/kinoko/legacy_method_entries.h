@@ -21,8 +21,8 @@ extern "C" {
 #endif
 
 // Original 446520/4495A0/446BD0/447050 virtual resource entries.
-int32_t __fastcall kinoko_method_register_texture_resource(int32_t receiver, void* unused_edx, struct SQVM* vm);
-int32_t __fastcall kinoko_method_register_render_target(int32_t receiver, void* unused_edx, struct SQVM* vm);
+int32_t __fastcall kinoko_method_register_texture_resource(void* receiver, void* unused_edx, struct SQVM* vm);
+int32_t __fastcall kinoko_method_register_render_target(void* receiver, void* unused_edx, struct SQVM* vm);
 int32_t __fastcall kinoko_method_load_resource_texture(KinokoActResource* receiver, void* unused_edx, const char* prefix);
 int32_t __fastcall kinoko_method_unload_resource_texture(KinokoActResource* receiver, void* unused_edx);
 int32_t __fastcall kinoko_method_load_chip_resource(KinokoActResource* receiver, void* unused_edx, const char* prefix);
@@ -73,7 +73,7 @@ KinokoActResource* __fastcall kinoko_method_clone_texture_resource(KinokoActReso
 KinokoActResource* __fastcall kinoko_method_clone_render_target(KinokoActResource* receiver, void* unused_edx);
 
 // kinoko_register_chip_resource_class
-int32_t __fastcall kinoko_method_register_chip_resource(int32_t receiver, void* unused_edx, struct SQVM* vm);
+int32_t __fastcall kinoko_method_register_chip_resource(void* receiver, void* unused_edx, struct SQVM* vm);
 
 // retdec_cact_destructor_bridge
 void* __fastcall kinoko_method_destroy_act(KinokoActDocument* receiver, void* unused_edx, unsigned char flags);

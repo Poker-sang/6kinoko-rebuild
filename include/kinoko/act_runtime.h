@@ -80,7 +80,7 @@ int32_t kinoko_execute_act_callback(void* script_ptr,
                                             const char *trace_label);
 int32_t kinoko_execute_act_source_script(
     struct SQVM* vm, void* script_ptr, const int32_t *environment_pair);
-int32_t kinoko_get_act_resource_class(struct SQVM* vm, int32_t resource, int32_t out[2]);
+int32_t kinoko_get_act_resource_class(struct SQVM* vm, KinokoActResource* resource, int32_t out[2]);
 int32_t kinoko_map_chip_count(struct SQVM* vm);
 int kinoko_map_compare_records(const void *a, const void *b);
 int32_t kinoko_map_get_chip_by_position(struct SQVM* vm);
@@ -104,7 +104,7 @@ int32_t kinoko_publish_act_layers(struct SQVM* vm, KinokoActDocument* act,
                                           int32_t *active_count);
 int32_t kinoko_publish_act_resource_pairs(
     struct SQVM* vm, const int32_t layer_pair[2],
-    const int32_t script_pair[2], int32_t resource);
+    const int32_t script_pair[2], KinokoActResource* resource);
 
 int32_t kinoko_publish_act_script_constants(struct SQVM* vm, const int32_t *environment);
 int32_t kinoko_publish_acting_player(struct SQVM* vm,
