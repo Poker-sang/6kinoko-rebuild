@@ -621,9 +621,9 @@ int32_t kinoko_register_map_binding(void);
 
 int32_t kinoko_host_clear_sound(void);
 
-int32_t kinoko_host_show_message_abi(int32_t a1);
+int32_t kinoko_host_show_message(const char* text);
 
-int32_t kinoko_host_sleep_abi(int32_t dwMilliseconds);
+int32_t kinoko_host_sleep(int32_t dwMilliseconds);
 
 int32_t kinoko_host_milliseconds(void);
 

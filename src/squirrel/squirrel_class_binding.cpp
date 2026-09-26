@@ -139,10 +139,10 @@ extern "C" void * kinoko_sqplus_construct_class_binding(void * output, const cha
     return output;
 }
 
-extern "C" int32_t* kinoko_sqplus_define_actor_class(int32_t* output, const char* name, int32_t parent) {
+extern "C" int32_t* kinoko_sqplus_define_actor_class(int32_t* output, const char* name, const char* parent) {
     if (!output) return nullptr;
     ClassBindingStorage state{};
-    kinoko_sqplus_construct_class_binding(&state, name, pointer<const char>(parent));
+    kinoko_sqplus_construct_class_binding(&state, name, parent);
     auto* vm = current_vm();
     ObjectView(output).assign(vm, ObjectView(&state.klass).value());
     for (auto* object : {&state.klass, &state.members, &state.methods}) ObjectView(object).release(vm);

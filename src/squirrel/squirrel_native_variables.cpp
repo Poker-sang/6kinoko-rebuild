@@ -30,7 +30,7 @@ int32_t table_access(SQVM* vm, bool write) {
     if (status) return status;
     if (!metadata) return -1;
     const auto source = load<Variable>(metadata).offset;
-    return write ? kinoko_sqplus_write_variable(&context, metadata, source) :
+    return write ? kinoko_sqplus_write_variable(&context, metadata, (void*)(uintptr_t)(source)) :
         kinoko_sqplus_read_variable(&context, metadata, source);
 }
 int32_t instance_access(SQVM* vm, bool write) {
@@ -39,7 +39,7 @@ int32_t instance_access(SQVM* vm, bool write) {
     VariableContext context{static_cast<int32_t>(sq_gettop(vm)),vm};
     void* metadata = nullptr; int32_t source = 0;
     if (!kinoko_sqplus_resolve_instance_variable(vm, context.count, &metadata, &source)) return -1;
-    return write ? kinoko_sqplus_write_variable(&context, metadata, source) :
+    return write ? kinoko_sqplus_write_variable(&context, metadata, (void*)(uintptr_t)(source)) :
         kinoko_sqplus_read_variable(&context, metadata, source);
 }
 } // namespace
@@ -99,13 +99,13 @@ extern "C" int32_t  kinoko_sqplus_read_variable(const void* context, const void*
     }
 }
 
-extern "C" int32_t  kinoko_sqplus_write_variable(const void* context, const void* metadata, int32_t destination) {
+extern "C" int32_t  kinoko_sqplus_write_variable(const void* context, const void* metadata, void* destination) {
     if (!context_has(context, 3) || !metadata || !destination) return -1;
     auto* vm = context_value(context).vm;
     const auto info = load<Variable>(metadata);
     if (info.flags & (ReadOnly | Constant)) return -1;
     return static_cast<int32_t>(upstream::sqplus_write_scalar(vm, info,
-        pointer<void>(destination)));
+        destination));
 }
 
 extern "C" int32_t  kinoko_sqplus_resolve_instance_variable(struct SQVM* vm_address, int32_t top, void** output_metadata, int32_t* output_source) {

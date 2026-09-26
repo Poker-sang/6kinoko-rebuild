@@ -293,8 +293,8 @@ static int32_t kinoko_script_show_message(const char* text) {
     return MessageBoxA((HWND)kinoko_game_window_slot, text, "Message", 0);
 }
 
-int32_t kinoko_host_show_message_abi(int32_t a1) {
-    return kinoko_script_show_message((const char *)(intptr_t)a1);
+int32_t kinoko_host_show_message(const char* text) {
+    return kinoko_script_show_message(text);
 }
 
 static int32_t kinoko_script_sleep(DWORD milliseconds) {
@@ -302,7 +302,7 @@ static int32_t kinoko_script_sleep(DWORD milliseconds) {
     return (int32_t)(intptr_t)&kinoko_script_void_result_identity;
 }
 
-int32_t kinoko_host_sleep_abi(int32_t dwMilliseconds) {
+int32_t kinoko_host_sleep(int32_t dwMilliseconds) {
     return kinoko_script_sleep((DWORD)dwMilliseconds);
 }
 

@@ -10,8 +10,8 @@ extern "C" {
 int32_t kinoko_script_dprint_noop(void);
 int32_t kinoko_actor_register_script_class(void);
 int32_t kinoko_register_input_class(void);
-int32_t kinoko_host_show_message_abi(int32_t a1);
-int32_t kinoko_host_sleep_abi(int32_t dwMilliseconds);
+int32_t kinoko_host_show_message(const char* text);
+int32_t kinoko_host_sleep(int32_t dwMilliseconds);
 int32_t kinoko_host_milliseconds(void);
 int32_t kinoko_host_close_window(void);
 int32_t kinoko_native_void_entry(struct SQVM* a1);
