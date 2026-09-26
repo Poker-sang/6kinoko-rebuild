@@ -64,16 +64,6 @@ int32_t kinoko_act_read_u32(KinokoArchiveReader* reader_ptr, uint32_t *value);
 int32_t kinoko_act_read_u8(KinokoArchiveReader* reader_ptr, uint8_t *value);
 int32_t kinoko_begin_stage_this(KinokoActRuntime* resource_ptr, int32_t stage);
 int32_t kinoko_bind_act_resource_object(KinokoActRuntime* resource_ptr);
-int32_t kinoko_c2dlayout_draw_impl(int32_t layout,
-                                           float x, float y);
-int32_t kinoko_c2dlayout_set_layer_impl(int32_t layout,
-                                                int32_t layer);
-int32_t kinoko_c2dlayout_update_faithful_impl(int32_t layout);
-int32_t kinoko_c2dlayout_update_impl(int32_t layout);
-void kinoko_c2dlayout_world_position(int32_t layer,
-                                             float *x,
-                                             float *y,
-                                             float *z);
 int32_t kinoko_cact_associate_resource(struct SQVM* vm);
 void* kinoko_construct_cact_script(void* this_ptr);
 void kinoko_destroy_cact_key(void* key);

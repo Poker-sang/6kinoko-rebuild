@@ -74,19 +74,19 @@ int32_t __fastcall kinoko_method_register_chip_resource(int32_t receiver, void* 
 // retdec_cact_destructor_bridge
 void* __fastcall kinoko_method_destroy_act(KinokoActDocument* receiver, void* unused_edx, unsigned char flags);
 // function_42bcc0
-int32_t __fastcall kinoko_method_layout_set_layer(int32_t receiver, void* unused_edx, int32_t layer);
+int32_t __fastcall kinoko_method_layout_set_layer(KinokoActLayout* receiver, void* unused_edx, KinokoActLayer* layer);
 // function_42c100
-int32_t __fastcall kinoko_method_layout_update(int32_t receiver, void* unused_edx);
+int32_t __fastcall kinoko_method_layout_update(KinokoActLayout* receiver, void* unused_edx);
 // function_42c300
-int32_t __fastcall kinoko_method_layout_draw(int32_t receiver, void* unused_edx, float x, float y);
+int32_t __fastcall kinoko_method_layout_draw(KinokoActLayout* receiver, void* unused_edx, float x, float y);
 // function_43c860
 int32_t __fastcall kinoko_method_layout3d_assign(int32_t receiver, void* unused_edx, int32_t source,
     int32_t mode);
 // function_450950
-int32_t __fastcall kinoko_method_begin_stage(int32_t receiver, void* unused_edx, int32_t stage);
+int32_t __fastcall kinoko_method_begin_stage(KinokoActRuntime* receiver, void* unused_edx, int32_t stage);
 // function_450e30
-int32_t __fastcall kinoko_method_root_table_construct(int32_t receiver, void* unused_edx, int32_t vm,
-    int32_t output);
+int32_t __fastcall kinoko_method_root_table_construct(KinokoActRuntime* receiver, void* unused_edx, struct SQVM* vm,
+    void* output);
 // function_4514a0
 int32_t __fastcall kinoko_method_act_bitblt(int32_t receiver, void* unused_edx, int32_t x, int32_t y,
     int32_t width, int32_t height, int32_t resource, int32_t source_x, int32_t source_y, int32_t blend,

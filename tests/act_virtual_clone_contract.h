@@ -27,7 +27,7 @@ static int32_t __fastcall probe_clone_bind_layout(int32_t self, void *unused, in
     (void)unused;
     act_clone_event('B');
     act_clone_bound_resource = *(int32_t *)(intptr_t)(layer + 100);
-    return kinoko_c2dlayout_set_layer_impl(self, layer);
+    return kinoko_method_layout_set_layer((KinokoActLayout*)(intptr_t)self, NULL, (KinokoActLayer*)(intptr_t)layer);
 }
 static int32_t __fastcall probe_clone_set_resource(KinokoActLayer *self, void *unused, KinokoActResource *resource) {
     act_clone_event('A');

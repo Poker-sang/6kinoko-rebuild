@@ -112,7 +112,7 @@ extern "C" int32_t kinoko_actor_manager_reindex(KinokoActorManager *manager,Kino
 extern "C" void *kinoko_actor_manager_clear_actors(KinokoActorManager *manager) {
     const ManagerView state(manager);
     auto *index=state.bytes(&ManagerPrefix::actors);
-    auto *sentinel=pointer<void>(state.get(&ManagerPrefix::actors).head);
+    auto *sentinel=state.get(&ManagerPrefix::actors).head;
     if (!sentinel) return nullptr;
     for (auto *entry=kinoko_actor_priority_first(index);entry!=sentinel;) {
         if (auto *actor=kinoko_actor_priority_value(entry)) {
@@ -155,7 +155,7 @@ extern "C" int32_t kinoko_actor_manager_refresh(KinokoActorManager *manager) {
     }
     auto **actors=state.get(&ManagerPrefix::iteration).begin;
     auto *index=state.bytes(&ManagerPrefix::actors);
-    auto *sentinel=pointer<void>(tree.head);
+    auto *sentinel=tree.head;
     int32_t count=0,back=0,middle=0,front=0;
     for (auto *entry=kinoko_actor_priority_first(index);entry!=sentinel;) {
         auto *actor=kinoko_actor_priority_value(entry);

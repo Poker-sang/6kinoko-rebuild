@@ -6,7 +6,7 @@ static int act_file_deletes, act_file_close_error;
 static int act_file_layout_binds;
 static int32_t __fastcall act_file_set_layer_probe(int32_t layout, void *unused, int32_t layer) {
     ++act_file_layout_binds;
-    return kinoko_method_layout_set_layer(layout, unused, layer);
+    return kinoko_method_layout_set_layer((KinokoActLayout*)(uintptr_t)(layout), unused, (KinokoActLayer*)(uintptr_t)(layer));
 }
 static int32_t __fastcall act_file_delete_probe(int32_t self, void *unused, unsigned char flags) {
     HANDLE exclusive = CreateFileA(act_file_probe_path, GENERIC_READ | GENERIC_WRITE,

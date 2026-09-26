@@ -754,7 +754,7 @@ template<bool string_layout> int32_t create_layer(int32_t player, const char* na
     kinoko_act_array_append((void*)(uintptr_t)(act+208), (void*)(uintptr_t)(layer));
     owned.release(); // ACT owns the layer before either publication callback.
     if constexpr(string_layout) kinoko_method_set_string_layer((KinokoStringLayout*)(uintptr_t)(native_layout), nullptr, pointer<KinokoActLayer>(layer));
-    else kinoko_method_layout_set_layer(native_layout, nullptr, layer);
+    else kinoko_method_layout_set_layer((KinokoActLayout*)(uintptr_t)(native_layout), nullptr, (KinokoActLayer*)(uintptr_t)(layer));
     kinoko_method_register_act_layer((KinokoActLayer*)(uintptr_t)(layer), nullptr, (void*)(uintptr_t)(address(&parent.object)), 0);
     if constexpr(string_layout) kinoko_method_register_string_layout(native_layout,nullptr);
     else kinoko_method_register_layout((KinokoActLayout*)(uintptr_t)(native_layout), nullptr);

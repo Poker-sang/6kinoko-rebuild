@@ -38,7 +38,7 @@ extern "C" int32_t __fastcall kinoko_method_update_string_layout(KinokoStringLay
         (uint32_t(static_cast<uint8_t>(text.get(&TextRecord::base_green)))<<8)|static_cast<uint8_t>(text.get(&TextRecord::base_blue));
     const uint32_t count=kinoko_string_queue_size(layout);
     for(uint32_t i=0;i<count;++i) {
-        const GlyphView glyph(pointer((int32_t)(intptr_t)kinoko_string_queue_at(layout, i)));
+        const GlyphView glyph(kinoko_string_queue_at(layout, i));
         auto quad=glyph.get(&GlyphRecord::quad);
         for(auto &vertex:quad.vertices) vertex.color=color;
         glyph.set(&GlyphRecord::quad,quad);
@@ -49,7 +49,7 @@ extern "C" int32_t __fastcall kinoko_method_update_string_layout(KinokoStringLay
     method(layer,&x,&y,&z);
     text.set(&TextRecord::origin_x,static_cast<int32_t>(x));text.set(&TextRecord::origin_y,static_cast<int32_t>(y));
     for(uint32_t i=0;i<count;++i) {
-        const GlyphView glyph(pointer((int32_t)(intptr_t)kinoko_string_queue_at(layout, i)));
+        const GlyphView glyph(kinoko_string_queue_at(layout, i));
         float gx=static_cast<float>(glyph.get(&GlyphRecord::x));
         const auto alignment=text.get(&TextRecord::alignment);
         if(alignment==1) gx-=text.get(&TextRecord::maximum_width)/2;
@@ -78,7 +78,7 @@ extern "C" int32_t __fastcall kinoko_method_draw_string_layout(KinokoStringLayou
     kinoko_render_set_filter(2);
     const uint32_t count=kinoko_string_queue_size(layout);
     for(uint32_t i=0;i<count;++i) {
-        const GlyphView glyph(pointer((int32_t)(intptr_t)kinoko_string_queue_at(layout, i)));
+        const GlyphView glyph(kinoko_string_queue_at(layout, i));
         kinoko_quad_submit(reinterpret_cast<KinokoQuad *>(glyph.bytes(&GlyphRecord::quad)),x,y);
     }
     for(int i=0;i<4;++i) device->SetRenderState(states[i],saved[i]);

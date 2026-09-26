@@ -1,3 +1,4 @@
+#include "kinoko/act_layout_render.hpp"
 #include "kinoko/actor_lifecycle.h"
 #include "kinoko/game_script_host.h"
 #include "kinoko/legacy_method_entries.h"
@@ -42,15 +43,15 @@ extern "C" void* kinoko_destroy_cact_with_flags(KinokoActDocument* receiver, uns
     return reinterpret_cast<void*>(static_cast<uintptr_t>(record(1, {bits(receiver), bits(flags)})));
 }
 
-extern "C" int32_t kinoko_c2dlayout_set_layer_impl(int32_t receiver, int32_t layer) {
+int32_t kinoko::act::bind_layout_2d(KinokoActLayout* receiver, KinokoActLayer* layer) {
     return record(2, {bits(receiver), bits(layer)});
 }
 
-extern "C" int32_t kinoko_c2dlayout_update_faithful_impl(int32_t receiver) {
+int32_t kinoko::act::update_layout_2d(KinokoActLayout* receiver) {
     return record(3, {bits(receiver)});
 }
 
-extern "C" int32_t kinoko_c2dlayout_draw_impl(int32_t receiver, float x, float y) {
+int32_t kinoko::act::draw_layout_2d(KinokoActLayout* receiver, float x, float y) {
     return record(4, {bits(receiver), bits(x), bits(y)});
 }
 

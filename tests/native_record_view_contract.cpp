@@ -44,7 +44,7 @@ int main() {
     std::array<unsigned char, sizeof(ManagerPrefix) + 2> manager{};
     const ManagerView view(manager.data() + 1);
     const auto index = view.view(&ManagerPrefix::actors);
-    index.set(&TreeIndex::head, Address{0x87654321});
+    index.set(&TreeIndex::head, reinterpret_cast<void*>(uintptr_t{0x87654321}));
     index.set(&TreeIndex::count, std::int32_t{123});
     CHECK(view.bytes(&ManagerPrefix::actors) == manager.data() + 85);
     CHECK(index.bytes(&TreeIndex::head) == manager.data() + 89);

@@ -1,3 +1,4 @@
+#include "kinoko/act_layout_render.hpp"
 #include "kinoko/actor_pool.h"
 #include "kinoko/actor_owner_list.h"
 #include "kinoko/actor_lifecycle.h"
@@ -15,9 +16,6 @@ static_assert(sizeof(void*) == sizeof(int32_t), "Original Win32 object addresses
 // single source of truth; the adapters do not add ordering or fallback logic.
 extern "C" {
 void* kinoko_destroy_cact_with_flags(KinokoActDocument* receiver, unsigned char flags);
-int32_t kinoko_c2dlayout_set_layer_impl(int32_t receiver, int32_t layer);
-int32_t kinoko_c2dlayout_update_faithful_impl(int32_t receiver);
-int32_t kinoko_c2dlayout_draw_impl(int32_t receiver, float x, float y);
 int32_t kinoko_begin_stage_this(KinokoActRuntime* receiver, int32_t stage);
 int32_t kinoko_root_table_construct_this(KinokoActRuntime* receiver, struct SQVM* vm, void* output);
 int32_t kinoko_act_bitblt_this(int32_t receiver, int32_t x, int32_t y, int32_t width, int32_t height,
@@ -38,20 +36,20 @@ extern "C" void* __fastcall kinoko_method_destroy_act(KinokoActDocument* receive
 }
 
 // function_42bcc0
-extern "C" int32_t __fastcall kinoko_method_layout_set_layer(int32_t receiver, void* /* unused_edx */,
-    int32_t layer) {
-    return kinoko_c2dlayout_set_layer_impl(receiver, layer);
+extern "C" int32_t __fastcall kinoko_method_layout_set_layer(KinokoActLayout* receiver, void* /* unused_edx */,
+    KinokoActLayer* layer) {
+    return kinoko::act::bind_layout_2d(receiver, layer);
 }
 
 // function_42c100
-extern "C" int32_t __fastcall kinoko_method_layout_update(int32_t receiver, void* /* unused_edx */) {
-    return kinoko_c2dlayout_update_faithful_impl(receiver);
+extern "C" int32_t __fastcall kinoko_method_layout_update(KinokoActLayout* receiver, void* /* unused_edx */) {
+    return kinoko::act::update_layout_2d(receiver);
 }
 
 // function_42c300
-extern "C" int32_t __fastcall kinoko_method_layout_draw(int32_t receiver, void* /* unused_edx */,
+extern "C" int32_t __fastcall kinoko_method_layout_draw(KinokoActLayout* receiver, void* /* unused_edx */,
     float x, float y) {
-    return kinoko_c2dlayout_draw_impl(receiver, x, y);
+    return kinoko::act::draw_layout_2d(receiver, x, y);
 }
 
 // function_43c860
@@ -61,15 +59,15 @@ extern "C" int32_t __fastcall kinoko_method_layout3d_assign(int32_t receiver, vo
 }
 
 // function_450950
-extern "C" int32_t __fastcall kinoko_method_begin_stage(int32_t receiver, void* /* unused_edx */,
+extern "C" int32_t __fastcall kinoko_method_begin_stage(KinokoActRuntime* receiver, void* /* unused_edx */,
     int32_t stage) {
     return kinoko_begin_stage_this((KinokoActRuntime*)(uintptr_t)(receiver), stage);
 }
 
 // function_450e30
-extern "C" int32_t __fastcall kinoko_method_root_table_construct(int32_t receiver,
-    void* /* unused_edx */, int32_t vm, int32_t output) {
-    return kinoko_root_table_construct_this((KinokoActRuntime*)(uintptr_t)(receiver), kinoko::legacy::pointer<SQVM>(vm), (void*)(uintptr_t)(output));
+extern "C" int32_t __fastcall kinoko_method_root_table_construct(KinokoActRuntime* receiver,
+    void* /* unused_edx */, struct SQVM* vm, void* output) {
+    return kinoko_root_table_construct_this((KinokoActRuntime*)(uintptr_t)(receiver), vm, (void*)(uintptr_t)(output));
 }
 
 // function_4514a0
