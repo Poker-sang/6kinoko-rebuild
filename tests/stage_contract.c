@@ -5497,8 +5497,8 @@ static int test_script_serialization(int32_t vm, int32_t* root) {
 static int test_original_layer_constructor(int32_t vm) {
     int32_t *layer = malloc(348);
     CHECK(layer); memset(layer, 0xcd, 348);
-    const int32_t previous = kinoko_act_vm_abi_slot; kinoko_act_vm_abi_slot = vm;
-    CHECK(kinoko_act_layer_initialize((KinokoActLayer*)layer, (struct SQVM*)(intptr_t)kinoko_act_vm_abi_slot) == (KinokoActLayer*)layer); kinoko_act_vm_abi_slot = previous;
+    struct SQVM* const previous = kinoko_act_vm; kinoko_act_vm = (struct SQVM*)(intptr_t)vm;
+    CHECK(kinoko_act_layer_initialize((KinokoActLayer*)layer, (struct SQVM*)(intptr_t)kinoko_act_vm) == (KinokoActLayer*)layer); kinoko_act_vm = previous;
     CHECK(layer[24] == -1 && layer[26] == -1 && layer[27] == -1);
     CHECK(strcmp(kinoko_string_data((const void*)(intptr_t)(PTR(layer)+112)), "Layer_") == 0);
     CHECK(layer[78] == vm && layer[79] == OT_TABLE && layer[83] == vm && layer[84] == OT_NULL);
@@ -5675,7 +5675,7 @@ static SQInteger release_cached_root_probe(SQUserPointer payload, SQInteger size
     (void)payload; (void)size;
     ++root_cache_release_count;
     root_cache_release_vm = (HSQUIRRELVM)kinoko_primary_vm;
-    root_cache_release_identity = kinoko_cached_root_slot;
+    root_cache_release_identity = PTR(kinoko_cached_root_slot);
     return 0;
 }
 static int test_owned_states(int at_exit) {
@@ -5691,7 +5691,7 @@ static int test_owned_states(int at_exit) {
     }
     if (at_exit) return 0;
     HSQUIRRELVM external = sq_open(64);
-    const int32_t head = kinoko_newest_shared_state;
+    void* const head = kinoko_newest_shared_state;
     CHECK(kinoko_sqplus_select_vm((struct SQVM *)(intptr_t)(PTR(external))) & 1);
     CHECK(kinoko_newest_shared_state == head);
     /* Switching VM must destroy the cached external object while its VM is
@@ -5699,13 +5699,13 @@ static int test_owned_states(int at_exit) {
     {
         HSQUIRRELVM next = sq_open(64);
         void *cache = kinoko_sqplus_root_object();
-        CHECK(next && cache && PTR(cache) == kinoko_cached_root_slot);
+        CHECK(next && cache && cache == kinoko_cached_root_slot);
         sq_newuserdata(external, 4);
         sq_setreleasehook(external, -1, release_cached_root_probe);
         kinoko_sqplus_object_capture(cache, -1);
         sq_pop(external, 1);
         CHECK(kinoko_sqplus_select_vm(external) & 1);
-        CHECK(root_cache_release_count == 0 && PTR(cache) == kinoko_cached_root_slot);
+        CHECK(root_cache_release_count == 0 && cache == kinoko_cached_root_slot);
         CHECK(kinoko_sqplus_select_vm(next) & 1);
         CHECK(root_cache_release_count == 1 && root_cache_release_vm == external);
         CHECK(root_cache_release_identity == PTR(cache) && kinoko_cached_root_slot == 0);

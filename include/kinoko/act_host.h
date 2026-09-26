@@ -54,7 +54,7 @@ extern KinokoScriptExtension kinoko_act_script_extension;
 extern int32_t  kinoko_script_void_result_identity;
 extern int32_t  kinoko_null_object_type;
 extern int32_t  kinoko_null_object_value;
-extern int32_t kinoko_primary_shared_state;
+extern struct SQSharedState* kinoko_primary_shared_state;
 extern int32_t kinoko_release_watch_data[8];
 extern int32_t kinoko_release_watch_count;
 

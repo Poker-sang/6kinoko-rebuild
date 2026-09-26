@@ -12,12 +12,12 @@
 #include <memory>
 #include <unordered_set>
 
-extern "C" int32_t kinoko_act_vm_abi_slot;
+extern "C" struct SQVM* kinoko_act_vm;
 
 namespace {
 using kinoko::legacy::address;
 using kinoko::legacy::pointer;
-inline int32_t& act_layer_vm_slot = kinoko_act_vm_abi_slot;
+inline SQVM*& act_layer_vm_slot = kinoko_act_vm;
 using kinoko::legacy::field;
 namespace sqrat = kinoko::script::upstream;
 
@@ -83,7 +83,7 @@ extern "C" KinokoActLayer* __fastcall kinoko_method_clone_act_layer(KinokoActLay
     if (!source) return 0;
     try {
         kinoko::legacy::Allocation<unsigned char> storage(static_cast<unsigned char*>(std::calloc(1,sizeof(kinoko::act::LayerStorageRecord))));
-        if (!storage || !kinoko_act_layer_initialize(reinterpret_cast<KinokoActLayer*>(storage.get()),pointer<SQVM>(act_layer_vm_slot))) return 0;
+        if (!storage || !kinoko_act_layer_initialize(reinterpret_cast<KinokoActLayer*>(storage.get()),act_layer_vm_slot)) return 0;
         std::unique_ptr<unsigned char,LayerDelete> owned(storage.release());
         
         using namespace kinoko::act;

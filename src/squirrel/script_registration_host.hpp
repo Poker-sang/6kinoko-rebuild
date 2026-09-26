@@ -28,5 +28,6 @@ int32_t kinoko_script_bind_root_integer(int32_t * a1, int32_t a2, char * a3);
 int32_t kinoko_compile_file_native(struct SQVM* vm);
 void kinoko_trace(const char*);
 void kinoko_trace_i32(const char*, int32_t);
-extern int32_t kinoko_input_class_storage[3], kinoko_act_vm_abi_slot;
+extern int32_t kinoko_input_class_storage[3];
+extern struct SQVM* kinoko_act_vm;
 }

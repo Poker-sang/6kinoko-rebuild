@@ -1964,7 +1964,7 @@ int32_t kinoko_root_table_register_resource(void* root_object,
         kinoko_trace_i32("sq-watch:fader-global-internal",
                          field<int32_t>(global_pair[1] + 4));
         kinoko_trace_ref_watch("fader-global-created",
-                               kinoko_primary_shared_state,
+                               address(kinoko_primary_shared_state),
                                global_pair[0], global_pair[1]);
     }
 

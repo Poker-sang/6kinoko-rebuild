@@ -117,7 +117,7 @@ extern "C" {
 
 extern int32_t kinoko_script_assets_packed(void);
 
-extern int32_t kinoko_primary_shared_state;
+extern struct SQSharedState* kinoko_primary_shared_state;
 
 extern int32_t kinoko_release_watch_data[8];
 
@@ -730,15 +730,15 @@ extern int32_t kinoko_sound_lookup_count;
 
 extern char kinoko_skip_vm_owner_reset;
 
-extern int32_t kinoko_newest_shared_state;
+extern void* kinoko_newest_shared_state;
 
 extern __declspec(align(4096)) struct SQVM *kinoko_primary_vm;
 
-extern int32_t kinoko_cached_root_slot;
+extern void* kinoko_cached_root_slot;
 
 extern int32_t kinoko_vm_thread_wrapper[3];
 
-extern int32_t kinoko_act_vm_abi_slot;
+extern struct SQVM* kinoko_act_vm;
 
 extern char kinoko_compile_act_output;
 

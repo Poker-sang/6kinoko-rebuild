@@ -32,7 +32,7 @@ static_assert(sizeof(collision_state) == 120 && sizeof(global_callback) == 28);
 
 #pragma comment(linker, "/alternatename:_D3DXCreateTexture@32=_D3DXCreateTexture")
 
-int32_t kinoko_primary_shared_state;
+struct SQSharedState* kinoko_primary_shared_state;
 
 int32_t kinoko_release_watch_data[8];
 
@@ -111,17 +111,17 @@ int32_t kinoko_sound_lookup_count = 0;
 
 char kinoko_skip_vm_owner_reset = 0;
 
-int32_t kinoko_newest_shared_state = 0;
+void* kinoko_newest_shared_state = 0;
 
 #pragma data_seg(".g644")
 __declspec(align(4096)) struct SQVM *kinoko_primary_vm = NULL;
 #pragma data_seg()
 
-int32_t kinoko_cached_root_slot = 0;
+void* kinoko_cached_root_slot = 0;
 
 int32_t kinoko_vm_thread_wrapper[3] = { 0, 0, 0 };
 
-int32_t kinoko_act_vm_abi_slot = 0;
+struct SQVM* kinoko_act_vm = 0;
 
 char kinoko_compile_act_output = 0;
 
@@ -464,7 +464,7 @@ static SQVM* kinoko_open_primary_script_vm(int32_t stack_size) {
     kinoko_sq_set_context_exchange(kinoko_exchange_source_receiver);
     auto* vm = kinoko_sq_open(stack_size);
     kinoko_active_vm = vm;
-    kinoko_primary_shared_state = ((int32_t)(uintptr_t)kinoko_sq_shared_state(vm));
+    kinoko_primary_shared_state = kinoko_sq_shared_state(vm);
     return vm;
 }
 

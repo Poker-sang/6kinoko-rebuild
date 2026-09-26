@@ -3,8 +3,8 @@ struct SQVM;
    Exercise actual document/layer/key/map virtual clones, without manually
    performing the second SetLayer that masked the missing consumer behavior. */
 static int test_map_lazy_binding(int32_t vm, int32_t *root) {
-    const int32_t previous_default_vm = kinoko_act_vm_abi_slot;
-    kinoko_act_vm_abi_slot = vm;
+    struct SQVM* const previous_default_vm = kinoko_act_vm;
+    kinoko_act_vm = (struct SQVM*)(intptr_t)vm;
     int32_t source[60] = {0};
     int32_t *resource = (int32_t*)calloc(1,100);
     struct kinoko_mcd_data *data = (struct kinoko_mcd_data*)calloc(1,sizeof(*data));
@@ -199,7 +199,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
         (int32_t)(intptr_t)kinoko_destroy_cact_with_flags((KinokoActDocument*)(uintptr_t)(PTR(copy)), 1);
     }
     kinoko_destroy_cact_object((KinokoActDocument*)(uintptr_t)(PTR(source)));
-    kinoko_act_vm_abi_slot = previous_default_vm;
+    kinoko_act_vm = previous_default_vm;
     puts("PASS: virtual ACT clone lazy map binding and publication property aliases");
     return 0;
 }

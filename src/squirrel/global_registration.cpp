@@ -8,7 +8,7 @@
 namespace {
 using namespace kinoko::script;
 using namespace kinoko::script::binding;
-inline int32_t& primary_vm_slot = kinoko_act_vm_abi_slot;
+inline SQVM*& primary_vm_slot = kinoko_act_vm;
 inline auto show_call_stack_entry = kinoko_native_no_arguments_entry;
 template<class Function> void* entry(Function function) {
     return reinterpret_cast<void*>(function);
@@ -108,8 +108,8 @@ void bind_root_mask(ObjectStorage &object, int32_t *storage, const char *name,
 int32_t kinoko_register_root_bindings() {
     kinoko_trace("473010:enter");
     kinoko_script_initialize_root();
-    primary_vm_slot = address(current_vm());
-    const int32_t vm_address = primary_vm_slot;
+    primary_vm_slot = current_vm();
+    auto* vm_address = primary_vm_slot;
     RootTableStorage root{};
     root.vtable = kinoko_sqrat_object_vtable();
     root.vm = current_vm();
