@@ -764,7 +764,7 @@ template<bool string_layout> KinokoActLayer* create_layer(KinokoActRuntime* play
     if constexpr(string_layout) kinoko_method_set_string_layer((KinokoStringLayout*)(uintptr_t)(native_layout), nullptr, layer);
     else kinoko_method_layout_set_layer((KinokoActLayout*)(uintptr_t)(native_layout), nullptr, (KinokoActLayer*)(uintptr_t)(layer));
     kinoko_method_register_act_layer((KinokoActLayer*)(uintptr_t)(layer), nullptr, (void*)(uintptr_t)(address(&parent.object)), 0);
-    if constexpr(string_layout) kinoko_method_register_string_layout(address(native_layout),nullptr);
+    if constexpr(string_layout) kinoko_method_register_string_layout((KinokoStringLayout*)(uintptr_t)(address(native_layout)), nullptr);
     else kinoko_method_register_layout((KinokoActLayout*)(uintptr_t)(native_layout), nullptr);
     return layer;
 }
@@ -1304,9 +1304,9 @@ int32_t kinoko_map_get_chip_by_position(SQVM* vm) {
             int32_t left = record->left;
             int32_t top = record->top;
             record->fractional_left = (float)left +
-                (layer ? kinoko::map::LayerView(layer).get(&kinoko::map::LayerRecord::position).x : 0.0f);
+                (layer ? kinoko::map::LayerView(layer).get(&kinoko::map::LayerRecord::position_x) : 0.0f);
             record->fractional_top = (float)top +
-                (layer ? kinoko::map::LayerView(layer).get(&kinoko::map::LayerRecord::position).y : 0.0f);
+                (layer ? kinoko::map::LayerView(layer).get(&kinoko::map::LayerRecord::position_y) : 0.0f);
             if (chip != nullptr && left <= x && top <= y &&
                 (int64_t)left + kinoko_mcd_i16(chip->bytes + 12) > x &&
                 (int64_t)top + kinoko_mcd_i16(chip->bytes + 14) > y) {
@@ -2239,24 +2239,28 @@ extern "C" int32_t kinoko_publish_string_layout_class(SQVM* vm,void* root,int32_
     return ok;
 }
 
-extern "C" int32_t __fastcall kinoko_method_register_string_layout(int32_t layout,void*) {
-    const int32_t layer=layout?field<int32_t>(layout+148):0;
-    if(!layer || field<int32_t>(layer+336)==0x01000001) return E_FAIL;
-    SQVM* const vm = field<SQVM*>(layer+332);
+extern "C" int32_t __fastcall kinoko_method_register_string_layout(KinokoStringLayout* layout,void*) {
+    auto* layer=layout ? kinoko::native::RecordView<kinoko::act::StringLayoutRecord>(layout).get(&kinoko::act::StringLayoutRecord::layer) : nullptr;
+    if(!layer) return E_FAIL;
+    const kinoko::act::LayerStorageView storage(layer);
+    const auto wrapper=storage.view(&kinoko::act::LayerStorageRecord::layout_object);
+    const auto* pair=reinterpret_cast<const int32_t*>(wrapper.bytes(&kinoko::act::LayerObjectRecord::value));
+    if(pair[0]==0x01000001) return E_FAIL;
+    SQVM* const vm = wrapper.get(&kinoko::act::LayerObjectRecord::vm);
     if(!vm) return E_INVALIDARG;
     kinoko::act::LayerObjectRecord root{}; int32_t klass[2]={static_cast<int32_t>(OT_NULL),0},outer[2]={static_cast<int32_t>(OT_NULL),0},script[2]={static_cast<int32_t>(OT_NULL),0};
     if(!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(&root), vm))) return E_FAIL;
     const bool ok=kinoko_publish_string_layout_class(vm, (void*)(uintptr_t)(address(&root)), klass) &&
-        kinoko_create_unbound_instance(vm, klass, (void*)(uintptr_t)(layout), outer) &&
-        kinoko_sqrat_raw_set_pair(vm, pointer<const int32_t>(layer+336), "layout", outer) &&
-        kinoko_create_bound_instance(vm, pointer<const int32_t>(layer+316), "layout", klass, (void*)(uintptr_t)(layout), script);
+        kinoko_create_unbound_instance(vm, klass, layout, outer) &&
+        kinoko_sqrat_raw_set_pair(vm, pair, "layout", outer) &&
+        kinoko_create_bound_instance(vm, reinterpret_cast<const int32_t*>(storage.view(&kinoko::act::LayerStorageRecord::script_object).bytes(&kinoko::act::LayerObjectRecord::value)), "layout", klass, layout, script);
     kinoko_sqrat_release_pair(vm, script);kinoko_sqrat_release_pair(vm, outer);
     kinoko_sqrat_release_pair(vm, klass);kinoko_sqrat_object_release((void *)(&root));
     if(!ok) return E_FAIL;
     using namespace kinoko::act;
-    const auto aliases = LayerStorageView(pointer<void>(layer)).view(&LayerStorageRecord::association)
+    const auto aliases = LayerStorageView(layer).view(&LayerStorageRecord::association)
         .view(&LayerAssociationRecord::property_aliases);
-    const kinoko::native::RecordView<StringLayoutRecord> text(pointer<void>(layout));
+    const kinoko::native::RecordView<StringLayoutRecord> text(layout);
     aliases.set(&LayerPropertyAliases::alpha, reinterpret_cast<float*>(text.bytes(&StringLayoutRecord::alpha)));
     aliases.set(&LayerPropertyAliases::blend, reinterpret_cast<int32_t*>(text.bytes(&StringLayoutRecord::blend)));
     aliases.set(&LayerPropertyAliases::red, reinterpret_cast<int32_t*>(text.bytes(&StringLayoutRecord::red)));
@@ -2301,11 +2305,14 @@ extern "C" int32_t __fastcall kinoko_method_bind_mesh_object(KinokoActResource* 
 extern "C" int32_t __fastcall kinoko_method_bind_mesh_table(KinokoActResource* resource,void *,void* object,const char *name) {
     return kinoko_bind_original_resource(resource,object,name,"CActResourceMesh",true);
 }
-extern "C" int32_t __fastcall kinoko_method_register_layout_3d(int32_t layout,void *) {
-    const auto *record=pointer<kinoko::act::Layout3DRecord>(layout);
-    const auto layer=record?address(record->layer):0;
-    if(!layer || field<int32_t>(layer+336)==0x01000001) return E_FAIL;
-    const auto vm = field<SQVM*>(layer+332);
+extern "C" int32_t __fastcall kinoko_method_register_layout_3d(KinokoActLayout* layout,void *) {
+    auto* layer=layout ? kinoko::native::RecordView<kinoko::act::Layout3DRecord>(layout).get(&kinoko::act::Layout3DRecord::layer) : nullptr;
+    if(!layer) return E_FAIL;
+    const kinoko::act::LayerStorageView storage(layer);
+    const auto wrapper=storage.view(&kinoko::act::LayerStorageRecord::layout_object);
+    const auto* pair=reinterpret_cast<const int32_t*>(wrapper.bytes(&kinoko::act::LayerObjectRecord::value));
+    if(pair[0]==0x01000001) return E_FAIL;
+    const auto vm = wrapper.get(&kinoko::act::LayerObjectRecord::vm);
     if(!vm) return E_INVALIDARG;
     kinoko::act::LayerObjectRecord root{}; int32_t klass[2]={static_cast<int32_t>(OT_NULL),0},outer[2]={static_cast<int32_t>(OT_NULL),0},script[2]={static_cast<int32_t>(OT_NULL),0};
     if(!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(&root), vm))) return E_FAIL;
@@ -2317,9 +2324,9 @@ extern "C" int32_t __fastcall kinoko_method_register_layout_3d(int32_t layout,vo
         {"scale_x",28,1},{"scale_y",32,1},{"scale_z",36,1}
     };
     const bool ok=kinoko_publish_map_view_class(vm, (void*)(uintptr_t)(address(&root)), "C3DLayout", properties, 9, 0, klass) &&
-        kinoko_create_unbound_instance(vm, klass, (void*)(uintptr_t)(layout), outer) &&
-        kinoko_sqrat_raw_set_pair(vm, pointer<const int32_t>(layer+336), "layout", outer) &&
-        kinoko_create_bound_instance(vm, pointer<const int32_t>(layer+316), "layout", klass, (void*)(uintptr_t)(layout), script);
+        kinoko_create_unbound_instance(vm, klass, layout, outer) &&
+        kinoko_sqrat_raw_set_pair(vm, pair, "layout", outer) &&
+        kinoko_create_bound_instance(vm, reinterpret_cast<const int32_t*>(storage.view(&kinoko::act::LayerStorageRecord::script_object).bytes(&kinoko::act::LayerObjectRecord::value)), "layout", klass, layout, script);
     kinoko_sqrat_release_pair(vm, script);kinoko_sqrat_release_pair(vm, outer);
     kinoko_sqrat_release_pair(vm, klass);kinoko_sqrat_object_release((void *)(&root));
     return ok?S_OK:E_FAIL;

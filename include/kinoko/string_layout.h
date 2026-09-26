@@ -11,7 +11,7 @@ const void *kinoko_string_layout_methods(void);
 KinokoStringLayout* __fastcall kinoko_method_clone_string_layout(KinokoStringLayout* object, void *unused);
 KinokoStringLayout* __fastcall kinoko_method_destroy_string_layout(KinokoStringLayout* object, void *unused);
 int32_t __fastcall kinoko_method_string_layout_type(KinokoStringLayout* object, void *unused);
-int32_t __fastcall kinoko_method_register_string_layout(int32_t object, void *unused);
+int32_t __fastcall kinoko_method_register_string_layout(KinokoStringLayout* object, void *unused);
 void kinoko_string_queue_construct(KinokoStringLayout* object);
 void kinoko_string_queue_destroy(KinokoStringLayout* object);
 uint32_t kinoko_string_queue_size(KinokoStringLayout* object);

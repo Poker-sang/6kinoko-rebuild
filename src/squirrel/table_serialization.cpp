@@ -1,3 +1,4 @@
+#include "kinoko/squirrel_host_object.hpp"
 #include "kinoko/savedata.h"
 #include "kinoko/base_utilities.h"
 #include "kinoko/squirrel_game_objects.h"
@@ -67,12 +68,12 @@ struct TableStream {
 // The helpers below own and release that reference; nested copies hand their
 // new reference to the recursive call, as the original 4722E0/472820 do.
 struct Object {
-    std::array<int32_t, 3> words{};
+    kinoko::script::ObjectStorage storage{};
     Object() = default;
-    Object(const void* vtable, int32_t type, int32_t data) : words{static_cast<int32_t>(reinterpret_cast<uintptr_t>(vtable)), type, data} {}
-    int32_t *raw() noexcept { return words.data(); }
-    int32_t type() const noexcept { return words[1]; }
-    int32_t data() const noexcept { return words[2]; }
+    Object(const void* vtable, int32_t type, int32_t data) : storage{vtable, kinoko::script::borrowed_value(type, data)} {}
+    int32_t *raw() noexcept { return reinterpret_cast<int32_t*>(&storage); }
+    int32_t type() const noexcept { return static_cast<int32_t>(storage.value._type); }
+    int32_t data() const noexcept { return kinoko::script::data_bits(storage.value); }
     void initialize() noexcept { kinoko_sqplus_object_initialize(raw()); }
     void destroy() noexcept { kinoko_sqplus_object_destroy(raw()); }
     bool assign(int32_t type_tag, int32_t bits) noexcept {
@@ -172,14 +173,14 @@ bool write_table(TableStream &stream, Object input) {
         if ((value_type & 0x7eu) == 0) continue;
         if (!stream.write(value_type)) { ok = false; break; }
         if (key_type == OT_INTEGER) {
-            ok = stream.write(key_type) && stream.write(key.words[2]);
+            ok = stream.write(key_type) && stream.write(key.data());
         } else if (key_type == OT_STRING) {
             ok = stream.write(key_type) && write_string(stream, key);
         } else { ok = false; }
         if (!ok) break;
 
         if (value_type == OT_INTEGER || value_type == OT_FLOAT) {
-            ok = stream.write(value.words[2]);
+            ok = stream.write(value.data());
         } else if (value_type == OT_BOOL) {
             const uint8_t boolean = static_cast<uint8_t>(value.data());
             ok = stream.write(boolean);
