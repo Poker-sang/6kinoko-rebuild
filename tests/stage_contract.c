@@ -2753,7 +2753,7 @@ static int test_error_value_ownership(int32_t vm) {
     int32_t string_object;
     int32_t refs;
 
-    ((int32_t)(uintptr_t)kinoko_sq_reset_error(((SQVM*)(uintptr_t)(uint32_t)((vm)))));
+    ((int32_t)(uintptr_t)kinoko_sq_reset_error_and_return_vm(((SQVM*)(uintptr_t)(uint32_t)((vm)))));
     error_releases = 0;
     ((int32_t)(uintptr_t)kinoko_sq_raise_object_error(((SQVM*)(uintptr_t)(uint32_t)((vm))), ((SQObjectPtr*)(uintptr_t)(uint32_t)((PTR(value))))));
     CHECK(object[1] == 2);
@@ -2766,7 +2766,7 @@ static int test_error_value_ownership(int32_t vm) {
     string_object = error[1];
     kinoko_squirrel_addref(error[0], string_object);
     refs = *(int32_t *)(intptr_t)(string_object + 4);
-    ((int32_t)(uintptr_t)kinoko_sq_reset_error(((SQVM*)(uintptr_t)(uint32_t)((vm)))));
+    ((int32_t)(uintptr_t)kinoko_sq_reset_error_and_return_vm(((SQVM*)(uintptr_t)(uint32_t)((vm)))));
     CHECK(error[0] == 0x01000001 && error[1] == 0);
     CHECK(*(int32_t *)(intptr_t)(string_object + 4) == refs - 1);
     kinoko_squirrel_release(0x08000010, string_object);
@@ -2783,17 +2783,17 @@ static int test_error_value_ownership(int32_t vm) {
         CHECK(kinoko_sq_throw_error(((SQVM*)(uintptr_t)(uint32_t)((vm))), (expected)) == -1);
         CHECK(*(int32_t *)(intptr_t)(error[1] + 4) == 1);
     }
-    ((int32_t)(uintptr_t)kinoko_sq_reset_error(((SQVM*)(uintptr_t)(uint32_t)((vm)))));
+    ((int32_t)(uintptr_t)kinoko_sq_reset_error_and_return_vm(((SQVM*)(uintptr_t)(uint32_t)((vm)))));
 
     object[1] = 1;
     value[0] = 0x08000080;
     value[1] = PTR(object);
-    ((int32_t)(uintptr_t)kinoko_sq_assign_integer(((SQObjectPtr*)(uintptr_t)(uint32_t)((PTR(value)))), (-37)));
+    ((int32_t)(uintptr_t)kinoko_sq_assign_nullable_integer(((SQObjectPtr*)(uintptr_t)(uint32_t)((PTR(value)))), (-37)));
     CHECK(value[0] == 0x05000002 && value[1] == -37 && error_releases == 2);
     object[1] = 1;
     value[0] = 0x08000080;
     value[1] = PTR(object);
-    ((int32_t)(uintptr_t)kinoko_sq_assign_float(((SQObjectPtr*)(uintptr_t)(uint32_t)((PTR(value)))), (0.75f)));
+    ((int32_t)(uintptr_t)kinoko_sq_assign_nullable_float(((SQObjectPtr*)(uintptr_t)(uint32_t)((PTR(value)))), (0.75f)));
     CHECK(value[0] == 0x05000004 && *(float *)&value[1] == 0.75f && error_releases == 3);
     puts("PASS: source SQObjectPtr error replacement, self-assignment, reset and numeric ownership");
     return 0;
@@ -2830,10 +2830,10 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
     }
     CHECK(kinoko_host_create_native_instance_abi(vm, PTR("MissingNativeClass"), pointer, 0) == 0);
     CHECK(kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm)))) == top);
-    ((int32_t)(uintptr_t)kinoko_sq_reset_error(((SQVM*)(uintptr_t)(uint32_t)((vm)))));
+    ((int32_t)(uintptr_t)kinoko_sq_reset_error_and_return_vm(((SQVM*)(uintptr_t)(uint32_t)((vm)))));
     CHECK(kinoko_host_create_native_instance_abi(vm, PTR("nativeConstructorCalls"), pointer, 0) == 0);
     CHECK(kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm)))) == top);
-    ((int32_t)(uintptr_t)kinoko_sq_reset_error(((SQVM*)(uintptr_t)(uint32_t)((vm)))));
+    ((int32_t)(uintptr_t)kinoko_sq_reset_error_and_return_vm(((SQVM*)(uintptr_t)(uint32_t)((vm)))));
     native_instance_releases = 0;
     CHECK(kinoko_host_create_native_instance_abi(vm, PTR("NativeProbe"), pointer, PTR(native_instance_release)) == 1);
     CHECK(kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm)))) == top+1);
@@ -2952,21 +2952,21 @@ static int test_compiler_receivers(int32_t vm, int32_t *root) {
     compile_error_vm=vm;
     compile_error_calls=compile_error_valid=0;
     ((int32_t)(uintptr_t)kinoko_sq_set_compiler_error_handler(((SQVM*)(uintptr_t)(uint32_t)((vm))), (SQCOMPILERERROR)(((void*)(uintptr_t)(uint32_t)((PTR(compiler_test_error)))))));
-    CHECK(kinoko_sq_compile_buffer(((SQVM*)(uintptr_t)(uint32_t)((vm))), (PTR("local =;")), (8), ((int32_t *)"callback source"), (0))==-1);
+    CHECK(kinoko_sq_compile_text(((SQVM*)(uintptr_t)(uint32_t)((vm))), (const char*)(uintptr_t)((PTR("local =;"))), (8), (const char*)(uintptr_t)(((int32_t *)"callback source")), (0))==-1);
     CHECK(compile_error_calls==0 && kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm))))==top);
-    CHECK(kinoko_sq_compile_buffer(((SQVM*)(uintptr_t)(uint32_t)((vm))), (PTR("local =;")), (8), ((int32_t *)"callback source"), (1))==-1);
+    CHECK(kinoko_sq_compile_text(((SQVM*)(uintptr_t)(uint32_t)((vm))), (const char*)(uintptr_t)((PTR("local =;"))), (8), (const char*)(uintptr_t)(((int32_t *)"callback source")), (1))==-1);
     CHECK(compile_error_calls==1 && compile_error_valid && kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm))))==top);
     CHECK(*(int32_t *)(intptr_t)(vm+64)==0x08000010);
     ((int32_t)(uintptr_t)kinoko_sq_set_compiler_error_handler(((SQVM*)(uintptr_t)(uint32_t)((vm))), (SQCOMPILERERROR)(((void*)(uintptr_t)(uint32_t)((previous_handler))))));
     // Length-limited source must ignore trailing bytes, unlike the old lost buffer state.
-    CHECK(kinoko_sq_compile_buffer(((SQVM*)(uintptr_t)(uint32_t)((vm))), (PTR("return 42;INVALID")), (10), ((int32_t *)"bounded source"), (0))==0);
+    CHECK(kinoko_sq_compile_text(((SQVM*)(uintptr_t)(uint32_t)((vm))), (const char*)(uintptr_t)((PTR("return 42;INVALID"))), (10), (const char*)(uintptr_t)(((int32_t *)"bounded source")), (0))==0);
     ((int32_t)(uintptr_t)kinoko_sq_push_raw_object(((SQVM*)(uintptr_t)(uint32_t)((vm))), (root[2]), (root[3])));
     CHECK(kinoko_sq_call((vm), (1), (1), (0))==0);
     int32_t *value=(int32_t *)(intptr_t)kinoko_sq_get_up((vm), (-1));
     CHECK(value[0]==0x05000002 && value[1]==42);
     ((int32_t)(uintptr_t)kinoko_sq_set_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm))), (top)));
     struct compile_feed feed={"return 73;",0,vm};
-    CHECK(kinoko_sq_compile_lexed(((SQVM*)(uintptr_t)(uint32_t)((vm))), (PTR(compiler_test_feed)), ((int32_t *)&feed), (PTR("reader source")), (0))==0);
+    CHECK(kinoko_sq_compile_lexed(((SQVM*)(uintptr_t)(uint32_t)((vm))), (SQLEXREADFUNC)(uintptr_t)((PTR(compiler_test_feed))), (void*)(uintptr_t)(((int32_t *)&feed)), (const char*)(uintptr_t)((PTR("reader source"))), (0))==0);
     ((int32_t)(uintptr_t)kinoko_sq_push_raw_object(((SQVM*)(uintptr_t)(uint32_t)((vm))), (root[2]), (root[3])));
     CHECK(kinoko_sq_call((vm), (1), (1), (0))==0);
     value=(int32_t *)(intptr_t)kinoko_sq_get_up((vm), (-1));
@@ -3652,10 +3652,10 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
     int32_t array[3];
     kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(array)), "apiPop");
     ((int32_t)(uintptr_t)kinoko_sq_push_raw_object(((SQVM*)(uintptr_t)(uint32_t)((vm))), (array[1]), (array[2])));
-    CHECK(kinoko_sq_array_pop(((SQVM*)(uintptr_t)(uint32_t)((vm))), (-1), (0)) == 0);
+    CHECK(kinoko_sq_pop_array_value(((SQVM*)(uintptr_t)(uint32_t)((vm))), (-1), (0)) == 0);
     CHECK(kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm)))) == top + 1);
     CHECK(*(int32_t *)(intptr_t)(array[2] + 28) == 2);
-    CHECK(kinoko_sq_array_pop(((SQVM*)(uintptr_t)(uint32_t)((vm))), (-1), (1)) == 0);
+    CHECK(kinoko_sq_pop_array_value(((SQVM*)(uintptr_t)(uint32_t)((vm))), (-1), (1)) == 0);
     CHECK(kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm)))) == top + 2);
     int32_t value = 0;
     CHECK(kinoko_sq_get_integer(((SQVM*)(uintptr_t)(uint32_t)((vm))), (-1), (&value)) == 0 && value == 20);

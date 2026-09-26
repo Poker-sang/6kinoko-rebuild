@@ -154,7 +154,7 @@ void legacy_api_contracts(HSQUIRRELVM vm) {
     require(SQ_SUCCEEDED(kinoko_sq_get_user_pointer(((SQVM*)(uintptr_t)(uint32_t)((machine))), (-1), ((void**)((&restored))))) && restored == address(&native_object), "userpointer round trip");
     require(SQ_FAILED(kinoko_sq_get_integer(((SQVM*)(uintptr_t)(uint32_t)((machine))), (-1), (&restored))), "userpointer is not an integer");
     kinoko_sq_pop((machine), (1));
-    ((int32_t)(uintptr_t)kinoko_sq_reset_error(((SQVM*)(uintptr_t)(uint32_t)((machine)))));
+    ((int32_t)(uintptr_t)kinoko_sq_reset_error_and_return_vm(((SQVM*)(uintptr_t)(uint32_t)((machine)))));
 
     ((int32_t)(uintptr_t)kinoko_sq_push_string(((SQVM*)(uintptr_t)(uint32_t)((machine))), ((const char*)(uintptr_t)(uint32_t)((address("externally-retained")))), (-1)));
     HSQOBJECT retained;
@@ -183,7 +183,7 @@ void legacy_api_contracts(HSQUIRRELVM vm) {
 
     Bytecode code;
     const char* source = "return 6 * 7;";
-    require(SQ_SUCCEEDED(kinoko_sq_compile_buffer(((SQVM*)(uintptr_t)(uint32_t)((machine))), (address(source)), (static_cast<int32_t>(std::strlen(source))), (reinterpret_cast<int32_t*>(const_cast<char*>("legacy-bytecode"))), (0))), "legacy compilebuffer");
+    require(SQ_SUCCEEDED(kinoko_sq_compile_text(((SQVM*)(uintptr_t)(uint32_t)((machine))), (const char*)(uintptr_t)((address(source))), (static_cast<int32_t>(std::strlen(source))), (const char*)(uintptr_t)((reinterpret_cast<int32_t*>(const_cast<char*>("legacy-bytecode")))), (0))), "legacy compilebuffer");
     require(SQ_SUCCEEDED(kinoko_sq_write_closure(((SQVM*)(uintptr_t)(uint32_t)((machine))), (SQWRITEFUNC)(((void*)(uintptr_t)(uint32_t)((address(reinterpret_cast<const void*>(write_bytecode)))))), ((void*)(uintptr_t)(uint32_t)((address(&code)))))), "source closure serialization");
     kinoko_sq_pop((machine), (1));
     require(SQ_SUCCEEDED(kinoko_sq_read_closure(((SQVM*)(uintptr_t)(uint32_t)((machine))), (SQREADFUNC)(((void*)(uintptr_t)(uint32_t)((address(reinterpret_cast<const void*>(read_bytecode)))))), (reinterpret_cast<int32_t*>(&code)))), "source closure deserialization");
@@ -206,7 +206,7 @@ void legacy_api_contracts(HSQUIRRELVM vm) {
     ((int32_t)(uintptr_t)kinoko_sq_get_last_error(((SQVM*)(uintptr_t)(uint32_t)((machine)))));
     require(SQ_SUCCEEDED(sq_getstring(vm, -1, &string)) && std::string(string) == large + ":17", "formatted error must not truncate or overrun a fixed buffer");
     kinoko_sq_pop((machine), (1));
-    ((int32_t)(uintptr_t)kinoko_sq_reset_error(((SQVM*)(uintptr_t)(uint32_t)((machine)))));
+    ((int32_t)(uintptr_t)kinoko_sq_reset_error_and_return_vm(((SQVM*)(uintptr_t)(uint32_t)((machine)))));
     require(sq_gettop(vm) == initial_top, "legacy API stack balance");
 }
 void standard_library_contracts(HSQUIRRELVM vm) {

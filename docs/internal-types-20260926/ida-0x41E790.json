@@ -1,0 +1,110 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"addr\":\"0x41E790\",\"code\":\"int sub_41E790()\\n{\\n  void *v1; // [esp-1Ch] [ebp-2Ch] BYREF\\n  int v2; // [esp-18h] [ebp-28h]\\n  int v3; // [esp-14h] [ebp-24h]\\n  int v4; // [esp-10h] [ebp-20h]\\n  int v5; // [esp-Ch] [ebp-1Ch]\\n  int v6; // [esp-8h] [ebp-18h]\\n  int v7; // [esp-4h] [ebp-14h]\\n  void **v8; // [esp+Ch] [ebp-4h]\\n\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"resourceID\\\", Size: 0xAu);\\n  sub_422550(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"layerID\\\", Size: 7u);\\n  sub_422550(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"stName\\\", Size: 6u);\\n  sub_422690(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"visible\\\", Size: 7u);\\n  sub_4227D0(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"parentID\\\", Size: 8u);\\n  sub_422550(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"debugOnly\\\", Size: 9u);\\n  sub_4227D0(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"dst_x\\\", Size: 5u);\\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"dst_y\\\", Size: 5u);\\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"dst_z\\\", Size: 5u);\\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"prev_x\\\", Size: 6u);\\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"prev_y\\\", Size: 6u);\\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"prev_z\\\", Size: 6u);\\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"ox\\\", Size: 2u);\\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"oy\\\", Size: 2u);\\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n  v8 = &v1;\\n  v6 = 15;\\n  v5 = 0;\\n  LOBYTE(v1) = 0;\\n  sub_4066F0(Src: \\\"oz\\\", Size: 2u);\\n  return sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\\n}\",\"refs\":[{\"addr\":\"0x4066f0\",\"name\":\"sub_4066F0\"},{\"addr\":\"0x4ebc54\",\"name\":\"aResourceid\",\"string\":\"resourceID\"},{\"addr\":\"0x422550\",\"name\":\"sub_422550\"},{\"addr\":\"0x4ebc60\",\"name\":\"aLayerid\",\"string\":\"layerID\"},{\"addr\":\"0x4ebc68\",\"name\":\"aStname\",\"string\":\"stName\"},{\"addr\":\"0x422690\",\"name\":\"sub_422690\"},{\"addr\":\"0x4ebc70\",\"name\":\"aVisible\",\"string\":\"visible\"},{\"addr\":\"0x4227d0\",\"name\":\"sub_4227D0\"},{\"addr\":\"0x4ebc78\",\"name\":\"aParentid\",\"string\":\"parentID\"},{\"addr\":\"0x4ebc84\",\"name\":\"aDebugonly\",\"string\":\"debugOnly\"},{\"addr\":\"0x4ebc90\",\"name\":\"aDstX\",\"string\":\"dst_x\"},{\"addr\":\"0x422910\",\"name\":\"sub_422910\"},{\"addr\":\"0x4ebc98\",\"name\":\"aDstY\",\"string\":\"dst_y\"},{\"addr\":\"0x4ebca0\",\"name\":\"aDstZ\",\"string\":\"dst_z\"},{\"addr\":\"0x4ebca8\",\"name\":\"aPrevX\",\"string\":\"prev_x\"},{\"addr\":\"0x4ebcb0\",\"name\":\"aPrevY\",\"string\":\"prev_y\"},{\"addr\":\"0x4ebcb8\",\"name\":\"aPrevZ\",\"string\":\"prev_z\"},{\"addr\":\"0x4ebcc0\",\"name\":\"aOx\",\"string\":\"ox\"},{\"addr\":\"0x4ebcc4\",\"name\":\"aOy\",\"string\":\"oy\"},{\"addr\":\"0x4ebcc8\",\"name\":\"aOz\",\"string\":\"oz\"}]}"
+    }
+  ],
+  "structuredContent": {
+    "addr": "0x41E790",
+    "code": "int sub_41E790()\n{\n  void *v1; // [esp-1Ch] [ebp-2Ch] BYREF\n  int v2; // [esp-18h] [ebp-28h]\n  int v3; // [esp-14h] [ebp-24h]\n  int v4; // [esp-10h] [ebp-20h]\n  int v5; // [esp-Ch] [ebp-1Ch]\n  int v6; // [esp-8h] [ebp-18h]\n  int v7; // [esp-4h] [ebp-14h]\n  void **v8; // [esp+Ch] [ebp-4h]\n\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"resourceID\", Size: 0xAu);\n  sub_422550(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"layerID\", Size: 7u);\n  sub_422550(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"stName\", Size: 6u);\n  sub_422690(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"visible\", Size: 7u);\n  sub_4227D0(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"parentID\", Size: 8u);\n  sub_422550(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"debugOnly\", Size: 9u);\n  sub_4227D0(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"dst_x\", Size: 5u);\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"dst_y\", Size: 5u);\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"dst_z\", Size: 5u);\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"prev_x\", Size: 6u);\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"prev_y\", Size: 6u);\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"prev_z\", Size: 6u);\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"ox\", Size: 2u);\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"oy\", Size: 2u);\n  sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n  v8 = &v1;\n  v6 = 15;\n  v5 = 0;\n  LOBYTE(v1) = 0;\n  sub_4066F0(Src: \"oz\", Size: 2u);\n  return sub_422910(a1: v1, a2: v2, a3: v3, a4: v4, a5: v5, a6: v6, a7: v7);\n}",
+    "refs": [
+      {
+        "addr": "0x4066f0",
+        "name": "sub_4066F0"
+      },
+      {
+        "addr": "0x4ebc54",
+        "name": "aResourceid",
+        "string": "resourceID"
+      },
+      {
+        "addr": "0x422550",
+        "name": "sub_422550"
+      },
+      {
+        "addr": "0x4ebc60",
+        "name": "aLayerid",
+        "string": "layerID"
+      },
+      {
+        "addr": "0x4ebc68",
+        "name": "aStname",
+        "string": "stName"
+      },
+      {
+        "addr": "0x422690",
+        "name": "sub_422690"
+      },
+      {
+        "addr": "0x4ebc70",
+        "name": "aVisible",
+        "string": "visible"
+      },
+      {
+        "addr": "0x4227d0",
+        "name": "sub_4227D0"
+      },
+      {
+        "addr": "0x4ebc78",
+        "name": "aParentid",
+        "string": "parentID"
+      },
+      {
+        "addr": "0x4ebc84",
+        "name": "aDebugonly",
+        "string": "debugOnly"
+      },
+      {
+        "addr": "0x4ebc90",
+        "name": "aDstX",
+        "string": "dst_x"
+      },
+      {
+        "addr": "0x422910",
+        "name": "sub_422910"
+      },
+      {
+        "addr": "0x4ebc98",
+        "name": "aDstY",
+        "string": "dst_y"
+      },
+      {
+        "addr": "0x4ebca0",
+        "name": "aDstZ",
+        "string": "dst_z"
+      },
+      {
+        "addr": "0x4ebca8",
+        "name": "aPrevX",
+        "string": "prev_x"
+      },
+      {
+        "addr": "0x4ebcb0",
+        "name": "aPrevY",
+        "string": "prev_y"
+      },
+      {
+        "addr": "0x4ebcb8",
+        "name": "aPrevZ",
+        "string": "prev_z"
+      },
+      {
+        "addr": "0x4ebcc0",
+        "name": "aOx",
+        "string": "ox"
+      },
+      {
+        "addr": "0x4ebcc4",
+        "name": "aOy",
+        "string": "oy"
+      },
+      {
+        "addr": "0x4ebcc8",
+        "name": "aOz",
+        "string": "oz"
+      }
+    ]
+  },
+  "isError": false
+}

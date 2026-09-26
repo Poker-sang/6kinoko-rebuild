@@ -1,0 +1,53 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"addr\":\"0x471160\",\"code\":\"int __cdecl sub_471160(int (__cdecl *a1)(int), int a2, int a3)\\n{\\n  unsigned __int8 v4; // al\\n  _DWORD v5[7]; // [esp-Ch] [ebp-34h] BYREF\\n  int v6; // [esp+10h] [ebp-18h] BYREF\\n  const char *pExceptionObject; // [esp+14h] [ebp-14h] BYREF\\n  int v8; // [esp+18h] [ebp-10h]\\n  int v9; // [esp+24h] [ebp-4h]\\n\\n  if ( sub_48A6F0(a1: a2, a2: a3) != 134217744 )\\n    return sub_48AC00(a1: a2, Src: \\\"Incorrect function argument\\\");\\n  v5[6] = v5;\\n  LOBYTE(v8) = 0;\\n  sub_45F5E0(a1: v5, a2: v8, a3: a2, a4: a3 + 1);\\n  v9 = 0;\\n  if ( (int)sub_48A8D0(a1: a2, a2: a3, a3: &v6) < 0 )\\n  {\\n    pExceptionObject = \\\"sq_get*() failed (type error)\\\";\\n    _CxxThrowException(&pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI1_AUSquirrelError__);\\n  }\\n  v9 = -1;\\n  v4 = a1(a1: v6);\\n  sub_48A530(a1: a2, a2: v4);\\n  return 1;\\n}\",\"refs\":[{\"addr\":\"0x48ac00\",\"name\":\"sub_48AC00\"},{\"addr\":\"0x4d5568\",\"name\":\"aIncorrectFunct\",\"string\":\"Incorrect function argument\"},{\"addr\":\"0x48a6f0\",\"name\":\"sub_48A6F0\"},{\"addr\":\"0x45f5e0\",\"name\":\"sub_45F5E0\"},{\"addr\":\"0x4d5538\",\"name\":\"aSqGetFailedTyp\",\"string\":\"sq_get*() failed (type error)\"},{\"addr\":\"0x4aba7b\",\"name\":\"__CxxThrowException@8\"},{\"addr\":\"0x4f3514\",\"name\":\"__TI1?AUSquirrelError@@\"},{\"addr\":\"0x48a8d0\",\"name\":\"sub_48A8D0\"},{\"addr\":\"0x48a530\",\"name\":\"sub_48A530\"}]}"
+    }
+  ],
+  "structuredContent": {
+    "addr": "0x471160",
+    "code": "int __cdecl sub_471160(int (__cdecl *a1)(int), int a2, int a3)\n{\n  unsigned __int8 v4; // al\n  _DWORD v5[7]; // [esp-Ch] [ebp-34h] BYREF\n  int v6; // [esp+10h] [ebp-18h] BYREF\n  const char *pExceptionObject; // [esp+14h] [ebp-14h] BYREF\n  int v8; // [esp+18h] [ebp-10h]\n  int v9; // [esp+24h] [ebp-4h]\n\n  if ( sub_48A6F0(a1: a2, a2: a3) != 134217744 )\n    return sub_48AC00(a1: a2, Src: \"Incorrect function argument\");\n  v5[6] = v5;\n  LOBYTE(v8) = 0;\n  sub_45F5E0(a1: v5, a2: v8, a3: a2, a4: a3 + 1);\n  v9 = 0;\n  if ( (int)sub_48A8D0(a1: a2, a2: a3, a3: &v6) < 0 )\n  {\n    pExceptionObject = \"sq_get*() failed (type error)\";\n    _CxxThrowException(&pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI1_AUSquirrelError__);\n  }\n  v9 = -1;\n  v4 = a1(a1: v6);\n  sub_48A530(a1: a2, a2: v4);\n  return 1;\n}",
+    "refs": [
+      {
+        "addr": "0x48ac00",
+        "name": "sub_48AC00"
+      },
+      {
+        "addr": "0x4d5568",
+        "name": "aIncorrectFunct",
+        "string": "Incorrect function argument"
+      },
+      {
+        "addr": "0x48a6f0",
+        "name": "sub_48A6F0"
+      },
+      {
+        "addr": "0x45f5e0",
+        "name": "sub_45F5E0"
+      },
+      {
+        "addr": "0x4d5538",
+        "name": "aSqGetFailedTyp",
+        "string": "sq_get*() failed (type error)"
+      },
+      {
+        "addr": "0x4aba7b",
+        "name": "__CxxThrowException@8"
+      },
+      {
+        "addr": "0x4f3514",
+        "name": "__TI1?AUSquirrelError@@"
+      },
+      {
+        "addr": "0x48a8d0",
+        "name": "sub_48A8D0"
+      },
+      {
+        "addr": "0x48a530",
+        "name": "sub_48A530"
+      }
+    ]
+  },
+  "isError": false
+}

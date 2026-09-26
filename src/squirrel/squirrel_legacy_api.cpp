@@ -114,7 +114,7 @@ extern "C" int32_t kinoko_sq_throw_error(SQVM* machine, char * a2) {
 }
 
 
-extern "C" SQVM* kinoko_sq_reset_error(SQVM* machine) {
+extern "C" SQVM* kinoko_sq_reset_error_and_return_vm(SQVM* machine) {
     sq_reseterror(machine); return machine;
 }
 
@@ -166,8 +166,8 @@ extern "C" int32_t kinoko_sq_get_print_function(SQVM* machine) {
 }
 
 
-extern "C" int32_t kinoko_sq_compile_lexed(SQVM* machine, int32_t reader, int32_t *context, int32_t name, int32_t raiseerror) {
-    return sq_compile(machine, reinterpret_cast<SQLEXREADFUNC>(ptr<void>(reader)), context, ptr<const char>(name), raiseerror != 0);
+extern "C" int32_t kinoko_sq_compile_lexed(SQVM* machine, SQLEXREADFUNC reader, void* context, const char* name, int32_t raiseerror) {
+    return sq_compile(machine, reader, context, name, raiseerror != 0);
 }
 
 
@@ -211,8 +211,8 @@ extern "C" int32_t kinoko_sq_raw_get_slot(SQVM* machine, int32_t a2) {
 }
 
 
-extern "C" int32_t kinoko_sq_compile_buffer(SQVM* machine, int32_t text, int32_t length, int32_t *name, int32_t raiseerror) {
-    return sq_compilebuffer(machine, ptr<const char>(text), length, reinterpret_cast<const char*>(name), raiseerror != 0);
+extern "C" int32_t kinoko_sq_compile_text(SQVM* machine, const char* text, int32_t length, const char* name, int32_t raiseerror) {
+    return sq_compilebuffer(machine, text, length, name, raiseerror != 0);
 }
 
 
@@ -221,7 +221,7 @@ extern "C" SQObjectPtr* kinoko_sq_new_closure(SQVM* machine, SQFUNCTION callback
 }
 
 
-extern "C" int32_t kinoko_sq_array_pop(SQVM* machine, int32_t index, int32_t push_value) {
+extern "C" int32_t kinoko_sq_pop_array_value(SQVM* machine, int32_t index, int32_t push_value) {
     return sq_arraypop(machine, index, push_value != 0);
 }
 
@@ -275,22 +275,22 @@ extern "C" SQObjectPtr* kinoko_sq_assign_object(SQObjectPtr* destination, const 
 }
 
 
-extern "C" SQObjectPtr* kinoko_sq_assign_integer(SQObjectPtr* destination, int32_t value) {
+extern "C" SQObjectPtr* kinoko_sq_assign_nullable_integer(SQObjectPtr* destination, int32_t value) {
     if (destination) *destination = value;
     return destination;
 }
 
 
-extern "C" SQObjectPtr* kinoko_sq_assign_float(SQObjectPtr* destination, float value) {
+extern "C" SQObjectPtr* kinoko_sq_assign_nullable_float(SQObjectPtr* destination, float value) {
     if (destination) *destination = value;
     return destination;
 }
 
 
-extern "C" SQVM* kinoko_sq_raise_object_error(SQVM* machine, SQObjectPtr* error_value) {
+extern "C" void* kinoko_sq_raise_object_error(SQVM* machine, SQObjectPtr* error_value) {
     if (!machine || !error_value) return machine;
     auto& value = *error_value;
-    const auto result = ISREFCOUNTED(type(value)) ? addr(_refcounted(value)) : addr(machine);
+    void* result = ISREFCOUNTED(type(value)) ? static_cast<void*>(_refcounted(value)) : static_cast<void*>(machine);
     machine->Raise_Error(value);
     return result;
 }
@@ -364,11 +364,11 @@ static int32_t kinoko_sq_destroy_userdata(SQUserData* data, int32_t flags) {
     if (flags & 1) sq_vm_free(data, size);
     return addr(data);
 }
-extern "C" void kinoko_sq_finalize_userdata_entry(int32_t object, void* unused) {
-    kinoko_sq_finalize_userdata(ptr<SQUserData>(object));
+extern "C" void kinoko_sq_finalize_userdata_entry(SQUserData* object, void* unused) {
+    kinoko_sq_finalize_userdata(object);
 }
 
-extern "C" int32_t kinoko_sq_destroy_userdata_entry(int32_t object, void* unused, int32_t flags) {
-    return kinoko_sq_destroy_userdata(ptr<SQUserData>(object), flags);
+extern "C" int32_t kinoko_sq_destroy_userdata_entry(SQUserData* object, void* unused, int32_t flags) {
+    return kinoko_sq_destroy_userdata(object, flags);
 }
 
