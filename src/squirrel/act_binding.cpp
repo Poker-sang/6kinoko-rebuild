@@ -724,12 +724,12 @@ template<bool string_layout> int32_t create_layer(int32_t player, const char* na
     kinoko::legacy::StringView(pointer<void>(layer+112)).assign(name, static_cast<uint32_t>(std::strlen(name)));
     kinoko::legacy::Allocation<int32_t> key(static_cast<int32_t*>(std::calloc(1,36)));
     const auto clear_layout=[](unsigned char* value) {
-        if constexpr(string_layout) if(value) kinoko_clear_string_layout(address(value));
+        if constexpr(string_layout) if(value) kinoko_clear_string_layout((KinokoStringLayout*)(uintptr_t)(address(value)));
         std::free(value);
     };
     auto* layout_storage=static_cast<unsigned char*>(std::calloc(1,string_layout?260:316));
     if(!layout_storage) return 0;
-    if constexpr(string_layout) kinoko_construct_string_layout(address(layout_storage));
+    if constexpr(string_layout) (int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(address(layout_storage)));
     else kinoko_construct_c2dlayout(address(layout_storage));
     std::unique_ptr<unsigned char,decltype(clear_layout)> layout(layout_storage,clear_layout);
     if (!key) return 0;

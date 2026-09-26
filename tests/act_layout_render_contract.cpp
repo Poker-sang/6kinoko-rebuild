@@ -28,7 +28,7 @@ void kinoko_trace_i32(const char*,int32_t) {}
 KinokoActLayer *__fastcall kinoko_act_layer_world_position(KinokoActLayer *layer,void*,float *x,float *y,float *z) { *x=3;*y=4;*z=5;return layer; }
 uint32_t kinoko_string_queue_size(KinokoStringLayout*) { return 1; }
 int32_t kinoko_string_queue_at(KinokoStringLayout*,uint32_t) { return address(&glyph); }
-int32_t kinoko_string_add_character(int32_t,const char*) { ++appended;return 1; }
+int32_t kinoko_string_add_character(KinokoStringLayout*,const char*) { ++appended;return 1; }
 int32_t kinoko_string_rebuild_queue(KinokoStringLayout*) { return 0; }
 }
 static uint8_t __fastcall query(KinokoActResource *resource,void*,const void*,KinokoActResource **out) {

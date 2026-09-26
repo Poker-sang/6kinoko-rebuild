@@ -67,7 +67,7 @@ extern "C" int32_t __fastcall kinoko_method_delete_act_script(int32_t script, vo
 namespace {
 void clear_layout(int32_t layout) {
     if (!layout) return;
-    if (field<int32_t>(layout)==address(kinoko_string_layout_methods())) { kinoko_clear_string_layout(layout);return; }
+    if (field<int32_t>(layout)==address(kinoko_string_layout_methods())) { kinoko_clear_string_layout((KinokoStringLayout*)(uintptr_t)(layout));return; }
     if (field<int32_t>(layout)==address(kinoko_act_host_symbols()->map_layout_vtable)) {
         kinoko_clear_map_layout(layout);
     }

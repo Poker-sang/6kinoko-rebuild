@@ -27,7 +27,7 @@ extern "C" int32_t __fastcall kinoko_method_update_string_layout(KinokoStringLay
     while(pending.length()) {
         const auto bytes=static_cast<uint32_t>(CharNextA(pending.data())-pending.data());
         char character[8]{};memcpy_s(character,sizeof(character),pending.data(),bytes);
-        kinoko_string_add_character(layout,character);
+        kinoko_string_add_character((KinokoStringLayout*)(uintptr_t)(layout), character);
         displayed.append(character,static_cast<uint32_t>(std::strlen(character)));
         pending.assign(pending,bytes,UINT32_MAX);
     }

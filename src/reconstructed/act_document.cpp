@@ -249,10 +249,10 @@ int32_t kinoko_act_load_key(int32_t key, int32_t reader_ptr,
         // reader through its recovered holder/version ABI.
         layout = static_cast<KinokoActLayout *>(std::calloc(1, sizeof(kinoko::act::StringLayoutRecord)));
         if (layout) {
-            kinoko_construct_string_layout(address(layout));
+            (int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(address(layout)));
             if (!kinoko_string_read_properties(reinterpret_cast<KinokoStringLayout *>(layout),
                     &reader_ptr, version)) {
-                kinoko_clear_string_layout(address(layout));
+                kinoko_clear_string_layout((KinokoStringLayout*)(uintptr_t)(address(layout)));
                 std::free(layout);
                 layout = nullptr;
             }

@@ -4502,8 +4502,8 @@ static int test_input_copy(void) {
 
 static int test_string_layout_binding(int32_t vm,int32_t* root) {
     int32_t object[65]={0},copy[65]={0},klass[2]={kinoko_null_object_type,kinoko_null_object_value},instance[2]={kinoko_null_object_type,kinoko_null_object_value};
-    CHECK(kinoko_construct_string_layout(PTR(object))==PTR(object));
-    CHECK(kinoko_construct_string_layout(PTR(copy))==PTR(copy));
+    CHECK((int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(object)))==PTR(object));
+    CHECK((int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(copy)))==PTR(copy));
     int32_t top=kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm))));
     CHECK(kinoko_publish_string_layout_class((struct SQVM*)(uintptr_t)(vm), PTR(root), klass));
     CHECK(kinoko_create_bound_instance((struct SQVM*)(uintptr_t)(vm), root+2, "StringProbe", klass, (void*)(uintptr_t)(PTR(object)), instance));
@@ -4529,9 +4529,9 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
     CHECK(((int32_t*)(intptr_t)kinoko_string_queue_at((KinokoStringLayout*)(uintptr_t)(PTR(copy)), 0))[0]==10);
     CHECK(kinoko_string_replicate((KinokoStringLayout*)(uintptr_t)(PTR(copy)), (KinokoStringLayout*)(uintptr_t)(PTR(copy)))==1 && atlas[108]==4);
     CHECK(kinoko_string_clear((KinokoStringLayout*)(uintptr_t)(PTR(copy)))==1 && atlas[108]==4 && kinoko_string_queue_size((KinokoStringLayout*)(uintptr_t)(PTR(copy)))==2);
-    kinoko_clear_string_layout(PTR(copy));CHECK(atlas[108]==2);
+    kinoko_clear_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(copy)));CHECK(atlas[108]==2);
     CHECK(execute_source(vm,root+2,"delete ::StringProbe;\n"));
-    kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), klass);kinoko_clear_string_layout(PTR(object));
+    kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), klass);kinoko_clear_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(object)));
     CHECK(atlas[108]==0 && kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm))))==top);
     puts("PASS: actual Sqrat CStringLayout methods, property clamps, pending-text quirk and borrowed atlas replication");
     return 0;
@@ -4539,7 +4539,7 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
 
 static int test_string_layout_lifetime(void) {
     int32_t layout[65];memset(layout,0xa5,sizeof(layout));
-    CHECK(kinoko_construct_string_layout(PTR(layout))==PTR(layout));
+    CHECK((int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(layout)))==PTR(layout));
     CHECK(layout[0]==PTR(&kinoko_string_layout_methods_storage) && layout[6]==15 && layout[13]==15 && layout[20]>=16);
     CHECK(layout[5]==0 && layout[12]==0 && layout[19]==13);
     const unsigned char face[]={0x82,0x6c,0x82,0x72,0x20,0x83,0x53,0x83,0x56,0x83,0x62,0x83,0x4e,0};
@@ -4551,24 +4551,24 @@ static int test_string_layout_lifetime(void) {
     kinoko_string_assign_cstr(layout+1,"rendered");
     kinoko_string_push_back((KinokoStringLayout*)(uintptr_t)(PTR(layout)), "pending");
     layout[50]=91;layout[51]=7;layout[52]=11;layout[53]=37;
-    int32_t clone=kinoko_method_clone_string_layout(PTR(layout),NULL);CHECK(clone);
+    int32_t clone=(int32_t)(intptr_t)kinoko_method_clone_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(layout)), NULL);CHECK(clone);
     int32_t* copied=(int32_t*)(intptr_t)clone;
     CHECK(copied[0]==PTR(&kinoko_string_layout_methods_storage) && copied[44]!=layout[44]);
     CHECK(copied[5]==8 && copied[12]==7 && copied[50]==91 && copied[53]==37);
-    CHECK(kinoko_string_atlas_size(clone)==0 && kinoko_string_queue_size((KinokoStringLayout*)(uintptr_t)(clone))==0);
+    CHECK(kinoko_string_atlas_size((KinokoStringLayout*)(uintptr_t)(clone))==0 && kinoko_string_queue_size((KinokoStringLayout*)(uintptr_t)(clone))==0);
     CHECK(kinoko_method_set_string_layer((KinokoStringLayout*)(uintptr_t)(clone), NULL, (KinokoActLayer*)(uintptr_t)(0))<0);
     CHECK(kinoko_method_update_string_layout((KinokoStringLayout*)(uintptr_t)(clone), NULL)<0);
     CHECK(kinoko_method_draw_string_layout((KinokoStringLayout*)(uintptr_t)(clone), NULL, 0, 0)<0);
-    CHECK(kinoko_string_add_character(clone,"\t")==1 && copied[51]==64);
-    CHECK(kinoko_string_add_character(clone,"\n")==1 && copied[51]==0 && copied[52]==27);
-    kinoko_method_delete_string_layout(clone,NULL,1);
-    CHECK(kinoko_method_delete_string_layout(PTR(layout),NULL,0)==PTR(layout));
+    CHECK(kinoko_string_add_character((KinokoStringLayout*)(uintptr_t)(clone), "\t")==1 && copied[51]==64);
+    CHECK(kinoko_string_add_character((KinokoStringLayout*)(uintptr_t)(clone), "\n")==1 && copied[51]==0 && copied[52]==27);
+    (int32_t)(intptr_t)kinoko_method_delete_string_layout((KinokoStringLayout*)(uintptr_t)(clone), NULL, 1);
+    CHECK((int32_t)(intptr_t)kinoko_method_delete_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(layout)), NULL, 0)==PTR(layout));
     CHECK(layout[44]==0 && layout[40]==0 && layout[41]==0 && layout[42]==0);
     CHECK(layout[19]==0 && layout[20]==15);
     int32_t* cookie=(int32_t*)malloc(4+520);CHECK(cookie);cookie[0]=2;
-    CHECK(kinoko_construct_string_layout(PTR(cookie+1))==PTR(cookie+1));
-    CHECK(kinoko_construct_string_layout(PTR(cookie+66))==PTR(cookie+66));
-    CHECK(kinoko_method_delete_string_layout(PTR(cookie+1),NULL,2)==PTR(cookie));
+    CHECK((int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(cookie+1)))==PTR(cookie+1));
+    CHECK((int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(cookie+66)))==PTR(cookie+66));
+    CHECK((int32_t)(intptr_t)kinoko_method_delete_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(cookie+1)), NULL, 2)==PTR(cookie));
     CHECK(cookie[45]==0 && cookie[110]==0);free(cookie);
     puts("PASS: CStringLayout original CP932 defaults, receiver, proxy and scalar/array destruction");
     return 0;
@@ -4576,8 +4576,8 @@ static int test_string_layout_lifetime(void) {
 
 static int test_string_glyph_cache(void) {
     int32_t layout[65]={0};
-    kinoko_construct_string_layout(PTR(layout));
-    int32_t* atlas=(int32_t*)(intptr_t)kinoko_string_append_atlas(PTR(layout));
+    (int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(layout)));
+    int32_t* atlas=(int32_t*)(intptr_t)kinoko_string_append_atlas((KinokoStringLayout*)(uintptr_t)(PTR(layout)));
     atlas[(24+344)/4]=PTR(malloc(32));
     atlas[5]=4;atlas[108]=2;
     layout[6]=layout[13]=15;
@@ -4589,13 +4589,13 @@ static int test_string_glyph_cache(void) {
         int32_t* glyph=(int32_t*)(intptr_t)kinoko_string_append_glyph((KinokoStringLayout*)(uintptr_t)(PTR(layout)));
         glyph[2]=4;glyph[63]=PTR(atlas);
     }
-    CHECK(kinoko_string_prune_atlases((KinokoStringLayout*)layout)==1 && kinoko_string_atlas_size(PTR(layout))==1);
+    CHECK(kinoko_string_prune_atlases((KinokoStringLayout*)layout)==1 && kinoko_string_atlas_size((KinokoStringLayout*)(uintptr_t)(PTR(layout)))==1);
     CHECK(kinoko_string_rebuild_queue((KinokoStringLayout*)layout)==1);
-    CHECK(kinoko_string_atlas_size(PTR(layout))==0);
+    CHECK(kinoko_string_atlas_size((KinokoStringLayout*)(uintptr_t)(PTR(layout)))==0);
     CHECK(layout[44]==storage && kinoko_string_queue_size((KinokoStringLayout*)(uintptr_t)(PTR(layout)))==0);
     CHECK(layout[5]==0 && layout[12]==4 && memcmp(kinoko_string_data((const void*)(intptr_t)(PTR(layout)+32)),"ABCD",5)==0);
     CHECK(((unsigned char*)layout)[228]==1 && layout[51]==0 && layout[52]==0 && layout[53]==0 && layout[54]==19);
-    kinoko_clear_string_layout(PTR(layout));
+    kinoko_clear_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(layout)));
     puts("PASS: native glyph deque protects live atlas; rebuild releases references/storage and preserves text order");
     return 0;
 }
@@ -5307,7 +5307,7 @@ static int test_key_string_writers(void) {
     ((float*)flat)[59]=0.625f; ((float*)flat)[71]=0.75f;
     key[1]=PTR(flat);
     kinoko_string_assign_cstr(key+2,"independently owned callback name");
-    int32_t string_source[65]={0};kinoko_construct_string_layout(PTR(string_source));
+    int32_t string_source[65]={0};(int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(string_source)));
     kinoko_string_assign_n(string_source+1,"A\0B",3);
     kinoko_string_assign_n(string_source+8,"C\0D",3);
     ((uint8_t*)string_source)[128]=1;string_source[33]=2;
@@ -5337,7 +5337,7 @@ static int test_key_string_writers(void) {
         kinoko_destroy_cact_key(PTR(copy)); CHECK(CloseHandle(file));
     }
     kinoko_archive_count=archives;
-    kinoko_clear_string_layout(PTR(string_source));
+    kinoko_clear_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(string_source)));
     kinoko_string_destroy((void*)(intptr_t)(PTR(key)+8));
     kinoko_compile_act_output=saved;
     puts("PASS: key presence byte and CStringLayout original bool alias serialization");

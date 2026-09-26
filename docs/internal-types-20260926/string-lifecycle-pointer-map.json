@@ -1,0 +1,29 @@
+{
+  "kinoko_construct_string_layout": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_clear_string_layout": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_method_delete_string_layout": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_string_append_atlas": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_string_atlas_size": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_string_atlas_at": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_method_clone_string_layout": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_method_destroy_string_layout": {
+    "0": "KinokoStringLayout*"
+  },
+  "kinoko_string_add_character": {
+    "0": "KinokoStringLayout*"
+  }
+}

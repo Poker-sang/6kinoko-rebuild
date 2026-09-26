@@ -22,8 +22,8 @@ using LayoutRecord=kinoko::act::StringLayoutRecord;
 using GlyphRecord=kinoko::act::StringGlyphRecord;
 using AtlasRecord=kinoko::text::AtlasLifecycle;
 using kinoko::native::RecordView;
-int32_t new_page(int32_t layout) {
-    const int32_t page=kinoko_string_append_atlas(layout);
+int32_t new_page(KinokoStringLayout* layout) {
+    const int32_t page=kinoko_string_append_atlas((KinokoStringLayout*)(uintptr_t)(layout));
     const RecordView<AtlasRecord> atlas(pointer<void>(page));
     atlas.set(&AtlasRecord::cursor_x,0);
     atlas.set(&AtlasRecord::cursor_y,0);
@@ -31,7 +31,7 @@ int32_t new_page(int32_t layout) {
     atlas.set(&AtlasRecord::references,0);
     atlas.set(&AtlasRecord::width,512);
     atlas.set(&AtlasRecord::height,512);
-    kinoko_string_font_configure(page+24,layout);
+    kinoko_string_font_configure(page+24,kinoko::legacy::address(layout));
     atlas.set(&AtlasRecord::texture,kinoko_string_font_texture(page+24));
     return page;
 }
@@ -59,8 +59,8 @@ void rectangle(int32_t s,int32_t handle,int32_t x,int32_t y,int32_t w,int32_t h)
 }
 
 }
-extern "C" int32_t kinoko_string_add_character(int32_t layout,const char* character) {
-    const RecordView<LayoutRecord> text(pointer<void>(layout));
+extern "C" int32_t kinoko_string_add_character(KinokoStringLayout* layout,const char* character) {
+    const RecordView<LayoutRecord> text(layout);
     int32_t cursor=text.get(&LayoutRecord::cursor_x);
     const auto font_height=text.get(&LayoutRecord::font_height);
     if(*character=='\t') {
@@ -76,10 +76,10 @@ extern "C" int32_t kinoko_string_add_character(int32_t layout,const char* charac
         return 1;
     }
     for(;;) {
-        if(kinoko_string_atlas_size(layout)==0) new_page(layout);
-        const int32_t page=kinoko_string_atlas_at(layout,kinoko_string_atlas_size(layout)-1);
+        if(kinoko_string_atlas_size((KinokoStringLayout*)(uintptr_t)(layout))==0) new_page(layout);
+        const int32_t page=kinoko_string_atlas_at((KinokoStringLayout*)(uintptr_t)(layout), kinoko_string_atlas_size((KinokoStringLayout*)(uintptr_t)(layout))-1);
         const RecordView<AtlasRecord> atlas(pointer<void>(page));
-        kinoko_string_font_configure(page+24,layout);
+        kinoko_string_font_configure(page+24,kinoko::legacy::address(layout));
         int32_t width=0,height=0;
         kinoko_string_font_upload(page+24,atlas.get(&AtlasRecord::texture),character,
             atlas.get(&AtlasRecord::cursor_x),atlas.get(&AtlasRecord::cursor_y),&width,&height);
