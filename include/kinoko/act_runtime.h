@@ -110,7 +110,7 @@ int32_t kinoko_publish_act_script_constants(struct SQVM* vm, const int32_t *envi
 int32_t kinoko_publish_acting_player(struct SQVM* vm,
                                              const int32_t *act_pair,
                                              const char *name,
-                                             int32_t player_ptr,
+                                             KinokoActRuntime* player_ptr,
                                              int32_t out_pair[2]);
 int32_t kinoko_publish_acting_player_class(struct SQVM* vm,
                                                    void* root_object);

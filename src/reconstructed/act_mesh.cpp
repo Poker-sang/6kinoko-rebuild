@@ -244,7 +244,7 @@ int32_t replace_texture(Resource *resource,const char *name,KinokoActResource *t
     return S_OK;
 }
 namespace {
-uint32_t hash_name(const char *name) {return static_cast<uint32_t>(kinoko_boost_hash_range(address(name),address(name+std::strlen(name))));}
+uint32_t hash_name(const char *name) {return static_cast<uint32_t>(kinoko_boost_hash_range((const char*)(uintptr_t)(address(name)), (const char*)(uintptr_t)(address(name+std::strlen(name)))));}
 Resource *__fastcall clone_resource(Resource *source,void *) {
     auto *copy=create_resource();
     if(!copy) return nullptr;
@@ -269,7 +269,7 @@ int32_t __fastcall update_layout(act::Layout3DRecord *layout,void *) {return act
 int32_t __fastcall draw_layout(act::Layout3DRecord *layout,void *,float,float) {return act::draw_layout_3d(layout);}
 void *__fastcall destroy_layout(act::Layout3DRecord *layout,void *,uint32_t flags) {if(flags&1)std::free(layout);return layout;}
 int32_t __fastcall dispose_layout(act::Layout3DRecord *layout,void *) {std::free(layout);return 0;}
-int32_t __fastcall read_layout(int32_t layout,void *,int32_t holder,int32_t version) {return kinoko_act_read_layout3d_properties(legacy::pointer<KinokoActLayout>(layout), (KinokoArchiveReader**)(uintptr_t)(legacy::pointer<int32_t>(holder)), version);}
+int32_t __fastcall read_layout(KinokoActLayout* layout,void *,KinokoArchiveReader** holder,int32_t version) {return kinoko_act_read_layout3d_properties(layout, holder, version);}
 // Named serialization supplies type hashes directly; retain usable GetType/
 // GetName metadata for legacy callers rather than a numeric-address binder.
 struct TypeInfo {const void *methods;const char *name;};

@@ -4854,7 +4854,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
     InitializeCriticalSection((CRITICAL_SECTION*)(player+5));
     CHECK(execute_source(vm,root+2,"dynamicHost <- {};"));
     CHECK(kinoko_publish_acting_player_class((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(root))));
-    CHECK(kinoko_publish_acting_player((struct SQVM*)(uintptr_t)(vm), root+2, "dynamicPlayer", PTR(player), player_pair));
+    CHECK(kinoko_publish_acting_player((struct SQVM*)(uintptr_t)(vm), root+2, "dynamicPlayer", (KinokoActRuntime*)(uintptr_t)(PTR(player)), player_pair));
     /* The original accepts a borrowed instance pointer and null to clear it.
        Check the actual state change, not only the wrapper's return type. */
     CHECK(execute_source(vm,root+2,
@@ -5418,7 +5418,7 @@ static int test_texture_serialization(int render_target) {
         CHECK(strcmp(kinoko_string_data((const void*)(loaded+10)),"Data/System/face1")==0);
         if (render_target) {
             const char name[]=".?AVCActRenderTarget@@";
-            const uint32_t type=(uint32_t)kinoko_boost_hash_range(PTR(name),PTR(name+sizeof(name)-1));
+            const uint32_t type=(uint32_t)kinoko_boost_hash_range((const char*)(uintptr_t)(PTR(name)), (const char*)(uintptr_t)(PTR(name+sizeof(name)-1)));
             stream.position=0;
             int32_t *factory=(int32_t*)(intptr_t)(int32_t)(intptr_t)kinoko_act_make_resource((KinokoArchiveReader*)(uintptr_t)(PTR(&stream)), type);
             CHECK(factory && factory[0]==PTR(&kinoko_render_target_methods_storage));
@@ -6587,7 +6587,7 @@ int main(int argc, char **argv) {
             CHECK(kinoko_publish_acting_player_class((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(root))));
             act_resource[33] = PTR(act + 24);
             act[24] = 1;
-            CHECK(kinoko_publish_acting_player((struct SQVM*)(uintptr_t)(vm), root + 2, "nativeStagePlayer", PTR(act_resource), player_pair));
+            CHECK(kinoko_publish_acting_player((struct SQVM*)(uintptr_t)(vm), root + 2, "nativeStagePlayer", (KinokoActRuntime*)(uintptr_t)(PTR(act_resource)), player_pair));
             CHECK(execute_source(vm, root + 2,
                 "StageStart.pl = nativeStagePlayer;\nfadeCalls.clear();\n"
                 "stageChangeCount = 120;\nSetGlobalUpdateFunction(UpdateStageStart);\n"));

@@ -876,7 +876,7 @@ int32_t kinoko_publish_acting_player_class(SQVM* vm,
 int32_t kinoko_publish_acting_player(SQVM* vm,
                                              const int32_t *act_pair,
                                              const char *name,
-                                             int32_t player_ptr,
+                                             KinokoActRuntime* player_ptr,
                                              int32_t out_pair[2])
 {
     int32_t base;
@@ -891,7 +891,7 @@ int32_t kinoko_publish_acting_player(SQVM* vm,
     kinoko_trace_squirrel_name("act:pair-name", address(name));
     kinoko_trace_i32("act:pair-act", act_pair[1]);
     kinoko_trace_squirrel_name("act:acting-name", address(name));
-    kinoko_trace_i32("act:acting-resource", player_ptr);
+    kinoko_trace_i32("act:acting-resource", address(player_ptr));
     kinoko_trace_i32("act:acting-class-type", kinoko_acting_player_class_pair[0]);
     kinoko_trace_i32("act:acting-class-data", kinoko_acting_player_class_pair[1]);
     out_pair[0] = static_cast<int32_t>(OT_NULL);
@@ -920,7 +920,7 @@ int32_t kinoko_publish_acting_player(SQVM* vm,
         kinoko_trace_i32("act:acting-instance-user-before",
                          field<int32_t>(instance + 32));
     }
-    if (sq_setinstanceup(vm, -1, kinoko_pointer(player_ptr)) < 0) {
+    if (sq_setinstanceup(vm, -1, player_ptr) < 0) {
         kinoko_sqrat_trim_stack(vm, base);
         return 0;
     }
@@ -1975,10 +1975,10 @@ int32_t kinoko_root_table_register_resource(void* root_object,
         !kinoko_publish_act_script_constants(vm, global_pair))
         break;
 
-    if (!kinoko_publish_acting_player(vm, act_pair, "pl", address(resource_ptr), player_pair))
+    if (!kinoko_publish_acting_player(vm, act_pair, "pl", resource_ptr, player_pair))
         break;
     kinoko_sqrat_release_pair(vm, player_pair);
-    if (!kinoko_publish_acting_player(vm, act_pair, "player", address(resource_ptr), player_pair))
+    if (!kinoko_publish_acting_player(vm, act_pair, "player", resource_ptr, player_pair))
         break;
     kinoko_sqrat_release_pair(vm, player_pair);
 
@@ -2067,33 +2067,33 @@ extern "C" int32_t __fastcall kinoko_method_resource_4499a0(KinokoActResource* r
 
 // Recovered 445530/455330 method bridges. Source Squirrel owns captures and
 // values; preserve the existing trace calls and explicit x86 member dispatch.
-extern "C" int32_t kinoko_sqrat_call_integer0(int32_t a1) {
-    int32_t method_holder = 0;
-    int32_t instance = 0;
-    int32_t method;
+extern "C" int32_t kinoko_sqrat_call_integer0(struct SQVM* a1) {
+    void* method_holder = nullptr;
+    void* instance = nullptr;
+    void* method;
     int32_t result;
 
-    if (sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&method_holder), (SQUserPointer*)kinoko_pointer(0)) < 0 ||
-        method_holder == 0 || *(int32_t *)(intptr_t)method_holder == 0 ||
-        sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&instance), kinoko_pointer(0)) < 0)
+    if (sq_getuserdata(a1, -1, (SQUserPointer*)(&method_holder), (SQUserPointer*)kinoko_pointer(0)) < 0 ||
+        method_holder == 0 || kinoko::legacy::load<void*>(method_holder) == 0 ||
+        sq_getinstanceup(a1, 1, (SQUserPointer*)(&instance), kinoko_pointer(0)) < 0)
         return 0;
-    method = *(int32_t *)(intptr_t)method_holder;
+    method = kinoko::legacy::load<void*>(method_holder);
     result = kinoko_call_thiscall0_result(
         (void *)(intptr_t)instance, (void *)(intptr_t)method);
-    sq_pushinteger(kinoko_vm(a1), result);
+    sq_pushinteger(a1, result);
     return 1;
 }
 
-extern "C" int32_t kinoko_sqrat_call_integer1(int32_t a1) {
+extern "C" int32_t kinoko_sqrat_call_integer1(struct SQVM* a1) {
     static volatile LONG trace_count;
-    int32_t outer_payload = 0;
-    int32_t instance_ptr = 0;
+    void* outer_payload = nullptr;
+    void* instance_ptr = nullptr;
     int32_t argument = 0;
     int32_t outer_status;
     int32_t instance_status;
     int32_t argument_status;
     int32_t result;
-    int32_t method;
+    void* method;
     LONG trace_index;
 
     /* Original 455330 is a Sqrat native wrapper.  The first outer value is
@@ -2103,34 +2103,34 @@ extern "C" int32_t kinoko_sqrat_call_integer1(int32_t a1) {
        status from 48A7D0 instead. */
     trace_index = InterlockedIncrement(&trace_count);
     if (trace_index <= 128)
-        kinoko_trace_i32("450950:wrapper-entry", a1);
-    outer_status = sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&outer_payload), (SQUserPointer*)kinoko_pointer(0));
+        kinoko_trace_i32("450950:wrapper-entry", address(a1);
+    outer_status = sq_getuserdata(a1, -1, (SQUserPointer*)(&outer_payload), (SQUserPointer*)kinoko_pointer(0));
     if (trace_index <= 128) {
-        kinoko_trace_i32("450950:wrapper-top", sq_gettop(kinoko_vm(a1)));
+        kinoko_trace_i32("450950:wrapper-top", sq_gettop(a1));
         kinoko_trace_i32("450950:wrapper-outer-status", outer_status);
-        kinoko_trace_i32("450950:wrapper-outer", outer_payload);
+        kinoko_trace_i32("450950:wrapper-outer", address(outer_payload);
     }
-    if (outer_payload == 0 || *(int32_t *)(intptr_t)outer_payload == 0)
+    if (outer_payload == 0 || kinoko::legacy::load<void*>(outer_payload) == 0)
         return 0;
-    method = *(int32_t *)(intptr_t)outer_payload;
-    instance_status = sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&instance_ptr), kinoko_pointer(0));
-    argument_status = sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&argument));
+    method = kinoko::legacy::load<void*>(outer_payload);
+    instance_status = sq_getinstanceup(a1, 1, (SQUserPointer*)(&instance_ptr), kinoko_pointer(0));
+    argument_status = sq_getinteger(a1, 2, (SQInteger*)(&argument));
     if (argument_status < 0)
         return 0;
     if (trace_index <= 128) {
-        kinoko_trace_i32("450950:wrapper-method", method);
+        kinoko_trace_i32("450950:wrapper-method", address(method);
         kinoko_trace_i32("450950:wrapper-instance-status", instance_status);
-        kinoko_trace_i32("450950:wrapper-instance", instance_ptr);
+        kinoko_trace_i32("450950:wrapper-instance", address(instance_ptr);
         kinoko_trace_i32("450950:wrapper-argument-status", argument_status);
         kinoko_trace_i32("450950:wrapper-argument", argument);
-        if (method == (int32_t)(intptr_t)kinoko_method_begin_stage)
+        if (method == reinterpret_cast<void*>(kinoko_method_begin_stage))
             kinoko_trace("450950:wrapper-begin-stage");
     }
     result = kinoko_call_thiscall1_result(
         (void *)(intptr_t)instance_ptr,
         (void *)(intptr_t)method,
         argument);
-    sq_pushinteger(kinoko_vm(a1), result);
+    sq_pushinteger(a1, result);
     return 1;
 }
 

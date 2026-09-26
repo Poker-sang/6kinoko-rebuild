@@ -60,11 +60,9 @@ extern int32_t kinoko_release_watch_count;
 
 int32_t _3f__3f_2_40_YAPAXI_40_Z(int32_t size);
 int32_t __fastcall kinoko_act_layer_associate_method(KinokoActLayer* receiver, void* unused_edx);
-int32_t kinoko_sqrat_call_integer0(int32_t a1);
-int32_t kinoko_sqrat_call_integer1(int32_t a1);
+int32_t kinoko_sqrat_call_integer0(struct SQVM* a1);
+int32_t kinoko_sqrat_call_integer1(struct SQVM* a1);
 int32_t kinoko_is_release_watch_data(int32_t data);
-int32_t kinoko_layout_submit_impl(int32_t vertex_buffer,
-                                          float x, float y);
 int32_t kinoko_load_act_texture(const char *texture_name);
 __declspec(noinline) void kinoko_trace_i32(const char *label,
                                                   int32_t value);

@@ -625,8 +625,7 @@ KinokoActResource* kinoko_act_make_resource(KinokoArchiveReader* reader_ptr, uin
     }
     // 449C50 registers the render target's raw RTTI name in the same factory.
     static const char target_name[] = ".?AVCActRenderTarget@@";
-    static const auto target_type = static_cast<uint32_t>(kinoko_boost_hash_range(
-        address(target_name), address(target_name + sizeof(target_name) - 1)));
+    static const auto target_type = static_cast<uint32_t>(kinoko_boost_hash_range((const char*)(uintptr_t)(address(target_name)), (const char*)(uintptr_t)(address(target_name + sizeof(target_name) - 1))));
     const bool render_target = type == target_type;
     const bool texture = type == 0xc6fdb98au || render_target;
     if (!texture && type != 0xfbaaf527u) {

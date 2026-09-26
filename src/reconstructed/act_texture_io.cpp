@@ -514,7 +514,7 @@ extern "C" int32_t kinoko_act_load_timeline(KinokoActTimeline* timeline,KinokoAr
 
 namespace {
 uint32_t type_hash(const char* name,size_t length) {
-    return static_cast<uint32_t>(kinoko_boost_hash_range(address(name),address(name+length)));
+    return static_cast<uint32_t>(kinoko_boost_hash_range((const char*)(uintptr_t)(address(name)), (const char*)(uintptr_t)(address(name+length))));
 }
 uint32_t type_hash(const char* name) { return type_hash(name,std::strlen(name)); }
 struct TypeName {

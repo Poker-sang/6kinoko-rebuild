@@ -9,7 +9,7 @@ extern "C" {
 extern struct SQVM *kinoko_primary_vm;
 void kinoko_trace_i32(const char*, int32_t);
 void kinoko_trace_squirrel_table_entries(const char*, int32_t);
-int32_t kinoko_camera_update_entry(int32_t);
+int32_t kinoko_camera_update_entry(struct SQVM*);
 }
 namespace {
 inline SQVM*& camera_vm_slot = kinoko_primary_vm;
@@ -198,8 +198,8 @@ int32_t register_map_binding_impl() {
     return address(kinoko_sqplus_object_destroy(&state.klass));
 }
 } // namespace
-extern "C" int32_t kinoko_camera_update_entry(int32_t vm) {
-    return kinoko_call_camera_update(pointer<SQVM>(vm));
+extern "C" int32_t kinoko_camera_update_entry(struct SQVM* vm) {
+    return kinoko_call_camera_update(vm);
 }
 extern "C" int32_t kinoko_register_camera_binding(void) { return register_camera_binding_impl(); }
 extern "C" int32_t kinoko_register_map_binding(void) { return register_map_binding_impl(); }

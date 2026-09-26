@@ -177,12 +177,6 @@ int32_t kinoko_layer_get_pair[2] = {0, 0};
 
 int32_t kinoko_script_void_result_identity;
 
-int32_t kinoko_layout_submit_impl(int32_t vertex_buffer,
-                                          float32_t x, float32_t y)
-{
-    return kinoko_quad_submit((KinokoQuad *)(intptr_t)vertex_buffer,x,y);
-}
-
 int32_t __fastcall kinoko_act_layer_associate_method(KinokoActLayer* receiver, void* unused_edx) {
     using Associate = int32_t (__thiscall*)(KinokoActLayer*);
     const auto* methods = kinoko::legacy::load<const unsigned char*>(receiver);
