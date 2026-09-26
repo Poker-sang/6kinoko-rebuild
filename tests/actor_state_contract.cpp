@@ -62,13 +62,13 @@ int main() {
     for (auto member:script_members) CHECK(destination.*member==source.*member);
     events.clear(); kinoko_actor_assign(dst,dst);
     CHECK((events==std::vector<int32_t>{10,address(&owner),11,address(&owner)}));
-    // Reset retains init references before Init overwrites them, and takes the
+    // Reset passes saved fields to the retaining Init entry, and takes the
     // priority written by Init instead of restoring the pre-reset priority.
     reset_actor=&destination; destination.spawn_x=10; destination.spawn_y=20; destination.spawn_z=-1;
     const KinokoOwnedObjectWords callback{1,31,2},argument{1,32,3};
     std::memcpy(destination.initial_function.data(),&callback,12);
     std::memcpy(destination.initial_argument.data(),&argument,12);
     events.clear(); CHECK(kinoko_actor_reset(dst)==81 && reset_priority==73);
-    CHECK((events==std::vector<int32_t>{13,address(&weak),11,address(&owner),20,32,31,21,31,32,22}));
+    CHECK((events==std::vector<int32_t>{13,address(&weak),11,address(&owner),20,21,22}));
     return 0;
 }

@@ -1,0 +1,59 @@
+?Release@RefTable@@QAEIAAUtagSQObject@@@Z (public: unsigned int __thiscall RefTable::Release(struct tagSQObject &)):
+  00000000: 55                 push        ebp
+  00000001: 8B EC              mov         ebp,esp
+  00000003: 6A FF              push        0FFFFFFFFh
+  00000005: 68 00 00 00 00     push        offset __ehhandler$?Release@RefTable@@QAEIAAUtagSQObject@@@Z
+  0000000A: 64 A1 00 00 00 00  mov         eax,dword ptr fs:[00000000h]
+  00000010: 50                 push        eax
+  00000011: 83 EC 14           sub         esp,14h
+  00000014: 53                 push        ebx
+  00000015: 56                 push        esi
+  00000016: 57                 push        edi
+  00000017: A1 00 00 00 00     mov         eax,dword ptr [___security_cookie]
+  0000001C: 33 C5              xor         eax,ebp
+  0000001E: 50                 push        eax
+  0000001F: 8D 45 F4           lea         eax,[ebp-0Ch]
+  00000022: 64 A3 00 00 00 00  mov         dword ptr fs:[00000000h],eax
+  00000028: 8B C1              mov         eax,ecx
+  0000002A: 89 45 F0           mov         dword ptr [ebp-10h],eax
+  0000002D: 6A 00              push        0
+  0000002F: 8D 4D EC           lea         ecx,[ebp-14h]
+  00000032: 51                 push        ecx
+  00000033: 8D 4D E8           lea         ecx,[ebp-18h]
+  00000036: 51                 push        ecx
+  00000037: FF 75 08           push        dword ptr [ebp+8]
+  0000003A: 8B C8              mov         ecx,eax
+  0000003C: E8 00 00 00 00     call        ?Get@RefTable@@AAEPAURefNode@1@AAUtagSQObject@@AAIPAPAU21@_N@Z
+  00000041: 8B F8              mov         edi,eax
+  00000043: 85 FF              test        edi,edi
+  00000045: 0F 84 C0 00 00 00  je          0000010B
+  0000004B: 83 47 08 FF        add         dword ptr [edi+8],0FFFFFFFFh
+  0000004F: 0F 85 B6 00 00 00  jne         0000010B
+  00000055: 8B 1F              mov         ebx,dword ptr [edi]
+  00000057: 8B 77 04           mov         esi,dword ptr [edi+4]
+  0000005A: 89 5D E0           mov         dword ptr [ebp-20h],ebx
+  0000005D: 89 75 E4           mov         dword ptr [ebp-1Ch],esi
+  00000060: 81 E3 00 00 00 08  and         ebx,8000000h
+  00000066: 74 03              je          0000006B
+  00000068: FF 46 04           inc         dword ptr [esi+4]
+  0000006B: 8B 4D EC           mov         ecx,dword ptr [ebp-14h]
+  0000006E: C7 45 FC 00 00 00  mov         dword ptr [ebp-4],0
+            00
+  00000075: 85 C9              test        ecx,ecx
+  00000077: 74 08              je          00000081
+  00000079: 8B 47 0C           mov         eax,dword ptr [edi+0Ch]
+  0000007C: 89 41 0C           mov         dword ptr [ecx+0Ch],eax
+  0000007F: EB 0F              jmp         00000090
+  00000081: 8B 55 F0           mov         edx,dword ptr [ebp-10h]
+  00000084: 8B 45 E8           mov         eax,dword ptr [ebp-18h]
+  00000087: 8B 4F 0C           mov         ecx,dword ptr [edi+0Ch]
+  0000008A: 8B 52 10           mov         edx,dword ptr [edx+10h]
+  0000008D: 89 0C 82           mov         dword ptr [edx+eax*4],ecx
+  00000090: 8B 4D F0           mov         ecx,dword ptr [ebp-10h]
+  00000093: 8B 41 0C           mov         eax,dword ptr [ecx+0Ch]
+  00000096: 89 47 0C           mov         dword ptr [edi+0Ch],eax
+  00000099: FF 49 04           dec         dword ptr [ecx+4]
+  0000009C: 89 79 0C           mov         dword ptr [ecx+0Ch],edi
+  0000009F: 8B 07              mov         eax,dword ptr [edi]
+  000000A1: 8B 4F 04           mov         ecx,dword ptr [edi+4]
+  000000A4: 89 45 08           mov         dword ptr [ebp+8],eax

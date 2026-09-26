@@ -1,0 +1,26 @@
+{
+  "addr": "0x463800",
+  "code": "int sub_469700()\n{\n  int result; // eax\n\n  unk_514454 = 0; /*0x463807*/\n  result = sub_463730(this: (_DWORD **)&unk_5143E0, a2: (int)&unk_514434); /*0x46380e*/\n  unk_514458 = 1; /*0x463813*/\n  return result; /*0x463818*/\n}",
+  "refs": [
+    {
+      "addr": "0x514454",
+      "name": "unk_514454"
+    },
+    {
+      "addr": "0x463730",
+      "name": "sub_463730"
+    },
+    {
+      "addr": "0x5143e0",
+      "name": "unk_5143E0"
+    },
+    {
+      "addr": "0x514434",
+      "name": "unk_514434"
+    },
+    {
+      "addr": "0x514458",
+      "name": "unk_514458"
+    }
+  ]
+}

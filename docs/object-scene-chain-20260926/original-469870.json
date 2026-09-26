@@ -1,0 +1,18 @@
+{
+  "addr": "0x469870",
+  "code": "char sub_469870()\n{\n  return sub_468950(this: dword_514300, a2: (int)&unk_5143E0); /*0x46987f*/\n}",
+  "refs": [
+    {
+      "addr": "0x468950",
+      "name": "sub_468950"
+    },
+    {
+      "addr": "0x514300",
+      "name": "dword_514300"
+    },
+    {
+      "addr": "0x5143e0",
+      "name": "unk_5143E0"
+    }
+  ]
+}

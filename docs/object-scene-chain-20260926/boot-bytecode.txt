@@ -1,0 +1,451 @@
+FUNCTION data/script/boot.nut: main stack=6 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 346]]
+K0 = "PauseBgm"
+K1 = "dprint"
+K2 = "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+K3 = "---------------------------------\n"
+K4 = "[NewMarisaland]\n"
+K5 = "Initializing..."
+K6 = "srand"
+K7 = "timeGetTime"
+K8 = "t_player"
+K9 = "t_item"
+K10 = "t_effect"
+K11 = "t_enemy"
+K12 = "t_lift"
+K13 = "t_boss"
+K14 = "t_boss_ex"
+K15 = "input"
+K16 = "Load"
+K17 = "keyconfig.dat"
+K18 = "LoadAnimationData"
+K19 = "data/actor/marisa/marisa.pat"
+K20 = "data/actor/item/item.pat"
+K21 = "data/actor/enemy/enemy.pat"
+K22 = "data/actor/unique/unique.pat"
+K23 = "data/actor/boss/boss.pat"
+K24 = "data/actor/system/system.pat"
+K25 = "data/map/map.pat"
+K26 = "CompileFile"
+K27 = "data/script/config.nut"
+K28 = "getroottable"
+K29 = "data/script/constant.nut"
+K30 = "data/script/savedata.nut"
+K31 = "data/script/global.nut"
+K32 = "data/script/stage.nut"
+K33 = "data/script/camera.nut"
+K34 = "data/script/chip_animation.nut"
+K35 = "InitSaveDataTable"
+K36 = "savedata"
+K37 = "data/script/player.nut"
+K38 = "data/script/player_ground.nut"
+K39 = "data/script/player_jump.nut"
+K40 = "data/script/player_callback.nut"
+K41 = "data/script/player_suwa.nut"
+K42 = "data/script/player_ufo.nut"
+K43 = "data/script/player_start.nut"
+K44 = "data/script/player_ex.nut"
+K45 = "data/script/effect.nut"
+K46 = "data/script/item.nut"
+K47 = "data/script/goal.nut"
+K48 = "data/script/warp.nut"
+K49 = "data/script/bullet.nut"
+K50 = "data/script/boss/boss_base.nut"
+K51 = "data/script/boss/boss_1.nut"
+K52 = "data/script/boss/boss_2.nut"
+K53 = "data/script/boss/boss_3.nut"
+K54 = "data/script/boss/boss_4.nut"
+K55 = "data/script/boss/boss_5.nut"
+K56 = "data/script/boss/boss_6.nut"
+K57 = "data/script/boss/boss_7.nut"
+K58 = "data/script/boss/boss_last.nut"
+K59 = "data/script/boss/boss_1ex.nut"
+K60 = "data/script/boss/boss_2ex.nut"
+K61 = "data/script/boss/boss_3ex.nut"
+K62 = "data/script/boss/boss_4ex.nut"
+K63 = "data/script/boss/boss_5ex.nut"
+K64 = "data/script/boss/boss_6ex.nut"
+K65 = "data/script/boss/boss_7ex.nut"
+K66 = "data/script/boss/boss_lastex.nut"
+K67 = "data/script/enemy.nut"
+K68 = "data/script/block.nut"
+K69 = "data/script/lift.nut"
+K70 = "data/script/hit.nut"
+K71 = "data/script/event.nut"
+K72 = "LoadSE"
+K73 = "data/se/se.csv"
+K74 = "LoadAct"
+K75 = "Data/WorldMap/WorldMap.act"
+K76 = "Data/System/Effect/EffectLayer.act"
+K77 = "EffectLayer"
+K78 = "pl"
+K79 = "BeginStage"
+K80 = "Data/System/Title/titlemenu.act"
+K81 = "Data/System/effect/fader0.act"
+K82 = "Data/System/Stage/PlayerStatus.act"
+K83 = "Data/System/Stage/StageStart.act"
+K84 = "Data/System/Stage/StageClear.act"
+K85 = "Data/System/Stage/TimeUp.act"
+K86 = "Data/System/Staffroll/EndingEND.act"
+K87 = "Data/System/effect/fader1.act"
+K88 = "Data/System/pause/StagePause.act"
+K89 = "StagePause"
+K90 = "Data/System/pause/WorldPause.act"
+K91 = "WorldPause"
+K92 = "Data/System/PlayerImage.act"
+K93 = "Data/System/Stage/GameOver.act"
+K94 = "Data/System/Logo.act"
+K95 = "Data/System/ExtraClearImage.act"
+K96 = "Data/System/effect/fader2.act"
+K97 = "InitStage"
+K98 = "op.act"
+K99 = "InitGlobal"
+K100 = "Done.\n"
+0000 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0001 LOAD           a0=  2 a1=          0 a2=  0 a3=  0
+0002 CLOSURE        a0=  3 a1=          0 a2=  0 a3=  0
+0003 NEWSLOT        a0=  1 a1=          1 a2=  2 a3=  3
+0004 PREPCALLK      a0=  1 a1=          1 a2=  0 a3=  2
+0005 LOAD           a0=  3 a1=          2 a2=  0 a3=  0
+0006 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0007 PREPCALLK      a0=  1 a1=          1 a2=  0 a3=  2
+0008 LOAD           a0=  3 a1=          3 a2=  0 a3=  0
+0009 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0010 PREPCALLK      a0=  1 a1=          1 a2=  0 a3=  2
+0011 LOAD           a0=  3 a1=          4 a2=  0 a3=  0
+0012 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0013 PREPCALLK      a0=  1 a1=          1 a2=  0 a3=  2
+0014 LOAD           a0=  3 a1=          3 a2=  0 a3=  0
+0015 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0016 PREPCALLK      a0=  1 a1=          1 a2=  0 a3=  2
+0017 LOAD           a0=  3 a1=          5 a2=  0 a3=  0
+0018 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0019 PREPCALLK      a0=  1 a1=          6 a2=  0 a3=  2
+0020 PREPCALLK      a0=  3 a1=          7 a2=  0 a3=  4
+0021 CALL           a0=  3 a1=          3 a2=  4 a3=  1
+0022 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0023 LOAD           a0=  1 a1=          8 a2=  0 a3=  0
+0024 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0025 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0026 LOAD           a0=  1 a1=          9 a2=  0 a3=  0
+0027 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0028 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0029 LOAD           a0=  1 a1=         10 a2=  0 a3=  0
+0030 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0031 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0032 LOAD           a0=  1 a1=         11 a2=  0 a3=  0
+0033 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0034 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0035 LOAD           a0=  1 a1=         12 a2=  0 a3=  0
+0036 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0037 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0038 LOAD           a0=  1 a1=         13 a2=  0 a3=  0
+0039 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0040 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0041 LOAD           a0=  1 a1=         14 a2=  0 a3=  0
+0042 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0043 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0044 GETK           a0=  1 a1=         15 a2=  0 a3=  0
+0045 PREPCALLK      a0=  1 a1=         16 a2=  1 a3=  2
+0046 LOAD           a0=  3 a1=         17 a2=  0 a3=  0
+0047 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0048 PREPCALLK      a0=  1 a1=         18 a2=  0 a3=  2
+0049 LOAD           a0=  3 a1=         19 a2=  0 a3=  0
+0050 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0051 PREPCALLK      a0=  1 a1=         18 a2=  0 a3=  2
+0052 LOAD           a0=  3 a1=         20 a2=  0 a3=  0
+0053 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0054 PREPCALLK      a0=  1 a1=         18 a2=  0 a3=  2
+0055 LOAD           a0=  3 a1=         21 a2=  0 a3=  0
+0056 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0057 PREPCALLK      a0=  1 a1=         18 a2=  0 a3=  2
+0058 LOAD           a0=  3 a1=         22 a2=  0 a3=  0
+0059 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0060 PREPCALLK      a0=  1 a1=         18 a2=  0 a3=  2
+0061 LOAD           a0=  3 a1=         23 a2=  0 a3=  0
+0062 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0063 PREPCALLK      a0=  1 a1=         18 a2=  0 a3=  2
+0064 LOAD           a0=  3 a1=         24 a2=  0 a3=  0
+0065 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0066 PREPCALLK      a0=  1 a1=         18 a2=  0 a3=  2
+0067 LOAD           a0=  3 a1=         25 a2=  0 a3=  0
+0068 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0069 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0070 DLOAD          a0=  3 a1=         27 a2=  4 a3= 28
+0071 PREPCALL       a0=  4 a1=          4 a2=  0 a3=  5
+0072 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0073 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0074 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0075 DLOAD          a0=  3 a1=         29 a2=  4 a3= 28
+0076 PREPCALL       a0=  4 a1=          4 a2=  0 a3=  5
+0077 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0078 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0079 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0080 DLOAD          a0=  3 a1=         30 a2=  4 a3= 28
+0081 PREPCALL       a0=  4 a1=          4 a2=  0 a3=  5
+0082 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0083 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0084 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0085 DLOAD          a0=  3 a1=         31 a2=  4 a3= 28
+0086 PREPCALL       a0=  4 a1=          4 a2=  0 a3=  5
+0087 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0088 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0089 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0090 DLOAD          a0=  3 a1=         32 a2=  4 a3= 28
+0091 PREPCALL       a0=  4 a1=          4 a2=  0 a3=  5
+0092 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0093 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0094 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0095 DLOAD          a0=  3 a1=         33 a2=  4 a3= 28
+0096 PREPCALL       a0=  4 a1=          4 a2=  0 a3=  5
+0097 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0098 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0099 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0100 DLOAD          a0=  3 a1=         34 a2=  4 a3= 28
+0101 PREPCALL       a0=  4 a1=          4 a2=  0 a3=  5
+0102 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0103 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0104 PREPCALLK      a0=  1 a1=         35 a2=  0 a3=  2
+0105 LOADROOTTABLE  a0=  3 a1=          0 a2=  0 a3=  0
+0106 GETK           a0=  3 a1=         36 a2=  3 a3=  0
+0107 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0108 GET            a0=  3 a1=          3 a2=  4 a3=  0
+0109 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0110 PREPCALLK      a0=  1 a1=         35 a2=  0 a3=  2
+0111 LOADROOTTABLE  a0=  3 a1=          0 a2=  0 a3=  0
+0112 GETK           a0=  3 a1=         36 a2=  3 a3=  0
+0113 LOADINT        a0=  4 a1=          1 a2=  0 a3=  0
+0114 GET            a0=  3 a1=          3 a2=  4 a3=  0
+0115 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0116 PREPCALLK      a0=  1 a1=         35 a2=  0 a3=  2
+0117 LOADROOTTABLE  a0=  3 a1=          0 a2=  0 a3=  0
+0118 GETK           a0=  3 a1=         36 a2=  3 a3=  0
+0119 LOADINT        a0=  4 a1=          2 a2=  0 a3=  0
+0120 GET            a0=  3 a1=          3 a2=  4 a3=  0
+0121 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0122 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0123 DLOAD          a0=  3 a1=         37 a2=  4 a3=  8
+0124 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0125 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0126 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0127 DLOAD          a0=  3 a1=         38 a2=  4 a3=  8
+0128 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0129 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0130 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0131 DLOAD          a0=  3 a1=         39 a2=  4 a3=  8
+0132 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0133 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0134 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0135 DLOAD          a0=  3 a1=         40 a2=  4 a3=  8
+0136 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0137 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0138 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0139 DLOAD          a0=  3 a1=         41 a2=  4 a3=  8
+0140 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0141 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0142 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0143 DLOAD          a0=  3 a1=         42 a2=  4 a3=  8
+0144 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0145 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0146 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0147 DLOAD          a0=  3 a1=         43 a2=  4 a3=  8
+0148 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0149 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0150 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0151 DLOAD          a0=  3 a1=         44 a2=  4 a3=  8
+0152 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0153 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0154 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0155 DLOAD          a0=  3 a1=         45 a2=  4 a3= 10
+0156 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0157 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0158 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0159 DLOAD          a0=  3 a1=         46 a2=  4 a3=  9
+0160 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0161 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0162 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0163 DLOAD          a0=  3 a1=         47 a2=  4 a3=  9
+0164 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0165 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0166 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0167 DLOAD          a0=  3 a1=         48 a2=  4 a3=  9
+0168 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0169 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0170 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0171 DLOAD          a0=  3 a1=         49 a2=  4 a3=  9
+0172 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0173 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0174 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0175 DLOAD          a0=  3 a1=         50 a2=  4 a3= 13
+0176 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0177 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0178 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0179 DLOAD          a0=  3 a1=         51 a2=  4 a3= 13
+0180 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0181 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0182 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0183 DLOAD          a0=  3 a1=         52 a2=  4 a3= 13
+0184 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0185 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0186 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0187 DLOAD          a0=  3 a1=         53 a2=  4 a3= 13
+0188 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0189 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0190 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0191 DLOAD          a0=  3 a1=         54 a2=  4 a3= 13
+0192 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0193 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0194 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0195 DLOAD          a0=  3 a1=         55 a2=  4 a3= 13
+0196 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0197 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0198 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0199 DLOAD          a0=  3 a1=         56 a2=  4 a3= 13
+0200 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0201 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0202 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0203 DLOAD          a0=  3 a1=         57 a2=  4 a3= 13
+0204 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0205 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0206 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0207 DLOAD          a0=  3 a1=         58 a2=  4 a3= 13
+0208 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0209 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0210 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0211 DLOAD          a0=  3 a1=         50 a2=  4 a3= 14
+0212 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0213 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0214 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0215 DLOAD          a0=  3 a1=         59 a2=  4 a3= 14
+0216 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0217 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0218 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0219 DLOAD          a0=  3 a1=         60 a2=  4 a3= 14
+0220 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0221 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0222 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0223 DLOAD          a0=  3 a1=         61 a2=  4 a3= 14
+0224 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0225 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0226 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0227 DLOAD          a0=  3 a1=         62 a2=  4 a3= 14
+0228 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0229 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0230 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0231 DLOAD          a0=  3 a1=         63 a2=  4 a3= 14
+0232 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0233 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0234 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0235 DLOAD          a0=  3 a1=         64 a2=  4 a3= 14
+0236 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0237 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0238 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0239 DLOAD          a0=  3 a1=         65 a2=  4 a3= 14
+0240 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0241 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0242 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0243 DLOAD          a0=  3 a1=         66 a2=  4 a3= 14
+0244 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0245 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0246 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0247 DLOAD          a0=  3 a1=         67 a2=  4 a3= 11
+0248 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0249 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0250 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0251 DLOAD          a0=  3 a1=         68 a2=  4 a3= 11
+0252 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0253 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0254 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0255 DLOAD          a0=  3 a1=         69 a2=  4 a3= 12
+0256 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0257 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0258 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0259 DLOAD          a0=  3 a1=         70 a2=  4 a3= 28
+0260 PREPCALL       a0=  4 a1=          4 a2=  0 a3=  5
+0261 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0262 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0263 PREPCALLK      a0=  1 a1=         26 a2=  0 a3=  2
+0264 DLOAD          a0=  3 a1=         71 a2=  4 a3= 28
+0265 PREPCALL       a0=  4 a1=          4 a2=  0 a3=  5
+0266 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0267 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0268 PREPCALLK      a0=  1 a1=         72 a2=  0 a3=  2
+0269 LOAD           a0=  3 a1=         73 a2=  0 a3=  0
+0270 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0271 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0272 LOAD           a0=  3 a1=         75 a2=  0 a3=  0
+0273 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0274 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0275 LOAD           a0=  3 a1=         76 a2=  0 a3=  0
+0276 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0277 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0278 GETK           a0=  1 a1=         77 a2=  1 a3=  0
+0279 GETK           a0=  1 a1=         78 a2=  1 a3=  0
+0280 PREPCALLK      a0=  1 a1=         79 a2=  1 a3=  2
+0281 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0282 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0283 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0284 LOAD           a0=  3 a1=         80 a2=  0 a3=  0
+0285 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0286 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0287 LOAD           a0=  3 a1=         81 a2=  0 a3=  0
+0288 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0289 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0290 LOAD           a0=  3 a1=         82 a2=  0 a3=  0
+0291 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0292 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0293 LOAD           a0=  3 a1=         83 a2=  0 a3=  0
+0294 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0295 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0296 LOAD           a0=  3 a1=         84 a2=  0 a3=  0
+0297 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0298 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0299 LOAD           a0=  3 a1=         85 a2=  0 a3=  0
+0300 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0301 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0302 LOAD           a0=  3 a1=         86 a2=  0 a3=  0
+0303 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0304 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0305 LOAD           a0=  3 a1=         87 a2=  0 a3=  0
+0306 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0307 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0308 LOAD           a0=  3 a1=         88 a2=  0 a3=  0
+0309 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0310 GETK           a0=  1 a1=         89 a2=  0 a3=  0
+0311 GETK           a0=  1 a1=         78 a2=  1 a3=  0
+0312 PREPCALLK      a0=  1 a1=         79 a2=  1 a3=  2
+0313 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0314 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0315 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0316 LOAD           a0=  3 a1=         90 a2=  0 a3=  0
+0317 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0318 GETK           a0=  1 a1=         91 a2=  0 a3=  0
+0319 GETK           a0=  1 a1=         78 a2=  1 a3=  0
+0320 PREPCALLK      a0=  1 a1=         79 a2=  1 a3=  2
+0321 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0322 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0323 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0324 LOAD           a0=  3 a1=         92 a2=  0 a3=  0
+0325 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0326 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0327 LOAD           a0=  3 a1=         93 a2=  0 a3=  0
+0328 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0329 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0330 LOAD           a0=  3 a1=         94 a2=  0 a3=  0
+0331 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0332 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0333 LOAD           a0=  3 a1=         95 a2=  0 a3=  0
+0334 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0335 PREPCALLK      a0=  1 a1=         74 a2=  0 a3=  2
+0336 LOAD           a0=  3 a1=         96 a2=  0 a3=  0
+0337 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0338 PREPCALLK      a0=  1 a1=         97 a2=  0 a3=  2
+0339 LOAD           a0=  3 a1=         98 a2=  0 a3=  0
+0340 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0341 PREPCALLK      a0=  1 a1=         99 a2=  0 a3=  2
+0342 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0343 PREPCALLK      a0=  1 a1=          1 a2=  0 a3=  2
+0344 LOAD           a0=  3 a1=        100 a2=  0 a3=  0
+0345 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0346 RETURN         a0=255 a1=          0 a2=  0 a3=  0

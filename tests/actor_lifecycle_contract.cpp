@@ -11,7 +11,7 @@ using kinoko::script::ObjectView;
 namespace {
 ObjectStorage step_key{};
 int clears = 0, deletes = 0, disposes = 0, destroys = 0, userdata_releases = 0;
-int32_t deleted_address = 0, active_actor = 0;
+int32_t deleted_address = 0, active_actor = 0, late_control = 0;
 using SetStep = int32_t(__thiscall*)(int32_t, KinokoOwnedObjectWords);
 using Destroy = int32_t(__thiscall*)(int32_t, unsigned char);
 using InPlace = int32_t(__thiscall*)(int32_t);
@@ -34,6 +34,7 @@ int32_t kinoko_actor_clear_script(KinokoActor *receiver_actor) {
     const auto actor=address(receiver_actor);
     require(ObjectView(actor + 56).value()._type == OT_NULL, "update reset before clear");
     require(ObjectView(actor + 68).value()._type == OT_NULL, "collision reset before clear");
+    require(load<int32_t>(pointer(actor))==kinoko_actor_vtable(), "base vtable restored before release hooks");
     ++clears; return actor;
 }
 }
@@ -55,6 +56,13 @@ struct ControlFixture : boost::detail::sp_counted_base {
     }
 };
 SQInteger release_userdata(SQUserPointer, SQInteger) { ++userdata_releases; return 0; }
+SQInteger install_late_links(SQUserPointer, SQInteger) {
+    require(load<int32_t>(pointer(active_actor+28))==0 && load<int32_t>(pointer(active_actor+36))==0,
+        "explicit control reset precedes wrapper destruction");
+    store(pointer(active_actor+28),late_control);
+    store(pointer(active_actor+36),late_control);
+    return 0;
+}
 
 KinokoOwnedObjectWords owned(HSQUIRRELVM vm, HSQOBJECT value) {
     sq_addref(vm, &value);
@@ -168,12 +176,22 @@ void lifecycle(HSQUIRRELVM vm) {
     require(g644 == reinterpret_cast<char*>(vm) && control[2] == 3, "child callback restores parent and ownership");
     sq_pop(vm, 1); erase_slot(vm, "stepFixtureCall"); erase_slot(vm, "stepFixtureValue");
     invoke(vm, actor, instance.get());
+    store(pointer(actor),int32_t{0x77777777});
     const auto cleared = clears;
     require(reinterpret_cast<InPlace>(kinoko_actor_dispose_method)(actor) == actor, "in-place entry returns receiver");
     require(clears == cleared + 1 && control[2] == 3, "destructor releases last step link");
     for (auto offset : {44, 56, 68, 96, 108, 124, 136})
         require(ObjectView(actor + offset).value()._type == OT_NULL, "all wrappers destroyed");
     require(bytes.front() == 0xa7 && bytes.back() == 0xa7, "destruction boundaries");
+    // A script release hook can repopulate controls after the explicit reset.
+    kinoko_actor_construct(reinterpret_cast<KinokoActor *>(pointer(actor)));
+    ControlFixture late(1,2); late_control=address(late.data()); active_actor=actor;
+    sq_newuserdata(vm,4); sq_setreleasehook(vm,-1,install_late_links);
+    ObjectView(actor+136).capture(vm,-1); sq_pop(vm,1);
+    const auto before_disposes=disposes,before_destroys=destroys;
+    kinoko_actor_dispose(reinterpret_cast<KinokoActor *>(pointer(actor)));
+    require(late[1]==0 && late[2]==0 && disposes==before_disposes+1 && destroys==before_destroys+1,
+        "member destructors release callback-installed weak then strong controls");
     auto* allocation = std::malloc(0x220); require(allocation != nullptr, "Actor allocation");
     const auto allocated_actor = address(allocation), deleted = deletes;
     kinoko_actor_construct((KinokoActor *)(intptr_t)(allocated_actor));

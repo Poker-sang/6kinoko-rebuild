@@ -1,0 +1,2101 @@
+FUNCTION data/WorldMap/WorldMap.nut: main stack=5 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 157]]
+K0 = "CompileFile"
+K1 = "Data/Script/demo/w7_end.nut"
+K2 = "Data/Script/demo/w8-1_end.nut"
+K3 = "Data/WorldMap/Effect.nut"
+K4 = "Data/WorldMap/Move.nut"
+K5 = "Data/WorldMap/Control.nut"
+K6 = "worldTable"
+K7 = "worldSubTable"
+K8 = "maskLayer"
+K9 = "blockLayer"
+K10 = "railChipID"
+K11 = "railChipIDPrev"
+K12 = "OnCreate"
+K13 = "Init"
+K14 = "InitEvent"
+K15 = "Update"
+K16 = "InitStage"
+K17 = "SetBgm"
+K18 = "GetStageNo"
+K19 = "Suspend"
+K20 = "Resume"
+K21 = "GetChipFlag"
+K22 = "SetSymbolVisible"
+K23 = "UpdateWorldClearFlag"
+K24 = "SetMarisaPosition"
+0000 PREPCALLK      a0=  1 a1=          0 a2=  0 a3=  2
+0001 LOAD           a0=  3 a1=          1 a2=  0 a3=  0
+0002 MOVE           a0=  4 a1=          0 a2=  0 a3=  0
+0003 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0004 PREPCALLK      a0=  1 a1=          0 a2=  0 a3=  2
+0005 LOAD           a0=  3 a1=          2 a2=  0 a3=  0
+0006 MOVE           a0=  4 a1=          0 a2=  0 a3=  0
+0007 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0008 PREPCALLK      a0=  1 a1=          0 a2=  0 a3=  2
+0009 LOAD           a0=  3 a1=          3 a2=  0 a3=  0
+0010 MOVE           a0=  4 a1=          0 a2=  0 a3=  0
+0011 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0012 PREPCALLK      a0=  1 a1=          0 a2=  0 a3=  2
+0013 LOAD           a0=  3 a1=          4 a2=  0 a3=  0
+0014 MOVE           a0=  4 a1=          0 a2=  0 a3=  0
+0015 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0016 PREPCALLK      a0=  1 a1=          0 a2=  0 a3=  2
+0017 LOAD           a0=  3 a1=          5 a2=  0 a3=  0
+0018 MOVE           a0=  4 a1=          0 a2=  0 a3=  0
+0019 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0020 LOAD           a0=  1 a1=          6 a2=  0 a3=  0
+0021 NEWARRAY       a0=  2 a1=          4 a2=  0 a3=  0
+0022 NEWARRAY       a0=  3 a1=          4 a2=  0 a3=  0
+0023 LOADINT        a0=  4 a1=          7 a2=  0 a3=  0
+0024 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0025 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0026 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0027 LOADINT        a0=  4 a1=          4 a2=  0 a3=  0
+0028 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0029 LOADINT        a0=  4 a1=          5 a2=  0 a3=  0
+0030 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0031 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0032 NEWARRAY       a0=  3 a1=          4 a2=  0 a3=  0
+0033 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0034 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0035 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0036 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0037 LOADINT        a0=  4 a1=          4 a2=  0 a3=  0
+0038 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0039 LOADINT        a0=  4 a1=          5 a2=  0 a3=  0
+0040 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0041 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0042 NEWARRAY       a0=  3 a1=          4 a2=  0 a3=  0
+0043 LOADINT        a0=  4 a1=          1 a2=  0 a3=  0
+0044 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0045 LOADINT        a0=  4 a1=          3 a2=  0 a3=  0
+0046 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0047 LOADINT        a0=  4 a1=          3 a2=  0 a3=  0
+0048 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0049 LOADINT        a0=  4 a1=          6 a2=  0 a3=  0
+0050 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0051 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0052 NEWARRAY       a0=  3 a1=          4 a2=  0 a3=  0
+0053 LOADINT        a0=  4 a1=          2 a2=  0 a3=  0
+0054 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0055 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0056 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0057 LOADINT        a0=  4 a1=          7 a2=  0 a3=  0
+0058 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0059 LOADINT        a0=  4 a1=          8 a2=  0 a3=  0
+0060 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0061 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0062 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0063 LOAD           a0=  1 a1=          7 a2=  0 a3=  0
+0064 NEWARRAY       a0=  2 a1=          4 a2=  0 a3=  0
+0065 NEWARRAY       a0=  3 a1=          4 a2=  0 a3=  0
+0066 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0067 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0068 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0069 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0070 LOADINT        a0=  4 a1=          1 a2=  0 a3=  0
+0071 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0072 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0073 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0074 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0075 NEWARRAY       a0=  3 a1=          4 a2=  0 a3=  0
+0076 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0077 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0078 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0079 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0080 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0081 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0082 LOADINT        a0=  4 a1=          1 a2=  0 a3=  0
+0083 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0084 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0085 NEWARRAY       a0=  3 a1=          4 a2=  0 a3=  0
+0086 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0087 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0088 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0089 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0090 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0091 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0092 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0093 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0094 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0095 NEWARRAY       a0=  3 a1=          4 a2=  0 a3=  0
+0096 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0097 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0098 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0099 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0100 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0101 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0102 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0103 APPENDARRAY    a0=  3 a1=          4 a2=  0 a3=  0
+0104 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0105 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0106 LOAD           a0=  1 a1=          8 a2=  0 a3=  0
+0107 NEWARRAY       a0=  2 a1=          0 a2=  0 a3=  0
+0108 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0109 LOAD           a0=  1 a1=          9 a2=  0 a3=  0
+0110 NEWARRAY       a0=  2 a1=          0 a2=  0 a3=  0
+0111 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0112 LOAD           a0=  1 a1=         10 a2=  0 a3=  0
+0113 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0114 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0115 LOAD           a0=  1 a1=         11 a2=  0 a3=  0
+0116 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0117 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0118 LOAD           a0=  1 a1=         12 a2=  0 a3=  0
+0119 CLOSURE        a0=  2 a1=          0 a2=  0 a3=  0
+0120 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0121 LOAD           a0=  1 a1=         13 a2=  0 a3=  0
+0122 CLOSURE        a0=  2 a1=          1 a2=  0 a3=  0
+0123 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0124 LOAD           a0=  1 a1=         14 a2=  0 a3=  0
+0125 CLOSURE        a0=  2 a1=          2 a2=  0 a3=  0
+0126 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0127 LOAD           a0=  1 a1=         15 a2=  0 a3=  0
+0128 CLOSURE        a0=  2 a1=          3 a2=  0 a3=  0
+0129 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0130 LOAD           a0=  1 a1=         16 a2=  0 a3=  0
+0131 CLOSURE        a0=  2 a1=          4 a2=  0 a3=  0
+0132 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0133 LOAD           a0=  1 a1=         17 a2=  0 a3=  0
+0134 CLOSURE        a0=  2 a1=          5 a2=  0 a3=  0
+0135 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0136 LOAD           a0=  1 a1=         18 a2=  0 a3=  0
+0137 CLOSURE        a0=  2 a1=          6 a2=  0 a3=  0
+0138 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0139 LOAD           a0=  1 a1=         19 a2=  0 a3=  0
+0140 CLOSURE        a0=  2 a1=          7 a2=  0 a3=  0
+0141 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0142 LOAD           a0=  1 a1=         20 a2=  0 a3=  0
+0143 CLOSURE        a0=  2 a1=          8 a2=  0 a3=  0
+0144 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0145 LOAD           a0=  1 a1=         21 a2=  0 a3=  0
+0146 CLOSURE        a0=  2 a1=          9 a2=  0 a3=  0
+0147 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0148 LOAD           a0=  1 a1=         22 a2=  0 a3=  0
+0149 CLOSURE        a0=  2 a1=         10 a2=  0 a3=  0
+0150 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0151 LOAD           a0=  1 a1=         23 a2=  0 a3=  0
+0152 CLOSURE        a0=  2 a1=         11 a2=  0 a3=  0
+0153 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0154 LOAD           a0=  1 a1=         24 a2=  0 a3=  0
+0155 CLOSURE        a0=  2 a1=         12 a2=  0 a3=  0
+0156 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0157 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/WorldMap/WorldMap.nut: OnCreate stack=6 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 21]]
+K0 = "thisAct"
+K1 = "Resume"
+K2 = "bindenv"
+K3 = "Suspend"
+K4 = "SetMarisaPosition"
+0000 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0001 DLOAD          a0=  2 a1=          1 a2=  3 a3=  1
+0002 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0003 PREPCALLK      a0=  3 a1=          2 a2=  3 a3=  4
+0004 MOVE           a0=  5 a1=          0 a2=  0 a3=  0
+0005 CALL           a0=  3 a1=          3 a2=  4 a3=  2
+0006 NEWSLOT        a0=  1 a1=          1 a2=  2 a3=  3
+0007 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0008 DLOAD          a0=  2 a1=          3 a2=  3 a3=  3
+0009 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0010 PREPCALLK      a0=  3 a1=          2 a2=  3 a3=  4
+0011 MOVE           a0=  5 a1=          0 a2=  0 a3=  0
+0012 CALL           a0=  3 a1=          3 a2=  4 a3=  2
+0013 NEWSLOT        a0=  1 a1=          1 a2=  2 a3=  3
+0014 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0015 DLOAD          a0=  2 a1=          4 a2=  3 a3=  4
+0016 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0017 PREPCALLK      a0=  3 a1=          2 a2=  3 a3=  4
+0018 MOVE           a0=  5 a1=          0 a2=  0 a3=  0
+0019 CALL           a0=  3 a1=          3 a2=  4 a3=  2
+0020 NEWSLOT        a0=  1 a1=          1 a2=  2 a3=  3
+0021 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/WorldMap/WorldMap.nut: Init stack=10 generator=False
+PARAMETERS ["this"]
+LOCALS [["@ITERATOR@", 4, 113, 124], ["val", 3, 113, 124], ["key", 2, 112, 124], ["@ITERATOR@", 4, 127, 171], ["val", 3, 127, 171], ["key", 2, 126, 171], ["railLayout", 2, 183, 189], ["layoutIndex", 1, 173, 191], ["this", 0, 0, 209]]
+K0 = "frameCount"
+K1 = "scrollX"
+K2 = "scrollY"
+K3 = "funcUpdate"
+K4 = "moveCount"
+K5 = "world"
+K6 = "worldSub"
+K7 = "stageNo"
+K8 = "isShop"
+K9 = "worldPrev"
+K10 = "worldSubPrev"
+K11 = "suspend"
+K12 = "useOldMenu"
+K13 = "stageNoPrev"
+K14 = ""
+K15 = "noInputFrame"
+K16 = "marisaX"
+K17 = "marisaY"
+K18 = "warpTable"
+K19 = "nextScrollX"
+K20 = "nextScrollY"
+K21 = "demoGen"
+K22 = "prevWorldClear"
+K23 = "w8_stage"
+K24 = "clearCountPrev"
+K25 = "clearCount"
+K26 = "lastEnterStage"
+K27 = "marisa"
+K28 = "visible"
+K29 = "PlayerStatus"
+K30 = "useMap"
+K31 = "useStage"
+K32 = "resource"
+K33 = "stName"
+K34 = "mapchip"
+K35 = "mapChip"
+K36 = "thisAct"
+K37 = "tostring"
+K38 = "len"
+K39 = "slice"
+K40 = "hidden_mask"
+K41 = "maskLayer"
+K42 = "append"
+K43 = "weakref"
+K44 = "hidden_block"
+K45 = "blockLayer"
+K46 = "rail"
+K47 = "layout"
+K48 = "chipCount"
+K49 = "GetChipLayout"
+K50 = "railChipID"
+K51 = "layoutID"
+K52 = "chipID"
+K53 = "InitEvent"
+K54 = "InitSymbol"
+K55 = "SetGlobalUpdateFunction"
+K56 = "Resume"
+K57 = "InitMaskLayer"
+K58 = "ProcMaskLayer"
+K59 = "UpdateWorldClearFlag"
+0000 LOAD           a0=  1 a1=          0 a2=  0 a3=  0
+0001 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0002 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0003 LOAD           a0=  1 a1=          1 a2=  0 a3=  0
+0004 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0005 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0006 LOAD           a0=  1 a1=          2 a2=  0 a3=  0
+0007 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0008 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0009 LOAD           a0=  1 a1=          3 a2=  0 a3=  0
+0010 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0011 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0012 LOAD           a0=  1 a1=          4 a2=  0 a3=  0
+0013 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0014 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0015 LOAD           a0=  1 a1=          5 a2=  0 a3=  0
+0016 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0017 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0018 LOAD           a0=  1 a1=          6 a2=  0 a3=  0
+0019 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0020 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0021 LOAD           a0=  1 a1=          7 a2=  0 a3=  0
+0022 LOADINT        a0=  2 a1=          1 a2=  0 a3=  0
+0023 NEG            a0=  2 a1=          2 a2=  0 a3=  0
+0024 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0025 LOAD           a0=  1 a1=          8 a2=  0 a3=  0
+0026 LOADBOOL       a0=  2 a1=          0 a2=  0 a3=  0
+0027 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0028 LOAD           a0=  1 a1=          9 a2=  0 a3=  0
+0029 LOADINT        a0=  2 a1=          1 a2=  0 a3=  0
+0030 NEG            a0=  2 a1=          2 a2=  0 a3=  0
+0031 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0032 LOAD           a0=  1 a1=         10 a2=  0 a3=  0
+0033 LOADINT        a0=  2 a1=          1 a2=  0 a3=  0
+0034 NEG            a0=  2 a1=          2 a2=  0 a3=  0
+0035 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0036 LOAD           a0=  1 a1=         11 a2=  0 a3=  0
+0037 LOADBOOL       a0=  2 a1=          0 a2=  0 a3=  0
+0038 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0039 LOAD           a0=  1 a1=         12 a2=  0 a3=  0
+0040 LOADBOOL       a0=  2 a1=          0 a2=  0 a3=  0
+0041 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0042 DLOAD          a0=  1 a1=         13 a2=  2 a3= 14
+0043 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0044 LOAD           a0=  1 a1=         15 a2=  0 a3=  0
+0045 LOADINT        a0=  2 a1=         10 a2=  0 a3=  0
+0046 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0047 LOAD           a0=  1 a1=         16 a2=  0 a3=  0
+0048 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0049 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0050 LOAD           a0=  1 a1=         17 a2=  0 a3=  0
+0051 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0052 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0053 LOAD           a0=  1 a1=         18 a2=  0 a3=  0
+0054 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0055 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0056 LOAD           a0=  1 a1=         19 a2=  0 a3=  0
+0057 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0058 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0059 LOAD           a0=  1 a1=         20 a2=  0 a3=  0
+0060 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0061 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0062 LOAD           a0=  1 a1=         21 a2=  0 a3=  0
+0063 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0064 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0065 LOAD           a0=  1 a1=         22 a2=  0 a3=  0
+0066 NEWARRAY       a0=  2 a1=         10 a2=  0 a3=  0
+0067 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0068 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0069 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0070 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0071 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0072 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0073 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0074 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0075 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0076 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0077 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0078 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0079 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0080 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0081 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0082 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0083 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0084 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0085 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0086 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0087 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0088 LOAD           a0=  1 a1=         23 a2=  0 a3=  0
+0089 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0090 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0091 LOAD           a0=  1 a1=         24 a2=  0 a3=  0
+0092 LOADROOTTABLE  a0=  2 a1=          0 a2=  0 a3=  0
+0093 GETK           a0=  2 a1=         25 a2=  2 a3=  0
+0094 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0095 DLOAD          a0=  1 a1=         26 a2=  2 a3= 14
+0096 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0097 GETK           a0=  1 a1=         27 a2=  0 a3=  0
+0098 LOAD           a0=  2 a1=         28 a2=  0 a3=  0
+0099 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0100 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0101 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0102 GETK           a0=  1 a1=         29 a2=  1 a3=  0
+0103 LOAD           a0=  2 a1=         30 a2=  0 a3=  0
+0104 LOADBOOL       a0=  3 a1=          1 a2=  0 a3=  0
+0105 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0106 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0107 GETK           a0=  1 a1=         29 a2=  1 a3=  0
+0108 LOAD           a0=  2 a1=         31 a2=  0 a3=  0
+0109 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0110 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0111 GETK           a0=  1 a1=         32 a2=  0 a3=  0
+0112 LOADNULLS      a0=  2 a1=          3 a2=  0 a3=  0
+0113 FOREACH        a0=  1 a1=         11 a2=  2 a3=  0
+0114 POSTFOREACH    a0=  1 a1=         11 a2=  2 a3=  0
+0115 LOADNULLS      a0=  5 a1=          1 a2=  0 a3=  0
+0116 NE             a0=  5 a1=          5 a2=  3 a3=  0
+0117 AND            a0=  5 a1=          3 a2=  5 a3=  0
+0118 GETK           a0=  6 a1=         33 a2=  3 a3=  0
+0119 EQ             a0=  6 a1=         34 a2=  6 a3=255
+0120 MOVE           a0=  5 a1=          6 a2=  0 a3=  0
+0121 JZ             a0=  5 a1=          2 a2=  0 a3=  0
+0122 LOAD           a0=  5 a1=         35 a2=  0 a3=  0
+0123 NEWSLOT        a0=  5 a1=          0 a2=  5 a3=  3
+0124 JMP            a0=  0 a1=        -12 a2=  0 a3=  0
+0125 GETK           a0=  1 a1=         36 a2=  0 a3=  0
+0126 LOADNULLS      a0=  2 a1=          3 a2=  0 a3=  0
+0127 FOREACH        a0=  1 a1=         44 a2=  2 a3=  0
+0128 POSTFOREACH    a0=  1 a1=         44 a2=  2 a3=  0
+0129 PREPCALLK      a0=  5 a1=         37 a2=  2 a3=  6
+0130 CALL           a0=  5 a1=          5 a2=  6 a3=  1
+0131 PREPCALLK      a0=  5 a1=         38 a2=  5 a3=  6
+0132 CALL           a0=  5 a1=          5 a2=  6 a3=  1
+0133 LOADINT        a0=  6 a1=         11 a2=  0 a3=  0
+0134 CMP            a0=  5 a1=          6 a2=  5 a3=  2
+0135 AND            a0=  5 a1=          8 a2=  5 a3=  0
+0136 PREPCALLK      a0=  6 a1=         37 a2=  2 a3=  7
+0137 CALL           a0=  6 a1=          6 a2=  7 a3=  1
+0138 PREPCALLK      a0=  6 a1=         39 a2=  6 a3=  7
+0139 LOADINT        a0=  8 a1=          0 a2=  0 a3=  0
+0140 LOADINT        a0=  9 a1=         11 a2=  0 a3=  0
+0141 CALL           a0=  6 a1=          6 a2=  7 a3=  3
+0142 EQ             a0=  6 a1=         40 a2=  6 a3=255
+0143 MOVE           a0=  5 a1=          6 a2=  0 a3=  0
+0144 JZ             a0=  5 a1=          5 a2=  0 a3=  0
+0145 GETK           a0=  5 a1=         41 a2=  0 a3=  0
+0146 PREPCALLK      a0=  5 a1=         42 a2=  5 a3=  6
+0147 PREPCALLK      a0=  7 a1=         43 a2=  3 a3=  8
+0148 CALL           a0=  7 a1=          7 a2=  8 a3=  1
+0149 CALL           a0=  5 a1=          5 a2=  6 a3=  2
+0150 PREPCALLK      a0=  5 a1=         37 a2=  2 a3=  6
+0151 CALL           a0=  5 a1=          5 a2=  6 a3=  1
+0152 PREPCALLK      a0=  5 a1=         38 a2=  5 a3=  6
+0153 CALL           a0=  5 a1=          5 a2=  6 a3=  1
+0154 LOADINT        a0=  6 a1=         12 a2=  0 a3=  0
+0155 CMP            a0=  5 a1=          6 a2=  5 a3=  2
+0156 AND            a0=  5 a1=          8 a2=  5 a3=  0
+0157 PREPCALLK      a0=  6 a1=         37 a2=  2 a3=  7
+0158 CALL           a0=  6 a1=          6 a2=  7 a3=  1
+0159 PREPCALLK      a0=  6 a1=         39 a2=  6 a3=  7
+0160 LOADINT        a0=  8 a1=          0 a2=  0 a3=  0
+0161 LOADINT        a0=  9 a1=         12 a2=  0 a3=  0
+0162 CALL           a0=  6 a1=          6 a2=  7 a3=  3
+0163 EQ             a0=  6 a1=         44 a2=  6 a3=255
+0164 MOVE           a0=  5 a1=          6 a2=  0 a3=  0
+0165 JZ             a0=  5 a1=          5 a2=  0 a3=  0
+0166 GETK           a0=  5 a1=         45 a2=  0 a3=  0
+0167 PREPCALLK      a0=  5 a1=         42 a2=  5 a3=  6
+0168 PREPCALLK      a0=  7 a1=         43 a2=  3 a3=  8
+0169 CALL           a0=  7 a1=          7 a2=  8 a3=  1
+0170 CALL           a0=  5 a1=          5 a2=  6 a3=  2
+0171 JMP            a0=  0 a1=        -45 a2=  0 a3=  0
+0172 LOADINT        a0=  1 a1=          0 a2=  0 a3=  0
+0173 GETK           a0=  2 a1=         46 a2=  0 a3=  0
+0174 GETK           a0=  2 a1=         47 a2=  2 a3=  0
+0175 GETK           a0=  2 a1=         48 a2=  2 a3=  0
+0176 CMP            a0=  2 a1=          2 a2=  1 a3=  3
+0177 JZ             a0=  2 a1=         14 a2=  0 a3=  0
+0178 GETK           a0=  2 a1=         46 a2=  0 a3=  0
+0179 GETK           a0=  2 a1=         47 a2=  2 a3=  0
+0180 PREPCALLK      a0=  2 a1=         49 a2=  2 a3=  3
+0181 MOVE           a0=  4 a1=          1 a2=  0 a3=  0
+0182 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0183 LOADNULLS      a0=  3 a1=          1 a2=  0 a3=  0
+0184 NE             a0=  3 a1=          3 a2=  2 a3=  0
+0185 JZ             a0=  3 a1=          4 a2=  0 a3=  0
+0186 GETK           a0=  3 a1=         50 a2=  0 a3=  0
+0187 GETK           a0=  4 a1=         51 a2=  2 a3=  0
+0188 GETK           a0=  5 a1=         52 a2=  2 a3=  0
+0189 NEWSLOT        a0=  3 a1=          3 a2=  4 a3=  5
+0190 PINCL          a0=  2 a1=          1 a2=  0 a3=  1
+0191 JMP            a0=  0 a1=        -19 a2=  0 a3=  0
+0192 PREPCALLK      a0=  1 a1=         53 a2=  0 a3=  2
+0193 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0194 PREPCALLK      a0=  1 a1=         54 a2=  0 a3=  2
+0195 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0196 PREPCALLK      a0=  1 a1=         55 a2=  0 a3=  2
+0197 LOADNULLS      a0=  3 a1=          1 a2=  0 a3=  0
+0198 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0199 PREPCALLK      a0=  1 a1=         56 a2=  0 a3=  2
+0200 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0201 PREPCALLK      a0=  1 a1=         57 a2=  0 a3=  2
+0202 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0203 PREPCALLK      a0=  1 a1=         58 a2=  0 a3=  2
+0204 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0205 LOADBOOL       a0=  4 a1=          1 a2=  0 a3=  0
+0206 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0207 PREPCALLK      a0=  1 a1=         59 a2=  0 a3=  2
+0208 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0209 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/WorldMap/WorldMap.nut: InitEvent stack=9 generator=False
+PARAMETERS ["this"]
+LOCALS [["currentLayout", 2, 11, 90], ["layoutIndex", 1, 1, 92], ["this", 0, 0, 93]]
+K0 = "event"
+K1 = "layout"
+K2 = "chipCount"
+K3 = "GetChipLayout"
+K4 = "chipID"
+K5 = "marisaX"
+K6 = "left"
+K7 = "marisaY"
+K8 = "top"
+K9 = "scrollX"
+K10 = "tointeger"
+K11 = "scrollY"
+K12 = "player"
+K13 = "offsetX"
+K14 = "offsetY"
+K15 = "Update_MarisaPosition"
+K16 = "warpTable"
+0000 LOADINT        a0=  1 a1=          0 a2=  0 a3=  0
+0001 GETK           a0=  2 a1=          0 a2=  0 a3=  0
+0002 GETK           a0=  2 a1=          1 a2=  2 a3=  0
+0003 GETK           a0=  2 a1=          2 a2=  2 a3=  0
+0004 CMP            a0=  2 a1=          2 a2=  1 a3=  3
+0005 JZ             a0=  2 a1=         87 a2=  0 a3=  0
+0006 GETK           a0=  2 a1=          0 a2=  0 a3=  0
+0007 GETK           a0=  2 a1=          1 a2=  2 a3=  0
+0008 PREPCALLK      a0=  2 a1=          3 a2=  2 a3=  3
+0009 MOVE           a0=  4 a1=          1 a2=  0 a3=  0
+0010 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0011 LOADNULLS      a0=  3 a1=          1 a2=  0 a3=  0
+0012 EQ             a0=  3 a1=          3 a2=  2 a3=  0
+0013 JZ             a0=  3 a1=          1 a2=  0 a3=  0
+0014 JMP            a0=  0 a1=         78 a2=  0 a3=  0
+0015 GETK           a0=  3 a1=          4 a2=  2 a3=  0
+0016 LOADINT        a0=  4 a1=       1006 a2=  0 a3=  0
+0017 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0018 JZ             a0=  4 a1=         45 a2=  0 a3=  0
+0019 DLOAD          a0=  4 a1=          5 a2=  5 a3=  6
+0020 GET            a0=  5 a1=          2 a2=  5 a3=  0
+0021 LOADINT        a0=  6 a1=         32 a2=  0 a3=  0
+0022 LOADINT        a0=  7 a1=          2 a2=  0 a3=  0
+0023 ARITH          a0=  6 a1=          7 a2=  6 a3= 47
+0024 ARITH          a0=  5 a1=          6 a2=  5 a3= 43
+0025 SET            a0=  4 a1=          0 a2=  4 a3=  5
+0026 DLOAD          a0=  4 a1=          7 a2=  5 a3=  8
+0027 GET            a0=  5 a1=          2 a2=  5 a3=  0
+0028 LOADINT        a0=  6 a1=         32 a2=  0 a3=  0
+0029 LOADINT        a0=  7 a1=          2 a2=  0 a3=  0
+0030 ARITH          a0=  6 a1=          7 a2=  6 a3= 47
+0031 ARITH          a0=  5 a1=          6 a2=  5 a3= 43
+0032 SET            a0=  4 a1=          0 a2=  4 a3=  5
+0033 DLOAD          a0=  4 a1=          9 a2=  5 a3=  5
+0034 GET            a0=  5 a1=          0 a2=  5 a3=  0
+0035 LOADINT        a0=  6 a1=        544 a2=  0 a3=  0
+0036 ARITH          a0=  5 a1=          6 a2=  5 a3= 47
+0037 PREPCALLK      a0=  5 a1=         10 a2=  5 a3=  6
+0038 CALL           a0=  5 a1=          5 a2=  6 a3=  1
+0039 LOADINT        a0=  6 a1=        544 a2=  0 a3=  0
+0040 ARITH          a0=  5 a1=          6 a2=  5 a3= 42
+0041 SET            a0=  4 a1=          0 a2=  4 a3=  5
+0042 DLOAD          a0=  4 a1=         11 a2=  5 a3=  7
+0043 GET            a0=  5 a1=          0 a2=  5 a3=  0
+0044 LOADINT        a0=  6 a1=        384 a2=  0 a3=  0
+0045 ARITH          a0=  5 a1=          6 a2=  5 a3= 47
+0046 PREPCALLK      a0=  5 a1=         10 a2=  5 a3=  6
+0047 CALL           a0=  5 a1=          5 a2=  6 a3=  1
+0048 LOADINT        a0=  6 a1=        384 a2=  0 a3=  0
+0049 ARITH          a0=  5 a1=          6 a2=  5 a3= 42
+0050 SET            a0=  4 a1=          0 a2=  4 a3=  5
+0051 GETK           a0=  4 a1=         12 a2=  0 a3=  0
+0052 DLOAD          a0=  5 a1=         13 a2=  6 a3=  9
+0053 GET            a0=  6 a1=          0 a2=  6 a3=  0
+0054 NEG            a0=  6 a1=          6 a2=  0 a3=  0
+0055 SET            a0=  4 a1=          4 a2=  5 a3=  6
+0056 GETK           a0=  4 a1=         12 a2=  0 a3=  0
+0057 DLOAD          a0=  5 a1=         14 a2=  6 a3= 11
+0058 GET            a0=  6 a1=          0 a2=  6 a3=  0
+0059 NEG            a0=  6 a1=          6 a2=  0 a3=  0
+0060 SET            a0=  4 a1=          4 a2=  5 a3=  6
+0061 PREPCALLK      a0=  4 a1=         15 a2=  0 a3=  5
+0062 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0063 JMP            a0=  0 a1=          0 a2=  0 a3=  0
+0064 GETK           a0=  3 a1=          4 a2=  2 a3=  0
+0065 LOADINT        a0=  4 a1=       1042 a2=  0 a3=  0
+0066 CMP            a0=  3 a1=          4 a2=  3 a3=  2
+0067 AND            a0=  3 a1=          4 a2=  3 a3=  0
+0068 GETK           a0=  4 a1=          4 a2=  2 a3=  0
+0069 LOADINT        a0=  5 a1=       1105 a2=  0 a3=  0
+0070 CMP            a0=  4 a1=          5 a2=  4 a3=  4
+0071 MOVE           a0=  3 a1=          4 a2=  0 a3=  0
+0072 JZ             a0=  3 a1=         18 a2=  0 a3=  0
+0073 GETK           a0=  3 a1=         16 a2=  0 a3=  0
+0074 GETK           a0=  4 a1=          4 a2=  2 a3=  0
+0075 LOADINT        a0=  5 a1=       1042 a2=  0 a3=  0
+0076 ARITH          a0=  4 a1=          5 a2=  4 a3= 45
+0077 NEWARRAY       a0=  5 a1=          2 a2=  0 a3=  0
+0078 GETK           a0=  6 a1=          6 a2=  2 a3=  0
+0079 LOADINT        a0=  7 a1=         32 a2=  0 a3=  0
+0080 LOADINT        a0=  8 a1=          2 a2=  0 a3=  0
+0081 ARITH          a0=  7 a1=          8 a2=  7 a3= 47
+0082 ARITH          a0=  6 a1=          7 a2=  6 a3= 43
+0083 APPENDARRAY    a0=  5 a1=          6 a2=  0 a3=  0
+0084 GETK           a0=  6 a1=          8 a2=  2 a3=  0
+0085 LOADINT        a0=  7 a1=         32 a2=  0 a3=  0
+0086 LOADINT        a0=  8 a1=          2 a2=  0 a3=  0
+0087 ARITH          a0=  7 a1=          8 a2=  7 a3= 47
+0088 ARITH          a0=  6 a1=          7 a2=  6 a3= 43
+0089 APPENDARRAY    a0=  5 a1=          6 a2=  0 a3=  0
+0090 NEWSLOT        a0=  3 a1=          3 a2=  4 a3=  5
+0091 PINCL          a0=  2 a1=          1 a2=  0 a3=  1
+0092 JMP            a0=  0 a1=        -92 a2=  0 a3=  0
+0093 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/WorldMap/WorldMap.nut: Update stack=9 generator=False
+PARAMETERS ["this"]
+LOCALS [["@ITERATOR@", 4, 66, 80], ["gen", 3, 66, 80], ["key", 2, 65, 80], ["toWorpID", 2, 275, 319], ["worpID", 1, 263, 319], ["this", 0, 0, 411]]
+K0 = "frameCount"
+K1 = "symbol"
+K2 = "layout"
+K3 = "SetChipRect"
+K4 = "ClearRenderLayer"
+K5 = "ClearActor"
+K6 = "ReleaseMap"
+K7 = "suspend"
+K8 = "UpdateAreaEffect"
+K9 = "noInputFrame"
+K10 = "Update_MarisaPosition"
+K11 = "Update_WorldScroll"
+K12 = "UpdateChipAnimation"
+K13 = "UpdateEffect"
+K14 = "demoGen"
+K15 = "len"
+K16 = "getstatus"
+K17 = "dead"
+K18 = "scrollX"
+K19 = "nextScrollX"
+K20 = "scrollY"
+K21 = "nextScrollY"
+K22 = "player"
+K23 = "offsetX"
+K24 = "offsetY"
+K25 = "PlayerStatus"
+K26 = "SetWorld"
+K27 = "world"
+K28 = "worldSub"
+K29 = ""
+K30 = "railFade"
+K31 = "UpdateRailFade"
+K32 = "ProcMaskLayer"
+K33 = "input"
+K34 = "k0"
+K35 = "funcUpdate"
+K36 = "stageName"
+K37 = "GetStageNo"
+K38 = "marisahouse"
+K39 = "currentSavedata"
+K40 = "result"
+K41 = "w8clear"
+K42 = "stageNo"
+K43 = "useMap"
+K44 = "useStage"
+K45 = "Suspend"
+K46 = "s01a"
+K47 = "InitStage"
+K48 = "slice"
+K49 = "warp"
+K50 = "tointeger"
+K51 = "warpTable"
+K52 = "marisaX"
+K53 = "marisaY"
+K54 = "Fader1"
+K55 = "FadeIn"
+K56 = "c"
+K57 = "s"
+K58 = "k1"
+K59 = "WorldPause"
+K60 = "Resume"
+K61 = "SetNextMove"
+K62 = "x"
+K63 = "y"
+K64 = "PlaySE"
+K65 = "abs"
+K66 = "UpdateWorldClearFlag"
+0000 LOAD           a0=  1 a1=          0 a2=  0 a3=  0
+0001 PINC           a0=  1 a1=          0 a2=  1 a3=  1
+0002 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0003 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0004 JZ             a0=  1 a1=         33 a2=  0 a3=  0
+0005 GETK           a0=  1 a1=          1 a2=  0 a3=  0
+0006 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0007 PREPCALLK      a0=  1 a1=          3 a2=  1 a3=  2
+0008 LOADINT        a0=  3 a1=       1023 a2=  0 a3=  0
+0009 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0010 LOADINT        a0=  5 a1=          0 a2=  0 a3=  0
+0011 LOADINT        a0=  6 a1=         64 a2=  0 a3=  0
+0012 LOADINT        a0=  7 a1=         96 a2=  0 a3=  0
+0013 CALL           a0=  1 a1=          1 a2=  2 a3=  6
+0014 GETK           a0=  1 a1=          1 a2=  0 a3=  0
+0015 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0016 PREPCALLK      a0=  1 a1=          3 a2=  1 a3=  2
+0017 LOADINT        a0=  3 a1=       1146 a2=  0 a3=  0
+0018 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0019 LOADINT        a0=  5 a1=        416 a2=  0 a3=  0
+0020 LOADINT        a0=  6 a1=         64 a2=  0 a3=  0
+0021 LOADINT        a0=  7 a1=         96 a2=  0 a3=  0
+0022 CALL           a0=  1 a1=          1 a2=  2 a3=  6
+0023 GETK           a0=  1 a1=          1 a2=  0 a3=  0
+0024 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0025 PREPCALLK      a0=  1 a1=          3 a2=  1 a3=  2
+0026 LOADINT        a0=  3 a1=       1024 a2=  0 a3=  0
+0027 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0028 LOADINT        a0=  5 a1=        224 a2=  0 a3=  0
+0029 LOADINT        a0=  6 a1=         64 a2=  0 a3=  0
+0030 LOADINT        a0=  7 a1=         96 a2=  0 a3=  0
+0031 CALL           a0=  1 a1=          1 a2=  2 a3=  6
+0032 PREPCALLK      a0=  1 a1=          4 a2=  0 a3=  2
+0033 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0034 PREPCALLK      a0=  1 a1=          5 a2=  0 a3=  2
+0035 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0036 PREPCALLK      a0=  1 a1=          6 a2=  0 a3=  2
+0037 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0038 GETK           a0=  1 a1=          7 a2=  0 a3=  0
+0039 JZ             a0=  1 a1=          1 a2=  0 a3=  0
+0040 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0041 PREPCALLK      a0=  1 a1=          8 a2=  0 a3=  2
+0042 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0043 GETK           a0=  1 a1=          9 a2=  0 a3=  0
+0044 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0045 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0046 JZ             a0=  1 a1=          7 a2=  0 a3=  0
+0047 LOAD           a0=  1 a1=          9 a2=  0 a3=  0
+0048 PINC           a0=  1 a1=          0 a2=  1 a3=255
+0049 PREPCALLK      a0=  1 a1=         10 a2=  0 a3=  2
+0050 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0051 PREPCALLK      a0=  1 a1=         11 a2=  0 a3=  2
+0052 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0053 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0054 PREPCALLK      a0=  1 a1=         12 a2=  0 a3=  2
+0055 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0056 PREPCALLK      a0=  1 a1=         13 a2=  0 a3=  2
+0057 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0058 GETK           a0=  1 a1=         14 a2=  0 a3=  0
+0059 PREPCALLK      a0=  1 a1=         15 a2=  1 a3=  2
+0060 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0061 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0062 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0063 JZ             a0=  1 a1=         20 a2=  0 a3=  0
+0064 GETK           a0=  1 a1=         14 a2=  0 a3=  0
+0065 LOADNULLS      a0=  2 a1=          3 a2=  0 a3=  0
+0066 FOREACH        a0=  1 a1=         14 a2=  2 a3=  0
+0067 POSTFOREACH    a0=  1 a1=         14 a2=  2 a3=  0
+0068 LOADNULLS      a0=  5 a1=          1 a2=  0 a3=  0
+0069 EQ             a0=  5 a1=          5 a2=  3 a3=  0
+0070 OR             a0=  5 a1=          4 a2=  5 a3=  0
+0071 PREPCALLK      a0=  6 a1=         16 a2=  3 a3=  7
+0072 CALL           a0=  6 a1=          6 a2=  7 a3=  1
+0073 EQ             a0=  6 a1=         17 a2=  6 a3=255
+0074 MOVE           a0=  5 a1=          6 a2=  0 a3=  0
+0075 JZ             a0=  5 a1=          3 a2=  0 a3=  0
+0076 GETK           a0=  5 a1=         14 a2=  0 a3=  0
+0077 DELETE         a0=  5 a1=          5 a2=  2 a3=  0
+0078 JMP            a0=  0 a1=          1 a2=  0 a3=  0
+0079 RESUME         a0=  5 a1=          3 a2=  0 a3=  0
+0080 JMP            a0=  0 a1=        -15 a2=  0 a3=  0
+0081 PREPCALLK      a0=  1 a1=         10 a2=  0 a3=  2
+0082 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0083 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0084 GETK           a0=  1 a1=         18 a2=  0 a3=  0
+0085 GETK           a0=  2 a1=         19 a2=  0 a3=  0
+0086 NE             a0=  1 a1=          2 a2=  1 a3=  0
+0087 OR             a0=  1 a1=          4 a2=  1 a3=  0
+0088 GETK           a0=  2 a1=         20 a2=  0 a3=  0
+0089 GETK           a0=  3 a1=         21 a2=  0 a3=  0
+0090 NE             a0=  2 a1=          3 a2=  2 a3=  0
+0091 MOVE           a0=  1 a1=          2 a2=  0 a3=  0
+0092 JZ             a0=  1 a1=         56 a2=  0 a3=  0
+0093 GETK           a0=  1 a1=         19 a2=  0 a3=  0
+0094 GETK           a0=  2 a1=         18 a2=  0 a3=  0
+0095 CMP            a0=  1 a1=          2 a2=  1 a3=  3
+0096 JZ             a0=  1 a1=          5 a2=  0 a3=  0
+0097 LOAD           a0=  1 a1=         18 a2=  0 a3=  0
+0098 LOADINT        a0=  2 a1=         32 a2=  0 a3=  0
+0099 LOADINT        a0=  3 a1=          2 a2=  0 a3=  0
+0100 ARITH          a0=  2 a1=          3 a2=  2 a3= 47
+0101 COMPARITH      a0=  1 a1=          2 a2=  1 a3= 45
+0102 GETK           a0=  1 a1=         19 a2=  0 a3=  0
+0103 GETK           a0=  2 a1=         18 a2=  0 a3=  0
+0104 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0105 JZ             a0=  1 a1=          5 a2=  0 a3=  0
+0106 LOAD           a0=  1 a1=         18 a2=  0 a3=  0
+0107 LOADINT        a0=  2 a1=         32 a2=  0 a3=  0
+0108 LOADINT        a0=  3 a1=          2 a2=  0 a3=  0
+0109 ARITH          a0=  2 a1=          3 a2=  2 a3= 47
+0110 COMPARITH      a0=  1 a1=          2 a2=  1 a3= 43
+0111 GETK           a0=  1 a1=         21 a2=  0 a3=  0
+0112 GETK           a0=  2 a1=         20 a2=  0 a3=  0
+0113 CMP            a0=  1 a1=          2 a2=  1 a3=  3
+0114 JZ             a0=  1 a1=          5 a2=  0 a3=  0
+0115 LOAD           a0=  1 a1=         20 a2=  0 a3=  0
+0116 LOADINT        a0=  2 a1=         32 a2=  0 a3=  0
+0117 LOADINT        a0=  3 a1=          2 a2=  0 a3=  0
+0118 ARITH          a0=  2 a1=          3 a2=  2 a3= 47
+0119 COMPARITH      a0=  1 a1=          2 a2=  1 a3= 45
+0120 GETK           a0=  1 a1=         21 a2=  0 a3=  0
+0121 GETK           a0=  2 a1=         20 a2=  0 a3=  0
+0122 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0123 JZ             a0=  1 a1=          5 a2=  0 a3=  0
+0124 LOAD           a0=  1 a1=         20 a2=  0 a3=  0
+0125 LOADINT        a0=  2 a1=         32 a2=  0 a3=  0
+0126 LOADINT        a0=  3 a1=          2 a2=  0 a3=  0
+0127 ARITH          a0=  2 a1=          3 a2=  2 a3= 47
+0128 COMPARITH      a0=  1 a1=          2 a2=  1 a3= 43
+0129 GETK           a0=  1 a1=         22 a2=  0 a3=  0
+0130 DLOAD          a0=  2 a1=         23 a2=  3 a3= 18
+0131 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0132 NEG            a0=  3 a1=          3 a2=  0 a3=  0
+0133 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0134 GETK           a0=  1 a1=         22 a2=  0 a3=  0
+0135 DLOAD          a0=  2 a1=         24 a2=  3 a3= 20
+0136 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0137 NEG            a0=  3 a1=          3 a2=  0 a3=  0
+0138 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0139 PREPCALLK      a0=  1 a1=         11 a2=  0 a3=  2
+0140 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0141 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0142 GETK           a0=  1 a1=         25 a2=  1 a3=  0
+0143 PREPCALLK      a0=  1 a1=         26 a2=  1 a3=  2
+0144 GETK           a0=  3 a1=         27 a2=  0 a3=  0
+0145 GETK           a0=  4 a1=         28 a2=  0 a3=  0
+0146 LOAD           a0=  5 a1=         29 a2=  0 a3=  0
+0147 CALL           a0=  1 a1=          1 a2=  2 a3=  4
+0148 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0149 GETK           a0=  1 a1=         30 a2=  0 a3=  0
+0150 PREPCALLK      a0=  1 a1=         15 a2=  1 a3=  2
+0151 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0152 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0153 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0154 JZ             a0=  1 a1=         13 a2=  0 a3=  0
+0155 PREPCALLK      a0=  1 a1=         31 a2=  0 a3=  2
+0156 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0157 GETK           a0=  1 a1=         30 a2=  0 a3=  0
+0158 PREPCALLK      a0=  1 a1=         15 a2=  1 a3=  2
+0159 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0160 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0161 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0162 JZ             a0=  1 a1=          4 a2=  0 a3=  0
+0163 PREPCALLK      a0=  1 a1=         32 a2=  0 a3=  2
+0164 LOADBOOL       a0=  3 a1=          1 a2=  0 a3=  0
+0165 LOADBOOL       a0=  4 a1=          1 a2=  0 a3=  0
+0166 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0167 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0168 PREPCALLK      a0=  1 a1=         11 a2=  0 a3=  2
+0169 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0170 GETK           a0=  1 a1=         33 a2=  0 a3=  0
+0171 GETK           a0=  1 a1=         34 a2=  1 a3=  0
+0172 LOADINT        a0=  2 a1=          1 a2=  0 a3=  0
+0173 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0174 AND            a0=  1 a1=          9 a2=  1 a3=  0
+0175 GETK           a0=  2 a1=         27 a2=  0 a3=  0
+0176 LOADINT        a0=  3 a1=          1 a2=  0 a3=  0
+0177 CMP            a0=  2 a1=          3 a2=  2 a3=  2
+0178 AND            a0=  2 a1=          4 a2=  2 a3=  0
+0179 GETK           a0=  3 a1=         35 a2=  0 a3=  0
+0180 LOADNULLS      a0=  4 a1=          1 a2=  0 a3=  0
+0181 EQ             a0=  3 a1=          4 a2=  3 a3=  0
+0182 MOVE           a0=  2 a1=          3 a2=  0 a3=  0
+0183 MOVE           a0=  1 a1=          2 a2=  0 a3=  0
+0184 JZ             a0=  1 a1=        168 a2=  0 a3=  0
+0185 DLOAD          a0=  1 a1=         36 a2=  2 a3= 37
+0186 PREPCALL       a0=  2 a1=          2 a2=  0 a3=  3
+0187 CALL           a0=  2 a1=          2 a2=  3 a3=  1
+0188 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0189 GETK           a0=  1 a1=         36 a2=  0 a3=  0
+0190 NE             a0=  1 a1=         29 a2=  1 a3=255
+0191 JZ             a0=  1 a1=        161 a2=  0 a3=  0
+0192 GETK           a0=  1 a1=         36 a2=  0 a3=  0
+0193 EQ             a0=  1 a1=         38 a2=  1 a3=255
+0194 JZ             a0=  1 a1=         44 a2=  0 a3=  0
+0195 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0196 GETK           a0=  1 a1=         39 a2=  1 a3=  0
+0197 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0198 NE             a0=  1 a1=          2 a2=  1 a3=  0
+0199 AND            a0=  1 a1=          5 a2=  1 a3=  0
+0200 LOADROOTTABLE  a0=  2 a1=          0 a2=  0 a3=  0
+0201 GETK           a0=  2 a1=         39 a2=  2 a3=  0
+0202 GETK           a0=  2 a1=         40 a2=  2 a3=  0
+0203 GETK           a0=  2 a1=         41 a2=  2 a3=  0
+0204 MOVE           a0=  1 a1=          2 a2=  0 a3=  0
+0205 JZ             a0=  1 a1=         31 a2=  0 a3=  0
+0206 LOAD           a0=  1 a1=         42 a2=  0 a3=  0
+0207 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0208 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0209 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0210 GETK           a0=  1 a1=         25 a2=  1 a3=  0
+0211 LOAD           a0=  2 a1=         43 a2=  0 a3=  0
+0212 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0213 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0214 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0215 GETK           a0=  1 a1=         25 a2=  1 a3=  0
+0216 LOAD           a0=  2 a1=         44 a2=  0 a3=  0
+0217 LOADBOOL       a0=  3 a1=          1 a2=  0 a3=  0
+0218 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0219 GETK           a0=  1 a1=         33 a2=  0 a3=  0
+0220 LOAD           a0=  2 a1=         34 a2=  0 a3=  0
+0221 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0222 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0223 PREPCALLK      a0=  1 a1=         45 a2=  0 a3=  2
+0224 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0225 LOAD           a0=  1 a1=         27 a2=  0 a3=  0
+0226 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0227 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0228 DLOAD          a0=  1 a1=         36 a2=  2 a3= 46
+0229 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0230 PREPCALLK      a0=  1 a1=         47 a2=  0 a3=  2
+0231 LOAD           a0=  3 a1=         46 a2=  0 a3=  0
+0232 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0233 LOAD           a0=  1 a1=         27 a2=  0 a3=  0
+0234 LOADINT        a0=  2 a1=          1 a2=  0 a3=  0
+0235 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0236 JMP            a0=  0 a1=          0 a2=  0 a3=  0
+0237 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0238 JMP            a0=  0 a1=        114 a2=  0 a3=  0
+0239 GETK           a0=  1 a1=         36 a2=  0 a3=  0
+0240 PREPCALLK      a0=  1 a1=         15 a2=  1 a3=  2
+0241 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0242 LOADINT        a0=  2 a1=          4 a2=  0 a3=  0
+0243 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0244 AND            a0=  1 a1=          7 a2=  1 a3=  0
+0245 GETK           a0=  2 a1=         36 a2=  0 a3=  0
+0246 PREPCALLK      a0=  2 a1=         48 a2=  2 a3=  3
+0247 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0248 LOADINT        a0=  5 a1=          4 a2=  0 a3=  0
+0249 CALL           a0=  2 a1=          2 a2=  3 a3=  3
+0250 EQ             a0=  2 a1=         49 a2=  2 a3=255
+0251 MOVE           a0=  1 a1=          2 a2=  0 a3=  0
+0252 JZ             a0=  1 a1=         68 a2=  0 a3=  0
+0253 LOAD           a0=  1 a1=         42 a2=  0 a3=  0
+0254 LOADINT        a0=  2 a1=          1 a2=  0 a3=  0
+0255 NEG            a0=  2 a1=          2 a2=  0 a3=  0
+0256 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0257 GETK           a0=  1 a1=         36 a2=  0 a3=  0
+0258 PREPCALLK      a0=  1 a1=         48 a2=  1 a3=  2
+0259 LOADINT        a0=  3 a1=          4 a2=  0 a3=  0
+0260 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0261 PREPCALLK      a0=  1 a1=         50 a2=  1 a3=  2
+0262 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0263 LOADINT        a0=  2 a1=         16 a2=  0 a3=  0
+0264 ARITH          a0=  2 a1=          2 a2=  1 a3= 37
+0265 LOADINT        a0=  3 a1=          8 a2=  0 a3=  0
+0266 CMP            a0=  2 a1=          3 a2=  2 a3=  2
+0267 JZ             a0=  2 a1=          4 a2=  0 a3=  0
+0268 LOADINT        a0=  3 a1=          8 a2=  0 a3=  0
+0269 NEG            a0=  3 a1=          3 a2=  0 a3=  0
+0270 MOVE           a0=  2 a1=          3 a2=  0 a3=  0
+0271 JMP            a0=  0 a1=          2 a2=  0 a3=  0
+0272 LOADINT        a0=  3 a1=          8 a2=  0 a3=  0
+0273 MOVE           a0=  2 a1=          3 a2=  0 a3=  0
+0274 ARITH          a0=  2 a1=          2 a2=  1 a3= 43
+0275 GETK           a0=  3 a1=         51 a2=  0 a3=  0
+0276 EXISTS         a0=  3 a1=          3 a2=  2 a3=  0
+0277 JZ             a0=  3 a1=         42 a2=  0 a3=  0
+0278 DLOAD          a0=  3 a1=         52 a2=  4 a3= 51
+0279 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0280 GET            a0=  4 a1=          4 a2=  2 a3=  0
+0281 LOADINT        a0=  5 a1=          0 a2=  0 a3=  0
+0282 GET            a0=  4 a1=          4 a2=  5 a3=  0
+0283 SET            a0=  3 a1=          0 a2=  3 a3=  4
+0284 DLOAD          a0=  3 a1=         53 a2=  4 a3= 51
+0285 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0286 GET            a0=  4 a1=          4 a2=  2 a3=  0
+0287 LOADINT        a0=  5 a1=          1 a2=  0 a3=  0
+0288 GET            a0=  4 a1=          4 a2=  5 a3=  0
+0289 SET            a0=  3 a1=          0 a2=  3 a3=  4
+0290 DLOAD          a0=  3 a1=         18 a2=  4 a3= 52
+0291 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0292 LOADINT        a0=  5 a1=        544 a2=  0 a3=  0
+0293 ARITH          a0=  4 a1=          5 a2=  4 a3= 47
+0294 PREPCALLK      a0=  4 a1=         50 a2=  4 a3=  5
+0295 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0296 LOADINT        a0=  5 a1=        544 a2=  0 a3=  0
+0297 ARITH          a0=  4 a1=          5 a2=  4 a3= 42
+0298 SET            a0=  3 a1=          0 a2=  3 a3=  4
+0299 DLOAD          a0=  3 a1=         20 a2=  4 a3= 53
+0300 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0301 LOADINT        a0=  5 a1=        384 a2=  0 a3=  0
+0302 ARITH          a0=  4 a1=          5 a2=  4 a3= 47
+0303 PREPCALLK      a0=  4 a1=         50 a2=  4 a3=  5
+0304 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0305 LOADINT        a0=  5 a1=        384 a2=  0 a3=  0
+0306 ARITH          a0=  4 a1=          5 a2=  4 a3= 42
+0307 SET            a0=  3 a1=          0 a2=  3 a3=  4
+0308 LOADROOTTABLE  a0=  3 a1=          0 a2=  0 a3=  0
+0309 GETK           a0=  3 a1=         54 a2=  3 a3=  0
+0310 PREPCALLK      a0=  3 a1=         55 a2=  3 a3=  4
+0311 LOADINT        a0=  5 a1=         30 a2=  0 a3=  0
+0312 LOADINT        a0=  6 a1=          0 a2=  0 a3=  0
+0313 LOADINT        a0=  7 a1=          0 a2=  0 a3=  0
+0314 LOADINT        a0=  8 a1=          0 a2=  0 a3=  0
+0315 CALL           a0=  3 a1=          3 a2=  4 a3=  5
+0316 LOAD           a0=  3 a1=         35 a2=  0 a3=  0
+0317 LOADNULLS      a0=  4 a1=          1 a2=  0 a3=  0
+0318 SET            a0=  3 a1=          0 a2=  3 a3=  4
+0319 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0320 JMP            a0=  0 a1=         32 a2=  0 a3=  0
+0321 GETK           a0=  1 a1=         36 a2=  0 a3=  0
+0322 PREPCALLK      a0=  1 a1=         48 a2=  1 a3=  2
+0323 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0324 LOADINT        a0=  4 a1=          1 a2=  0 a3=  0
+0325 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0326 EQ             a0=  2 a1=         56 a2=  1 a3=255
+0327 JZ             a0=  2 a1=         10 a2=  0 a3=  0
+0328 DLOAD          a0=  2 a1=         42 a2=  3 a3= 36
+0329 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0330 PREPCALLK      a0=  3 a1=         48 a2=  3 a3=  4
+0331 LOADINT        a0=  5 a1=          1 a2=  0 a3=  0
+0332 CALL           a0=  3 a1=          3 a2=  4 a3=  2
+0333 PREPCALLK      a0=  3 a1=         50 a2=  3 a3=  4
+0334 CALL           a0=  3 a1=          3 a2=  4 a3=  1
+0335 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0336 JMP            a0=  0 a1=         12 a2=  0 a3=  0
+0337 JMP            a0=  0 a1=          2 a2=  0 a3=  0
+0338 EQ             a0=  2 a1=         57 a2=  1 a3=255
+0339 JZ             a0=  2 a1=          5 a2=  0 a3=  0
+0340 LOAD           a0=  2 a1=         42 a2=  0 a3=  0
+0341 LOADINT        a0=  3 a1=          1 a2=  0 a3=  0
+0342 NEG            a0=  3 a1=          3 a2=  0 a3=  0
+0343 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0344 JMP            a0=  0 a1=          4 a2=  0 a3=  0
+0345 LOAD           a0=  2 a1=         42 a2=  0 a3=  0
+0346 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0347 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0348 JMP            a0=  0 a1=          0 a2=  0 a3=  0
+0349 PREPCALLK      a0=  1 a1=         47 a2=  0 a3=  2
+0350 GETK           a0=  3 a1=         36 a2=  0 a3=  0
+0351 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0352 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0353 GETK           a0=  1 a1=         33 a2=  0 a3=  0
+0354 GETK           a0=  1 a1=         58 a2=  1 a3=  0
+0355 LOADINT        a0=  2 a1=          1 a2=  0 a3=  0
+0356 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0357 JZ             a0=  1 a1=          8 a2=  0 a3=  0
+0358 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0359 GETK           a0=  1 a1=         59 a2=  1 a3=  0
+0360 PREPCALLK      a0=  1 a1=         60 a2=  1 a3=  2
+0361 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0362 LOAD           a0=  1 a1=          7 a2=  0 a3=  0
+0363 LOADBOOL       a0=  2 a1=          1 a2=  0 a3=  0
+0364 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0365 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0366 GETK           a0=  1 a1=         35 a2=  0 a3=  0
+0367 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0368 NE             a0=  1 a1=          2 a2=  1 a3=  0
+0369 JZ             a0=  1 a1=          3 a2=  0 a3=  0
+0370 PREPCALLK      a0=  1 a1=         35 a2=  0 a3=  2
+0371 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0372 JMP            a0=  0 a1=         34 a2=  0 a3=  0
+0373 PREPCALLK      a0=  1 a1=         61 a2=  0 a3=  2
+0374 LOADROOTTABLE  a0=  3 a1=          0 a2=  0 a3=  0
+0375 GETK           a0=  3 a1=         33 a2=  3 a3=  0
+0376 GETK           a0=  3 a1=         62 a2=  3 a3=  0
+0377 LOADROOTTABLE  a0=  4 a1=          0 a2=  0 a3=  0
+0378 GETK           a0=  4 a1=         33 a2=  4 a3=  0
+0379 GETK           a0=  4 a1=         63 a2=  4 a3=  0
+0380 LOADBOOL       a0=  5 a1=          0 a2=  0 a3=  0
+0381 CALL           a0=  1 a1=          1 a2=  2 a3=  4
+0382 JZ             a0=  1 a1=          4 a2=  0 a3=  0
+0383 PREPCALLK      a0=  1 a1=         64 a2=  0 a3=  2
+0384 LOADINT        a0=  3 a1=         95 a2=  0 a3=  0
+0385 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0386 JMP            a0=  0 a1=         20 a2=  0 a3=  0
+0387 PREPCALLK      a0=  1 a1=         65 a2=  0 a3=  2
+0388 LOADROOTTABLE  a0=  3 a1=          0 a2=  0 a3=  0
+0389 GETK           a0=  3 a1=         33 a2=  3 a3=  0
+0390 GETK           a0=  3 a1=         62 a2=  3 a3=  0
+0391 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0392 LOADINT        a0=  2 a1=          1 a2=  0 a3=  0
+0393 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0394 OR             a0=  1 a1=          8 a2=  1 a3=  0
+0395 PREPCALLK      a0=  2 a1=         65 a2=  0 a3=  3
+0396 LOADROOTTABLE  a0=  4 a1=          0 a2=  0 a3=  0
+0397 GETK           a0=  4 a1=         33 a2=  4 a3=  0
+0398 GETK           a0=  4 a1=         63 a2=  4 a3=  0
+0399 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0400 LOADINT        a0=  3 a1=          1 a2=  0 a3=  0
+0401 EQ             a0=  2 a1=          3 a2=  2 a3=  0
+0402 MOVE           a0=  1 a1=          2 a2=  0 a3=  0
+0403 JZ             a0=  1 a1=          3 a2=  0 a3=  0
+0404 PREPCALLK      a0=  1 a1=         64 a2=  0 a3=  2
+0405 LOADINT        a0=  3 a1=         96 a2=  0 a3=  0
+0406 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0407 PREPCALLK      a0=  1 a1=         10 a2=  0 a3=  2
+0408 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0409 PREPCALLK      a0=  1 a1=         66 a2=  0 a3=  2
+0410 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0411 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/WorldMap/WorldMap.nut: InitStage stack=8 generator=False
+PARAMETERS ["this", "stageName"]
+LOCALS [["stageName", 1, 0, 72], ["this", 0, 0, 72]]
+K0 = "slice"
+K1 = "c"
+K2 = "PlaySE"
+K3 = "s"
+K4 = "currentSavedata"
+K5 = "status"
+K6 = "worldPosX"
+K7 = "marisaX"
+K8 = "worldPosY"
+K9 = "marisaY"
+K10 = "isShop"
+K11 = "clearCountPrev"
+K12 = "clearCount"
+K13 = "waitCount"
+K14 = "lastEnterStage"
+K15 = "w"
+K16 = "world"
+K17 = "-"
+K18 = "SetGlobalUpdateFunction"
+K19 = "Fader1"
+K20 = "FadeOut"
+K21 = "suspend"
+0000 PREPCALLK      a0=  2 a1=          0 a2=  1 a3=  3
+0001 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0002 LOADINT        a0=  5 a1=          1 a2=  0 a3=  0
+0003 CALL           a0=  2 a1=          2 a2=  3 a3=  3
+0004 EQ             a0=  3 a1=          1 a2=  2 a3=255
+0005 JZ             a0=  3 a1=          5 a2=  0 a3=  0
+0006 PREPCALLK      a0=  3 a1=          2 a2=  0 a3=  4
+0007 LOADINT        a0=  5 a1=         97 a2=  0 a3=  0
+0008 CALL           a0=  3 a1=          3 a2=  4 a3=  2
+0009 JMP            a0=  0 a1=          7 a2=  0 a3=  0
+0010 JMP            a0=  0 a1=          2 a2=  0 a3=  0
+0011 EQ             a0=  3 a1=          3 a2=  2 a3=255
+0012 JZ             a0=  3 a1=          4 a2=  0 a3=  0
+0013 PREPCALLK      a0=  3 a1=          2 a2=  0 a3=  4
+0014 LOADINT        a0=  5 a1=         98 a2=  0 a3=  0
+0015 CALL           a0=  3 a1=          3 a2=  4 a3=  2
+0016 JMP            a0=  0 a1=          0 a2=  0 a3=  0
+0017 PREPCALLK      a0=  2 a1=          0 a2=  1 a3=  3
+0018 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0019 LOADINT        a0=  5 a1=          1 a2=  0 a3=  0
+0020 CALL           a0=  2 a1=          2 a2=  3 a3=  3
+0021 EQ             a0=  2 a1=          3 a2=  2 a3=255
+0022 JZ             a0=  2 a1=         18 a2=  0 a3=  0
+0023 GETK           a0=  2 a1=          4 a2=  0 a3=  0
+0024 LOADNULLS      a0=  3 a1=          1 a2=  0 a3=  0
+0025 NE             a0=  2 a1=          3 a2=  2 a3=  0
+0026 JZ             a0=  2 a1=         10 a2=  0 a3=  0
+0027 GETK           a0=  2 a1=          4 a2=  0 a3=  0
+0028 GETK           a0=  2 a1=          5 a2=  2 a3=  0
+0029 DLOAD          a0=  3 a1=          6 a2=  4 a3=  7
+0030 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0031 SET            a0=  2 a1=          2 a2=  3 a3=  4
+0032 GETK           a0=  2 a1=          4 a2=  0 a3=  0
+0033 GETK           a0=  2 a1=          5 a2=  2 a3=  0
+0034 DLOAD          a0=  3 a1=          8 a2=  4 a3=  9
+0035 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0036 SET            a0=  2 a1=          2 a2=  3 a3=  4
+0037 LOAD           a0=  2 a1=         10 a2=  0 a3=  0
+0038 LOADBOOL       a0=  3 a1=          1 a2=  0 a3=  0
+0039 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0040 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0041 LOAD           a0=  2 a1=         10 a2=  0 a3=  0
+0042 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0043 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0044 LOAD           a0=  2 a1=         11 a2=  0 a3=  0
+0045 LOADROOTTABLE  a0=  3 a1=          0 a2=  0 a3=  0
+0046 GETK           a0=  3 a1=         12 a2=  3 a3=  0
+0047 NEWSLOT        a0=  2 a1=          0 a2=  2 a3=  3
+0048 LOAD           a0=  2 a1=         13 a2=  0 a3=  0
+0049 LOADINT        a0=  3 a1=         30 a2=  0 a3=  0
+0050 NEWSLOT        a0=  2 a1=          0 a2=  2 a3=  3
+0051 DLOAD          a0=  2 a1=         14 a2=  3 a3= 15
+0052 GETK           a0=  4 a1=         16 a2=  0 a3=  0
+0053 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0054 LOAD           a0=  4 a1=         17 a2=  0 a3=  0
+0055 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0056 ARITH          a0=  3 a1=          1 a2=  3 a3= 43
+0057 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0058 PREPCALLK      a0=  2 a1=         18 a2=  0 a3=  3
+0059 CLOSURE        a0=  4 a1=          0 a2=  0 a3=  0
+0060 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0061 LOADROOTTABLE  a0=  2 a1=          0 a2=  0 a3=  0
+0062 GETK           a0=  2 a1=         19 a2=  2 a3=  0
+0063 PREPCALLK      a0=  2 a1=         20 a2=  2 a3=  3
+0064 LOADINT        a0=  4 a1=         30 a2=  0 a3=  0
+0065 LOADINT        a0=  5 a1=          0 a2=  0 a3=  0
+0066 LOADINT        a0=  6 a1=          0 a2=  0 a3=  0
+0067 LOADINT        a0=  7 a1=          0 a2=  0 a3=  0
+0068 CALL           a0=  2 a1=          2 a2=  3 a3=  5
+0069 LOAD           a0=  2 a1=         21 a2=  0 a3=  0
+0070 LOADBOOL       a0=  3 a1=          1 a2=  0 a3=  0
+0071 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0072 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/WorldMap/WorldMap.nut: SetBgm stack=8 generator=False
+PARAMETERS ["this"]
+LOCALS [["nextBgm", 1, 1, 74], ["this", 0, 0, 75]]
+K0 = ""
+K1 = "world"
+K2 = "data/bgm/wd1.ogg"
+K3 = "data/bgm/wd2.ogg"
+K4 = "data/bgm/wd3.ogg"
+K5 = "worldSub"
+K6 = "data/bgm/wd9.ogg"
+K7 = "data/bgm/wd4.ogg"
+K8 = "data/bgm/wd5.ogg"
+K9 = "data/bgm/wd6.ogg"
+K10 = "data/bgm/wd7.ogg"
+K11 = "data/bgm/wd8.ogg"
+K12 = "stageBgmCurrent"
+K13 = "PlayBgm"
+0000 LOAD           a0=  1 a1=          0 a2=  0 a3=  0
+0001 GETK           a0=  2 a1=          1 a2=  0 a3=  0
+0002 LOADINT        a0=  3 a1=          1 a2=  0 a3=  0
+0003 EQ             a0=  3 a1=          3 a2=  2 a3=  0
+0004 JZ             a0=  3 a1=          4 a2=  0 a3=  0
+0005 LOAD           a0=  3 a1=          2 a2=  0 a3=  0
+0006 MOVE           a0=  1 a1=          3 a2=  0 a3=  0
+0007 JMP            a0=  0 a1=         56 a2=  0 a3=  0
+0008 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0009 LOADINT        a0=  3 a1=          2 a2=  0 a3=  0
+0010 EQ             a0=  3 a1=          3 a2=  2 a3=  0
+0011 JZ             a0=  3 a1=          4 a2=  0 a3=  0
+0012 LOAD           a0=  3 a1=          3 a2=  0 a3=  0
+0013 MOVE           a0=  1 a1=          3 a2=  0 a3=  0
+0014 JMP            a0=  0 a1=         49 a2=  0 a3=  0
+0015 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0016 LOADINT        a0=  3 a1=          3 a2=  0 a3=  0
+0017 EQ             a0=  3 a1=          3 a2=  2 a3=  0
+0018 JZ             a0=  3 a1=          4 a2=  0 a3=  0
+0019 LOAD           a0=  3 a1=          4 a2=  0 a3=  0
+0020 MOVE           a0=  1 a1=          3 a2=  0 a3=  0
+0021 JMP            a0=  0 a1=         42 a2=  0 a3=  0
+0022 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0023 LOADINT        a0=  3 a1=          4 a2=  0 a3=  0
+0024 EQ             a0=  3 a1=          3 a2=  2 a3=  0
+0025 JZ             a0=  3 a1=         11 a2=  0 a3=  0
+0026 GETK           a0=  3 a1=          5 a2=  0 a3=  0
+0027 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0028 EQ             a0=  3 a1=          4 a2=  3 a3=  0
+0029 JZ             a0=  3 a1=          3 a2=  0 a3=  0
+0030 LOAD           a0=  3 a1=          6 a2=  0 a3=  0
+0031 MOVE           a0=  1 a1=          3 a2=  0 a3=  0
+0032 JMP            a0=  0 a1=          2 a2=  0 a3=  0
+0033 LOAD           a0=  3 a1=          7 a2=  0 a3=  0
+0034 MOVE           a0=  1 a1=          3 a2=  0 a3=  0
+0035 JMP            a0=  0 a1=         28 a2=  0 a3=  0
+0036 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0037 LOADINT        a0=  3 a1=          5 a2=  0 a3=  0
+0038 EQ             a0=  3 a1=          3 a2=  2 a3=  0
+0039 JZ             a0=  3 a1=          4 a2=  0 a3=  0
+0040 LOAD           a0=  3 a1=          8 a2=  0 a3=  0
+0041 MOVE           a0=  1 a1=          3 a2=  0 a3=  0
+0042 JMP            a0=  0 a1=         21 a2=  0 a3=  0
+0043 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0044 LOADINT        a0=  3 a1=          6 a2=  0 a3=  0
+0045 EQ             a0=  3 a1=          3 a2=  2 a3=  0
+0046 JZ             a0=  3 a1=          4 a2=  0 a3=  0
+0047 LOAD           a0=  3 a1=          9 a2=  0 a3=  0
+0048 MOVE           a0=  1 a1=          3 a2=  0 a3=  0
+0049 JMP            a0=  0 a1=         14 a2=  0 a3=  0
+0050 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0051 LOADINT        a0=  3 a1=          7 a2=  0 a3=  0
+0052 EQ             a0=  3 a1=          3 a2=  2 a3=  0
+0053 JZ             a0=  3 a1=          4 a2=  0 a3=  0
+0054 LOAD           a0=  3 a1=         10 a2=  0 a3=  0
+0055 MOVE           a0=  1 a1=          3 a2=  0 a3=  0
+0056 JMP            a0=  0 a1=          7 a2=  0 a3=  0
+0057 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0058 LOADINT        a0=  3 a1=          8 a2=  0 a3=  0
+0059 EQ             a0=  3 a1=          3 a2=  2 a3=  0
+0060 JZ             a0=  3 a1=          3 a2=  0 a3=  0
+0061 LOAD           a0=  3 a1=         11 a2=  0 a3=  0
+0062 MOVE           a0=  1 a1=          3 a2=  0 a3=  0
+0063 JMP            a0=  0 a1=          0 a2=  0 a3=  0
+0064 GETK           a0=  2 a1=         12 a2=  0 a3=  0
+0065 NE             a0=  2 a1=          1 a2=  2 a3=  0
+0066 JZ             a0=  2 a1=          8 a2=  0 a3=  0
+0067 LOAD           a0=  2 a1=         12 a2=  0 a3=  0
+0068 SET            a0=  2 a1=          0 a2=  2 a3=  1
+0069 PREPCALLK      a0=  2 a1=         13 a2=  0 a3=  3
+0070 GETK           a0=  4 a1=         12 a2=  0 a3=  0
+0071 LOADINT        a0=  5 a1=       1000 a2=  0 a3=  0
+0072 LOADINT        a0=  6 a1=        100 a2=  0 a3=  0
+0073 LOADBOOL       a0=  7 a1=          1 a2=  0 a3=  0
+0074 CALL           a0=  2 a1=          2 a2=  3 a3=  5
+0075 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/WorldMap/WorldMap.nut: GetStageNo stack=7 generator=False
+PARAMETERS ["this"]
+LOCALS [["currentLayout", 2, 16, 168], ["currentLayoutIndex", 1, 6, 168], ["this", 0, 0, 169]]
+K0 = "event"
+K1 = "layout"
+K2 = "GetChipByPosition"
+K3 = "marisaX"
+K4 = "marisaY"
+K5 = ""
+K6 = "GetChipLayout"
+K7 = "chipID"
+K8 = "world"
+K9 = "w8_stage"
+K10 = "c02a"
+K11 = "c01a"
+K12 = "c03a"
+K13 = "c04a"
+K14 = "c05a"
+K15 = "c06a"
+K16 = "c07a"
+K17 = "c08a"
+K18 = "c09a"
+K19 = "c10a"
+K20 = "c11a"
+K21 = "c12a"
+K22 = "c13a"
+K23 = "c14a"
+K24 = "c15a"
+K25 = "c16a"
+K26 = "s01a"
+K27 = "s02a"
+K28 = "s03a"
+K29 = "marisahouse"
+K30 = "warp"
+0000 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0001 GETK           a0=  1 a1=          1 a2=  1 a3=  0
+0002 PREPCALLK      a0=  1 a1=          2 a2=  1 a3=  2
+0003 GETK           a0=  3 a1=          3 a2=  0 a3=  0
+0004 GETK           a0=  4 a1=          4 a2=  0 a3=  0
+0005 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0006 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0007 CMP            a0=  2 a1=          2 a2=  1 a3=  3
+0008 JZ             a0=  2 a1=          2 a2=  0 a3=  0
+0009 LOAD           a0=  2 a1=          5 a2=  0 a3=  0
+0010 RETURN         a0=  1 a1=          2 a2=  0 a3=  0
+0011 GETK           a0=  2 a1=          0 a2=  0 a3=  0
+0012 GETK           a0=  2 a1=          1 a2=  2 a3=  0
+0013 PREPCALLK      a0=  2 a1=          6 a2=  2 a3=  3
+0014 MOVE           a0=  4 a1=          1 a2=  0 a3=  0
+0015 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0016 LOADNULLS      a0=  3 a1=          1 a2=  0 a3=  0
+0017 EQ             a0=  3 a1=          3 a2=  2 a3=  0
+0018 JZ             a0=  3 a1=          2 a2=  0 a3=  0
+0019 LOAD           a0=  3 a1=          5 a2=  0 a3=  0
+0020 RETURN         a0=  1 a1=          3 a2=  0 a3=  0
+0021 GETK           a0=  3 a1=          7 a2=  2 a3=  0
+0022 LOADINT        a0=  4 a1=        958 a2=  0 a3=  0
+0023 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0024 JZ             a0=  4 a1=         14 a2=  0 a3=  0
+0025 GETK           a0=  4 a1=          8 a2=  0 a3=  0
+0026 LOADINT        a0=  5 a1=          8 a2=  0 a3=  0
+0027 EQ             a0=  4 a1=          5 a2=  4 a3=  0
+0028 AND            a0=  4 a1=          4 a2=  4 a3=  0
+0029 GETK           a0=  5 a1=          9 a2=  0 a3=  0
+0030 LOADINT        a0=  6 a1=          1 a2=  0 a3=  0
+0031 EQ             a0=  5 a1=          6 a2=  5 a3=  0
+0032 MOVE           a0=  4 a1=          5 a2=  0 a3=  0
+0033 JZ             a0=  4 a1=          2 a2=  0 a3=  0
+0034 LOAD           a0=  4 a1=         10 a2=  0 a3=  0
+0035 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0036 LOAD           a0=  4 a1=         11 a2=  0 a3=  0
+0037 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0038 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0039 LOADINT        a0=  4 a1=        959 a2=  0 a3=  0
+0040 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0041 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0042 LOAD           a0=  4 a1=         10 a2=  0 a3=  0
+0043 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0044 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0045 LOADINT        a0=  4 a1=        960 a2=  0 a3=  0
+0046 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0047 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0048 LOAD           a0=  4 a1=         12 a2=  0 a3=  0
+0049 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0050 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0051 LOADINT        a0=  4 a1=        961 a2=  0 a3=  0
+0052 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0053 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0054 LOAD           a0=  4 a1=         13 a2=  0 a3=  0
+0055 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0056 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0057 LOADINT        a0=  4 a1=        962 a2=  0 a3=  0
+0058 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0059 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0060 LOAD           a0=  4 a1=         14 a2=  0 a3=  0
+0061 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0062 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0063 LOADINT        a0=  4 a1=        963 a2=  0 a3=  0
+0064 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0065 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0066 LOAD           a0=  4 a1=         15 a2=  0 a3=  0
+0067 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0068 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0069 LOADINT        a0=  4 a1=        964 a2=  0 a3=  0
+0070 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0071 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0072 LOAD           a0=  4 a1=         16 a2=  0 a3=  0
+0073 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0074 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0075 LOADINT        a0=  4 a1=        965 a2=  0 a3=  0
+0076 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0077 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0078 LOAD           a0=  4 a1=         17 a2=  0 a3=  0
+0079 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0080 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0081 LOADINT        a0=  4 a1=        966 a2=  0 a3=  0
+0082 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0083 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0084 LOAD           a0=  4 a1=         18 a2=  0 a3=  0
+0085 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0086 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0087 LOADINT        a0=  4 a1=        967 a2=  0 a3=  0
+0088 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0089 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0090 LOAD           a0=  4 a1=         19 a2=  0 a3=  0
+0091 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0092 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0093 LOADINT        a0=  4 a1=        968 a2=  0 a3=  0
+0094 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0095 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0096 LOAD           a0=  4 a1=         20 a2=  0 a3=  0
+0097 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0098 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0099 LOADINT        a0=  4 a1=        969 a2=  0 a3=  0
+0100 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0101 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0102 LOAD           a0=  4 a1=         21 a2=  0 a3=  0
+0103 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0104 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0105 LOADINT        a0=  4 a1=        970 a2=  0 a3=  0
+0106 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0107 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0108 LOAD           a0=  4 a1=         22 a2=  0 a3=  0
+0109 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0110 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0111 LOADINT        a0=  4 a1=        971 a2=  0 a3=  0
+0112 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0113 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0114 LOAD           a0=  4 a1=         23 a2=  0 a3=  0
+0115 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0116 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0117 LOADINT        a0=  4 a1=        972 a2=  0 a3=  0
+0118 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0119 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0120 LOAD           a0=  4 a1=         24 a2=  0 a3=  0
+0121 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0122 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0123 LOADINT        a0=  4 a1=        973 a2=  0 a3=  0
+0124 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0125 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0126 LOAD           a0=  4 a1=         25 a2=  0 a3=  0
+0127 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0128 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0129 LOADINT        a0=  4 a1=        990 a2=  0 a3=  0
+0130 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0131 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0132 LOAD           a0=  4 a1=         26 a2=  0 a3=  0
+0133 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0134 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0135 LOADINT        a0=  4 a1=        991 a2=  0 a3=  0
+0136 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0137 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0138 LOAD           a0=  4 a1=         27 a2=  0 a3=  0
+0139 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0140 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0141 LOADINT        a0=  4 a1=        992 a2=  0 a3=  0
+0142 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0143 JZ             a0=  4 a1=          3 a2=  0 a3=  0
+0144 LOAD           a0=  4 a1=         28 a2=  0 a3=  0
+0145 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0146 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0147 LOADINT        a0=  4 a1=       1006 a2=  0 a3=  0
+0148 EQ             a0=  4 a1=          4 a2=  3 a3=  0
+0149 JZ             a0=  4 a1=          2 a2=  0 a3=  0
+0150 LOAD           a0=  4 a1=         29 a2=  0 a3=  0
+0151 RETURN         a0=  1 a1=          4 a2=  0 a3=  0
+0152 GETK           a0=  3 a1=          7 a2=  2 a3=  0
+0153 LOADINT        a0=  4 a1=       1042 a2=  0 a3=  0
+0154 CMP            a0=  3 a1=          4 a2=  3 a3=  2
+0155 AND            a0=  3 a1=          4 a2=  3 a3=  0
+0156 GETK           a0=  4 a1=          7 a2=  2 a3=  0
+0157 LOADINT        a0=  5 a1=       1105 a2=  0 a3=  0
+0158 CMP            a0=  4 a1=          5 a2=  4 a3=  4
+0159 MOVE           a0=  3 a1=          4 a2=  0 a3=  0
+0160 JZ             a0=  3 a1=          6 a2=  0 a3=  0
+0161 DLOAD          a0=  3 a1=         30 a2=  4 a3=  7
+0162 GET            a0=  4 a1=          2 a2=  4 a3=  0
+0163 LOADINT        a0=  5 a1=       1042 a2=  0 a3=  0
+0164 ARITH          a0=  4 a1=          5 a2=  4 a3= 45
+0165 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0166 RETURN         a0=  1 a1=          3 a2=  0 a3=  0
+0167 LOAD           a0=  3 a1=          5 a2=  0 a3=  0
+0168 RETURN         a0=  1 a1=          3 a2=  0 a3=  0
+0169 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/WorldMap/WorldMap.nut: Suspend stack=4 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 37]]
+K0 = "currentSavedata"
+K1 = "status"
+K2 = "worldPosX"
+K3 = "marisaX"
+K4 = "worldPosY"
+K5 = "marisaY"
+K6 = "useOldMenu"
+K7 = "suspend"
+K8 = "player"
+K9 = "visible"
+K10 = "PlayerStatus"
+K11 = "useMap"
+K12 = "useStage"
+K13 = "Suspend"
+0000 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0001 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0002 NE             a0=  1 a1=          2 a2=  1 a3=  0
+0003 JZ             a0=  1 a1=         10 a2=  0 a3=  0
+0004 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0005 GETK           a0=  1 a1=          1 a2=  1 a3=  0
+0006 DLOAD          a0=  2 a1=          2 a2=  3 a3=  3
+0007 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0008 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0009 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0010 GETK           a0=  1 a1=          1 a2=  1 a3=  0
+0011 DLOAD          a0=  2 a1=          4 a2=  3 a3=  5
+0012 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0013 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0014 GETK           a0=  1 a1=          6 a2=  0 a3=  0
+0015 JZ             a0=  1 a1=          1 a2=  0 a3=  0
+0016 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0017 LOAD           a0=  1 a1=          7 a2=  0 a3=  0
+0018 LOADBOOL       a0=  2 a1=          1 a2=  0 a3=  0
+0019 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0020 GETK           a0=  1 a1=          8 a2=  0 a3=  0
+0021 LOAD           a0=  2 a1=          9 a2=  0 a3=  0
+0022 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0023 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0024 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0025 GETK           a0=  1 a1=         10 a2=  1 a3=  0
+0026 LOAD           a0=  2 a1=         11 a2=  0 a3=  0
+0027 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0028 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0029 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0030 GETK           a0=  1 a1=         10 a2=  1 a3=  0
+0031 LOAD           a0=  2 a1=         12 a2=  0 a3=  0
+0032 LOADBOOL       a0=  3 a1=          1 a2=  0 a3=  0
+0033 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0034 GETK           a0=  1 a1=          8 a2=  0 a3=  0
+0035 PREPCALLK      a0=  1 a1=         13 a2=  1 a3=  2
+0036 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0037 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/WorldMap/WorldMap.nut: Resume stack=6 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 189]]
+K0 = "useOldMenu"
+K1 = "suspend"
+K2 = "player"
+K3 = "visible"
+K4 = "PlayerStatus"
+K5 = "useMap"
+K6 = "useStage"
+K7 = "EndingEND"
+K8 = "pl"
+K9 = "EndStage"
+K10 = "frameCount"
+K11 = "noInputFrame"
+K12 = "stageNo"
+K13 = "crowdCount"
+K14 = "CheckResult"
+K15 = "ProcMaskLayer"
+K16 = "railFade"
+K17 = "len"
+K18 = "SetBgm"
+K19 = "SetGlobalUpdateFunction"
+K20 = "Resume"
+K21 = "currentSavedata"
+K22 = "status"
+K23 = "worldPosX"
+K24 = "worldPosY"
+K25 = "marisaX"
+K26 = "marisaY"
+K27 = "scrollX"
+K28 = "tointeger"
+K29 = "scrollY"
+K30 = "offsetX"
+K31 = "offsetY"
+K32 = "Update_MarisaPosition"
+K33 = "lastEnterStage"
+K34 = "w7-c08a"
+K35 = "clearCount"
+K36 = "clearCountPrev"
+K37 = "prevWorldClear"
+K38 = "demoGen"
+K39 = "w7end"
+K40 = "Demo_World7End"
+K41 = "result"
+K42 = "w7clear"
+K43 = "w8-c01a"
+K44 = "w8_stage"
+K45 = "w8-1end"
+K46 = "Demo_World8s1End"
+0000 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0001 JZ             a0=  1 a1=          1 a2=  0 a3=  0
+0002 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0003 LOAD           a0=  1 a1=          1 a2=  0 a3=  0
+0004 LOADBOOL       a0=  2 a1=          0 a2=  0 a3=  0
+0005 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0006 GETK           a0=  1 a1=          2 a2=  0 a3=  0
+0007 LOAD           a0=  2 a1=          3 a2=  0 a3=  0
+0008 LOADBOOL       a0=  3 a1=          1 a2=  0 a3=  0
+0009 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0010 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0011 GETK           a0=  1 a1=          4 a2=  1 a3=  0
+0012 LOAD           a0=  2 a1=          5 a2=  0 a3=  0
+0013 LOADBOOL       a0=  3 a1=          1 a2=  0 a3=  0
+0014 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0015 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0016 GETK           a0=  1 a1=          4 a2=  1 a3=  0
+0017 LOAD           a0=  2 a1=          6 a2=  0 a3=  0
+0018 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0019 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0020 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0021 GETK           a0=  1 a1=          7 a2=  1 a3=  0
+0022 GETK           a0=  1 a1=          8 a2=  1 a3=  0
+0023 PREPCALLK      a0=  1 a1=          9 a2=  1 a3=  2
+0024 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0025 LOAD           a0=  1 a1=         10 a2=  0 a3=  0
+0026 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0027 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0028 LOAD           a0=  1 a1=         11 a2=  0 a3=  0
+0029 LOADINT        a0=  2 a1=         40 a2=  0 a3=  0
+0030 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0031 LOAD           a0=  1 a1=         12 a2=  0 a3=  0
+0032 LOADINT        a0=  2 a1=          1 a2=  0 a3=  0
+0033 NEG            a0=  2 a1=          2 a2=  0 a3=  0
+0034 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0035 LOAD           a0=  1 a1=         13 a2=  0 a3=  0
+0036 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0037 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0038 PREPCALLK      a0=  1 a1=         14 a2=  0 a3=  2
+0039 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0040 PREPCALLK      a0=  1 a1=         15 a2=  0 a3=  2
+0041 LOADBOOL       a0=  3 a1=          1 a2=  0 a3=  0
+0042 LOADBOOL       a0=  4 a1=          0 a2=  0 a3=  0
+0043 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0044 GETK           a0=  1 a1=         16 a2=  0 a3=  0
+0045 PREPCALLK      a0=  1 a1=         17 a2=  1 a3=  2
+0046 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0047 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0048 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0049 JZ             a0=  1 a1=          4 a2=  0 a3=  0
+0050 PREPCALLK      a0=  1 a1=         15 a2=  0 a3=  2
+0051 LOADBOOL       a0=  3 a1=          1 a2=  0 a3=  0
+0052 LOADBOOL       a0=  4 a1=          1 a2=  0 a3=  0
+0053 CALL           a0=  1 a1=          1 a2=  2 a3=  3
+0054 PREPCALLK      a0=  1 a1=         18 a2=  0 a3=  2
+0055 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0056 PREPCALLK      a0=  1 a1=         19 a2=  0 a3=  2
+0057 LOADNULLS      a0=  3 a1=          1 a2=  0 a3=  0
+0058 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0059 GETK           a0=  1 a1=          2 a2=  0 a3=  0
+0060 PREPCALLK      a0=  1 a1=         20 a2=  1 a3=  2
+0061 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0062 GETK           a0=  1 a1=         21 a2=  0 a3=  0
+0063 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0064 NE             a0=  1 a1=          2 a2=  1 a3=  0
+0065 JZ             a0=  1 a1=         53 a2=  0 a3=  0
+0066 GETK           a0=  1 a1=         21 a2=  0 a3=  0
+0067 GETK           a0=  1 a1=         22 a2=  1 a3=  0
+0068 GETK           a0=  1 a1=         23 a2=  1 a3=  0
+0069 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0070 CMP            a0=  1 a1=          2 a2=  1 a3=  2
+0071 AND            a0=  1 a1=          6 a2=  1 a3=  0
+0072 GETK           a0=  2 a1=         21 a2=  0 a3=  0
+0073 GETK           a0=  2 a1=         22 a2=  2 a3=  0
+0074 GETK           a0=  2 a1=         24 a2=  2 a3=  0
+0075 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0076 CMP            a0=  2 a1=          3 a2=  2 a3=  2
+0077 MOVE           a0=  1 a1=          2 a2=  0 a3=  0
+0078 JZ             a0=  1 a1=         40 a2=  0 a3=  0
+0079 DLOAD          a0=  1 a1=         25 a2=  2 a3= 21
+0080 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0081 GETK           a0=  2 a1=         22 a2=  2 a3=  0
+0082 GETK           a0=  2 a1=         23 a2=  2 a3=  0
+0083 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0084 DLOAD          a0=  1 a1=         26 a2=  2 a3= 21
+0085 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0086 GETK           a0=  2 a1=         22 a2=  2 a3=  0
+0087 GETK           a0=  2 a1=         24 a2=  2 a3=  0
+0088 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0089 DLOAD          a0=  1 a1=         27 a2=  2 a3= 25
+0090 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0091 LOADINT        a0=  3 a1=        544 a2=  0 a3=  0
+0092 ARITH          a0=  2 a1=          3 a2=  2 a3= 47
+0093 PREPCALLK      a0=  2 a1=         28 a2=  2 a3=  3
+0094 CALL           a0=  2 a1=          2 a2=  3 a3=  1
+0095 LOADINT        a0=  3 a1=        544 a2=  0 a3=  0
+0096 ARITH          a0=  2 a1=          3 a2=  2 a3= 42
+0097 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0098 DLOAD          a0=  1 a1=         29 a2=  2 a3= 26
+0099 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0100 LOADINT        a0=  3 a1=        384 a2=  0 a3=  0
+0101 ARITH          a0=  2 a1=          3 a2=  2 a3= 47
+0102 PREPCALLK      a0=  2 a1=         28 a2=  2 a3=  3
+0103 CALL           a0=  2 a1=          2 a2=  3 a3=  1
+0104 LOADINT        a0=  3 a1=        384 a2=  0 a3=  0
+0105 ARITH          a0=  2 a1=          3 a2=  2 a3= 42
+0106 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0107 GETK           a0=  1 a1=          2 a2=  0 a3=  0
+0108 DLOAD          a0=  2 a1=         30 a2=  3 a3= 27
+0109 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0110 NEG            a0=  3 a1=          3 a2=  0 a3=  0
+0111 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0112 GETK           a0=  1 a1=          2 a2=  0 a3=  0
+0113 DLOAD          a0=  2 a1=         31 a2=  3 a3= 29
+0114 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0115 NEG            a0=  3 a1=          3 a2=  0 a3=  0
+0116 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0117 PREPCALLK      a0=  1 a1=         32 a2=  0 a3=  2
+0118 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0119 GETK           a0=  1 a1=         21 a2=  0 a3=  0
+0120 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0121 NE             a0=  1 a1=          2 a2=  1 a3=  0
+0122 JZ             a0=  1 a1=         66 a2=  0 a3=  0
+0123 GETK           a0=  1 a1=         33 a2=  0 a3=  0
+0124 EQ             a0=  1 a1=         34 a2=  1 a3=255
+0125 AND            a0=  1 a1=          5 a2=  1 a3=  0
+0126 LOADROOTTABLE  a0=  2 a1=          0 a2=  0 a3=  0
+0127 GETK           a0=  2 a1=         35 a2=  2 a3=  0
+0128 GETK           a0=  3 a1=         36 a2=  0 a3=  0
+0129 CMP            a0=  2 a1=          3 a2=  2 a3=  0
+0130 MOVE           a0=  1 a1=          2 a2=  0 a3=  0
+0131 JZ             a0=  1 a1=         33 a2=  0 a3=  0
+0132 GETK           a0=  1 a1=         37 a2=  0 a3=  0
+0133 LOADINT        a0=  2 a1=          7 a2=  0 a3=  0
+0134 GET            a0=  1 a1=          1 a2=  2 a3=  0
+0135 LOADBOOL       a0=  2 a1=          0 a2=  0 a3=  0
+0136 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0137 JZ             a0=  1 a1=         17 a2=  0 a3=  0
+0138 GETK           a0=  1 a1=         38 a2=  0 a3=  0
+0139 DLOAD          a0=  2 a1=         39 a2=  3 a3= 40
+0140 PREPCALL       a0=  3 a1=          3 a2=  0 a3=  4
+0141 CALL           a0=  3 a1=          3 a2=  4 a3=  1
+0142 NEWSLOT        a0=  1 a1=          1 a2=  2 a3=  3
+0143 GETK           a0=  1 a1=         38 a2=  0 a3=  0
+0144 GETK           a0=  1 a1=         39 a2=  1 a3=  0
+0145 RESUME         a0=  1 a1=          1 a2=  0 a3=  0
+0146 GETK           a0=  1 a1=         37 a2=  0 a3=  0
+0147 LOADINT        a0=  2 a1=          7 a2=  0 a3=  0
+0148 GETK           a0=  3 a1=         21 a2=  0 a3=  0
+0149 GETK           a0=  3 a1=         41 a2=  3 a3=  0
+0150 LOAD           a0=  4 a1=         42 a2=  0 a3=  0
+0151 LOADBOOL       a0=  5 a1=          1 a2=  0 a3=  0
+0152 SET            a0=  3 a1=          3 a2=  4 a3=  5
+0153 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0154 JMP            a0=  0 a1=         10 a2=  0 a3=  0
+0155 LOAD           a0=  1 a1=         25 a2=  0 a3=  0
+0156 LOADINT        a0=  2 a1=       1696 a2=  0 a3=  0
+0157 LOADINT        a0=  3 a1=         16 a2=  0 a3=  0
+0158 ARITH          a0=  2 a1=          3 a2=  2 a3= 43
+0159 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0160 LOAD           a0=  1 a1=         26 a2=  0 a3=  0
+0161 LOADINT        a0=  2 a1=       1440 a2=  0 a3=  0
+0162 LOADINT        a0=  3 a1=         16 a2=  0 a3=  0
+0163 ARITH          a0=  2 a1=          3 a2=  2 a3= 43
+0164 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0165 GETK           a0=  1 a1=         33 a2=  0 a3=  0
+0166 EQ             a0=  1 a1=         43 a2=  1 a3=255
+0167 AND            a0=  1 a1=          5 a2=  1 a3=  0
+0168 LOADROOTTABLE  a0=  2 a1=          0 a2=  0 a3=  0
+0169 GETK           a0=  2 a1=         35 a2=  2 a3=  0
+0170 GETK           a0=  3 a1=         36 a2=  0 a3=  0
+0171 CMP            a0=  2 a1=          3 a2=  2 a3=  0
+0172 MOVE           a0=  1 a1=          2 a2=  0 a3=  0
+0173 JZ             a0=  1 a1=         11 a2=  0 a3=  0
+0174 LOAD           a0=  1 a1=         44 a2=  0 a3=  0
+0175 LOADINT        a0=  2 a1=          1 a2=  0 a3=  0
+0176 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0177 GETK           a0=  1 a1=         38 a2=  0 a3=  0
+0178 DLOAD          a0=  2 a1=         45 a2=  3 a3= 46
+0179 PREPCALL       a0=  3 a1=          3 a2=  0 a3=  4
+0180 CALL           a0=  3 a1=          3 a2=  4 a3=  1
+0181 NEWSLOT        a0=  1 a1=          1 a2=  2 a3=  3
+0182 GETK           a0=  1 a1=         38 a2=  0 a3=  0
+0183 GETK           a0=  1 a1=         45 a2=  1 a3=  0
+0184 RESUME         a0=  1 a1=          1 a2=  0 a3=  0
+0185 LOAD           a0=  1 a1=         36 a2=  0 a3=  0
+0186 LOADROOTTABLE  a0=  2 a1=          0 a2=  0 a3=  0
+0187 GETK           a0=  2 a1=         35 a2=  2 a3=  0
+0188 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0189 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/WorldMap/WorldMap.nut: GetChipFlag stack=9 generator=False
+PARAMETERS ["this", "_layer", "_x", "_y"]
+LOCALS [["chipInfo", 6, 29, 35], ["chipLayout", 5, 14, 35], ["chipIndex", 4, 4, 35], ["_y", 3, 0, 36], ["_x", 2, 0, 36], ["_layer", 1, 0, 36], ["this", 0, 0, 36]]
+K0 = "layout"
+K1 = "GetChipByPosition"
+K2 = "rail"
+K3 = "GetChipLayout"
+K4 = "visible"
+K5 = "mapChip"
+K6 = "GetChipInfo"
+K7 = "chipID"
+K8 = "flag0"
+0000 GETK           a0=  4 a1=          0 a2=  1 a3=  0
+0001 PREPCALLK      a0=  4 a1=          1 a2=  4 a3=  5
+0002 DMOVE          a0=  6 a1=          2 a2=  7 a3=  3
+0003 CALL           a0=  4 a1=          4 a2=  5 a3=  3
+0004 LOADINT        a0=  5 a1=          0 a2=  0 a3=  0
+0005 CMP            a0=  5 a1=          5 a2=  4 a3=  3
+0006 JZ             a0=  5 a1=          2 a2=  0 a3=  0
+0007 LOADINT        a0=  5 a1=          0 a2=  0 a3=  0
+0008 RETURN         a0=  1 a1=          5 a2=  0 a3=  0
+0009 GETK           a0=  5 a1=          2 a2=  0 a3=  0
+0010 GETK           a0=  5 a1=          0 a2=  5 a3=  0
+0011 PREPCALLK      a0=  5 a1=          3 a2=  5 a3=  6
+0012 MOVE           a0=  7 a1=          4 a2=  0 a3=  0
+0013 CALL           a0=  5 a1=          5 a2=  6 a3=  2
+0014 LOADNULLS      a0=  6 a1=          1 a2=  0 a3=  0
+0015 EQ             a0=  6 a1=          6 a2=  5 a3=  0
+0016 JZ             a0=  6 a1=          2 a2=  0 a3=  0
+0017 LOADINT        a0=  6 a1=          0 a2=  0 a3=  0
+0018 RETURN         a0=  1 a1=          6 a2=  0 a3=  0
+0019 GETK           a0=  6 a1=          4 a2=  5 a3=  0
+0020 LOADBOOL       a0=  7 a1=          0 a2=  0 a3=  0
+0021 EQ             a0=  6 a1=          7 a2=  6 a3=  0
+0022 JZ             a0=  6 a1=          2 a2=  0 a3=  0
+0023 LOADINT        a0=  6 a1=          0 a2=  0 a3=  0
+0024 RETURN         a0=  1 a1=          6 a2=  0 a3=  0
+0025 GETK           a0=  6 a1=          5 a2=  0 a3=  0
+0026 PREPCALLK      a0=  6 a1=          6 a2=  6 a3=  7
+0027 GETK           a0=  8 a1=          7 a2=  5 a3=  0
+0028 CALL           a0=  6 a1=          6 a2=  7 a3=  2
+0029 LOADNULLS      a0=  7 a1=          1 a2=  0 a3=  0
+0030 EQ             a0=  7 a1=          7 a2=  6 a3=  0
+0031 JZ             a0=  7 a1=          2 a2=  0 a3=  0
+0032 LOADINT        a0=  7 a1=          0 a2=  0 a3=  0
+0033 RETURN         a0=  1 a1=          7 a2=  0 a3=  0
+0034 GETK           a0=  7 a1=          8 a2=  6 a3=  0
+0035 RETURN         a0=  1 a1=          7 a2=  0 a3=  0
+0036 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/WorldMap/WorldMap.nut: SetSymbolVisible stack=17 generator=False
+PARAMETERS ["this", "_x", "_y", "_visible", "_useSmoke"]
+LOCALS [["symbolLayout", 7, 14, 119], ["symbolLayoutIndex", 6, 6, 123], ["actualed", 5, 1, 123], ["_useSmoke", 4, 0, 124], ["_visible", 3, 0, 124], ["_y", 2, 0, 124], ["_x", 1, 0, 124], ["this", 0, 0, 124]]
+K0 = "symbol"
+K1 = "layout"
+K2 = "GetChipByPosition"
+K3 = "GetChipLayout"
+K4 = "chipID"
+K5 = "fabs"
+K6 = "left"
+K7 = "top"
+K8 = "visible"
+K9 = "EffectLayer"
+K10 = "global"
+K11 = "CreateBigSmoke"
+0000 LOADINT        a0=  5 a1=          0 a2=  0 a3=  0
+0001 GETK           a0=  6 a1=          0 a2=  0 a3=  0
+0002 GETK           a0=  6 a1=          1 a2=  6 a3=  0
+0003 PREPCALLK      a0=  6 a1=          2 a2=  6 a3=  7
+0004 DMOVE          a0=  8 a1=          1 a2=  9 a3=  2
+0005 CALL           a0=  6 a1=          6 a2=  7 a3=  3
+0006 LOADINT        a0=  7 a1=          0 a2=  0 a3=  0
+0007 CMP            a0=  7 a1=          7 a2=  6 a3=  2
+0008 JZ             a0=  7 a1=        111 a2=  0 a3=  0
+0009 GETK           a0=  7 a1=          0 a2=  0 a3=  0
+0010 GETK           a0=  7 a1=          1 a2=  7 a3=  0
+0011 PREPCALLK      a0=  7 a1=          3 a2=  7 a3=  8
+0012 MOVE           a0=  9 a1=          6 a2=  0 a3=  0
+0013 CALL           a0=  7 a1=          7 a2=  8 a3=  2
+0014 LOADNULLS      a0=  8 a1=          1 a2=  0 a3=  0
+0015 NE             a0=  8 a1=          8 a2=  7 a3=  0
+0016 AND            a0=  8 a1=         74 a2=  8 a3=  0
+0017 GETK           a0=  9 a1=          4 a2=  7 a3=  0
+0018 LOADINT        a0= 10 a1=       1023 a2=  0 a3=  0
+0019 EQ             a0=  9 a1=         10 a2=  9 a3=  0
+0020 AND            a0=  9 a1=         19 a2=  9 a3=  0
+0021 PREPCALLK      a0= 10 a1=          5 a2=  0 a3= 11
+0022 GETK           a0= 12 a1=          6 a2=  7 a3=  0
+0023 LOADINT        a0= 13 a1=         32 a2=  0 a3=  0
+0024 ARITH          a0= 12 a1=         13 a2= 12 a3= 43
+0025 ARITH          a0= 12 a1=          1 a2= 12 a3= 45
+0026 CALL           a0= 10 a1=         10 a2= 11 a3=  2
+0027 LOADINT        a0= 11 a1=         16 a2=  0 a3=  0
+0028 CMP            a0= 10 a1=         11 a2= 10 a3=  3
+0029 AND            a0= 10 a1=          9 a2= 10 a3=  0
+0030 PREPCALLK      a0= 11 a1=          5 a2=  0 a3= 12
+0031 GETK           a0= 13 a1=          7 a2=  7 a3=  0
+0032 LOADINT        a0= 14 a1=         80 a2=  0 a3=  0
+0033 ARITH          a0= 13 a1=         14 a2= 13 a3= 43
+0034 ARITH          a0= 13 a1=          2 a2= 13 a3= 45
+0035 CALL           a0= 11 a1=         11 a2= 12 a3=  2
+0036 LOADINT        a0= 12 a1=         16 a2=  0 a3=  0
+0037 CMP            a0= 11 a1=         12 a2= 11 a3=  3
+0038 MOVE           a0= 10 a1=         11 a2=  0 a3=  0
+0039 MOVE           a0=  9 a1=         10 a2=  0 a3=  0
+0040 OR             a0=  9 a1=         49 a2=  9 a3=  0
+0041 GETK           a0= 10 a1=          4 a2=  7 a3=  0
+0042 LOADINT        a0= 11 a1=       1146 a2=  0 a3=  0
+0043 EQ             a0= 10 a1=         11 a2= 10 a3=  0
+0044 AND            a0= 10 a1=         19 a2= 10 a3=  0
+0045 PREPCALLK      a0= 11 a1=          5 a2=  0 a3= 12
+0046 GETK           a0= 13 a1=          6 a2=  7 a3=  0
+0047 LOADINT        a0= 14 a1=         32 a2=  0 a3=  0
+0048 ARITH          a0= 13 a1=         14 a2= 13 a3= 43
+0049 ARITH          a0= 13 a1=          1 a2= 13 a3= 45
+0050 CALL           a0= 11 a1=         11 a2= 12 a3=  2
+0051 LOADINT        a0= 12 a1=         16 a2=  0 a3=  0
+0052 CMP            a0= 11 a1=         12 a2= 11 a3=  3
+0053 AND            a0= 11 a1=          9 a2= 11 a3=  0
+0054 PREPCALLK      a0= 12 a1=          5 a2=  0 a3= 13
+0055 GETK           a0= 14 a1=          7 a2=  7 a3=  0
+0056 LOADINT        a0= 15 a1=         80 a2=  0 a3=  0
+0057 ARITH          a0= 14 a1=         15 a2= 14 a3= 43
+0058 ARITH          a0= 14 a1=          2 a2= 14 a3= 45
+0059 CALL           a0= 12 a1=         12 a2= 13 a3=  2
+0060 LOADINT        a0= 13 a1=         16 a2=  0 a3=  0
+0061 CMP            a0= 12 a1=         13 a2= 12 a3=  3
+0062 MOVE           a0= 11 a1=         12 a2=  0 a3=  0
+0063 MOVE           a0= 10 a1=         11 a2=  0 a3=  0
+0064 OR             a0= 10 a1=         24 a2= 10 a3=  0
+0065 GETK           a0= 11 a1=          4 a2=  7 a3=  0
+0066 LOADINT        a0= 12 a1=       1039 a2=  0 a3=  0
+0067 EQ             a0= 11 a1=         12 a2= 11 a3=  0
+0068 AND            a0= 11 a1=         19 a2= 11 a3=  0
+0069 PREPCALLK      a0= 12 a1=          5 a2=  0 a3= 13
+0070 GETK           a0= 14 a1=          6 a2=  7 a3=  0
+0071 LOADINT        a0= 15 a1=         48 a2=  0 a3=  0
+0072 ARITH          a0= 14 a1=         15 a2= 14 a3= 43
+0073 ARITH          a0= 14 a1=          1 a2= 14 a3= 45
+0074 CALL           a0= 12 a1=         12 a2= 13 a3=  2
+0075 LOADINT        a0= 13 a1=         16 a2=  0 a3=  0
+0076 CMP            a0= 12 a1=         13 a2= 12 a3=  3
+0077 AND            a0= 12 a1=          9 a2= 12 a3=  0
+0078 PREPCALLK      a0= 13 a1=          5 a2=  0 a3= 14
+0079 GETK           a0= 15 a1=          7 a2=  7 a3=  0
+0080 LOADINT        a0= 16 a1=         48 a2=  0 a3=  0
+0081 ARITH          a0= 15 a1=         16 a2= 15 a3= 43
+0082 ARITH          a0= 15 a1=          2 a2= 15 a3= 45
+0083 CALL           a0= 13 a1=         13 a2= 14 a3=  2
+0084 LOADINT        a0= 14 a1=         16 a2=  0 a3=  0
+0085 CMP            a0= 13 a1=         14 a2= 13 a3=  3
+0086 MOVE           a0= 12 a1=         13 a2=  0 a3=  0
+0087 MOVE           a0= 11 a1=         12 a2=  0 a3=  0
+0088 MOVE           a0= 10 a1=         11 a2=  0 a3=  0
+0089 MOVE           a0=  9 a1=         10 a2=  0 a3=  0
+0090 MOVE           a0=  8 a1=          9 a2=  0 a3=  0
+0091 JZ             a0=  8 a1=         28 a2=  0 a3=  0
+0092 AND            a0=  8 a1=          9 a2=  4 a3=  0
+0093 MOVE           a0=  8 a1=          4 a2=  0 a3=  0
+0094 GETK           a0=  9 a1=          8 a2=  7 a3=  0
+0095 LOADBOOL       a0= 10 a1=          0 a2=  0 a3=  0
+0096 EQ             a0=  9 a1=         10 a2=  9 a3=  0
+0097 AND            a0=  9 a1=          3 a2=  9 a3=  0
+0098 LOADBOOL       a0= 10 a1=          1 a2=  0 a3=  0
+0099 EQ             a0= 10 a1=         10 a2=  3 a3=  0
+0100 MOVE           a0=  9 a1=         10 a2=  0 a3=  0
+0101 MOVE           a0=  8 a1=          9 a2=  0 a3=  0
+0102 JZ             a0=  8 a1=         11 a2=  0 a3=  0
+0103 LOADROOTTABLE  a0=  8 a1=          0 a2=  0 a3=  0
+0104 GETK           a0=  8 a1=          9 a2=  8 a3=  0
+0105 GETK           a0=  8 a1=         10 a2=  8 a3=  0
+0106 PREPCALLK      a0=  8 a1=         11 a2=  8 a3=  9
+0107 GETK           a0= 10 a1=          6 a2=  7 a3=  0
+0108 LOADINT        a0= 11 a1=         32 a2=  0 a3=  0
+0109 ARITH          a0= 10 a1=         11 a2= 10 a3= 43
+0110 GETK           a0= 11 a1=          7 a2=  7 a3=  0
+0111 LOADINT        a0= 12 a1=         32 a2=  0 a3=  0
+0112 ARITH          a0= 11 a1=         12 a2= 11 a3= 43
+0113 CALL           a0=  8 a1=          8 a2=  9 a3=  3
+0114 GETK           a0=  8 a1=          8 a2=  7 a3=  0
+0115 NE             a0=  8 a1=          3 a2=  8 a3=  0
+0116 JZ             a0=  8 a1=          3 a2=  0 a3=  0
+0117 LOAD           a0=  8 a1=          8 a2=  0 a3=  0
+0118 SET            a0=  8 a1=          7 a2=  8 a3=  3
+0119 PINCL          a0=  8 a1=          5 a2=  0 a3=  1
+0120 AND            a0=  7 a1=          2 a2=  3 a3=  0
+0121 MOVE           a0=  7 a1=          3 a2=  0 a3=  0
+0122 MOVE           a0=  7 a1=          5 a2=  0 a3=  0
+0123 RETURN         a0=  1 a1=          7 a2=  0 a3=  0
+0124 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/WorldMap/WorldMap.nut: UpdateWorldClearFlag stack=5 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 53]]
+K0 = "currentSavedata"
+K1 = "prevWorldClear"
+K2 = "result"
+K3 = "w1clear"
+K4 = "w2clear"
+K5 = "w3clear"
+K6 = "w4clear"
+K7 = "w5clear"
+K8 = "w6clear"
+K9 = "w7clear"
+K10 = "w8clear"
+0000 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0001 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0002 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0003 JZ             a0=  1 a1=          1 a2=  0 a3=  0
+0004 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0005 GETK           a0=  1 a1=          1 a2=  0 a3=  0
+0006 LOADINT        a0=  2 a1=          1 a2=  0 a3=  0
+0007 GETK           a0=  3 a1=          0 a2=  0 a3=  0
+0008 GETK           a0=  3 a1=          2 a2=  3 a3=  0
+0009 GETK           a0=  3 a1=          3 a2=  3 a3=  0
+0010 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0011 GETK           a0=  1 a1=          1 a2=  0 a3=  0
+0012 LOADINT        a0=  2 a1=          2 a2=  0 a3=  0
+0013 GETK           a0=  3 a1=          0 a2=  0 a3=  0
+0014 GETK           a0=  3 a1=          2 a2=  3 a3=  0
+0015 GETK           a0=  3 a1=          4 a2=  3 a3=  0
+0016 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0017 GETK           a0=  1 a1=          1 a2=  0 a3=  0
+0018 LOADINT        a0=  2 a1=          3 a2=  0 a3=  0
+0019 GETK           a0=  3 a1=          0 a2=  0 a3=  0
+0020 GETK           a0=  3 a1=          2 a2=  3 a3=  0
+0021 GETK           a0=  3 a1=          5 a2=  3 a3=  0
+0022 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0023 GETK           a0=  1 a1=          1 a2=  0 a3=  0
+0024 LOADINT        a0=  2 a1=          4 a2=  0 a3=  0
+0025 GETK           a0=  3 a1=          0 a2=  0 a3=  0
+0026 GETK           a0=  3 a1=          2 a2=  3 a3=  0
+0027 GETK           a0=  3 a1=          6 a2=  3 a3=  0
+0028 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0029 GETK           a0=  1 a1=          1 a2=  0 a3=  0
+0030 LOADINT        a0=  2 a1=          5 a2=  0 a3=  0
+0031 GETK           a0=  3 a1=          0 a2=  0 a3=  0
+0032 GETK           a0=  3 a1=          2 a2=  3 a3=  0
+0033 GETK           a0=  3 a1=          7 a2=  3 a3=  0
+0034 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0035 GETK           a0=  1 a1=          1 a2=  0 a3=  0
+0036 LOADINT        a0=  2 a1=          6 a2=  0 a3=  0
+0037 GETK           a0=  3 a1=          0 a2=  0 a3=  0
+0038 GETK           a0=  3 a1=          2 a2=  3 a3=  0
+0039 GETK           a0=  3 a1=          8 a2=  3 a3=  0
+0040 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0041 GETK           a0=  1 a1=          1 a2=  0 a3=  0
+0042 LOADINT        a0=  2 a1=          7 a2=  0 a3=  0
+0043 GETK           a0=  3 a1=          0 a2=  0 a3=  0
+0044 GETK           a0=  3 a1=          2 a2=  3 a3=  0
+0045 GETK           a0=  3 a1=          9 a2=  3 a3=  0
+0046 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0047 GETK           a0=  1 a1=          1 a2=  0 a3=  0
+0048 LOADINT        a0=  2 a1=          8 a2=  0 a3=  0
+0049 GETK           a0=  3 a1=          0 a2=  0 a3=  0
+0050 GETK           a0=  3 a1=          2 a2=  3 a3=  0
+0051 GETK           a0=  3 a1=         10 a2=  3 a3=  0
+0052 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0053 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/WorldMap/WorldMap.nut: SetMarisaPosition stack=6 generator=False
+PARAMETERS ["this", "_x", "_y"]
+LOCALS [["_y", 2, 0, 50], ["_x", 1, 0, 50], ["this", 0, 0, 50]]
+K0 = "marisaX"
+K1 = "marisaY"
+K2 = "currentSavedata"
+K3 = "status"
+K4 = "worldPosX"
+K5 = "worldPosY"
+K6 = "nextScrollX"
+K7 = "tointeger"
+K8 = "nextScrollY"
+K9 = "scrollX"
+K10 = "scrollY"
+K11 = "player"
+K12 = "offsetX"
+K13 = "offsetY"
+K14 = "Update_WorldScroll"
+0000 LOAD           a0=  3 a1=          0 a2=  0 a3=  0
+0001 SET            a0=  3 a1=          0 a2=  3 a3=  1
+0002 LOAD           a0=  3 a1=          1 a2=  0 a3=  0
+0003 SET            a0=  3 a1=          0 a2=  3 a3=  2
+0004 GETK           a0=  3 a1=          2 a2=  0 a3=  0
+0005 LOADNULLS      a0=  4 a1=          1 a2=  0 a3=  0
+0006 NE             a0=  3 a1=          4 a2=  3 a3=  0
+0007 JZ             a0=  3 a1=          8 a2=  0 a3=  0
+0008 GETK           a0=  3 a1=          2 a2=  0 a3=  0
+0009 GETK           a0=  3 a1=          3 a2=  3 a3=  0
+0010 LOAD           a0=  4 a1=          4 a2=  0 a3=  0
+0011 SET            a0=  3 a1=          3 a2=  4 a3=  1
+0012 GETK           a0=  3 a1=          2 a2=  0 a3=  0
+0013 GETK           a0=  3 a1=          3 a2=  3 a3=  0
+0014 LOAD           a0=  4 a1=          5 a2=  0 a3=  0
+0015 SET            a0=  3 a1=          3 a2=  4 a3=  2
+0016 LOAD           a0=  3 a1=          6 a2=  0 a3=  0
+0017 LOADINT        a0=  4 a1=        544 a2=  0 a3=  0
+0018 ARITH          a0=  4 a1=          4 a2=  1 a3= 47
+0019 PREPCALLK      a0=  4 a1=          7 a2=  4 a3=  5
+0020 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0021 LOADINT        a0=  5 a1=        544 a2=  0 a3=  0
+0022 ARITH          a0=  4 a1=          5 a2=  4 a3= 42
+0023 SET            a0=  3 a1=          0 a2=  3 a3=  4
+0024 LOAD           a0=  3 a1=          8 a2=  0 a3=  0
+0025 LOADINT        a0=  4 a1=        384 a2=  0 a3=  0
+0026 ARITH          a0=  4 a1=          4 a2=  2 a3= 47
+0027 PREPCALLK      a0=  4 a1=          7 a2=  4 a3=  5
+0028 CALL           a0=  4 a1=          4 a2=  5 a3=  1
+0029 LOADINT        a0=  5 a1=        384 a2=  0 a3=  0
+0030 ARITH          a0=  4 a1=          5 a2=  4 a3= 42
+0031 SET            a0=  3 a1=          0 a2=  3 a3=  4
+0032 DLOAD          a0=  3 a1=          9 a2=  4 a3=  6
+0033 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0034 SET            a0=  3 a1=          0 a2=  3 a3=  4
+0035 DLOAD          a0=  3 a1=         10 a2=  4 a3=  8
+0036 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0037 SET            a0=  3 a1=          0 a2=  3 a3=  4
+0038 GETK           a0=  3 a1=         11 a2=  0 a3=  0
+0039 DLOAD          a0=  4 a1=         12 a2=  5 a3=  9
+0040 GET            a0=  5 a1=          0 a2=  5 a3=  0
+0041 NEG            a0=  5 a1=          5 a2=  0 a3=  0
+0042 SET            a0=  3 a1=          3 a2=  4 a3=  5
+0043 GETK           a0=  3 a1=         11 a2=  0 a3=  0
+0044 DLOAD          a0=  4 a1=         13 a2=  5 a3= 10
+0045 GET            a0=  5 a1=          0 a2=  5 a3=  0
+0046 NEG            a0=  5 a1=          5 a2=  0 a3=  0
+0047 SET            a0=  3 a1=          3 a2=  4 a3=  5
+0048 PREPCALLK      a0=  3 a1=         14 a2=  0 a3=  4
+0049 CALL           a0=  3 a1=          3 a2=  4 a3=  1
+0050 RETURN         a0=255 a1=          0 a2=  0 a3=  0

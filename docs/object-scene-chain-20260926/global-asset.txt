@@ -1,0 +1,6 @@
+path=data/script/global.cv4
+archive=2
+offset=3159873
+size=16936
+hex=59 59 F1 EA F2 F0 A2 A3 A3 A3 F7 F1 E2 F3 B3 A3 A3 AB B5 A3 A3 A3 C7 C2 D7 C2 8C D0 C0 D1 CA D3 D7 8C C4 CF CC C1 C2 CF 8D CD D6 D7 B3 A3 A3 AB A7 A3 A3 A3 CE C2 CA CD F7 F1 E2 F3 86 A3 A3 A3
+ascii=YY..............................................................

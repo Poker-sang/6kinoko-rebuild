@@ -14,6 +14,8 @@ int32_t kinoko_actor_manager_initialize(KinokoActorManager *manager);
 KinokoActor *kinoko_actor_manager_create(KinokoActorManager *manager,
     const KinokoOwnedObjectWords *callback, float x, float y, float z,
     const KinokoOwnedObjectWords *argument, const void *initial_data);
+/* Borrows inputs, retains argument then callback before replacing any fields;
+   releases both before returning, including exception unwinding. */
 int32_t kinoko_actor_initialize(KinokoActor *actor, KinokoActorManager *manager,
     const KinokoOwnedObjectWords *callback, float x, float y, float z,
     const KinokoOwnedObjectWords *argument);

@@ -25,15 +25,12 @@ extern "C" int32_t kinoko_actor_reset(KinokoActor *actor) {
     view.set(&ActorRecord::owner_control,static_cast<ControlRecord *>(nullptr));
     kinoko_native_release_strong(address(owner));
     kinoko_actor_clear_script(actor);
-    // Init replaces these same references. Retain argument before callback and
-    // release in reverse order, matching the original by-value temporaries.
-    KinokoOwnedObjectWords argument{},callback{};
-    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t *>(&argument)), (const void *)(view.bytes(&ActorRecord::initial_argument)));
-    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t *>(&callback)), (const void *)(view.bytes(&ActorRecord::initial_function)));
-    kinoko_actor_initialize(actor,view.get(&ActorRecord::manager),&callback,
-        view.get(&ActorRecord::spawn_x),view.get(&ActorRecord::spawn_y),view.get(&ActorRecord::spawn_z),&argument);
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(&callback)));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(&argument)));
+    // Init now owns its argument-before-callback copies, also on exceptions.
+    // Borrow these fields only until that entry has retained both references.
+    kinoko_actor_initialize(actor,view.get(&ActorRecord::manager),
+        reinterpret_cast<const KinokoOwnedObjectWords *>(view.bytes(&ActorRecord::initial_function)),
+        view.get(&ActorRecord::spawn_x),view.get(&ActorRecord::spawn_y),view.get(&ActorRecord::spawn_z),
+        reinterpret_cast<const KinokoOwnedObjectWords *>(view.bytes(&ActorRecord::initial_argument)));
     return kinoko_actor_reset_priority(actor,view.get(&ActorRecord::priority));
 }
 extern "C" KinokoActor *kinoko_actor_assign(KinokoActor *destination,KinokoActor *source) {

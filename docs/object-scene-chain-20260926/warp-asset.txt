@@ -1,0 +1,6 @@
+path=data/script/warp.cv4
+archive=0
+offset=48075994
+size=4167
+hex=95 95 3D 26 3E 3C 6E 6F 6F 6F 3B 3D 2E 3F 7F 6F 6F 67 7B 6F 6F 6F 0B 0E 1B 0E 40 3C 0C 1D 06 1F 1B 40 18 0E 1D 1F 41 01 1A 1B 7F 6F 6F 67 6B 6F 6F 6F 02 0E 06 01 3B 3D 2E 3F 6B 6F 6F 6F 6E 6F
+ascii=..=&><nooo;=.?.oog{ooo....@<.....@....A....oogkooo....;=.?kooono

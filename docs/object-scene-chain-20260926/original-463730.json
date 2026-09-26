@@ -1,0 +1,14 @@
+{
+  "addr": "0x463730",
+  "code": "int __thiscall sub_463730(_DWORD **this, int a2)\n{\n  _DWORD *v2; // eax\n  _DWORD *v3; // esi\n  int v5; // eax\n  int **v7; // eax\n  int *j; // eax\n  int i; // eax\n  _DWORD *v10; // edi\n  _DWORD *k; // esi\n  int result; // eax\n\n  v2 = *(_DWORD **)(a2 + 4); /*0x463737*/\n  v3 = (_DWORD *)*v2; /*0x46373b*/\n  if ( (_DWORD *)*v2 != v2 ) /*0x463742*/\n  {\n    do /*0x4637a5*/\n    {\n      v5 = v3[3]; /*0x463744*/\n      if ( (*(_DWORD *)(v5 + 8))-- == 1 ) /*0x463747*/\n        (*(void (__thiscall **)(_DWORD, _DWORD))(**(this + 1) + 8))(a1: *(this + 1), a2: *(_DWORD *)(v3[3] + 12)); /*0x46375b*/\n      if ( *((_BYTE *)v3 + 17) == 0 ) /*0x463761*/\n      {\n        v7 = (int **)v3[2]; /*0x463763*/\n        if ( *((_BYTE *)v7 + 17) != 0 ) /*0x46376a*/\n        {\n          for ( i = v3[1]; *(_BYTE *)(i + 17) == 0; i = *(_DWORD *)(i + 4) ) /*0x463789*/\n          {\n            if ( v3 != *(_DWORD **)(i + 8) ) /*0x463793*/\n              break; /*0x463793*/\n            v3 = (_DWORD *)i; /*0x463795*/\n          }\n          v3 = (_DWORD *)i; /*0x4637a0*/\n        }\n        else\n        {\n          v3 = (_DWORD *)v3[2]; /*0x46376c*/\n          for ( j = *v7; *((_BYTE *)j + 17) == 0; j = (int *)*j ) /*0x463774*/\n            v3 = j; /*0x463776*/\n        }\n      }\n    }\n    while ( v3 != *(_DWORD **)(a2 + 4) ); /*0x4637a5*/\n  }\n  v10 = *(_DWORD **)(*(_DWORD *)(a2 + 4) + 4); /*0x4637aa*/\n  for ( k = v10; *((_BYTE *)k + 17) == 0; v10 = k ) /*0x4637b3*/\n  {\n    sub_4634D0(a1: (void *)k[2]); /*0x4637bb*/\n    k = (_DWORD *)*k; /*0x4637c0*/\n    operator delete(a1: v10); /*0x4637c3*/\n  }\n  *(_DWORD *)(*(_DWORD *)(a2 + 4) + 4) = *(_DWORD *)(a2 + 4); /*0x4637d6*/\n  **(_DWORD **)(a2 + 4) = *(_DWORD *)(a2 + 4); /*0x4637dc*/\n  result = *(_DWORD *)(a2 + 4); /*0x4637de*/\n  *(_DWORD *)(result + 8) = result; /*0x4637e2*/\n  *(_DWORD *)(a2 + 8) = 0; /*0x4637e6*/\n  return result; /*0x4637e1*/\n}",
+  "refs": [
+    {
+      "addr": "0x4634d0",
+      "name": "sub_4634D0"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    }
+  ]
+}

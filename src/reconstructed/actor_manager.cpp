@@ -115,14 +115,14 @@ extern "C" void *kinoko_actor_manager_clear_actors(KinokoActorManager *manager) 
     auto *sentinel=pointer<void>(state.get(&ManagerPrefix::actors).head);
     if (!sentinel) return nullptr;
     for (auto *entry=kinoko_actor_priority_first(index);entry!=sentinel;) {
-        auto *next=kinoko_actor_priority_next(index,entry);
         if (auto *actor=kinoko_actor_priority_value(entry)) {
             const ActorView view(actor);
             const auto references=view.get(&ActorRecord::owner_references)-1;
             view.set(&ActorRecord::owner_references,references);
             if (!references) retire(state,view);
         }
-        entry=next;
+        // 463761 advances after retirement: release hooks can insert successors.
+        entry=kinoko_actor_priority_next(index,entry);
     }
     kinoko_priority_clear(index);
     return sentinel;
@@ -142,18 +142,15 @@ extern "C" int32_t kinoko_actor_manager_refresh(KinokoActorManager *manager) {
     const ManagerView state(manager);
     if (!state.get(&ManagerPrefix::cleanup_pending)) return state.get(&ManagerPrefix::iteration_count);
     const auto tree=state.get(&ManagerPrefix::actors);
-    if (!tree.head || tree.count<=0) {
-        state.set(&ManagerPrefix::iteration_count,int32_t{0});
-        // Retain the accepted empty-manager compatibility path and old ranges.
-        state.set(&ManagerPrefix::cleanup_pending,uint8_t{0});
-        return 0;
-    }
-    for (auto member:{&ManagerPrefix::iteration,&ManagerPrefix::callback_candidates}) {
-        const auto buffer=state.view(member);
-        const auto begin=buffer.get(&ActorIterationBuffer::begin);
-        if (!begin || buffer.get(&ActorIterationBuffer::end)-begin<tree.count) {
-            if (tree.count>INT32_MAX/8 || !kinoko_native_buffer_ensure(address(buffer.data()),tree.count*8u)) return 0;
-            buffer.set(&ActorIterationBuffer::end,buffer.get(&ActorIterationBuffer::begin)+tree.count*2);
+    state.set(&ManagerPrefix::iteration_count,tree.count);
+    // 463D56 publishes even zero; the empty branch leaves dirty/ranges intact.
+    if (!tree.count) return 0;
+    const auto iteration=state.get(&ManagerPrefix::iteration);
+    if (!iteration.begin || iteration.end-iteration.begin<tree.count) {
+        // Both buffers grow together, based on the iteration buffer alone.
+        for (auto member:{&ManagerPrefix::iteration,&ManagerPrefix::callback_candidates}) {
+            const auto buffer=state.view(member);
+            if (tree.count>INT32_MAX/8 || !kinoko_native_buffer_resize(address(buffer.data()),tree.count*8u)) return 0;
         }
     }
     auto **actors=state.get(&ManagerPrefix::iteration).begin;
@@ -161,31 +158,32 @@ extern "C" int32_t kinoko_actor_manager_refresh(KinokoActorManager *manager) {
     auto *sentinel=pointer<void>(tree.head);
     int32_t count=0,back=0,middle=0,front=0;
     for (auto *entry=kinoko_actor_priority_first(index);entry!=sentinel;) {
-        auto *next=kinoko_actor_priority_next(index,entry); // before erasure
         auto *actor=kinoko_actor_priority_value(entry);
         const ActorView view(actor);
+        // 463DAA exposes the pending actor in the output slot during destruction.
+        actors[count]=actor;
         if (view.get(&ActorRecord::release_pending)) {
-            kinoko_actor_priority_erase(index,entry);
+            entry=kinoko_actor_priority_erase_next(index,view.get(&ActorRecord::priority_entry));
             retire(state,view); // deferred release does not decrement refcount
+            state.set(&ManagerPrefix::iteration_count,state.get(&ManagerPrefix::iteration_count)-1);
         } else {
-            actors[count++]=actor;
+            ++count;
             const auto priority=view.get(&ActorRecord::priority);
             back+=priority==-1;
             middle+=priority<0xffff;
             front+=priority<0x10000;
+            entry=kinoko_actor_priority_next(index,entry);
         }
-        entry=next;
     }
-    const int32_t limits[]{0,back,middle,front,count};
+    const int32_t limits[]{0,back,middle,front,state.get(&ManagerPrefix::iteration_count)};
     const auto layers=state.get(&ManagerPrefix::render_layers);
     for (size_t i=0;i<layers.size();++i) if (layers[i]) {
         const RecordView<RenderLayerRecord> layer(layers[i]);
-        layer.set(&RenderLayerRecord::begin,limits[i]);
+        if (i) layer.set(&RenderLayerRecord::begin,limits[i]);
         layer.set(&RenderLayerRecord::end,limits[i+1]);
     }
-    state.set(&ManagerPrefix::iteration_count,count);
     state.set(&ManagerPrefix::cleanup_pending,uint8_t{0});
-    return count;
+    return state.get(&ManagerPrefix::iteration_count);
 }
 
 extern "C" int32_t kinoko_actor_activate(KinokoActor *actor,KinokoCamera *camera,float extent) {

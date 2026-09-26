@@ -1,0 +1,6 @@
+path=data/script/stage.cv4
+archive=2
+offset=2971901
+size=29259
+hex=85 85 2D 36 2E 2C 7E 7F 7F 7F 2B 2D 3E 2F 6F 7F 7F 77 6A 7F 7F 7F 1B 1E 0B 1E 50 0C 1C 0D 16 0F 0B 50 0C 0B 1E 18 1A 51 11 0A 0B 6F 7F 7F 77 7B 7F 7F 7F 12 1E 16 11 2B 2D 3E 2F 43 7F 7F 7F 7E
+ascii=..-6.,~...+->/o..wj.......P......P.....Q...o..w{.......+->/C...~

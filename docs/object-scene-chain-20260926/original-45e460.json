@@ -1,0 +1,22 @@
+{
+  "addr": "0x45e460",
+  "code": "int __thiscall sub_45E460(volatile signed __int32 **this)\n{\n  volatile signed __int32 *v2; // ecx\n  volatile signed __int32 *v3; // edi\n  int result; // eax\n  volatile signed __int32 *v5; // ecx\n  volatile signed __int32 *v6; // esi\n\n  *this = (volatile signed __int32 *)&Actor::`vftable'; /*0x45e48d*/\n  sub_4A9570(a1: this + 14); /*0x45e49d*/\n  sub_4A9570(a1: this + 17); /*0x45e4a5*/\n  sub_45FB90(); /*0x45e4ac*/\n  *(this + 8) = nullptr; /*0x45e4b3*/\n  v2 = *(this + 9); /*0x45e4b6*/\n  *(this + 9) = nullptr; /*0x45e4b9*/\n  if ( v2 != nullptr && _InterlockedExchangeAdd(v2 + 2, 0xFFFFFFFF) == 0 ) /*0x45e4ca*/\n    (*(void (__thiscall **)(volatile signed __int32 *))(*v2 + 8))(a1: v2); /*0x45e4d1*/\n  *(this + 6) = nullptr; /*0x45e4d5*/\n  v3 = *(this + 7); /*0x45e4d8*/\n  *(this + 7) = nullptr; /*0x45e4db*/\n  if ( v3 != nullptr && _InterlockedExchangeAdd(v3 + 1, 0xFFFFFFFF) == 0 ) /*0x45e4ec*/\n  {\n    (*(void (__thiscall **)(volatile signed __int32 *))(*v3 + 4))(a1: v3); /*0x45e4f5*/\n    if ( _InterlockedExchangeAdd(v3 + 2, 0xFFFFFFFF) == 0 ) /*0x45e501*/\n      (*(void (__thiscall **)(volatile signed __int32 *))(*v3 + 8))(a1: v3); /*0x45e50a*/\n  }\n  sub_4A9D70(a1: this + 34); /*0x45e519*/\n  sub_4A9D70(a1: this + 31); /*0x45e525*/\n  sub_4A9D70(a1: this + 27); /*0x45e537*/\n  sub_4A9D70(a1: this + 24); /*0x45e543*/\n  sub_4A9D70(a1: this + 17); /*0x45e54f*/\n  sub_4A9D70(a1: this + 14); /*0x45e55b*/\n  result = sub_4A9D70(a1: this + 11); /*0x45e567*/\n  v5 = *(this + 9); /*0x45e56c*/\n  if ( v5 != nullptr ) /*0x45e575*/\n  {\n    result = (int)(v5 + 2); /*0x45e577*/\n    if ( _InterlockedExchangeAdd(v5 + 2, 0xFFFFFFFF) == 0 ) /*0x45e581*/\n      result = (*(int (__thiscall **)(volatile signed __int32 *))(*v5 + 8))(a1: v5); /*0x45e588*/\n  }\n  v6 = *(this + 7); /*0x45e58a*/\n  if ( v6 != nullptr ) /*0x45e596*/\n  {\n    result = (int)(v6 + 1); /*0x45e598*/\n    if ( _InterlockedExchangeAdd(v6 + 1, 0xFFFFFFFF) == 0 ) /*0x45e5a2*/\n    {\n      result = (*(int (__thiscall **)(volatile signed __int32 *))(*v6 + 4))(a1: v6); /*0x45e5ab*/\n      if ( _InterlockedExchangeAdd(v6 + 2, 0xFFFFFFFF) == 0 ) /*0x45e5b7*/\n        return (*(int (__thiscall **)(volatile signed __int32 *))(*v6 + 8))(a1: v6); /*0x45e5c0*/\n    }\n  }\n  return result; /*0x45e5c2*/\n}",
+  "refs": [
+    {
+      "addr": "0x4d54ac",
+      "name": "??_7Actor@@6B@"
+    },
+    {
+      "addr": "0x4a9570",
+      "name": "sub_4A9570"
+    },
+    {
+      "addr": "0x45fb90",
+      "name": "sub_45FB90"
+    },
+    {
+      "addr": "0x4a9d70",
+      "name": "sub_4A9D70"
+    }
+  ]
+}

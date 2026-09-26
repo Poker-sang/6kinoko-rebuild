@@ -1,0 +1,66 @@
+{
+  "addr": "0x469900",
+  "code": "void sub_469900()\n{\n  int v0; // esi\n  _DWORD v1[12]; // [esp+0h] [ebp-3Ch] BYREF\n  int v2; // [esp+38h] [ebp-4h]\n\n  v1[11] = v1; /*0x469928*/\n  v2 = 0; /*0x469932*/\n  sub_46B9A0(a1: &unk_513CC0); /*0x469935*/\n  if ( sub_4A9A30(a1: &unk_513CA8) == 134217984 ) /*0x469949*/\n  {\n    LOBYTE(v2) = 1; /*0x469950*/\n    sub_45DFB0(a1: &dword_513C98); /*0x469954*/\n    v2 = 0; /*0x469959*/\n  }\n  v0 = sub_471060(); /*0x469961*/\n  if ( (v0 & 0x20000000) != 0 ) /*0x469969*/\n    sub_466470(a1: &unk_514388); /*0x469970*/\n  if ( (v0 & 0x1FFFFFFF) != 0 ) /*0x46997b*/\n  {\n    dword_514420 = v0; /*0x469987*/\n    sub_4641D0(this: dword_5143E0, a2: (int)&unk_514388); /*0x46998d*/\n  }\n  if ( v0 < 0 ) /*0x469994*/\n    sub_46F0B0(a1: &unk_5142A8); /*0x46999b*/\n  if ( (v0 & 0x40000000) != 0 ) /*0x4699a6*/\n    sub_466050(); /*0x4699a8*/\n}",
+  "refs": [
+    {
+      "addr": "0x46b9a0",
+      "name": "sub_46B9A0"
+    },
+    {
+      "addr": "0x513cc0",
+      "name": "unk_513CC0"
+    },
+    {
+      "addr": "0x45dfb0",
+      "name": "sub_45DFB0"
+    },
+    {
+      "addr": "0x513c98",
+      "name": "dword_513C98"
+    },
+    {
+      "addr": "0x4a9a30",
+      "name": "sub_4A9A30"
+    },
+    {
+      "addr": "0x513ca8",
+      "name": "unk_513CA8"
+    },
+    {
+      "addr": "0x471060",
+      "name": "sub_471060"
+    },
+    {
+      "addr": "0x466470",
+      "name": "sub_466470"
+    },
+    {
+      "addr": "0x514388",
+      "name": "unk_514388"
+    },
+    {
+      "addr": "0x514420",
+      "name": "dword_514420"
+    },
+    {
+      "addr": "0x4641d0",
+      "name": "sub_4641D0"
+    },
+    {
+      "addr": "0x5143e0",
+      "name": "dword_5143E0"
+    },
+    {
+      "addr": "0x46f0b0",
+      "name": "sub_46F0B0"
+    },
+    {
+      "addr": "0x5142a8",
+      "name": "unk_5142A8"
+    },
+    {
+      "addr": "0x466050",
+      "name": "sub_466050"
+    }
+  ]
+}

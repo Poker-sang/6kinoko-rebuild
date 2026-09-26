@@ -1,0 +1,30 @@
+{
+  "addr": "0x464e20",
+  "code": "int __thiscall sub_464E20(int this)\n{\n  unsigned int i; // edi\n  int v3; // edx\n  _DWORD *v4; // ebx\n  int v5; // edi\n  int result; // eax\n  _DWORD *v7; // [esp+Ch] [ebp-8h]\n  void *k; // [esp+Ch] [ebp-8h]\n  _DWORD *j; // [esp+10h] [ebp-4h]\n\n  for ( i = 0; i < (*(_DWORD *)(this + 72) - *(_DWORD *)(this + 68)) >> 2; ++i ) /*0x464e38*/\n    sub_405D60(a1: *(_DWORD *)(*(_DWORD *)(this + 68) + 4 * i)); /*0x464e4c*/\n  v3 = *(_DWORD *)(this + 68); /*0x464e5f*/\n  if ( v3 != *(_DWORD *)(this + 72) ) /*0x464e67*/\n    *(_DWORD *)(this + 72) = v3; /*0x464e7e*/\n  sub_463730((_DWORD **)this, a2: this + 84); /*0x464e87*/\n  v7 = *(_DWORD **)(*(_DWORD *)(this + 40) + 4); /*0x464e96*/\n  for ( j = v7; *((_BYTE *)j + 21) == 0; v7 = j ) /*0x464e9c*/\n  {\n    sub_429C70(a1: (void *)j[2]); /*0x464eaa*/\n    j = (_DWORD *)*j; /*0x464eb8*/\n    operator delete(a1: v7); /*0x464ebb*/\n  }\n  *(_DWORD *)(*(_DWORD *)(this + 40) + 4) = *(_DWORD *)(this + 40); /*0x464ed2*/\n  **(_DWORD **)(this + 40) = *(_DWORD *)(this + 40); /*0x464ed8*/\n  *(_DWORD *)(*(_DWORD *)(this + 40) + 8) = *(_DWORD *)(this + 40); /*0x464edd*/\n  *(_DWORD *)(this + 44) = 0; /*0x464ee3*/\n  sub_464D90(a1: this + 52); /*0x464eea*/\n  v4 = *(_DWORD **)(*(_DWORD *)(this + 88) + 4); /*0x464ef2*/\n  for ( k = v4; *((_BYTE *)v4 + 17) == 0; k = v4 ) /*0x464efc*/\n  {\n    sub_4634D0(a1: (void *)v4[2]); /*0x464f06*/\n    v4 = (_DWORD *)*v4; /*0x464f0e*/\n    operator delete(a1: k); /*0x464f11*/\n  }\n  *(_DWORD *)(*(_DWORD *)(this + 88) + 4) = *(_DWORD *)(this + 88); /*0x464f25*/\n  **(_DWORD **)(this + 88) = *(_DWORD *)(this + 88); /*0x464f2b*/\n  *(_DWORD *)(*(_DWORD *)(this + 88) + 8) = *(_DWORD *)(this + 88); /*0x464f30*/\n  *(_DWORD *)(this + 92) = 0; /*0x464f35*/\n  v5 = *(_DWORD *)(this + 100); /*0x464f38*/\n  result = *(_DWORD *)(this + 104); /*0x464f3b*/\n  if ( v5 != result ) /*0x464f40*/\n  {\n    result = *(_DWORD *)(this + 100); /*0x464f53*/\n    *(_DWORD *)(this + 104) = v5; /*0x464f5d*/\n  }\n  *(_DWORD *)(this + 116) = 0; /*0x464f61*/\n  *(_BYTE *)(this + 120) = 0; /*0x464f68*/\n  return result; /*0x464f60*/\n}",
+  "refs": [
+    {
+      "addr": "0x405d60",
+      "name": "sub_405D60"
+    },
+    {
+      "addr": "0x463730",
+      "name": "sub_463730"
+    },
+    {
+      "addr": "0x429c70",
+      "name": "sub_429C70"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    },
+    {
+      "addr": "0x464d90",
+      "name": "sub_464D90"
+    },
+    {
+      "addr": "0x4634d0",
+      "name": "sub_4634D0"
+    }
+  ]
+}
