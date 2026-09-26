@@ -63,7 +63,7 @@ extern "C" int32_t kinoko_begin_stage_this(int32_t receiver, int32_t stage) {
     return record(6, {bits(receiver), bits(stage)});
 }
 
-extern "C" int32_t kinoko_root_table_construct_this(int32_t receiver, int32_t vm, int32_t output) {
+extern "C" int32_t kinoko_root_table_construct_this(int32_t receiver, struct SQVM* vm, int32_t output) {
     return record(7, {bits(receiver), bits(vm), bits(output)});
 }
 

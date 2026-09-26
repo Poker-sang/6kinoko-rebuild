@@ -1,3 +1,4 @@
+struct SQVM;
 #pragma once
 #include "kinoko/act_layout_records.hpp"
 #include "kinoko/legacy_string.hpp"
@@ -30,11 +31,11 @@ uint32_t resource_type();
 uint32_t layout_type();
 }
 extern "C" {
-int32_t kinoko_publish_mesh_resource_class(int32_t,int32_t,int32_t *);
+int32_t kinoko_publish_mesh_resource_class(struct SQVM*,int32_t,int32_t *);
 int32_t __fastcall kinoko_method_read_mesh_resource(int32_t,void *,int32_t,int32_t);
 int32_t __fastcall kinoko_method_write_mesh_resource(int32_t,void *,int32_t);
 int32_t __fastcall kinoko_method_write_layout_3d(int32_t,void *,int32_t);
-int32_t __fastcall kinoko_method_register_mesh_resource(int32_t,void *,int32_t);
+int32_t __fastcall kinoko_method_register_mesh_resource(int32_t,void *,struct SQVM*);
 int32_t __fastcall kinoko_method_bind_mesh_object(int32_t,void *,int32_t,const char *);
 int32_t __fastcall kinoko_method_bind_mesh_table(int32_t,void *,int32_t,const char *);
 int32_t __fastcall kinoko_method_register_layout_3d(int32_t,void *);

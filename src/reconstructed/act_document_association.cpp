@@ -35,7 +35,7 @@ void DocumentLoadAssociations::bind_loaded_parents(KinokoActDocument *document, 
             auto children = old_parent.get(&LayerAssociationRecord::children);
             if (children.storage) {
                 auto &values = *children.storage;
-                values.erase(std::remove(values.begin(), values.end(), address(layer)), values.end());
+                values.erase(std::remove(values.begin(), values.end(), static_cast<void*>(layer)), values.end());
                 children.end = children.begin + values.size();
                 old_parent.set(&LayerAssociationRecord::children, children);
             }

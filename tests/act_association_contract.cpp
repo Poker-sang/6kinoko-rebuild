@@ -62,8 +62,8 @@ int main() {
     CHECK(missing.prefix.parent_id == -1 && !missing.prefix.parent);
     CHECK(self.prefix.parent == self.get()); // no invented cycle rejection
     CHECK(first.prefix.children.storage->size() == 2);
-    CHECK((*first.prefix.children.storage)[0] == address(child.get()));
-    CHECK((*first.prefix.children.storage)[1] == address(second_child.get()));
+    CHECK((*first.prefix.children.storage)[0] == child.get());
+    CHECK((*first.prefix.children.storage)[1] == second_child.get());
     // First duplicate wins, signed negative IDs also participate in resources.
     ResourceIdentityRecord resource{nullptr, 70}, duplicate_resource{nullptr, 70}, negative{nullptr, -3};
     auto *r = reinterpret_cast<KinokoActResource *>(&resource);
@@ -117,7 +117,7 @@ int main() {
     CHECK(clone_child.prefix.parent_id == 777); // no reparent/ID rewrite
     CHECK(!clone_first.prefix.parent);
     CHECK(clone_child.prefix.children.storage->size() == 2);
-    CHECK((*clone_child.prefix.children.storage)[0] == address(clone_child.get()));
+    CHECK((*clone_child.prefix.children.storage)[0] == clone_child.get());
     CHECK((*clone_child.prefix.children.storage)[1] == 0);
     for (Layer *entry : {&clone_child, &clone_first, &clone_duplicate})
         for (auto byte : entry->tail) CHECK(byte == 0xa5);
@@ -126,6 +126,6 @@ int main() {
     associations.bind_loaded_parents(act, 1);
     CHECK(child.prefix.parent == self.get());
     CHECK(first.prefix.children.storage->size() == 1);
-    CHECK((*first.prefix.children.storage)[0] == address(second_child.get()));
+    CHECK((*first.prefix.children.storage)[0] == second_child.get());
     std::puts("PASS: fresh parent resolution, first duplicate IDs, missing references, ordered virtual resource calls, untouched layout tail");
 }

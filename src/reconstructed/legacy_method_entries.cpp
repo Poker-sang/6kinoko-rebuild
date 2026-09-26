@@ -19,7 +19,7 @@ int32_t kinoko_c2dlayout_set_layer_impl(int32_t receiver, int32_t layer);
 int32_t kinoko_c2dlayout_update_faithful_impl(int32_t receiver);
 int32_t kinoko_c2dlayout_draw_impl(int32_t receiver, float x, float y);
 int32_t kinoko_begin_stage_this(int32_t receiver, int32_t stage);
-int32_t kinoko_root_table_construct_this(int32_t receiver, int32_t vm, int32_t output);
+int32_t kinoko_root_table_construct_this(int32_t receiver, struct SQVM* vm, int32_t output);
 int32_t kinoko_act_bitblt_this(int32_t receiver, int32_t x, int32_t y, int32_t width, int32_t height,
     int32_t resource, int32_t source_x, int32_t source_y, int32_t blend, float alpha);
 int32_t kinoko_update_mesh_children(void* receiver, int32_t argument);
@@ -71,7 +71,7 @@ extern "C" int32_t __fastcall kinoko_method_begin_stage(int32_t receiver, void* 
 // function_450e30
 extern "C" int32_t __fastcall kinoko_method_root_table_construct(int32_t receiver,
     void* /* unused_edx */, int32_t vm, int32_t output) {
-    return kinoko_root_table_construct_this(receiver, vm, output);
+    return kinoko_root_table_construct_this(receiver, (struct SQVM*)(uintptr_t)(vm), output);
 }
 
 // function_4514a0

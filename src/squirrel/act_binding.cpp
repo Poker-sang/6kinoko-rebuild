@@ -147,16 +147,16 @@ int32_t get_pair(int32_t object, const char* name, int32_t* output) {
 }
 
 int32_t kinoko_publish_cact_layer_property(
-    int32_t vm, const char *name, int32_t offset,
+    SQVM* vm, const char *name, int32_t offset,
     int32_t getter, int32_t setter)
 {
     const auto tables = layer_property_tables();
-    return tables.valid() && tables.add(pointer<SQVM>(vm), name, offset,
+    return tables.valid() && tables.add(vm, name, offset,
                                         pointer<void>(getter), pointer<void>(setter));
 }
 
 int32_t kinoko_publish_cact_layer_members(
-    int32_t vm, const int32_t *class_pair)
+    SQVM* vm, const int32_t *class_pair)
 {
     static const char *const direct_int_names[] = {
         "resourceID", "layerID", "parentID"
@@ -217,56 +217,35 @@ int32_t kinoko_publish_cact_layer_members(
     if (vm == 0 || class_pair == nullptr ||
         class_pair[0] != 0x08004000 || class_pair[1] == 0)
         return 0;
-    if (!tables.ensure(pointer<SQVM>(vm))) return 0;
+    if (!tables.ensure(vm)) return 0;
 
     const bool published = [&]() {
-        if (!initialize_native_property_class(pointer<SQVM>(vm), class_pair, tables))
+        if (!initialize_native_property_class(vm, class_pair, tables))
             return false;
 
-        if (!kinoko_publish_cact_layer_property(
-                vm, "stName", offsetof(kinoko::act::LayerStorageRecord, name),
-                address(kinoko_cact_layer_get_string),
-                address(kinoko_cact_layer_set_string)))
+        if (!kinoko_publish_cact_layer_property((struct SQVM*)(uintptr_t)(vm), "stName", offsetof(kinoko::act::LayerStorageRecord, name), address(kinoko_cact_layer_get_string), address(kinoko_cact_layer_set_string)))
             return false;
         for (index = 0; index < sizeof(direct_int_names) /
                              sizeof(direct_int_names[0]); ++index) {
-            if (!kinoko_publish_cact_layer_property(
-                    vm, direct_int_names[index], direct_int_offsets[index],
-                    address(kinoko_cact_layer_get_int),
-                    address(kinoko_cact_layer_set_int)))
+            if (!kinoko_publish_cact_layer_property((struct SQVM*)(uintptr_t)(vm), direct_int_names[index], direct_int_offsets[index], address(kinoko_cact_layer_get_int), address(kinoko_cact_layer_set_int)))
                 return false;
         }
-        if (!kinoko_publish_cact_layer_property(
-                vm, "visible", offsetof(kinoko::act::LayerStorageRecord, visibility_flags),
-                address(kinoko_cact_layer_get_bool),
-                address(kinoko_cact_layer_set_bool)) ||
-            !kinoko_publish_cact_layer_property(
-                vm, "debugOnly", offsetof(kinoko::act::LayerStorageRecord, visibility_flags)+1,
-                address(kinoko_cact_layer_get_bool),
-                address(kinoko_cact_layer_set_bool)))
+        if (!kinoko_publish_cact_layer_property((struct SQVM*)(uintptr_t)(vm), "visible", offsetof(kinoko::act::LayerStorageRecord, visibility_flags), address(kinoko_cact_layer_get_bool), address(kinoko_cact_layer_set_bool)) ||
+            !kinoko_publish_cact_layer_property((struct SQVM*)(uintptr_t)(vm), "debugOnly", offsetof(kinoko::act::LayerStorageRecord, visibility_flags)+1, address(kinoko_cact_layer_get_bool), address(kinoko_cact_layer_set_bool)))
             return false;
         for (index = 0; index < sizeof(direct_float_names) /
                              sizeof(direct_float_names[0]); ++index) {
-            if (!kinoko_publish_cact_layer_property(
-                    vm, direct_float_names[index], direct_float_offsets[index],
-                    address(kinoko_cact_layer_get_float),
-                    address(kinoko_cact_layer_set_float)))
+            if (!kinoko_publish_cact_layer_property((struct SQVM*)(uintptr_t)(vm), direct_float_names[index], direct_float_offsets[index], address(kinoko_cact_layer_get_float), address(kinoko_cact_layer_set_float)))
                 return false;
         }
         for (index = 0; index < sizeof(pointer_float_names) /
                              sizeof(pointer_float_names[0]); ++index) {
-            if (!kinoko_publish_cact_layer_property(
-                    vm, pointer_float_names[index], pointer_float_offsets[index],
-                    address(kinoko_cact_layer_get_pointer_float),
-                    address(kinoko_cact_layer_set_pointer_float)))
+            if (!kinoko_publish_cact_layer_property((struct SQVM*)(uintptr_t)(vm), pointer_float_names[index], pointer_float_offsets[index], address(kinoko_cact_layer_get_pointer_float), address(kinoko_cact_layer_set_pointer_float)))
                 return false;
         }
         for (index = 0; index < sizeof(pointer_int_names) /
                              sizeof(pointer_int_names[0]); ++index) {
-            if (!kinoko_publish_cact_layer_property(
-                    vm, pointer_int_names[index], pointer_int_offsets[index],
-                    address(kinoko_cact_layer_get_pointer_int),
-                    address(kinoko_cact_layer_set_pointer_int)))
+            if (!kinoko_publish_cact_layer_property((struct SQVM*)(uintptr_t)(vm), pointer_int_names[index], pointer_int_offsets[index], address(kinoko_cact_layer_get_pointer_int), address(kinoko_cact_layer_set_pointer_int)))
                 return false;
         }
 
@@ -275,17 +254,17 @@ int32_t kinoko_publish_cact_layer_members(
            each instance with the same raw/newslot distinction as the ACT path. */
         for (index = 0; index < sizeof(object_names) / sizeof(object_names[0]);
              ++index) {
-            if (!kinoko_sqrat_set_pair(pointer<SQVM>(vm), class_pair, object_names[index], null_pair))
+            if (!kinoko_sqrat_set_pair(vm, class_pair, object_names[index], null_pair))
                 return false;
         }
         return true;
     }();
-    if (!published) tables.clear(pointer<SQVM>(vm));
+    if (!published) tables.clear(vm);
     return published;
 }
 
 int32_t kinoko_publish_c2dlayout_properties(
-    int32_t vm, const int32_t class_pair[2])
+    SQVM* vm, const int32_t class_pair[2])
 {
     static const char *const float_names[] = {
         "roll_x", "roll_y", "roll_z", "cor_x", "cor_y", "cor_z",
@@ -303,31 +282,31 @@ int32_t kinoko_publish_c2dlayout_properties(
     if (vm == 0 || class_pair == nullptr ||
         class_pair[0] != 0x08004000 || class_pair[1] == 0)
         return 0;
-    if (!tables.ensure(pointer<SQVM>(vm))) return 0;
+    if (!tables.ensure(vm)) return 0;
 
     const bool published = [&]() {
-        if (!initialize_native_property_class(pointer<SQVM>(vm), class_pair, tables))
+        if (!initialize_native_property_class(vm, class_pair, tables))
             return false;
 
         for (index = 0; index < sizeof(float_names) / sizeof(float_names[0]);
              ++index) {
-            if (!tables.add(pointer<SQVM>(vm), float_names[index], float_offsets[index], pointer<void>(address(kinoko_c2dlayout_get_float)), pointer<void>(address(kinoko_c2dlayout_set_float))))
+            if (!tables.add(vm, float_names[index], float_offsets[index], pointer<void>(address(kinoko_c2dlayout_get_float)), pointer<void>(address(kinoko_c2dlayout_set_float))))
                 return false;
         }
-        if (!tables.add(pointer<SQVM>(vm), "blend", 288, pointer<void>(address(kinoko_c2dlayout_get_int)), pointer<void>(address(kinoko_c2dlayout_set_int))))
+        if (!tables.add(vm, "blend", 288, pointer<void>(address(kinoko_c2dlayout_get_int)), pointer<void>(address(kinoko_c2dlayout_set_int))))
             return false;
         for (index = 0; index < sizeof(color_names) / sizeof(color_names[0]);
              ++index) {
-            if (!tables.add(pointer<SQVM>(vm), color_names[index], color_offsets[index], pointer<void>(address(kinoko_c2dlayout_get_int)), pointer<void>(address(kinoko_c2dlayout_set_color))))
+            if (!tables.add(vm, color_names[index], color_offsets[index], pointer<void>(address(kinoko_c2dlayout_get_int)), pointer<void>(address(kinoko_c2dlayout_set_color))))
                 return false;
         }
         return true;
     }();
-    if (!published) tables.clear(pointer<SQVM>(vm));
+    if (!published) tables.clear(vm);
     return published;
 }
 
-int32_t kinoko_publish_c2dlayout_class(int32_t vm, int32_t root_object)
+int32_t kinoko_publish_c2dlayout_class(SQVM* vm, int32_t root_object)
 {
     int32_t existing[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t class_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
@@ -339,39 +318,39 @@ int32_t kinoko_publish_c2dlayout_class(int32_t vm, int32_t root_object)
         return 0;
     existing_result = get_pair(root_object, "C2DLayout", existing);
     if (existing_result && existing[0] == 0x08004000 && existing[1] != 0) {
-        kinoko_sqrat_assign_pair(pointer<SQVM>(vm), published_layout_class(), existing);
+        kinoko_sqrat_assign_pair(vm, published_layout_class(), existing);
         class_pair[0] = existing[0];
         class_pair[1] = existing[1];
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), existing);
+        kinoko_sqrat_release_pair(vm, existing);
         if (layout_property_tables().valid())
             return 1;
-        return kinoko_publish_c2dlayout_properties(vm, class_pair);
+        return kinoko_publish_c2dlayout_properties((struct SQVM*)(uintptr_t)(vm), class_pair);
     }
     if (existing_result)
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), existing);
+        kinoko_sqrat_release_pair(vm, existing);
 
-    base = sq_gettop(kinoko_vm(vm));
-    if (!kinoko_sqrat_new_class(pointer<SQVM>(vm), class_pair) || sq_gettop(kinoko_vm(vm)) <= base) {
-        kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+    base = sq_gettop(vm);
+    if (!kinoko_sqrat_new_class(vm, class_pair) || sq_gettop(vm) <= base) {
+        kinoko_sqrat_trim_stack(vm, base);
         return 0;
     }
     if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-        kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+        kinoko_sqrat_release_pair(vm, class_pair);
+        kinoko_sqrat_trim_stack(vm, base);
         return 0;
     }
 
-    kinoko_sqrat_assign_pair(pointer<SQVM>(vm), published_layout_class(), class_pair);
-    bool published = kinoko_publish_c2dlayout_properties(vm, class_pair) != 0;
+    kinoko_sqrat_assign_pair(vm, published_layout_class(), class_pair);
+    bool published = kinoko_publish_c2dlayout_properties((struct SQVM*)(uintptr_t)(vm), class_pair) != 0;
     if (published) {
-        published = kinoko_sqrat_set_pair(pointer<SQVM>(vm),
+        published = kinoko_sqrat_set_pair(vm,
             pointer<const int32_t>(root_object + 8), "C2DLayout", class_pair) != 0;
         if (!published)
-            kinoko_sqrat_assign_pair(pointer<SQVM>(vm), published_layout_class(), empty_pair);
+            kinoko_sqrat_assign_pair(vm, published_layout_class(), empty_pair);
     }
     if (published) kinoko_trace_i32("act:c2dlayout-class", class_pair[1]);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-    kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+    kinoko_sqrat_release_pair(vm, class_pair);
+    kinoko_sqrat_trim_stack(vm, base);
     return published;
 }
 
@@ -393,17 +372,17 @@ int32_t register_root_class(SQVM* machine, Publish publish) {
 // do not create another decompiled map of Sqrat objects for this old caller.
 extern "C" int32_t kinoko_register_c2dlayout_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
-        return kinoko_publish_c2dlayout_class(vm, root);
+        return kinoko_publish_c2dlayout_class((struct SQVM*)(uintptr_t)(vm), root);
     });
 }
 
 
-int32_t kinoko_cact_associate_resource(int32_t vm)
+int32_t kinoko_cact_associate_resource(SQVM* vm)
 {
     int32_t layer = 0, resource = 0;
     int32_t result = (int32_t)E_FAIL;
-    if (sq_getinstanceup(kinoko_vm(vm), 1, (SQUserPointer*)(&layer), kinoko_pointer(0)) >= 0 && layer != 0 &&
-        sq_getinstanceup(kinoko_vm(vm), 2, (SQUserPointer*)(&resource), kinoko_pointer(0)) >= 0 && resource != 0) {
+    if (sq_getinstanceup(vm, 1, (SQUserPointer*)(&layer), kinoko_pointer(0)) >= 0 && layer != 0 &&
+        sq_getinstanceup(vm, 2, (SQUserPointer*)(&resource), kinoko_pointer(0)) >= 0 && resource != 0) {
         /* 424210 -> 4252E0 -> 41EF20: change only the resource and its ID. */
         field<int32_t>(layer + 100) = resource;
         field<int32_t>(layer + 96) = field<int32_t>(resource + 4);
@@ -413,25 +392,25 @@ int32_t kinoko_cact_associate_resource(int32_t vm)
             address(kinoko_string_data(ResourcePublicationView(pointer<void>(resource)).bytes(&ResourcePublicationRecord::name))));
         result = 0;
     }
-    sq_pushinteger(kinoko_vm(vm), result);
+    sq_pushinteger(vm, result);
     return 1;
 }
 
-int32_t kinoko_resource_load_texture(int32_t vm) {
+int32_t kinoko_resource_load_texture(SQVM* vm) {
     int32_t resource = 0;
     const SQChar *prefix = nullptr;
-    if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm), 1, reinterpret_cast<SQUserPointer *>(&resource), nullptr)) ||
-        !resource || sq_gettop(kinoko_vm(vm)) < 2) return 0;
-    if (sq_gettype(kinoko_vm(vm), 2) != OT_NULL &&
-        SQ_FAILED(sq_getstring(kinoko_vm(vm), 2, &prefix))) return 0;
+    if (SQ_FAILED(sq_getinstanceup(vm, 1, reinterpret_cast<SQUserPointer *>(&resource), nullptr)) ||
+        !resource || sq_gettop(vm) < 2) return 0;
+    if (sq_gettype(vm, 2) != OT_NULL &&
+        SQ_FAILED(sq_getstring(vm, 2, &prefix))) return 0;
     // 44FD20 forwards through virtual slot +40, retaining derived behavior.
     const int32_t result = kinoko_call_thiscall1_result(pointer<void>(resource),
         field<void *>(field<int32_t>(resource) + 40), address(prefix));
-    sq_pushbool(kinoko_vm(vm), (result & 0xff) != 0);
+    sq_pushbool(vm, (result & 0xff) != 0);
     return 1;
 }
 
-int32_t kinoko_publish_texture_resource_class(int32_t vm, int32_t root,
+int32_t kinoko_publish_texture_resource_class(SQVM* vm, int32_t root,
     const char *name, int32_t out[2]) {
     static const kinoko_native_view_property properties[] = {
         {"resourceID", 4, 0}, {"stName", 8, 4},
@@ -440,27 +419,26 @@ int32_t kinoko_publish_texture_resource_class(int32_t vm, int32_t root,
         {"src_width", 88, 1}, {"src_height", 92, 1}
     };
     if (get_pair(root, name, out) && out[0] == 0x08004000) return 1;
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), out);
-    return kinoko_publish_map_view_class(vm, root, name, properties,
-        sizeof(properties) / sizeof(properties[0]), 0, out) &&
-        kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), out, "LoadTexture", (void *)(intptr_t)(address(kinoko_resource_load_texture)), nullptr, 0);
+    kinoko_sqrat_release_pair(vm, out);
+    return kinoko_publish_map_view_class((struct SQVM*)(uintptr_t)(vm), root, name, properties, sizeof(properties) / sizeof(properties[0]), 0, out) &&
+        kinoko_sqrat_set_native_closure(vm, out, "LoadTexture", (void *)(intptr_t)(address(kinoko_resource_load_texture)), nullptr, 0);
 }
 
-int32_t kinoko_publish_cact_resource2d_class(int32_t vm, int32_t root) {
+int32_t kinoko_publish_cact_resource2d_class(SQVM* vm, int32_t root) {
     if (!vm || !root) return 0;
     int32_t klass[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    const auto ok = kinoko_publish_texture_resource_class(vm, root, "CActResource2D", klass);
+    const auto ok = kinoko_publish_texture_resource_class((struct SQVM*)(uintptr_t)(vm), root, "CActResource2D", klass);
     if (ok) {
-        kinoko_sqrat_assign_pair(pointer<SQVM>(vm), kinoko_resource2d_class_pair, klass);
+        kinoko_sqrat_assign_pair(vm, kinoko_resource2d_class_pair, klass);
         kinoko_resource2d_class_published = 1;
     }
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);
+    kinoko_sqrat_release_pair(vm, klass);
     return ok;
 }
 
 extern "C" int32_t kinoko_register_texture_resource_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
-        return kinoko_publish_cact_resource2d_class(vm, root);
+        return kinoko_publish_cact_resource2d_class((struct SQVM*)(uintptr_t)(vm), root);
     });
 }
 
@@ -468,21 +446,21 @@ extern "C" int32_t kinoko_register_texture_resource_class(SQVM* machine) {
 extern "C" int32_t kinoko_register_render_target_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
         int32_t klass[2] = {static_cast<int32_t>(OT_NULL), 0};
-        const auto ok = kinoko_publish_texture_resource_class(vm, root, "CActRenderTarget", klass);
+        const auto ok = kinoko_publish_texture_resource_class((struct SQVM*)(uintptr_t)(vm), root, "CActRenderTarget", klass);
         kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);
         return ok;
     });
 }
 
 
-extern "C" int32_t __fastcall kinoko_method_register_texture_resource(int32_t, void *, int32_t vm) {
-    return kinoko_register_texture_resource_class(pointer<SQVM>(vm));
+extern "C" int32_t __fastcall kinoko_method_register_texture_resource(int32_t, void *, SQVM* vm) {
+    return kinoko_register_texture_resource_class(vm);
 }
-extern "C" int32_t __fastcall kinoko_method_register_render_target(int32_t, void *, int32_t vm) {
-    return kinoko_register_render_target_class(pointer<SQVM>(vm));
+extern "C" int32_t __fastcall kinoko_method_register_render_target(int32_t, void *, SQVM* vm) {
+    return kinoko_register_render_target_class(vm);
 }
 
-int32_t kinoko_publish_cact_layer_class(int32_t vm, int32_t root_object)
+int32_t kinoko_publish_cact_layer_class(SQVM* vm, int32_t root_object)
 {
     int32_t existing[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t class_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
@@ -500,43 +478,43 @@ int32_t kinoko_publish_cact_layer_class(int32_t vm, int32_t root_object)
     if (existing_result) {
         int32_t already_published =
             existing[0] == 0x08004000 && existing[1] != 0;
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), existing);
+        kinoko_sqrat_release_pair(vm, existing);
         if (already_published)
             return 1;
     }
 
-    base = sq_gettop(kinoko_vm(vm));
-    if (!kinoko_sqrat_new_class(pointer<SQVM>(vm), class_pair) || sq_gettop(kinoko_vm(vm)) <= base) {
-        kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+    base = sq_gettop(vm);
+    if (!kinoko_sqrat_new_class(vm, class_pair) || sq_gettop(vm) <= base) {
+        kinoko_sqrat_trim_stack(vm, base);
         return 0;
     }
     if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-        kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+        kinoko_sqrat_release_pair(vm, class_pair);
+        kinoko_sqrat_trim_stack(vm, base);
         return 0;
     }
 
-    class_wrapper[1] = vm;
+    class_wrapper[1] = address(vm);
     class_wrapper[2] = class_pair[0];
     class_wrapper[3] = class_pair[1];
     if ((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(class_wrapper), (const char *)(intptr_t)((int32_t)(intptr_t)"AssociateResource"), (const void *)(method_source), 8, (void *)(kinoko_cact_associate_resource), 0)) < 0) {
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-        kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+        kinoko_sqrat_release_pair(vm, class_pair);
+        kinoko_sqrat_trim_stack(vm, base);
         return 0;
     }
-    if (!kinoko_publish_cact_layer_members(vm, class_pair)) {
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-        kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+    if (!kinoko_publish_cact_layer_members((struct SQVM*)(uintptr_t)(vm), class_pair)) {
+        kinoko_sqrat_release_pair(vm, class_pair);
+        kinoko_sqrat_trim_stack(vm, base);
         return 0;
     }
-    if (!kinoko_sqrat_set_pair(pointer<SQVM>(vm), pointer<const int32_t>(root_object + 8), "CActLayer", class_pair)) {
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-        kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+    if (!kinoko_sqrat_set_pair(vm, pointer<const int32_t>(root_object + 8), "CActLayer", class_pair)) {
+        kinoko_sqrat_release_pair(vm, class_pair);
+        kinoko_sqrat_trim_stack(vm, base);
         return 0;
     }
     kinoko_trace_i32("act:cact-layer-class", class_pair[1]);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-    kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+    kinoko_sqrat_release_pair(vm, class_pair);
+    kinoko_sqrat_trim_stack(vm, base);
     return 1;
 }
 
@@ -544,12 +522,12 @@ int32_t kinoko_publish_cact_layer_class(int32_t vm, int32_t root_object)
 // publication still lives in its register method; only the class setup is shared.
 extern "C" int32_t kinoko_register_cact_layer_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
-        return kinoko_publish_cact_layer_class(vm, root);
+        return kinoko_publish_cact_layer_class((struct SQVM*)(uintptr_t)(vm), root);
     });
 }
 
 
-int32_t kinoko_publish_acting_player_properties(int32_t vm,
+int32_t kinoko_publish_acting_player_properties(SQVM* vm,
                                                         const int32_t class_pair[2]) {
     static const char *names[] = { "staging", "marginLeft", "marginRight",
         "marginTop", "marginBottom", "offsetX", "offsetY", "visible",
@@ -569,19 +547,19 @@ int32_t kinoko_publish_acting_player_properties(int32_t vm,
     int32_t get_table[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t set_table[2] = { static_cast<int32_t>(OT_NULL), 0 };
     const bool published = [&]() {
-    if (!kinoko_sqrat_new_table(pointer<SQVM>(vm), get_table) ||
-        !kinoko_sqrat_new_table(pointer<SQVM>(vm), set_table) ||
-        !initialize_offset_property_class(pointer<SQVM>(vm), class_pair, set_table, get_table, nullptr, nullptr))
+    if (!kinoko_sqrat_new_table(vm, get_table) ||
+        !kinoko_sqrat_new_table(vm, set_table) ||
+        !initialize_offset_property_class(vm, class_pair, set_table, get_table, nullptr, nullptr))
         return false;
     for (size_t i = 0; i < sizeof(offsets) / sizeof(offsets[0]); ++i) {
-        if (!kinoko_sqrat_set_offset_closure(pointer<SQVM>(vm), get_table, names[i], offsets[i], (void *)(intptr_t)(address(kinoko_acting_player_get_property))) ||
-            !kinoko_sqrat_set_offset_closure(pointer<SQVM>(vm), set_table, names[i], offsets[i], (void *)(intptr_t)(address(kinoko_acting_player_set_property))))
+        if (!kinoko_sqrat_set_offset_closure(vm, get_table, names[i], offsets[i], (void *)(intptr_t)(address(kinoko_acting_player_get_property))) ||
+            !kinoko_sqrat_set_offset_closure(vm, set_table, names[i], offsets[i], (void *)(intptr_t)(address(kinoko_acting_player_set_property))))
             return false;
     }
     return true;
     }();
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), get_table);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), set_table);
+    kinoko_sqrat_release_pair(vm, get_table);
+    kinoko_sqrat_release_pair(vm, set_table);
     return published;
 }
 
@@ -682,48 +660,48 @@ bool swap_layers(KinokoActRuntime* player, int32_t first, int32_t second) {
     return true;
 }
 
-int32_t get_layer_order_native(int32_t vm) {
+int32_t get_layer_order_native(SQVM* vm) {
     int32_t player=0, layer=0;
-    if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
-        SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),2,reinterpret_cast<SQUserPointer*>(&layer),nullptr)))
-        return sq_throwerror(kinoko_vm(vm),"invalid GetLayerOrder arguments");
-    sq_pushinteger(kinoko_vm(vm),get_layer_order(pointer<KinokoActRuntime>(player), pointer<KinokoActLayer>(layer)));
+    if (SQ_FAILED(sq_getinstanceup(vm,1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
+        SQ_FAILED(sq_getinstanceup(vm,2,reinterpret_cast<SQUserPointer*>(&layer),nullptr)))
+        return sq_throwerror(vm,"invalid GetLayerOrder arguments");
+    sq_pushinteger(vm,get_layer_order(pointer<KinokoActRuntime>(player), pointer<KinokoActLayer>(layer)));
     return 1;
 }
-int32_t swap_layers_native(int32_t vm) {
+int32_t swap_layers_native(SQVM* vm) {
     int32_t player=0;
     SQInteger first=0, second=0;
-    if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
-        SQ_FAILED(sq_getinteger(kinoko_vm(vm),2,&first)) ||
-        SQ_FAILED(sq_getinteger(kinoko_vm(vm),3,&second)))
-        return sq_throwerror(kinoko_vm(vm),"invalid SwapLayer arguments");
+    if (SQ_FAILED(sq_getinstanceup(vm,1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
+        SQ_FAILED(sq_getinteger(vm,2,&first)) ||
+        SQ_FAILED(sq_getinteger(vm,3,&second)))
+        return sq_throwerror(vm,"invalid SwapLayer arguments");
     try {
-        sq_pushbool(kinoko_vm(vm),swap_layers(pointer<KinokoActRuntime>(player), first, second));
+        sq_pushbool(vm,swap_layers(pointer<KinokoActRuntime>(player), first, second));
         return 1;
-    } catch (...) { return sq_throwerror(kinoko_vm(vm),"SwapLayer allocation failed"); }
+    } catch (...) { return sq_throwerror(vm,"SwapLayer allocation failed"); }
 }
 
-int32_t find_first_native(int32_t vm) {
+int32_t find_first_native(SQVM* vm) {
     KinokoActRuntime *player=nullptr;
     const SQChar* pattern=nullptr;
-    if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
-        SQ_FAILED(sq_getstring(kinoko_vm(vm),2,&pattern)))
-        return sq_throwerror(kinoko_vm(vm),"invalid FindFirstFile arguments");
-    sq_pushinteger(kinoko_vm(vm),kinoko_act_find_first(player,pattern));
+    if (SQ_FAILED(sq_getinstanceup(vm,1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
+        SQ_FAILED(sq_getstring(vm,2,&pattern)))
+        return sq_throwerror(vm,"invalid FindFirstFile arguments");
+    sq_pushinteger(vm,kinoko_act_find_first(player,pattern));
     return 1;
 }
 enum class FindOperation { Next, Close, Name };
-template<FindOperation operation> int32_t find_by_id_native(int32_t vm) {
+template<FindOperation operation> int32_t find_by_id_native(SQVM* vm) {
     KinokoActRuntime *player=nullptr;
     SQInteger id=0;
-    if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
-        SQ_FAILED(sq_getinteger(kinoko_vm(vm),2,&id)))
-        return sq_throwerror(kinoko_vm(vm),"invalid file enumeration arguments");
+    if (SQ_FAILED(sq_getinstanceup(vm,1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
+        SQ_FAILED(sq_getinteger(vm,2,&id)))
+        return sq_throwerror(vm,"invalid file enumeration arguments");
     if constexpr (operation==FindOperation::Name)
-        sq_pushstring(kinoko_vm(vm),kinoko_act_find_name(player,id),-1);
+        sq_pushstring(vm,kinoko_act_find_name(player,id),-1);
     else if constexpr (operation==FindOperation::Close)
-        sq_pushbool(kinoko_vm(vm),kinoko_act_find_close(player,id));
-    else sq_pushbool(kinoko_vm(vm),kinoko_act_find_next(player,id));
+        sq_pushbool(vm,kinoko_act_find_close(player,id));
+    else sq_pushbool(vm,kinoko_act_find_next(player,id));
     return 1;
 }
 
@@ -785,9 +763,9 @@ template<bool string_layout> int32_t create_layer(int32_t player, const char* na
 // decompiled 4556C0 thunk lost the member call and returned conversion status.
 // Original instance conversion initializes a null argument to zero, allowing
 // SetRenderTarget(null) to select the default target again.
-int32_t set_render_target_native(int32_t vm) {
+int32_t set_render_target_native(SQVM* vm) {
     SQUserPointer player = nullptr, target = nullptr;
-    const auto machine = kinoko_vm(vm);
+    const auto machine = vm;
     if (SQ_FAILED(sq_getinstanceup(machine, 1, &player, nullptr)) || !player)
         return sq_throwerror(machine, "invalid SetRenderTarget receiver");
     sq_getinstanceup(machine, 2, &target, nullptr);
@@ -796,33 +774,33 @@ int32_t set_render_target_native(int32_t vm) {
     sq_pushbool(machine, SQTrue);
     return 1;
 }
-template<bool string_layout> int32_t create_layer_native(int32_t vm) {
+template<bool string_layout> int32_t create_layer_native(SQVM* vm) {
     int32_t player = 0;
     const SQChar* name = nullptr;
-    if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
-        SQ_FAILED(sq_getstring(kinoko_vm(vm),2,&name))) return sq_throwerror(kinoko_vm(vm), "invalid CreateLayer arguments");
+    if (SQ_FAILED(sq_getinstanceup(vm,1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
+        SQ_FAILED(sq_getstring(vm,2,&name))) return sq_throwerror(vm, "invalid CreateLayer arguments");
     try {
         DynamicLayerParent root(vm), klass(vm);
-        const auto root_value = kinoko::script::upstream::sqrat_root(kinoko_vm(vm));
+        const auto root_value = kinoko::script::upstream::sqrat_root(vm);
         std::memcpy(root.object+2, &root_value, sizeof(root_value));
-        if (!kinoko_publish_cact_layer_class(vm,address(root.object)) ||
+        if (!kinoko_publish_cact_layer_class((struct SQVM*)(uintptr_t)(vm), address(root.object)) ||
             !get_pair(address(root.object),"CActLayer",klass.object+2))
-            return sq_throwerror(kinoko_vm(vm), "CActLayer class is unavailable");
+            return sq_throwerror(vm, "CActLayer class is unavailable");
         const auto layer = create_layer<string_layout>(player,name);
         const auto type = kinoko::legacy::load<HSQOBJECT>(klass.object+2);
-        if (!kinoko::script::upstream::sqrat_push_instance(kinoko_vm(vm),type,pointer<void>(layer)))
-            return sq_throwerror(kinoko_vm(vm), "CActLayer class is unavailable");
+        if (!kinoko::script::upstream::sqrat_push_instance(vm,type,pointer<void>(layer)))
+            return sq_throwerror(vm, "CActLayer class is unavailable");
         return 1;
-    } catch (...) { return sq_throwerror(kinoko_vm(vm), "CreateLayer allocation failed"); }
+    } catch (...) { return sq_throwerror(vm, "CreateLayer allocation failed"); }
 }
 }
 
-int32_t kinoko_publish_acting_player_class(int32_t vm,
+int32_t kinoko_publish_acting_player_class(SQVM* vm,
                                                    int32_t root_object)
 {
     int32_t existing[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t class_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    int32_t class_object[4] = { 0, vm, static_cast<int32_t>(OT_NULL), 0 };
+    int32_t class_object[4] = { 0, address(vm), static_cast<int32_t>(OT_NULL), 0 };
     int32_t existing_result;
     int32_t base;
 
@@ -836,59 +814,59 @@ int32_t kinoko_publish_acting_player_class(int32_t vm,
             kinoko_acting_player_class_pair[0] = existing[0];
             kinoko_acting_player_class_pair[1] = existing[1];
         }
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), existing);
+        kinoko_sqrat_release_pair(vm, existing);
         if (already_published)
             return 1;
     }
 
-    base = sq_gettop(kinoko_vm(vm));
-    if (!kinoko_sqrat_new_class(pointer<SQVM>(vm), class_pair) || sq_gettop(kinoko_vm(vm)) <= base)
+    base = sq_gettop(vm);
+    if (!kinoko_sqrat_new_class(vm, class_pair) || sq_gettop(vm) <= base)
         return 0;
     if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
+        kinoko_sqrat_release_pair(vm, class_pair);
         return 0;
     }
 
-    class_object[1] = vm;
+    class_object[1] = address(vm);
     class_object[2] = class_pair[0];
     class_object[3] = class_pair[1];
-    kinoko_sqplus_register_actor_method(pointer<SQVM>(vm), class_object + 1, "SetCurrentTime", (void *)(kinoko_act_set_current_time), (void *)(kinoko_sqrat_call_integer1), 0);
-    kinoko_sqplus_register_actor_method(pointer<SQVM>(vm), class_object + 1, "IncrementFrame", (void *)(kinoko_act_increment_frame), (void *)(kinoko_sqrat_call_integer0), 0);
-    kinoko_sqplus_register_actor_method(pointer<SQVM>(vm), class_object + 1, "GetCurrentTime", (void *)(kinoko_act_get_current_time), (void *)(kinoko_sqrat_call_integer0), 0);
-    kinoko_sqplus_register_actor_method(pointer<SQVM>(vm), class_object + 1, "GetCurrentFrame", (void *)(kinoko_act_get_current_frame), (void *)(kinoko_sqrat_call_integer0), 0);
-    kinoko_sqplus_register_actor_method(pointer<SQVM>(vm), class_object + 1, "BeginStage", (void *)(kinoko_method_begin_stage), (void *)(kinoko_sqrat_call_integer1), 0);
-    kinoko_sqplus_register_actor_method(pointer<SQVM>(vm), class_object + 1, "EndStage", (void *)(kinoko_act_end_stage), (void *)(kinoko_sqrat_call_integer0), 0);
-    kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), class_pair, "CreateLayer2D", (void *)(intptr_t)(address(create_layer_native<false>)), nullptr, 0);
-    kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), class_pair, "CreateLayerString", (void *)(intptr_t)(address(create_layer_native<true>)), nullptr, 0);
-    kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), class_pair, "GetLayerOrder", (void *)(intptr_t)(address(get_layer_order_native)), nullptr, 0);
-    kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), class_pair, "SwapLayer", (void *)(intptr_t)(address(swap_layers_native)), nullptr, 0);
-    kinoko_sqplus_register_actor_method(pointer<SQVM>(vm), class_object + 1, "BitBlt", (void *)(kinoko_method_act_bitblt), (void *)(kinoko_native_draw_member_callback), 0);
-    kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), class_pair, "SetRenderTarget", (void *)(intptr_t)(address(set_render_target_native)), nullptr, 0);
-    kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), class_pair, "FindFirstFile", (void *)(intptr_t)(address(find_first_native)), nullptr, 0);
-    kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), class_pair, "FindNextFile", (void *)(intptr_t)(address(find_by_id_native<FindOperation::Next>)), nullptr, 0);
-    kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), class_pair, "FindClose", (void *)(intptr_t)(address(find_by_id_native<FindOperation::Close>)), nullptr, 0);
-    kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), class_pair, "GetFindFileName", (void *)(intptr_t)(address(find_by_id_native<FindOperation::Name>)), nullptr, 0);
-    kinoko_sqplus_register_actor_method(pointer<SQVM>(vm), class_object + 1, "timeGetTime", (void *)(timeGetTime), (void *)(kinoko_sqrat_call_integer0), 0);
-    kinoko_sqplus_register_actor_method(pointer<SQVM>(vm), class_object + 1, "Sleep", (void *)(kinoko_act_sleep), (void *)(kinoko_native_integer_member_callback), 0);
-    kinoko_sqplus_register_actor_method(pointer<SQVM>(vm), class_object + 1, "SleepTo", (void *)(kinoko_act_sleep_to), (void *)(kinoko_native_integer_member_callback), 0);
-    kinoko_sqplus_register_actor_method(pointer<SQVM>(vm), class_object + 1, "Suspend", (void *)(kinoko_act_suspend), (void *)(kinoko_native_nullary_member_callback), 0);
-    kinoko_sqplus_register_actor_method(pointer<SQVM>(vm), class_object + 1, "Resume", (void *)(kinoko_act_resume), (void *)(kinoko_native_nullary_member_callback), 0);
+    kinoko_sqplus_register_actor_method(vm, class_object + 1, "SetCurrentTime", (void *)(kinoko_act_set_current_time), (void *)(kinoko_sqrat_call_integer1), 0);
+    kinoko_sqplus_register_actor_method(vm, class_object + 1, "IncrementFrame", (void *)(kinoko_act_increment_frame), (void *)(kinoko_sqrat_call_integer0), 0);
+    kinoko_sqplus_register_actor_method(vm, class_object + 1, "GetCurrentTime", (void *)(kinoko_act_get_current_time), (void *)(kinoko_sqrat_call_integer0), 0);
+    kinoko_sqplus_register_actor_method(vm, class_object + 1, "GetCurrentFrame", (void *)(kinoko_act_get_current_frame), (void *)(kinoko_sqrat_call_integer0), 0);
+    kinoko_sqplus_register_actor_method(vm, class_object + 1, "BeginStage", (void *)(kinoko_method_begin_stage), (void *)(kinoko_sqrat_call_integer1), 0);
+    kinoko_sqplus_register_actor_method(vm, class_object + 1, "EndStage", (void *)(kinoko_act_end_stage), (void *)(kinoko_sqrat_call_integer0), 0);
+    kinoko_sqrat_set_native_closure(vm, class_pair, "CreateLayer2D", (void *)(intptr_t)(address(create_layer_native<false>)), nullptr, 0);
+    kinoko_sqrat_set_native_closure(vm, class_pair, "CreateLayerString", (void *)(intptr_t)(address(create_layer_native<true>)), nullptr, 0);
+    kinoko_sqrat_set_native_closure(vm, class_pair, "GetLayerOrder", (void *)(intptr_t)(address(get_layer_order_native)), nullptr, 0);
+    kinoko_sqrat_set_native_closure(vm, class_pair, "SwapLayer", (void *)(intptr_t)(address(swap_layers_native)), nullptr, 0);
+    kinoko_sqplus_register_actor_method(vm, class_object + 1, "BitBlt", (void *)(kinoko_method_act_bitblt), (void *)(kinoko_native_draw_member_callback), 0);
+    kinoko_sqrat_set_native_closure(vm, class_pair, "SetRenderTarget", (void *)(intptr_t)(address(set_render_target_native)), nullptr, 0);
+    kinoko_sqrat_set_native_closure(vm, class_pair, "FindFirstFile", (void *)(intptr_t)(address(find_first_native)), nullptr, 0);
+    kinoko_sqrat_set_native_closure(vm, class_pair, "FindNextFile", (void *)(intptr_t)(address(find_by_id_native<FindOperation::Next>)), nullptr, 0);
+    kinoko_sqrat_set_native_closure(vm, class_pair, "FindClose", (void *)(intptr_t)(address(find_by_id_native<FindOperation::Close>)), nullptr, 0);
+    kinoko_sqrat_set_native_closure(vm, class_pair, "GetFindFileName", (void *)(intptr_t)(address(find_by_id_native<FindOperation::Name>)), nullptr, 0);
+    kinoko_sqplus_register_actor_method(vm, class_object + 1, "timeGetTime", (void *)(timeGetTime), (void *)(kinoko_sqrat_call_integer0), 0);
+    kinoko_sqplus_register_actor_method(vm, class_object + 1, "Sleep", (void *)(kinoko_act_sleep), (void *)(kinoko_native_integer_member_callback), 0);
+    kinoko_sqplus_register_actor_method(vm, class_object + 1, "SleepTo", (void *)(kinoko_act_sleep_to), (void *)(kinoko_native_integer_member_callback), 0);
+    kinoko_sqplus_register_actor_method(vm, class_object + 1, "Suspend", (void *)(kinoko_act_suspend), (void *)(kinoko_native_nullary_member_callback), 0);
+    kinoko_sqplus_register_actor_method(vm, class_object + 1, "Resume", (void *)(kinoko_act_resume), (void *)(kinoko_native_nullary_member_callback), 0);
 
-    if (!kinoko_publish_acting_player_properties(vm, class_pair)) {
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-        kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+    if (!kinoko_publish_acting_player_properties((struct SQVM*)(uintptr_t)(vm), class_pair)) {
+        kinoko_sqrat_release_pair(vm, class_pair);
+        kinoko_sqrat_trim_stack(vm, base);
         return 0;
     }
 
     kinoko_acting_player_class_pair[0] = class_pair[0];
     kinoko_acting_player_class_pair[1] = class_pair[1];
-    kinoko_sqrat_set_pair(pointer<SQVM>(vm), pointer<const int32_t>(root_object + 8), "ActingPlayer", class_pair);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-    kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+    kinoko_sqrat_set_pair(vm, pointer<const int32_t>(root_object + 8), "ActingPlayer", class_pair);
+    kinoko_sqrat_release_pair(vm, class_pair);
+    kinoko_sqrat_trim_stack(vm, base);
     return 1;
 }
 
-int32_t kinoko_publish_acting_player(int32_t vm,
+int32_t kinoko_publish_acting_player(SQVM* vm,
                                              const int32_t *act_pair,
                                              const char *name,
                                              int32_t player_ptr,
@@ -912,15 +890,15 @@ int32_t kinoko_publish_acting_player(int32_t vm,
     kinoko_trace_i32("act:acting-class-data", kinoko_acting_player_class_pair[1]);
     out_pair[0] = static_cast<int32_t>(OT_NULL);
     out_pair[1] = 0;
-    base = sq_gettop(kinoko_vm(vm));
-    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(act_pair[0], act_pair[1]));
-    sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer(address(name)), -1);
-    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(kinoko_acting_player_class_pair[0], kinoko_acting_player_class_pair[1]));
-    if (sq_createinstance(kinoko_vm(vm), -1) < 0) {
-        kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+    base = sq_gettop(vm);
+    sq_pushobject(vm, kinoko_borrowed_object(act_pair[0], act_pair[1]));
+    sq_pushstring(vm, (const SQChar*)kinoko_pointer(address(name)), -1);
+    sq_pushobject(vm, kinoko_borrowed_object(kinoko_acting_player_class_pair[0], kinoko_acting_player_class_pair[1]));
+    if (sq_createinstance(vm, -1) < 0) {
+        kinoko_sqrat_trim_stack(vm, base);
         return 0;
     }
-    sq_remove(kinoko_vm(vm), -2);
+    sq_remove(vm, -2);
     instance_slot = ((int32_t)(uintptr_t)kinoko_sq_get_up((SQVM*)(uintptr_t)(vm), -1));
     kinoko_trace_i32("act:acting-instance-slot", instance_slot);
     kinoko_trace_i32("act:acting-instance-type",
@@ -936,8 +914,8 @@ int32_t kinoko_publish_acting_player(int32_t vm,
         kinoko_trace_i32("act:acting-instance-user-before",
                          field<int32_t>(instance + 32));
     }
-    if (sq_setinstanceup(kinoko_vm(vm), -1, kinoko_pointer(player_ptr)) < 0) {
-        kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+    if (sq_setinstanceup(vm, -1, kinoko_pointer(player_ptr)) < 0) {
+        kinoko_sqrat_trim_stack(vm, base);
         return 0;
     }
     if (instance_slot != 0 &&
@@ -949,13 +927,13 @@ int32_t kinoko_publish_acting_player(int32_t vm,
         kinoko_trace_i32("act:acting-instance-user-after",
                          field<int32_t>(instance + 32));
     }
-    sq_getstackobj(kinoko_vm(vm), -1, (HSQOBJECT*)(out_pair));
-    kinoko_sqrat_retain_pair(pointer<SQVM>(vm), out_pair);
-    result = sq_newslot(kinoko_vm(vm), -3, ((0) != 0));
+    sq_getstackobj(vm, -1, (HSQOBJECT*)(out_pair));
+    kinoko_sqrat_retain_pair(vm, out_pair);
+    result = sq_newslot(vm, -3, ((0) != 0));
     if (std::strcmp(name, "pl") == 0 || std::strcmp(name, "player") == 0) {
         kinoko_trace_squirrel_name("act:acting-read-name",
                                    address(name));
-        object_wrapper[1] = vm;
+        object_wrapper[1] = address(vm);
         object_wrapper[2] = act_pair[0];
         object_wrapper[3] = act_pair[1];
         if (get_pair(address(object_wrapper),
@@ -968,18 +946,18 @@ int32_t kinoko_publish_acting_player(int32_t vm,
                 kinoko_trace_i32("act:acting-read-user",
                                  field<int32_t>(actual[1] + 32));
             }
-            kinoko_sqrat_release_pair(pointer<SQVM>(vm), actual);
+            kinoko_sqrat_release_pair(vm, actual);
         } else {
             kinoko_trace("act:acting-read-failed");
         }
     }
     kinoko_trace_i32("act:pair-act-after", act_pair[1]);
-    kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+    kinoko_sqrat_trim_stack(vm, base);
     return result >= 0 && out_pair[0] == 0x0A008000;
 }
 
 int32_t kinoko_execute_act_source_script(
-    int32_t vm, int32_t script_ptr, const int32_t *environment_pair)
+    SQVM* vm, int32_t script_ptr, const int32_t *environment_pair)
 {
     if (!vm || !script_ptr || !environment_pair) return 0;
     const char *source = field<const char *>(script_ptr + 92);
@@ -1021,8 +999,8 @@ namespace {
 // 51B924 maps the script environment's object pointer to CActScript. Original
 // insert is unique; re-registering an environment does not replace its owner.
 std::map<int32_t, int32_t> act_script_owners;
-void refresh_act_script_callbacks(int32_t vm, int32_t script, const int32_t *environment) {
-    int32_t wrapper[5] = {kinoko_sqrat_object_vtable(), vm, environment[0], environment[1], 0};
+void refresh_act_script_callbacks(SQVM* vm, int32_t script, const int32_t *environment) {
+    int32_t wrapper[5] = {kinoko_sqrat_object_vtable(), address(vm), environment[0], environment[1], 0};
     kinoko_copy_act_callback((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(script), 4, (void*)(uintptr_t)(address(wrapper)), "Init");
     kinoko_copy_act_callback((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(script), 24, (void*)(uintptr_t)(address(wrapper)), "Update");
     kinoko_copy_act_callback((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(script), 44, (void*)(uintptr_t)(address(wrapper)), "OnCreate");
@@ -1036,7 +1014,7 @@ extern "C" void kinoko_forget_act_script(int32_t script) {
     }
 }
 
-int32_t kinoko_compile_act_file(int32_t vm, const char *path, const int32_t *environment) {
+int32_t kinoko_compile_act_file(SQVM* vm, const char *path, const int32_t *environment) {
     if (!vm || !path || !environment || environment[0] == 0x01000001) return 0;
     KinokoArchiveReader *reader = nullptr;
     try {
@@ -1067,7 +1045,7 @@ int32_t kinoko_compile_act_file(int32_t vm, const char *path, const int32_t *env
             : kinoko_sq_compile_act_source((SQVM*)(uintptr_t)(vm), reinterpret_cast<const char*>(buffer.data()), static_cast<int32_t>(strnlen(reinterpret_cast<const char*>(buffer.data()), size)), environment);
         if (!ok) return 0;
         const auto owner = act_script_owners.find(environment[1]);
-        if (owner != act_script_owners.end()) refresh_act_script_callbacks(vm, owner->second, environment);
+        if (owner != act_script_owners.end()) refresh_act_script_callbacks((struct SQVM*)(uintptr_t)(vm), owner->second, environment);
         return 1;
     } catch (...) {
         if (reader) kinoko_reader_close(reader);
@@ -1075,63 +1053,63 @@ int32_t kinoko_compile_act_file(int32_t vm, const char *path, const int32_t *env
     }
 }
 
-int32_t kinoko_local_compile_file_native(int32_t vm) {
+int32_t kinoko_local_compile_file_native(SQVM* vm) {
     const SQChar *path = nullptr;
     int32_t environment[2] = {static_cast<int32_t>(OT_NULL), 0};
-    if (sq_gettop(kinoko_vm(vm)) < 2 || SQ_FAILED(sq_getstring(kinoko_vm(vm), 2, &path))) return 0;
-    if (sq_gettop(kinoko_vm(vm)) >= 3)
-        sq_getstackobj(kinoko_vm(vm), 3, reinterpret_cast<HSQOBJECT*>(environment));
-    sq_pushbool(kinoko_vm(vm), kinoko_compile_act_file(vm, path, environment));
+    if (sq_gettop(vm) < 2 || SQ_FAILED(sq_getstring(vm, 2, &path))) return 0;
+    if (sq_gettop(vm) >= 3)
+        sq_getstackobj(vm, 3, reinterpret_cast<HSQOBJECT*>(environment));
+    sq_pushbool(vm, kinoko_compile_act_file((struct SQVM*)(uintptr_t)(vm), path, environment));
     return 1;
 }
 
-int32_t kinoko_publish_act_script_constants(int32_t vm, const int32_t *environment)
+int32_t kinoko_publish_act_script_constants(SQVM* vm, const int32_t *environment)
 {
     static const char *const names[] = {
         "BLEND_NORMAL", "BLEND_ALPHA", "BLEND_ADD", "BLEND_SUB",
         "BLEND_MULTI", "BLEND_INVERT"
     };
-    int32_t object[5] = {address(kinoko_act_host_symbols()->sq_object_vtable), vm, environment[0], environment[1], 0};
+    int32_t object[5] = {address(kinoko_act_host_symbols()->sq_object_vtable), address(vm), environment[0], environment[1], 0};
     int32_t user[2] = {static_cast<int32_t>(OT_NULL), 0};
     int32_t have_user = get_pair(address(object), "u", user);
     int32_t needs_user = !have_user || user[0] == static_cast<int32_t>(OT_NULL);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), user);
+    kinoko_sqrat_release_pair(vm, user);
     /* 416056..41605F passes the same Sqrat object as source and destination. */
-    if (needs_user && !kinoko_sqrat_set_pair(pointer<SQVM>(vm), environment, "u", environment))
+    if (needs_user && !kinoko_sqrat_set_pair(vm, environment, "u", environment))
         return 0;
     /* 415FD0:4160DC installs these in the script environment before loading. */
     for (int32_t value = 0; value < 6; ++value) {
-        if (!kinoko_sqrat_bind_int(pointer<SQVM>(vm), environment, names[value], value))
+        if (!kinoko_sqrat_bind_int(vm, environment, names[value], value))
             return 0;
     }
-    return kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), environment, "CompileFile", (void *)(intptr_t)(address(kinoko_local_compile_file_native)), nullptr, 0);
+    return kinoko_sqrat_set_native_closure(vm, environment, "CompileFile", (void *)(intptr_t)(address(kinoko_local_compile_file_native)), nullptr, 0);
 }
 
 extern "C" int32_t kinoko_register_act_script(int32_t script, int32_t object) {
     if (!script || !object || field<int32_t>(object + 8) == 0x01000001) return static_cast<int32_t>(E_FAIL);
     const int32_t vm = field<int32_t>(object + 4);
     const auto *environment = pointer<const int32_t>(object + 8);
-    if (!vm || !kinoko_publish_act_script_constants(vm, environment)) return static_cast<int32_t>(E_FAIL);
+    if (!vm || !kinoko_publish_act_script_constants((struct SQVM*)(uintptr_t)(vm), environment)) return static_cast<int32_t>(E_FAIL);
     if (!field<uint8_t>(script + 100)) return 0;
     bool ok = false;
     if (field<uint8_t>(script + 101)) {
         ok = kinoko_execute_embedded_act_script((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(script), environment) != 0;
     } else {
         const char *path = kinoko_string_data(ScriptPublicationView(pointer<void>(script)).bytes(&ScriptPublicationRecord::path));
-        ok = path && *path ? kinoko_compile_act_file(vm, path, environment) != 0
-                          : kinoko_execute_act_source_script(vm, script, environment) != 0;
+        ok = path && *path ? kinoko_compile_act_file((struct SQVM*)(uintptr_t)(vm), path, environment) != 0
+                          : kinoko_execute_act_source_script((struct SQVM*)(uintptr_t)(vm), script, environment) != 0;
     }
     if (!ok) return static_cast<int32_t>(E_FAIL);
-    refresh_act_script_callbacks(vm, script, environment);
+    refresh_act_script_callbacks((struct SQVM*)(uintptr_t)(vm), script, environment);
     act_script_owners.emplace(environment[1], script);
     return 0;
 }
 
-int32_t kinoko_prepare_cact_layer_objects(int32_t vm, int32_t layer,
+int32_t kinoko_prepare_cact_layer_objects(SQVM* vm, int32_t layer,
                                          int32_t script_pair[2]) {
     using namespace kinoko::act;
     if (!vm || !layer || !script_pair) return 0;
-    auto* machine = pointer<SQVM>(vm);
+    auto* machine = vm;
     const LayerStorageView storage(pointer<void>(layer));
     const auto script = storage.view(&LayerStorageRecord::script_object);
     const auto layout = storage.view(&LayerStorageRecord::layout_object);
@@ -1155,7 +1133,7 @@ int32_t kinoko_prepare_cact_layer_objects(int32_t vm, int32_t layer,
     kinoko_sqrat_release_pair(machine, table.data());
     const auto value = script.get(&LayerObjectRecord::value);
     std::memcpy(script_pair, value.data(), sizeof value);
-    if (!kinoko_publish_act_script_constants(vm, script_pair)) return 0;
+    if (!kinoko_publish_act_script_constants((struct SQVM*)(uintptr_t)(vm), script_pair)) return 0;
     reset(layout, kinoko_act_host_symbols()->layer_layout_vtable);
     return 1;
 }
@@ -1173,10 +1151,10 @@ extern "C" int32_t __fastcall kinoko_method_register_act_layer(
     int32_t root[5] = {}, klass[2] = {static_cast<int32_t>(OT_NULL), 0};
     int32_t outer[2] = {static_cast<int32_t>(OT_NULL), 0}, inner[2] = {static_cast<int32_t>(OT_NULL), 0}, script[2] = {static_cast<int32_t>(OT_NULL), 0};
     if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), pointer<SQVM>(vm)))) return static_cast<int32_t>(E_FAIL);
-    bool ok = kinoko_publish_cact_layer_class(vm, address(root)) &&
+    bool ok = kinoko_publish_cact_layer_class((struct SQVM*)(uintptr_t)(vm), address(root)) &&
         get_pair(address(root), "CActLayer", klass) &&
         kinoko_create_bound_instance((struct SQVM*)(uintptr_t)(vm), pointer<const int32_t>(parent + 8), kinoko_string_data(LayerPublicationView(pointer<void>(layer)).bytes(&LayerPublicationRecord::name)), klass, (void*)(uintptr_t)(layer), outer) &&
-        kinoko_prepare_cact_layer_objects(vm, layer, script);
+        kinoko_prepare_cact_layer_objects((struct SQVM*)(uintptr_t)(vm), layer, script);
     if (ok) {
         kinoko_sqrat_assign_pair(pointer<SQVM>(vm), pointer<int32_t>(layer + 336), outer);
         ok = kinoko_sqrat_raw_set_pair(pointer<SQVM>(vm), outer, "script", script) &&
@@ -1210,8 +1188,8 @@ int32_t kinoko_bind_original_layout(int32_t layout, bool map) {
     int32_t outer[2] = {static_cast<int32_t>(OT_NULL), 0}, script[2] = {static_cast<int32_t>(OT_NULL), 0};
     if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), pointer<SQVM>(vm)))) return static_cast<int32_t>(E_FAIL);
     const bool registered = map
-        ? kinoko_publish_c2dmaplayout_class(vm, address(root), klass) != 0
-        : kinoko_publish_c2dlayout_class(vm, address(root)) && get_pair(address(root), "C2DLayout", klass);
+        ? kinoko_publish_c2dmaplayout_class((struct SQVM*)(uintptr_t)(vm), address(root), klass) != 0
+        : kinoko_publish_c2dlayout_class((struct SQVM*)(uintptr_t)(vm), address(root)) && get_pair(address(root), "C2DLayout", klass);
     const bool ok = registered &&
         kinoko_create_unbound_instance((struct SQVM*)(uintptr_t)(vm), klass, (void*)(uintptr_t)(layout), outer) &&
         kinoko_sqrat_raw_set_pair(pointer<SQVM>(vm), pointer<const int32_t>(layer + 336), "layout", outer) &&
@@ -1253,15 +1231,15 @@ extern "C" int32_t __fastcall kinoko_method_register_map_layout(int32_t layout, 
     return kinoko_bind_original_layout(layout, true);
 }
 
-int32_t kinoko_map_chip_count(int32_t vm) {
+int32_t kinoko_map_chip_count(SQVM* vm) {
     int32_t layout = 0;
-    if (sq_getinstanceup(kinoko_vm(vm), 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0)
+    if (sq_getinstanceup(vm, 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0)
         return 0;
-    sq_pushinteger(kinoko_vm(vm), kinoko::map::placement_count(pointer<KinokoActLayout>(layout)));
+    sq_pushinteger(vm, kinoko::map::placement_count(pointer<KinokoActLayout>(layout)));
     return 1;
 }
 
-int32_t kinoko_map_get_chip_layout(int32_t vm) {
+int32_t kinoko_map_get_chip_layout(SQVM* vm) {
     int32_t layout = 0;
     int32_t index = -1;
     int32_t begin;
@@ -1269,32 +1247,32 @@ int32_t kinoko_map_get_chip_layout(int32_t vm) {
     int32_t root[5];
     int32_t chip_class[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t instance[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    if (sq_getinstanceup(kinoko_vm(vm), 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0 ||
-        sq_getinteger(kinoko_vm(vm), 2, (SQInteger*)(&index)) < 0)
+    if (sq_getinstanceup(vm, 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0 ||
+        sq_getinteger(vm, 2, (SQInteger*)(&index)) < 0)
         return 0;
     begin = field<int32_t>(layout + 264);
     count = (field<int32_t>(layout + 268) - begin) / 32;
     if (index < 0 || index >= count) {
-        sq_pushnull(kinoko_vm(vm));
+        sq_pushnull(vm);
         return 1;
     }
-    if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), pointer<SQVM>(vm))))
+    if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), vm)))
         return 0;
     if (get_pair(address(root), "ChipLayout", chip_class) &&
         kinoko_create_unbound_instance((struct SQVM*)(uintptr_t)(vm), chip_class, (void*)(uintptr_t)(begin + 32 * index), instance))
-        sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(instance[0], instance[1]));
+        sq_pushobject(vm, kinoko_borrowed_object(instance[0], instance[1]));
     else
-        sq_pushnull(kinoko_vm(vm));
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), instance);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), chip_class);
+        sq_pushnull(vm);
+    kinoko_sqrat_release_pair(vm, instance);
+    kinoko_sqrat_release_pair(vm, chip_class);
     kinoko_sqrat_object_release((void *)(root));
     return 1;
 }
 
-int32_t kinoko_map_layout_argument(int32_t vm, int32_t *index) {
+int32_t kinoko_map_layout_argument(SQVM* vm, int32_t *index) {
     int32_t layout = 0;
-    if (sq_getinstanceup(kinoko_vm(vm), 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0 ||
-        (index != nullptr && sq_getinteger(kinoko_vm(vm), 2, (SQInteger*)(index)) < 0))
+    if (sq_getinstanceup(vm, 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0 ||
+        (index != nullptr && sq_getinteger(vm, 2, (SQInteger*)(index)) < 0))
         return 0;
     return layout;
 }
@@ -1307,14 +1285,14 @@ struct kinoko_mcd_data *kinoko_map_chip_data(int32_t layout) {
     return kinoko_map_cached_chip_data(pointer<KinokoActLayout>(layout));
 }
 
-int32_t kinoko_map_get_chip_by_position(int32_t vm) {
+int32_t kinoko_map_get_chip_by_position(SQVM* vm) {
     int32_t x = 0, y = 0;
-    int32_t layout = kinoko_map_layout_argument(vm, &x);
+    int32_t layout = kinoko_map_layout_argument((struct SQVM*)(uintptr_t)(vm), &x);
     // GetChipByPosition calls 435220, whose 435243..435265 prologue binds
     // an empty cache even for invisible event layers. Other chip-data users
     // (e.g. PreArrangement) do not have this lazy-binding contract.
     const bool valid_position = layout &&
-        sq_getinteger(kinoko_vm(vm), 3, (SQInteger*)(&y)) >= 0;
+        sq_getinteger(vm, 3, (SQInteger*)(&y)) >= 0;
     struct kinoko_mcd_data *data = valid_position
         ? kinoko_map_query_chip_data(pointer<KinokoActLayout>(layout)) : nullptr;
     int32_t found = -1;
@@ -1336,76 +1314,76 @@ int32_t kinoko_map_get_chip_by_position(int32_t vm) {
             }
         }
     }
-    sq_pushinteger(kinoko_vm(vm), found);
+    sq_pushinteger(vm, found);
     return 1;
 }
 
-int32_t kinoko_map_set_chip_rect(int32_t vm) {
+int32_t kinoko_map_set_chip_rect(SQVM* vm) {
     int32_t id = 0, rectangle[4];
-    int32_t layout = kinoko_map_layout_argument(vm, &id);
+    int32_t layout = kinoko_map_layout_argument((struct SQVM*)(uintptr_t)(vm), &id);
     for (int32_t i=0;i<4;++i) {
-        if (sq_getinteger(kinoko_vm(vm),i+3,(SQInteger*)(rectangle+i))<0) {
-            sq_pushbool(kinoko_vm(vm),SQFalse);return 1;
+        if (sq_getinteger(vm,i+3,(SQInteger*)(rectangle+i))<0) {
+            sq_pushbool(vm,SQFalse);return 1;
         }
     }
     const bool ok=kinoko::map::set_chip_rectangle(pointer<KinokoActLayout>(layout),id,
         static_cast<int16_t>(rectangle[0]),static_cast<int16_t>(rectangle[1]),
         static_cast<int16_t>(rectangle[2]),static_cast<int16_t>(rectangle[3]));
-    sq_pushbool(kinoko_vm(vm),ok ? SQTrue : SQFalse);
+    sq_pushbool(vm,ok ? SQTrue : SQFalse);
     return 1;
 }
 
-int32_t kinoko_map_set_chip_layout(int32_t vm) {
+int32_t kinoko_map_set_chip_layout(SQVM* vm) {
     int32_t index = -1, left = 0, top = 0;
-    int32_t layout = kinoko_map_layout_argument(vm, &index);
+    int32_t layout = kinoko_map_layout_argument((struct SQVM*)(uintptr_t)(vm), &index);
     int32_t record = kinoko_map_record_at(layout, index);
-    int32_t ok = record != 0 && sq_getinteger(kinoko_vm(vm), 3, (SQInteger*)(&left)) >= 0 &&
-                 sq_getinteger(kinoko_vm(vm), 4, (SQInteger*)(&top)) >= 0;
+    int32_t ok = record != 0 && sq_getinteger(vm, 3, (SQInteger*)(&left)) >= 0 &&
+                 sq_getinteger(vm, 4, (SQInteger*)(&top)) >= 0;
     if (ok) {
         field<int32_t>(record + 4) = left;
         field<int32_t>(record + 8) = top;
     }
-    sq_pushbool(kinoko_vm(vm), ((ok) != 0));
+    sq_pushbool(vm, ((ok) != 0));
     return 1;
 }
 
-int32_t kinoko_map_set_chip_id(int32_t vm) {
+int32_t kinoko_map_set_chip_id(SQVM* vm) {
     int32_t index = -1, id = 0;
-    int32_t layout = kinoko_map_layout_argument(vm, &index);
+    int32_t layout = kinoko_map_layout_argument((struct SQVM*)(uintptr_t)(vm), &index);
     int32_t record = kinoko_map_record_at(layout, index);
-    int32_t ok = record != 0 && sq_getinteger(kinoko_vm(vm), 3, (SQInteger*)(&id)) >= 0;
+    int32_t ok = record != 0 && sq_getinteger(vm, 3, (SQInteger*)(&id)) >= 0;
     if (ok)
         field<int32_t>(record) = id;
-    sq_pushbool(kinoko_vm(vm), ((ok) != 0));
+    sq_pushbool(vm, ((ok) != 0));
     return 1;
 }
 
-int32_t kinoko_map_get_chip_id(int32_t vm) {
+int32_t kinoko_map_get_chip_id(SQVM* vm) {
     int32_t index = -1;
-    int32_t layout = kinoko_map_layout_argument(vm, &index);
+    int32_t layout = kinoko_map_layout_argument((struct SQVM*)(uintptr_t)(vm), &index);
     int32_t record = kinoko_map_record_at(layout, index);
-    sq_pushinteger(kinoko_vm(vm), record ? field<int32_t>(record) : -1);
+    sq_pushinteger(vm, record ? field<int32_t>(record) : -1);
     return 1;
 }
 
-int32_t kinoko_map_prearrangement(int32_t vm) {
-    int32_t layout = kinoko_map_layout_argument(vm, nullptr);
+int32_t kinoko_map_prearrangement(SQVM* vm) {
+    int32_t layout = kinoko_map_layout_argument((struct SQVM*)(uintptr_t)(vm), nullptr);
     struct kinoko_mcd_data *data = kinoko_map_chip_data(layout);
     if (layout == 0 || data == nullptr) {
-        sq_pushinteger(kinoko_vm(vm), (int32_t)E_FAIL);
+        sq_pushinteger(vm, (int32_t)E_FAIL);
         return 1;
     }
     kinoko::map::prepare_placements(pointer<KinokoActLayout>(layout));
-    sq_pushinteger(kinoko_vm(vm), 0);
+    sq_pushinteger(vm, 0);
     return 1;
 }
 
 // Original 433740 stores the fractional position and truncates it into left.
 // 433770 intentionally updates only f_top; preserve that asymmetry.
-int32_t kinoko_chip_set_fractional_left(int32_t vm) {
-    const int32_t chip = kinoko_map_layout_argument(vm, nullptr);
+int32_t kinoko_chip_set_fractional_left(SQVM* vm) {
+    const int32_t chip = kinoko_map_layout_argument((struct SQVM*)(uintptr_t)(vm), nullptr);
     SQFloat value = 0;
-    if (!chip || !kinoko::script::upstream::sqrat_float_argument(kinoko_vm(vm), 2, value)) return 0;
+    if (!chip || !kinoko::script::upstream::sqrat_float_argument(vm, 2, value)) return 0;
     field<float>(chip + 12) = value;
     // __ftol2_sse produces a signed 64-bit integer; the caller keeps EAX.
     const int64_t truncated = std::isfinite(value) &&
@@ -1416,16 +1394,16 @@ int32_t kinoko_chip_set_fractional_left(int32_t vm) {
     return 0;
 }
 
-int32_t kinoko_map_get_left(int32_t vm) {
-    const int32_t layout = kinoko_map_layout_argument(vm, nullptr);
+int32_t kinoko_map_get_left(SQVM* vm) {
+    const int32_t layout = kinoko_map_layout_argument((struct SQVM*)(uintptr_t)(vm), nullptr);
     const int32_t first = kinoko_map_record_at(layout, 0);
-    sq_pushinteger(kinoko_vm(vm), first ? field<int32_t>(first + 4) : 0);
+    sq_pushinteger(vm, first ? field<int32_t>(first + 4) : 0);
     return 1;
 }
 
 // Original 435F00 scans backwards only within maxChipWidth of the last left.
-int32_t kinoko_map_get_right(int32_t vm) {
-    const int32_t layout = kinoko_map_layout_argument(vm, nullptr);
+int32_t kinoko_map_get_right(SQVM* vm) {
+    const int32_t layout = kinoko_map_layout_argument((struct SQVM*)(uintptr_t)(vm), nullptr);
     const int32_t begin = layout ? field<int32_t>(layout + 264) : 0;
     const int32_t end = layout ? field<int32_t>(layout + 268) : 0;
     int32_t right = end != begin ? field<int32_t>(end - 28) : 0;
@@ -1444,25 +1422,25 @@ int32_t kinoko_map_get_right(int32_t vm) {
             }
         }
     }
-    sq_pushinteger(kinoko_vm(vm), right);
+    sq_pushinteger(vm, right);
     return 1;
 }
 
-int32_t kinoko_publish_map_view_class(int32_t vm, int32_t root,
+int32_t kinoko_publish_map_view_class(SQVM* vm, int32_t root,
     const char *name, const struct kinoko_native_view_property *properties,
     int32_t property_count, int32_t is_map, int32_t out[2]) {
     int32_t get_table[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t set_table[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    int32_t base = sq_gettop(kinoko_vm(vm));
+    int32_t base = sq_gettop(vm);
     if (get_pair(root, name, out) && out[0] == 0x08004000)
         return 1;
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), out);
+    kinoko_sqrat_release_pair(vm, out);
     const bool published = [&]() {
-    if (!kinoko_sqrat_new_class(pointer<SQVM>(vm), out))
+    if (!kinoko_sqrat_new_class(vm, out))
         return false;
-    if (!kinoko_sqrat_new_table(pointer<SQVM>(vm), get_table) ||
-        !kinoko_sqrat_new_table(pointer<SQVM>(vm), set_table) ||
-        !initialize_native_property_class(pointer<SQVM>(vm), out, {set_table, get_table}))
+    if (!kinoko_sqrat_new_table(vm, get_table) ||
+        !kinoko_sqrat_new_table(vm, set_table) ||
+        !initialize_native_property_class(vm, out, {set_table, get_table}))
         return false;
     for (int32_t i = 0; i < property_count; ++i) {
         const struct kinoko_native_view_property *p = properties + i;
@@ -1476,35 +1454,35 @@ int32_t kinoko_publish_map_view_class(int32_t vm, int32_t root,
             p->kind == 3 ? address(kinoko_native_view_set_short) :
             p->kind == 4 ? address(kinoko_cact_layer_set_string) :
                           address(kinoko_c2dlayout_set_int);
-        if (!kinoko_sqrat_set_offset_closure(pointer<SQVM>(vm), get_table, p->name, p->offset, (void *)(intptr_t)(getter)) ||
-            !kinoko_sqrat_set_offset_closure(pointer<SQVM>(vm), set_table, p->name, p->offset, (void *)(intptr_t)(setter)))
+        if (!kinoko_sqrat_set_offset_closure(vm, get_table, p->name, p->offset, (void *)(intptr_t)(getter)) ||
+            !kinoko_sqrat_set_offset_closure(vm, set_table, p->name, p->offset, (void *)(intptr_t)(setter)))
             return false;
     }
     if (!is_map && std::strcmp(name, "ChipLayout") == 0 &&
-        !kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), set_table, "f_left", (void *)(intptr_t)(address(kinoko_chip_set_fractional_left)), nullptr, 0))
+        !kinoko_sqrat_set_native_closure(vm, set_table, "f_left", (void *)(intptr_t)(address(kinoko_chip_set_fractional_left)), nullptr, 0))
         return false;
     if (is_map &&
-        (!kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), get_table, "left", (void *)(intptr_t)(address(kinoko_map_get_left)), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), get_table, "right", (void *)(intptr_t)(address(kinoko_map_get_right)), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), out, "PreArrangement", (void *)(intptr_t)(address(kinoko_map_prearrangement)), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), get_table, "chipCount", (void *)(intptr_t)(address(kinoko_map_chip_count)), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), out, "GetChipLayout", (void *)(intptr_t)(address(kinoko_map_get_chip_layout)), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), out, "GetChipByPosition", (void *)(intptr_t)(address(kinoko_map_get_chip_by_position)), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), out, "SetChipRect", (void *)(intptr_t)(address(kinoko_map_set_chip_rect)), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), out, "SetChipLayout", (void *)(intptr_t)(address(kinoko_map_set_chip_layout)), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), out, "SetChipID", (void *)(intptr_t)(address(kinoko_map_set_chip_id)), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), out, "GetChipID", (void *)(intptr_t)(address(kinoko_map_get_chip_id)), nullptr, 0)))
+        (!kinoko_sqrat_set_native_closure(vm, get_table, "left", (void *)(intptr_t)(address(kinoko_map_get_left)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure(vm, get_table, "right", (void *)(intptr_t)(address(kinoko_map_get_right)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure(vm, out, "PreArrangement", (void *)(intptr_t)(address(kinoko_map_prearrangement)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure(vm, get_table, "chipCount", (void *)(intptr_t)(address(kinoko_map_chip_count)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure(vm, out, "GetChipLayout", (void *)(intptr_t)(address(kinoko_map_get_chip_layout)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure(vm, out, "GetChipByPosition", (void *)(intptr_t)(address(kinoko_map_get_chip_by_position)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure(vm, out, "SetChipRect", (void *)(intptr_t)(address(kinoko_map_set_chip_rect)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure(vm, out, "SetChipLayout", (void *)(intptr_t)(address(kinoko_map_set_chip_layout)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure(vm, out, "SetChipID", (void *)(intptr_t)(address(kinoko_map_set_chip_id)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure(vm, out, "GetChipID", (void *)(intptr_t)(address(kinoko_map_get_chip_id)), nullptr, 0)))
         return false;
-    return kinoko_sqrat_set_pair(pointer<SQVM>(vm),
+    return kinoko_sqrat_set_pair(vm,
         pointer<const int32_t>(root + 8), name, out) != 0;
     }();
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), get_table);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), set_table);
-    kinoko_sqrat_trim_stack(pointer<SQVM>(vm), base);
+    kinoko_sqrat_release_pair(vm, get_table);
+    kinoko_sqrat_release_pair(vm, set_table);
+    kinoko_sqrat_trim_stack(vm, base);
     return published;
 }
 
-int32_t kinoko_publish_c2dmaplayout_class(int32_t vm, int32_t root,
+int32_t kinoko_publish_c2dmaplayout_class(SQVM* vm, int32_t root,
                                                 int32_t out[2]) {
     static const struct kinoko_native_view_property map_properties[] = {
         { "layerType", 236, 0 }, { "maxChipWidth", 240, 0 },
@@ -1519,67 +1497,65 @@ int32_t kinoko_publish_c2dmaplayout_class(int32_t vm, int32_t root,
         { "visible", 24, 2 }, { "alpha", 28, 1 }
     };
     int32_t chip_class[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    int32_t ok = kinoko_publish_map_view_class(vm, root, "ChipLayout",
-        chip_properties, sizeof(chip_properties) / sizeof(chip_properties[0]), 0, chip_class);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), chip_class);
-    return ok && kinoko_publish_map_view_class(vm, root, "C2DMapLayout",
-        map_properties, sizeof(map_properties) / sizeof(map_properties[0]), 1, out);
+    int32_t ok = kinoko_publish_map_view_class((struct SQVM*)(uintptr_t)(vm), root, "ChipLayout", chip_properties, sizeof(chip_properties) / sizeof(chip_properties[0]), 0, chip_class);
+    kinoko_sqrat_release_pair(vm, chip_class);
+    return ok && kinoko_publish_map_view_class((struct SQVM*)(uintptr_t)(vm), root, "C2DMapLayout", map_properties, sizeof(map_properties) / sizeof(map_properties[0]), 1, out);
 }
 
 // 433C90: cdecl, one VM argument, HRESULT result (IDA 4341ED: retn).
 extern "C" int32_t kinoko_register_map_layout_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
         int32_t klass[2] = {static_cast<int32_t>(OT_NULL), 0};
-        const auto ok = kinoko_publish_c2dmaplayout_class(vm, root, klass);
+        const auto ok = kinoko_publish_c2dmaplayout_class((struct SQVM*)(uintptr_t)(vm), root, klass);
         kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);
         return ok;
     });
 }
 
 
-int32_t kinoko_resource_get_chip_info(int32_t vm) {
+int32_t kinoko_resource_get_chip_info(SQVM* vm) {
     int32_t resource = 0, id = 0;
     int32_t root[5];
     int32_t klass[2] = { static_cast<int32_t>(OT_NULL), 0 }, instance[2] = { static_cast<int32_t>(OT_NULL), 0 };
     struct kinoko_mcd_chip *chip;
-    if (sq_getinstanceup(kinoko_vm(vm), 1, (SQUserPointer*)(&resource), kinoko_pointer(0)) < 0 || resource == 0 ||
-        sq_getinteger(kinoko_vm(vm), 2, (SQInteger*)(&id)) < 0)
+    if (sq_getinstanceup(vm, 1, (SQUserPointer*)(&resource), kinoko_pointer(0)) < 0 || resource == 0 ||
+        sq_getinteger(vm, 2, (SQInteger*)(&id)) < 0)
         return 0;
     chip = kinoko_mcd_find_chip(field<kinoko_mcd_data *>(resource + 64), (uint32_t)id);
-    if (chip == nullptr || !(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), pointer<SQVM>(vm)))) {
-        sq_pushnull(kinoko_vm(vm));
+    if (chip == nullptr || !(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), vm))) {
+        sq_pushnull(vm);
         return 1;
     }
     if (get_pair(address(root), "ChipInfo", klass) &&
         kinoko_create_unbound_instance((struct SQVM*)(uintptr_t)(vm), klass, (void*)(uintptr_t)(address(chip->bytes)), instance))
-        sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(instance[0], instance[1]));
+        sq_pushobject(vm, kinoko_borrowed_object(instance[0], instance[1]));
     else
-        sq_pushnull(kinoko_vm(vm));
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), instance);
+        sq_pushnull(vm);
+    kinoko_sqrat_release_pair(vm, klass);
+    kinoko_sqrat_release_pair(vm, instance);
     kinoko_sqrat_object_release((void *)(root));
     return 1;
 }
 
-int32_t kinoko_resource_set_chip_flag(int32_t vm) {
-    const int32_t resource = kinoko_map_layout_argument(vm, nullptr);
+int32_t kinoko_resource_set_chip_flag(SQVM* vm) {
+    const int32_t resource = kinoko_map_layout_argument((struct SQVM*)(uintptr_t)(vm), nullptr);
     SQInteger id = 0, flag = -1;
     // Original 42FEF8/42FEFD accepts only bit zero, despite the 64-bit storage.
     auto *data = resource ? field<kinoko_mcd_data *>(resource + 64) : nullptr;
-    auto *chip = data && kinoko::script::upstream::sqrat_integer_argument(kinoko_vm(vm), 2, id) &&
-        kinoko::script::upstream::sqrat_integer_argument(kinoko_vm(vm), 3, flag) && flag == 0
+    auto *chip = data && kinoko::script::upstream::sqrat_integer_argument(vm, 2, id) &&
+        kinoko::script::upstream::sqrat_integer_argument(vm, 3, flag) && flag == 0
         ? kinoko_mcd_find_chip(data, static_cast<uint32_t>(id)) : nullptr;
     if (chip) {
         uint32_t bits;
         std::memcpy(&bits, chip->bytes + 16, sizeof(bits));
-        bits = kinoko::script::upstream::sqrat_bool_argument(kinoko_vm(vm), 4) ? bits | 1u : bits & ~1u;
+        bits = kinoko::script::upstream::sqrat_bool_argument(vm, 4) ? bits | 1u : bits & ~1u;
         std::memcpy(chip->bytes + 16, &bits, sizeof(bits));
     }
-    sq_pushbool(kinoko_vm(vm), chip != nullptr);
+    sq_pushbool(vm, chip != nullptr);
     return 1;
 }
 
-int32_t kinoko_publish_chip_resource_class(int32_t vm, int32_t root, int32_t out[2]) {
+int32_t kinoko_publish_chip_resource_class(SQVM* vm, int32_t root, int32_t out[2]) {
 
     static const struct kinoko_native_view_property info_properties[] = {
         { "chipID", 0, 0 }, { "textureID", 4, 0 },
@@ -1592,16 +1568,14 @@ int32_t kinoko_publish_chip_resource_class(int32_t vm, int32_t root, int32_t out
         { "resourceID", 4, 0 }, { "stName", 8, 4 }
     };
     if (get_pair(root, "CActResourceChip", out) && out[0] == 0x08004000) return 1;
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), out);
+    kinoko_sqrat_release_pair(vm, out);
     int32_t info[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t ok;
-    ok = kinoko_publish_map_view_class(vm, root, "ChipInfo",
-        info_properties, sizeof(info_properties) / sizeof(info_properties[0]), 0, info) &&
-        kinoko_publish_map_view_class(vm, root, "CActResourceChip",
-            resource_properties, sizeof(resource_properties) / sizeof(resource_properties[0]), 0, out) &&
-        kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), out, "GetChipInfo", (void *)(intptr_t)(address(kinoko_resource_get_chip_info)), nullptr, 0) &&
-        kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), out, "SetChipFlag", (void *)(intptr_t)(address(kinoko_resource_set_chip_flag)), nullptr, 0);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), info);
+    ok = kinoko_publish_map_view_class((struct SQVM*)(uintptr_t)(vm), root, "ChipInfo", info_properties, sizeof(info_properties) / sizeof(info_properties[0]), 0, info) &&
+        kinoko_publish_map_view_class((struct SQVM*)(uintptr_t)(vm), root, "CActResourceChip", resource_properties, sizeof(resource_properties) / sizeof(resource_properties[0]), 0, out) &&
+        kinoko_sqrat_set_native_closure(vm, out, "GetChipInfo", (void *)(intptr_t)(address(kinoko_resource_get_chip_info)), nullptr, 0) &&
+        kinoko_sqrat_set_native_closure(vm, out, "SetChipFlag", (void *)(intptr_t)(address(kinoko_resource_set_chip_flag)), nullptr, 0);
+    kinoko_sqrat_release_pair(vm, info);
     return ok;
 }
 
@@ -1610,7 +1584,7 @@ int32_t kinoko_publish_chip_resource_class(int32_t vm, int32_t root, int32_t out
 extern "C" int32_t kinoko_register_chip_resource_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
         int32_t klass[2] = {static_cast<int32_t>(OT_NULL), 0};
-        const auto ok = kinoko_publish_chip_resource_class(vm, root, klass);
+        const auto ok = kinoko_publish_chip_resource_class((struct SQVM*)(uintptr_t)(vm), root, klass);
         kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);
         return ok;
     });
@@ -1618,26 +1592,26 @@ extern "C" int32_t kinoko_register_chip_resource_class(SQVM* machine) {
 
 
 extern "C" int32_t __fastcall kinoko_method_register_chip_resource(
-    int32_t receiver, void *, int32_t vm) {
-    return kinoko_register_chip_resource_class(pointer<SQVM>(vm));
+    int32_t receiver, void *, SQVM* vm) {
+    return kinoko_register_chip_resource_class(vm);
 }
 
-int32_t kinoko_get_act_resource_class(int32_t vm, int32_t resource, int32_t out[2]) {
+int32_t kinoko_get_act_resource_class(SQVM* vm, int32_t resource, int32_t out[2]) {
     if(field<const void*>(resource)==kinoko::mesh::resource_methods()) {
         int32_t root[5]{};
-        if(!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), pointer<SQVM>(vm)))) return 0;
-        const auto ok=kinoko_publish_mesh_resource_class(vm,address(root),out);
+        if(!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), vm))) return 0;
+        const auto ok=kinoko_publish_mesh_resource_class((struct SQVM*)(uintptr_t)(vm), address(root), out);
         kinoko_sqrat_object_release((void *)(root));return ok;
     }
     if (field<int32_t>(resource) != address(kinoko_act_host_symbols()->chip_resource_vtable)) {
         out[0] = kinoko_resource2d_class_pair[0];
         out[1] = kinoko_resource2d_class_pair[1];
-        kinoko_sqrat_retain_pair(pointer<SQVM>(vm), out);
+        kinoko_sqrat_retain_pair(vm, out);
         return out[0] == 0x08004000;
     }
     int32_t root[5] = {};
-    if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), pointer<SQVM>(vm)))) return 0;
-    const auto ok = kinoko_publish_chip_resource_class(vm, address(root), out);
+    if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), vm))) return 0;
+    const auto ok = kinoko_publish_chip_resource_class((struct SQVM*)(uintptr_t)(vm), address(root), out);
     kinoko_sqrat_object_release((void *)(root));
     return ok;
 }
@@ -1677,7 +1651,7 @@ int32_t kinoko_bind_original_resource(int32_t resource, int32_t object,
 }
 
 int32_t kinoko_publish_act_resource_pairs(
-    int32_t vm, const int32_t layer_pair[2],
+    SQVM* vm, const int32_t layer_pair[2],
     const int32_t script_pair[2], int32_t resource)
 {
     int32_t outer_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
@@ -1688,29 +1662,29 @@ int32_t kinoko_publish_act_resource_pairs(
     if (vm == 0 || layer_pair == nullptr || script_pair == nullptr)
         return 0;
     if (resource == 0) {
-        return kinoko_sqrat_raw_set_pair(pointer<SQVM>(vm), layer_pair, "resource", null_pair) &&
-               kinoko_sqrat_raw_set_pair(pointer<SQVM>(vm), script_pair, "resource", null_pair);
+        return kinoko_sqrat_raw_set_pair(vm, layer_pair, "resource", null_pair) &&
+               kinoko_sqrat_raw_set_pair(vm, script_pair, "resource", null_pair);
     }
-    if (!kinoko_get_act_resource_class(vm, resource, resource_class_pair))
+    if (!kinoko_get_act_resource_class((struct SQVM*)(uintptr_t)(vm), resource, resource_class_pair))
         return 0;
 
     /* 4467E0 -> 448FB0 uses sq_newslot on the outer layer object. */
     if (!kinoko_create_bound_instance((struct SQVM*)(uintptr_t)(vm), layer_pair, "resource", resource_class_pair, (void*)(uintptr_t)(resource), outer_pair)) {
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), outer_pair);
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), resource_class_pair);
+        kinoko_sqrat_release_pair(vm, outer_pair);
+        kinoko_sqrat_release_pair(vm, resource_class_pair);
         return 0;
     }
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), outer_pair);
+    kinoko_sqrat_release_pair(vm, outer_pair);
 
     /* 446920 -> 448910 uses sq_rawset on the script table. */
     if (!kinoko_create_unbound_instance((struct SQVM*)(uintptr_t)(vm), resource_class_pair, (void*)(uintptr_t)(resource), script_resource_pair) ||
-        !kinoko_sqrat_raw_set_pair(pointer<SQVM>(vm), script_pair, "resource", script_resource_pair)) {
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), script_resource_pair);
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), resource_class_pair);
+        !kinoko_sqrat_raw_set_pair(vm, script_pair, "resource", script_resource_pair)) {
+        kinoko_sqrat_release_pair(vm, script_resource_pair);
+        kinoko_sqrat_release_pair(vm, resource_class_pair);
         return 0;
     }
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), script_resource_pair);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), resource_class_pair);
+    kinoko_sqrat_release_pair(vm, script_resource_pair);
+    kinoko_sqrat_release_pair(vm, resource_class_pair);
     return 1;
 }
 
@@ -1779,7 +1753,7 @@ int publish_stage_objects(int32_t act, int32_t runtime, StageTables &tables, int
     return 1;
 }
 }
-int32_t kinoko_publish_act_layers(int32_t vm, int32_t act, int32_t runtime, int32_t *active_count) {
+int32_t kinoko_publish_act_layers(SQVM* vm, int32_t act, int32_t runtime, int32_t *active_count) {
     if (active_count) *active_count = 0;
     if (!vm || !act || !runtime) return 0;
     StageTables tables(vm);
@@ -1831,12 +1805,12 @@ int32_t kinoko_bind_act_resource_object(int32_t resource_ptr)
     return 1;
 }
 
-int32_t kinoko_register_runtime_act_script(int32_t vm, int32_t resource_ptr,
+int32_t kinoko_register_runtime_act_script(SQVM* vm, int32_t resource_ptr,
                                                  int32_t act)
 {
-    int32_t root[5] = { 0, vm, 0, 0, 0 };
+    int32_t root[5] = { 0, address(vm), 0, 0, 0 };
     int32_t parent[2] = { static_cast<int32_t>(OT_NULL), 0 }, global[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    int32_t object[5] = { 0, vm, 0, 0, 0 };
+    int32_t object[5] = { 0, address(vm), 0, 0, 0 };
     int32_t script = act + 100, result = 0;
     root[2] = field<int32_t>(resource_ptr + 156);
     root[3] = field<int32_t>(resource_ptr + 160);
@@ -1850,8 +1824,8 @@ int32_t kinoko_register_runtime_act_script(int32_t vm, int32_t resource_ptr,
     object[2] = global[0]; object[3] = global[1];
     result = kinoko_register_act_script(script, address(object)) >= 0;
     } while (false);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), global);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), parent);
+    kinoko_sqrat_release_pair(vm, global);
+    kinoko_sqrat_release_pair(vm, parent);
     return result;
 }
 
@@ -1955,8 +1929,7 @@ int32_t kinoko_root_table_register_resource(int32_t root_object,
         kinoko_trace("450f30:root-bind-failed");
         break;
     }
-    if (!kinoko_publish_cact_resource2d_class(
-            vm, root_object)) {
+    if (!kinoko_publish_cact_resource2d_class((struct SQVM*)(uintptr_t)(vm), root_object)) {
         kinoko_trace("450f30:resource2d-class-failed");
         break;
     }
@@ -1972,8 +1945,8 @@ int32_t kinoko_root_table_register_resource(int32_t root_object,
     kinoko_string_assign_cstr(pointer<int32_t>(resource_ptr + 164), act_name);
     kinoko_trace_squirrel_name("450f30:act-name", address(act_name));
 
-    if (!kinoko_publish_cact_layer_class(vm, root_object) ||
-        !kinoko_publish_acting_player_class(vm, root_object) ||
+    if (!kinoko_publish_cact_layer_class((struct SQVM*)(uintptr_t)(vm), root_object) ||
+        !kinoko_publish_acting_player_class((struct SQVM*)(uintptr_t)(vm), root_object) ||
         !kinoko_sqrat_new_table(pointer<SQVM>(vm), act_pair) ||
         !kinoko_sqrat_set_pair(pointer<SQVM>(vm), pointer<const int32_t>(root_object + 8), act_name, act_pair) ||
         !kinoko_sqrat_new_table(pointer<SQVM>(vm), global_pair) ||
@@ -2004,15 +1977,13 @@ int32_t kinoko_root_table_register_resource(int32_t root_object,
         !kinoko_sqrat_set_pair(pointer<SQVM>(vm), act_pair, "resource", resource_pair) ||
         !kinoko_sqrat_set_pair(pointer<SQVM>(vm), global_pair, "thisAct", act_pair) ||
         !kinoko_sqrat_set_delegate(pointer<SQVM>(vm), global_pair, act_pair) ||
-        !kinoko_publish_act_script_constants(vm, global_pair))
+        !kinoko_publish_act_script_constants((struct SQVM*)(uintptr_t)(vm), global_pair))
         break;
 
-    if (!kinoko_publish_acting_player(vm, act_pair, "pl", resource_ptr,
-                                      player_pair))
+    if (!kinoko_publish_acting_player((struct SQVM*)(uintptr_t)(vm), act_pair, "pl", resource_ptr, player_pair))
         break;
     kinoko_sqrat_release_pair(pointer<SQVM>(vm), player_pair);
-    if (!kinoko_publish_acting_player(vm, act_pair, "player", resource_ptr,
-                                      player_pair))
+    if (!kinoko_publish_acting_player((struct SQVM*)(uintptr_t)(vm), act_pair, "player", resource_ptr, player_pair))
         break;
     kinoko_sqrat_release_pair(pointer<SQVM>(vm), player_pair);
 
@@ -2051,7 +2022,7 @@ int32_t kinoko_root_table_register_resource(int32_t root_object,
 }
 
 int32_t kinoko_root_table_construct_this(int32_t resource_ptr,
-                                                 int32_t vm,
+                                                 SQVM* vm,
                                                  int32_t output_ptr)
 {
     int32_t root_object[5] = { 0, 0, static_cast<int32_t>(OT_NULL), 0, 0 };
@@ -2059,7 +2030,7 @@ int32_t kinoko_root_table_construct_this(int32_t resource_ptr,
 
     if (resource_ptr == 0 || vm == 0)
         return (int32_t)0x80070057u;
-    if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root_object), pointer<SQVM>(vm))))
+    if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root_object), vm)))
         return (int32_t)0x80004005u;
 
     /* 450E30 accepts an optional pre-existing Sqrat object only to verify
@@ -2171,12 +2142,12 @@ extern "C" int32_t kinoko_sqrat_call_integer1(int32_t a1) {
 
 
 namespace {
-int32_t string_property_set(int32_t vm) {
+int32_t string_property_set(SQVM* vm) {
     int32_t offset=0;
     const int32_t object=kinoko_c2dlayout_property_offset(vm,&offset);
     if(!object) return 0;
     SQInteger value=0;
-    if(!kinoko::script::upstream::sqrat_integer_argument(kinoko_vm(vm),2,value)) return 0;
+    if(!kinoko::script::upstream::sqrat_integer_argument(vm,2,value)) return 0;
     if(offset==88) value=std::clamp(value,1,127);
     else if(offset==92) value=(std::max)(value,1);
     else if(offset>=96 && offset<=116) value=std::clamp(value,0,255);
@@ -2184,25 +2155,25 @@ int32_t string_property_set(int32_t vm) {
     field<int32_t>(object+offset)=value;
     return 0;
 }
-int32_t string_value_get(int32_t vm) {
+int32_t string_value_get(SQVM* vm) {
     int32_t offset=0;
     const int32_t object=kinoko_c2dlayout_property_offset(vm,&offset);
     if(!object) return 0;
-    sq_pushstring(kinoko_vm(vm),kinoko::legacy::StringView(pointer<void>(object+offset)).data(),-1);
+    sq_pushstring(vm,kinoko::legacy::StringView(pointer<void>(object+offset)).data(),-1);
     return 1;
 }
-int32_t string_face_set(int32_t vm) {
+int32_t string_face_set(SQVM* vm) {
     int32_t offset=0;
     const int32_t object=kinoko_c2dlayout_property_offset(vm,&offset);
     const SQChar* value=nullptr;
-    if(!object || SQ_FAILED(sq_getstring(kinoko_vm(vm),2,&value))) return 0;
+    if(!object || SQ_FAILED(sq_getstring(vm,2,&value))) return 0;
     static const char face[]="\x82\x6c\x82\x72\x20\x83\x53\x83\x56\x83\x62\x83\x4e";
     if(!*value) value=face;
     kinoko::legacy::StringView(pointer<void>(object+60)).assign(value,static_cast<uint32_t>(std::strlen(value)));
     return 0;
 }
-template<int Method> int32_t string_method(int32_t vm) {
-    const auto machine=kinoko_vm(vm);
+template<int Method> int32_t string_method(SQVM* vm) {
+    const auto machine=vm;
     int32_t object=0;
     if(SQ_FAILED(sq_getinstanceup(machine,1,reinterpret_cast<SQUserPointer*>(&object),nullptr)) || !object)
         return sq_throwerror(machine,"invalid CStringLayout receiver");
@@ -2234,14 +2205,14 @@ template<int Method> int32_t string_method(int32_t vm) {
 
 // 43EDA0 publishes a non-owning Sqrat class. Actual method/descriptor creation
 // uses the vendored Sqrat bridge; no original code addresses or class registry.
-extern "C" int32_t kinoko_publish_string_layout_class(int32_t vm,int32_t root,int32_t* out) {
+extern "C" int32_t kinoko_publish_string_layout_class(SQVM* vm,int32_t root,int32_t* out) {
     if(!vm || !root || !out) return 0;
     if(get_pair(root,"CStringLayout",out) && out[0]==0x08004000) return 1;
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), out);
-    const int32_t top=sq_gettop(kinoko_vm(vm));
+    kinoko_sqrat_release_pair(vm, out);
+    const int32_t top=sq_gettop(vm);
     int32_t setters[2]={static_cast<int32_t>(OT_NULL),0},getters[2]={static_cast<int32_t>(OT_NULL),0};
-    bool ok=kinoko_sqrat_new_class(pointer<SQVM>(vm), out) && kinoko_sqrat_new_table(pointer<SQVM>(vm), setters) && kinoko_sqrat_new_table(pointer<SQVM>(vm), getters) &&
-        initialize_native_property_class(pointer<SQVM>(vm), out, {setters, getters});
+    bool ok=kinoko_sqrat_new_class(vm, out) && kinoko_sqrat_new_table(vm, setters) && kinoko_sqrat_new_table(vm, getters) &&
+        initialize_native_property_class(vm, out, {setters, getters});
     struct Property { const char* name; int32_t offset,kind; bool readonly; };
     static const Property properties[]={
         {"alpha",152,1,false},{"blend",156,0,false},{"alignment",132,0,false},
@@ -2257,8 +2228,8 @@ extern "C" int32_t kinoko_publish_string_layout_class(int32_t vm,int32_t root,in
             p.kind==3?address(string_value_get):address(kinoko_c2dlayout_get_int);
         const auto setter=p.kind==1?address(kinoko_c2dlayout_set_float):p.kind==2?address(kinoko_cact_layer_set_bool):
             p.kind==3?(p.offset==60?address(string_face_set):address(kinoko_cact_layer_set_string)):address(string_property_set);
-        if(ok) ok=kinoko_sqrat_set_offset_closure(pointer<SQVM>(vm), getters, p.name, p.offset, (void *)(intptr_t)(getter)) &&
-            (p.readonly || kinoko_sqrat_set_offset_closure(pointer<SQVM>(vm), setters, p.name, p.offset, (void *)(intptr_t)(setter)));
+        if(ok) ok=kinoko_sqrat_set_offset_closure(vm, getters, p.name, p.offset, (void *)(intptr_t)(getter)) &&
+            (p.readonly || kinoko_sqrat_set_offset_closure(vm, setters, p.name, p.offset, (void *)(intptr_t)(setter)));
     }
     struct Method { const char* name; int32_t (*call)(int32_t); };
     static const Method methods[]={
@@ -2266,11 +2237,11 @@ extern "C" int32_t kinoko_publish_string_layout_class(int32_t vm,int32_t root,in
         {"PopBack",string_method<3>},{"GetCharacterBytes",string_method<4>},
         {"ReplicateText",string_method<5>},{"Rebuild",string_method<6>}
     };
-    for(const auto& m:methods) if(ok) ok=kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), out, m.name, (void *)(intptr_t)(address(m.call)), nullptr, 0);
-    if(ok) ok=kinoko_sqrat_set_pair(pointer<SQVM>(vm), pointer<const int32_t>(root+8), "CStringLayout", out);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), getters);kinoko_sqrat_release_pair(pointer<SQVM>(vm), setters);
-    kinoko_sqrat_trim_stack(pointer<SQVM>(vm), top);
-    if(!ok) kinoko_sqrat_release_pair(pointer<SQVM>(vm), out);
+    for(const auto& m:methods) if(ok) ok=kinoko_sqrat_set_native_closure(vm, out, m.name, (void *)(intptr_t)(address(m.call)), nullptr, 0);
+    if(ok) ok=kinoko_sqrat_set_pair(vm, pointer<const int32_t>(root+8), "CStringLayout", out);
+    kinoko_sqrat_release_pair(vm, getters);kinoko_sqrat_release_pair(vm, setters);
+    kinoko_sqrat_trim_stack(vm, top);
+    if(!ok) kinoko_sqrat_release_pair(vm, out);
     return ok;
 }
 
@@ -2281,7 +2252,7 @@ extern "C" int32_t __fastcall kinoko_method_register_string_layout(int32_t layou
     if(!vm) return E_INVALIDARG;
     int32_t root[5]{},klass[2]={static_cast<int32_t>(OT_NULL),0},outer[2]={static_cast<int32_t>(OT_NULL),0},script[2]={static_cast<int32_t>(OT_NULL),0};
     if(!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), pointer<SQVM>(vm)))) return E_FAIL;
-    const bool ok=kinoko_publish_string_layout_class(vm,address(root),klass) &&
+    const bool ok=kinoko_publish_string_layout_class((struct SQVM*)(uintptr_t)(vm), address(root), klass) &&
         kinoko_create_unbound_instance((struct SQVM*)(uintptr_t)(vm), klass, (void*)(uintptr_t)(layout), outer) &&
         kinoko_sqrat_raw_set_pair(pointer<SQVM>(vm), pointer<const int32_t>(layer+336), "layout", outer) &&
         kinoko_create_bound_instance((struct SQVM*)(uintptr_t)(vm), pointer<const int32_t>(layer+316), "layout", klass, (void*)(uintptr_t)(layout), script);
@@ -2301,33 +2272,33 @@ extern "C" int32_t __fastcall kinoko_method_register_string_layout(int32_t layou
 }
 
 namespace {
-int32_t mesh_replace_texture(int32_t vm) {
+int32_t mesh_replace_texture(SQVM* vm) {
     kinoko::mesh::Resource *resource=nullptr;
     KinokoActResource *texture=nullptr;
     const SQChar *name=nullptr;
-    auto *machine=kinoko_vm(vm);
+    auto *machine=vm;
     if(SQ_FAILED(sq_getinstanceup(machine,1,reinterpret_cast<SQUserPointer*>(&resource),nullptr)) ||
         SQ_FAILED(sq_getstring(machine,2,&name)) ||
         SQ_FAILED(sq_getinstanceup(machine,3,reinterpret_cast<SQUserPointer*>(&texture),nullptr)) || !resource) return 0;
     sq_pushinteger(machine,kinoko::mesh::replace_texture(resource,name,texture));return 1;
 }
 }
-extern "C" int32_t kinoko_publish_mesh_resource_class(int32_t vm,int32_t root,int32_t *out) {
+extern "C" int32_t kinoko_publish_mesh_resource_class(SQVM* vm,int32_t root,int32_t *out) {
     if(get_pair(root,"CActResourceMesh",out) && out[0]==0x08004000) return 1;
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), out);
+    kinoko_sqrat_release_pair(vm, out);
     static const kinoko_native_view_property properties[]={
         {"resourceID",4,0},{"stName",8,4},{"stMeshName",36,4}
     };
-    return kinoko_publish_map_view_class(vm,root,"CActResourceMesh",properties,3,0,out) &&
-        kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), out, "LoadMesh", (void *)(intptr_t)(address(kinoko_resource_load_texture)), nullptr, 0) &&
-        kinoko_sqrat_set_native_closure(pointer<SQVM>(vm), out, "SetReplaceTexture", (void *)(intptr_t)(address(mesh_replace_texture)), nullptr, 0);
+    return kinoko_publish_map_view_class((struct SQVM*)(uintptr_t)(vm), root, "CActResourceMesh", properties, 3, 0, out) &&
+        kinoko_sqrat_set_native_closure(vm, out, "LoadMesh", (void *)(intptr_t)(address(kinoko_resource_load_texture)), nullptr, 0) &&
+        kinoko_sqrat_set_native_closure(vm, out, "SetReplaceTexture", (void *)(intptr_t)(address(mesh_replace_texture)), nullptr, 0);
 }
-extern "C" int32_t __fastcall kinoko_method_register_mesh_resource(int32_t,void *,int32_t vm) {
+extern "C" int32_t __fastcall kinoko_method_register_mesh_resource(int32_t,void *,SQVM* vm) {
     if(!vm) return E_INVALIDARG;
     int32_t root[5]{},klass[2]={static_cast<int32_t>(OT_NULL),0};
-    if(!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), pointer<SQVM>(vm)))) return E_FAIL;
-    const auto ok=kinoko_publish_mesh_resource_class(vm,address(root),klass);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);kinoko_sqrat_object_release((void *)(root));
+    if(!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), vm))) return E_FAIL;
+    const auto ok=kinoko_publish_mesh_resource_class((struct SQVM*)(uintptr_t)(vm), address(root), klass);
+    kinoko_sqrat_release_pair(vm, klass);kinoko_sqrat_object_release((void *)(root));
     return ok?S_OK:E_FAIL;
 }
 extern "C" int32_t __fastcall kinoko_method_bind_mesh_object(int32_t resource,void *,int32_t object,const char *name) {
@@ -2351,7 +2322,7 @@ extern "C" int32_t __fastcall kinoko_method_register_layout_3d(int32_t layout,vo
         {"roll_x",16,1},{"roll_y",20,1},{"roll_z",24,1},
         {"scale_x",28,1},{"scale_y",32,1},{"scale_z",36,1}
     };
-    const bool ok=kinoko_publish_map_view_class(vm,address(root),"C3DLayout",properties,9,0,klass) &&
+    const bool ok=kinoko_publish_map_view_class((struct SQVM*)(uintptr_t)(vm), address(root), "C3DLayout", properties, 9, 0, klass) &&
         kinoko_create_unbound_instance((struct SQVM*)(uintptr_t)(vm), klass, (void*)(uintptr_t)(layout), outer) &&
         kinoko_sqrat_raw_set_pair(pointer<SQVM>(vm), pointer<const int32_t>(layer+336), "layout", outer) &&
         kinoko_create_bound_instance((struct SQVM*)(uintptr_t)(vm), pointer<const int32_t>(layer+316), "layout", klass, (void*)(uintptr_t)(layout), script);

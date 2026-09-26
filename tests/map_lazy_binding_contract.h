@@ -1,3 +1,4 @@
+struct SQVM;
 /* R134/R135/R136/R137 regression source. Builds with stage_contract; execution is user-owned.
    Exercise actual document/layer/key/map virtual clones, without manually
    performing the second SetLayer that masked the missing consumer behavior. */
@@ -91,7 +92,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
         } else if (query == 1) {
             int32_t klass[2] = {kinoko_null_object_type,kinoko_null_object_value}, instance[2] = {kinoko_null_object_type,kinoko_null_object_value};
             *(uint8_t*)(intptr_t)(cloned_layer+140) = 0;
-            CHECK(kinoko_publish_c2dmaplayout_class(vm,PTR(root),klass));
+            CHECK(kinoko_publish_c2dmaplayout_class((struct SQVM*)(uintptr_t)(vm), PTR(root), klass));
             CHECK(kinoko_create_bound_instance((struct SQVM*)(uintptr_t)(vm), root+2, "LazyMapProbe", klass, (void*)(uintptr_t)(PTR(layout)), instance));
             CHECK(execute_source(vm,root+2,
                 "if (LazyMapProbe.GetChipByPosition(8,9) != 0) throw \"unbound event map\";\n"
@@ -111,14 +112,14 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             int32_t runtime[48] = {0}, parent[2] = {kinoko_null_object_type,kinoko_null_object_value}, active = 0;
             CHECK(*(int32_t*)(intptr_t)(cloned_layer+52) == 0);
             CHECK(*(int32_t*)(intptr_t)(cloned_layer+56) == 0);
-            CHECK(kinoko_publish_cact_layer_class(vm,PTR(root)));
+            CHECK(kinoko_publish_cact_layer_class((struct SQVM*)(uintptr_t)(vm), PTR(root)));
             CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
             CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, "RegistrationProbe", parent));
             CHECK(execute_source(vm,parent,"resource <- {}; global <- {};"));
             runtime[39] = root[2]; runtime[40] = root[3];
             /* Original 452040 excludes layers with timeline extras. */
             if (query == 3) *(int32_t*)(intptr_t)(cloned_layer+196) = 1;
-            CHECK(kinoko_publish_act_layers(vm,PTR(copy),PTR(runtime),&active));
+            CHECK(kinoko_publish_act_layers((struct SQVM*)(uintptr_t)(vm), PTR(copy), PTR(runtime), &active));
             CHECK(active == 1);
             if (query == 2) {
                 CHECK(*(int32_t*)(intptr_t)(cloned_layer+52) == PTR(layout)+320);
