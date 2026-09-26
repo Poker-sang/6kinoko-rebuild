@@ -67,6 +67,7 @@ Record successful builds, compiled contracts, and passing executions separately.
 
 ## Documentation
 
+- [Workflow repair and executed validation](../docs/workflow-repair-20260926/README.md)
 - [Migration status and next steps](../MIGRATION.md)
 - [Completed scope and retained-boundary ledger](../docs/internal-types-20260926/README.md)
 - [Final build handoff](../docs/internal-types-20260926/HANDOFF.md) and [artifact verification record](../docs/internal-types-20260926/artifacts.json)

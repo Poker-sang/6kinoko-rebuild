@@ -67,6 +67,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\run_staged.ps1 `
 
 ## 文档入口
 
+- [工作流修复与已执行验证](../docs/workflow-repair-20260926/README.md)
 - [迁移现状与下一步](../MIGRATION.md)
 - [本轮完成清单与保留台账](../docs/internal-types-20260926/README.md)
 - [最终构建交接](../docs/internal-types-20260926/HANDOFF.md)与[产物校验记录](../docs/internal-types-20260926/artifacts.json)
