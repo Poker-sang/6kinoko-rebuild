@@ -536,8 +536,6 @@ struct SQVM *kinoko_script_open_primary_vm(int32_t stack_size) {
     return kinoko_open_primary_script_vm(stack_size);
 }
 
-}
-
 const void* kinoko_sqrat_object_vtable(void) { return &kinoko_sqrat_object_methods_storage; }
 
 const void* kinoko_sqrat_root_vtable(void) { return &kinoko_sqrat_root_methods_storage; }
@@ -548,8 +546,6 @@ int32_t kinoko_actor_step_key(void) { return (int32_t)(intptr_t)&kinoko_actor_st
 
 const void* kinoko_squirrel_object_vtable(void) {
     return &kinoko_squirrel_object_methods_storage;
-}
-
 }
 
 int32_t *kinoko_native_binding_type(int32_t category) {
