@@ -1,6 +1,7 @@
 # 现代运行时迁移准备
 
-从 [迁移交接入口](docs/migration/README.md) 开始阅读。
+当前可搬运基线先看 [独立目录构建与交接](docs/migration-baseline-20260926/README.md)。
+历史迁移路线见 [迁移交接入口](docs/migration/README.md)。
 最终轮变更、验证界限和新仓库起点见 [最终准备交接](docs/migration/final-preparation.md)。
 
 本仓库仍是 Win32/x86 原版行为恢复基线。新增的跨平台编译入口只覆盖抽取的资源规则，

@@ -1,16 +1,15 @@
-param([string]$Name,[int]$Batch)
+param(
+    [Parameter(Mandatory=$true)][string]$Name,
+    [Parameter(Mandatory=$true)][int]$Batch,
+    [Parameter(Mandatory=$true)][string]$SourceDir,
+    [string]$Generator
+)
 $ErrorActionPreference='Stop'
+$SourceDir=(Resolve-Path -LiteralPath $SourceDir).Path
+Set-Location -LiteralPath (Join-Path $PSScriptRoot '..')
+& (Join-Path $PSScriptRoot 'build_staged.ps1') -Name $Name -SourceDir $SourceDir -Generator $Generator
 $BuildTree="build-runs/$Name"
-if (Test-Path $BuildTree) { throw "Existing build is retained: $BuildTree" }
-New-Item -ItemType Directory -Path $BuildTree | Out-Null
-$SourceCommit=git rev-parse HEAD
-$SourceCommit | Set-Content "$BuildTree/source-commit.txt"
-cmake -S . -B $BuildTree -G 'Visual Studio 18 2026' -A Win32 -DKINOKO_REFERENCE_DIR=C:/WorkSpace/6kinoko "-DKINOKO_RUNTIME_DIR=C:/WorkSpace/6kinoko-rebuild/runtime-builds/$Name" -DKINOKO_RETDEC_DISABLE_TRACE=ON *> "$BuildTree/configure.log"
-if ($LASTEXITCODE -ne 0) { Get-Content "$BuildTree/configure.log" -Tail 12; exit 1 }
-cmake --build $BuildTree --config Release --parallel 4 *> "$BuildTree/build.log"
-if ($LASTEXITCODE -ne 0) { Select-String -Path "$BuildTree/build.log" -Pattern 'error ' | Select-Object -First 10; exit 1 }
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/stage_dat.ps1 -Executable "runtime-builds/$Name/kinoko_retdec_rebuild.exe" -SourceDir C:/WorkSpace/6kinoko *> "$BuildTree/dat.log"
-if ($LASTEXITCODE -ne 0) { Get-Content "$BuildTree/dat.log" -Tail 10; exit 1 }
+$SourceCommit=(Get-Content -LiteralPath "$BuildTree/source-commit.txt" -Raw).Trim()
 $Digest=(Get-FileHash "runtime-builds/$Name/kinoko_retdec_rebuild.exe" -Algorithm SHA256).Hash
 $Record="docs/act-load-continuation-20260923/BATCH$Batch.md"
 @"
