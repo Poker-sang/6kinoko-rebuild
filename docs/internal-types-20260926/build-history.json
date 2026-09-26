@@ -1,0 +1,533 @@
+[
+  {
+    "build": "internal-types-01",
+    "source_commit": "4c8807019709a412c6d708630a9b655b966a8b35",
+    "build_log": "build-runs/internal-types-01/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-02",
+    "source_commit": "1f0c283d450a07a5799038a8c6573f412ae27eb4",
+    "build_log": "build-runs/internal-types-02/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-03",
+    "source_commit": "b294e29924f05d6909c17cf9f9d7d0f98b3e44e8",
+    "build_log": "build-runs/internal-types-03/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-04",
+    "source_commit": "182a66af5156ac049a575df7ef6b7589e72719d0",
+    "build_log": "build-runs/internal-types-04/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-05",
+    "source_commit": "38e0d889e5caafa2556e281c38430db9a5dddde2",
+    "build_log": "build-runs/internal-types-05/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-06",
+    "source_commit": "da4f6b86511cc21d96cc18282bcb52bf0aa8b26d",
+    "build_log": "build-runs/internal-types-06/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-07",
+    "source_commit": "77ea55c2ac72af1a2fc183ef318ebbeea5483182",
+    "build_log": "build-runs/internal-types-07/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-08",
+    "source_commit": "80d69d2d7b4097634d4ed676ee9b5ac0d367a513",
+    "build_log": "build-runs/internal-types-08/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-09",
+    "source_commit": "09e39fe2a81470daaf47454587cbf125c6f769d3",
+    "build_log": "build-runs/internal-types-09/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-10",
+    "source_commit": "b2fe237f0f4b5bf0cd79d5871810a56315f12ce5",
+    "build_log": "build-runs/internal-types-10/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-11",
+    "source_commit": "68dedeb8dd3dcff0c886abc2b1645768f5d9ed3e",
+    "build_log": "build-runs/internal-types-11/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-12",
+    "source_commit": "d6030ce8447041e66e13464927d82a705a509f85",
+    "build_log": "build-runs/internal-types-12/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-13",
+    "source_commit": "d8ec377e29a5c805d2cb5cbc83a01d76fd0fa090",
+    "build_log": "build-runs/internal-types-13/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-13/artifacts.json"
+  },
+  {
+    "build": "internal-types-14",
+    "source_commit": "9a84456d46fefe7f9eab8f6deee0e5d226d6df5e",
+    "build_log": "build-runs/internal-types-14/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-14/artifacts.json"
+  },
+  {
+    "build": "internal-types-15",
+    "source_commit": "196fdd26990af291de2f7ff6cd3149efdef1c833",
+    "build_log": "build-runs/internal-types-15/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-16",
+    "source_commit": "4c06576b609174d8a4e1e1de4a255bab51c310c6",
+    "build_log": "build-runs/internal-types-16/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-17",
+    "source_commit": "128f441fae58a47156adb79479797b12aeceb5a7",
+    "build_log": "build-runs/internal-types-17/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-17/artifacts.json"
+  },
+  {
+    "build": "internal-types-18",
+    "source_commit": "ee08c6f2bbac3690174c61f2a71d35b556fa4746",
+    "build_log": "build-runs/internal-types-18/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-19",
+    "source_commit": "84e076f724b2bec51b73984fada591be8634c7d3",
+    "build_log": "build-runs/internal-types-19/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-20",
+    "source_commit": "5c1ab4a97bfa6b2dbf38f6a7f26e547b6469619f",
+    "build_log": "build-runs/internal-types-20/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-21",
+    "source_commit": "00c688d5a9ef7941e4796f4b44a56d589930595a",
+    "build_log": "build-runs/internal-types-21/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-22",
+    "source_commit": "2b372fe1493b9bee3e851dfdddf879884fb51869",
+    "build_log": "build-runs/internal-types-22/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-22/artifacts.json"
+  },
+  {
+    "build": "internal-types-23",
+    "source_commit": "1b3f172e30fa08e187e98e02416675246e3e4d51",
+    "build_log": "build-runs/internal-types-23/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-23/artifacts.json"
+  },
+  {
+    "build": "internal-types-24",
+    "source_commit": "fdab63d3c0aed155e5f66b86a4fa0e1533f5a66e",
+    "build_log": "build-runs/internal-types-24/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-25",
+    "source_commit": "19b1e9c93f3ec2dcb79724910a8f30fcbea3425d",
+    "build_log": "build-runs/internal-types-25/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-26",
+    "source_commit": "22e554b6a14401b4d9b8ec30eb57b7377d39add6",
+    "build_log": "build-runs/internal-types-26/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-27",
+    "source_commit": "f18e2aa7f24079831fbbf2d6bd5a3fd0be602e0b",
+    "build_log": "build-runs/internal-types-27/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-28",
+    "source_commit": "108cc22332993cde012a9329a1a9267f1f0a6073",
+    "build_log": "build-runs/internal-types-28/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-29",
+    "source_commit": "3cdd616c259c4d192a626501a239fe8c2addca7b",
+    "build_log": "build-runs/internal-types-29/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-30",
+    "source_commit": "5cddccf52a94726b47e530c1af22b72d417800aa",
+    "build_log": "build-runs/internal-types-30/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-31",
+    "source_commit": "aa67c585b9abfb2193e16efb5e3e1822be19ae9e",
+    "build_log": "build-runs/internal-types-31/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-32",
+    "source_commit": "cf60328a25a51b5725e74b32c38a0d2c2307b6be",
+    "build_log": "build-runs/internal-types-32/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-33",
+    "source_commit": "ff6e22d3a870f6561845e71cbd76d7b7dad8b8ce",
+    "build_log": "build-runs/internal-types-33/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-33/artifacts.json"
+  },
+  {
+    "build": "internal-types-34",
+    "source_commit": "43b5b0089f022184cdcc1b68d10dd0cdcbff31cf",
+    "build_log": "build-runs/internal-types-34/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-34/artifacts.json"
+  },
+  {
+    "build": "internal-types-35",
+    "source_commit": "e1edf0c68f5f0c45c9d29284a29b12892909298b",
+    "build_log": "build-runs/internal-types-35/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-36",
+    "source_commit": "8092786deab72468202243671e96768d470ebcfd",
+    "build_log": "build-runs/internal-types-36/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-37",
+    "source_commit": "d1b586fc2f95dbe77a7f7e9ba0b78d086f24f100",
+    "build_log": "build-runs/internal-types-37/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-37/artifacts.json"
+  },
+  {
+    "build": "internal-types-38",
+    "source_commit": "373abf6706405dfc6ca18ff4314192491254b9ec",
+    "build_log": "build-runs/internal-types-38/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-38/artifacts.json"
+  },
+  {
+    "build": "internal-types-39",
+    "source_commit": "075958380daf6eddf19a6e3660957b51ec6dda69",
+    "build_log": "build-runs/internal-types-39/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-40",
+    "source_commit": "48a281c1566fd0ee03fa17038a38f39995eff32e",
+    "build_log": "build-runs/internal-types-40/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-40/artifacts.json"
+  },
+  {
+    "build": "internal-types-41",
+    "source_commit": "61dea47628bdbc1bc84b8070f6908a64f7062383",
+    "build_log": "build-runs/internal-types-41/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-42",
+    "source_commit": "f11632a25039106f494c8618a1f140206018daf4",
+    "build_log": "build-runs/internal-types-42/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-43",
+    "source_commit": "b94a3d079f94503b9c4de6976e5b9c2aefe552b9",
+    "build_log": "build-runs/internal-types-43/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-44",
+    "source_commit": "3efff939807d8e03f0f651485b79bbf979e6b803",
+    "build_log": "build-runs/internal-types-44/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-45",
+    "source_commit": "385b8cfac1ed14d640c7588738c29eb7fd8c9ef9",
+    "build_log": "build-runs/internal-types-45/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-46",
+    "source_commit": "3df4ca07a7cbb8b627ce5a6f985f0ee01d374176",
+    "build_log": "build-runs/internal-types-46/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-46/artifacts.json"
+  },
+  {
+    "build": "internal-types-47",
+    "source_commit": "37853e3340b68c4756ca398f4581c360ccbc9082",
+    "build_log": "build-runs/internal-types-47/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-47/artifacts.json"
+  },
+  {
+    "build": "internal-types-48",
+    "source_commit": "e5a96750cbad325e38741b93db91a81b7c4983a4",
+    "build_log": "build-runs/internal-types-48/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-49",
+    "source_commit": "236e02d06c3de238264f56847477c90be1ffef3d",
+    "build_log": "build-runs/internal-types-49/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-49/artifacts.json"
+  },
+  {
+    "build": "internal-types-50",
+    "source_commit": "d5123083e4660440f82b5b9fd12a3d9d67ea893f",
+    "build_log": "build-runs/internal-types-50/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-51",
+    "source_commit": "93ecc24a4f54d1effc427f50f7b4eee84cc90723",
+    "build_log": "build-runs/internal-types-51/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-52",
+    "source_commit": "1dcca0c24ffc311364b1b9652b996195242ff99b",
+    "build_log": "build-runs/internal-types-52/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-52/artifacts.json"
+  },
+  {
+    "build": "internal-types-53",
+    "source_commit": "0e0a773b14b1a36c88ea4223e8af5e260111afaa",
+    "build_log": "build-runs/internal-types-53/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-53/artifacts.json"
+  },
+  {
+    "build": "internal-types-54",
+    "source_commit": "bb1f312d21fc41f6a572549424a854f944180070",
+    "build_log": "build-runs/internal-types-54/build.log",
+    "full_build_succeeded": false,
+    "game_run": false,
+    "tests_run": false,
+    "status": "No full-success manifest; retained failed/incomplete build, not a verified release."
+  },
+  {
+    "build": "internal-types-55",
+    "source_commit": "53cf72a447bd90a84e4901b3463dd939193b9915",
+    "build_log": "build-runs/internal-types-55/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-55/artifacts.json"
+  },
+  {
+    "build": "internal-types-56",
+    "source_commit": "10c6681f1160fef5e735883583c69fe623cd4b22",
+    "build_log": "build-runs/internal-types-56/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-56/artifacts.json"
+  },
+  {
+    "build": "internal-types-57",
+    "source_commit": "601113fbf893a5de49174ebce5c3a1277c089aae",
+    "build_log": "build-runs/internal-types-57/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-57/artifacts.json"
+  },
+  {
+    "build": "internal-types-58",
+    "source_commit": "ec205fa91d906a7123aa6dc4c1e08f2afeec8832",
+    "build_log": "build-runs/internal-types-58/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-58/artifacts.json"
+  },
+  {
+    "build": "internal-types-59",
+    "source_commit": "8047e62c1c75a1aabc611a6bff812c5148ec3433",
+    "build_log": "build-runs/internal-types-59/build.log",
+    "full_build_succeeded": true,
+    "game_run": false,
+    "tests_run": false,
+    "artifacts": "build-runs/internal-types-59/artifacts.json"
+  }
+]
