@@ -300,15 +300,12 @@ int32_t kinoko_host_append_render_item(int32_t * a1) {
 }
 
 int32_t kinoko_host_find_map_layout_abi(int32_t name_ptr) {
-    return kinoko_map_find_layout((int32_t)(intptr_t)&map_state.record,
-                                  (const char *)(intptr_t)name_ptr);
+    return (int32_t)(intptr_t)kinoko_map_lookup_layout((KinokoMapManager*)(uintptr_t)((int32_t)(intptr_t)&map_state.record), (const char *)(intptr_t)name_ptr);
 }
 
 int32_t kinoko_host_create_map_layer_abi(int32_t name_ptr)
 {
-    return kinoko_map_create_render_layer(
-        (int32_t)(intptr_t)&map_state.record,
-        (const char *)(intptr_t)name_ptr);
+    return (int32_t)(intptr_t)kinoko_map_make_render_layer((KinokoMapManager*)(uintptr_t)((int32_t)(intptr_t)&map_state.record), (const char *)(intptr_t)name_ptr);
 }
 
 int32_t kinoko_host_clear_sound(void) {

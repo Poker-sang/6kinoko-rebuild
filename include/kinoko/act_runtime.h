@@ -32,11 +32,6 @@ struct kinoko_native_view_property {
 extern "C" {
 #endif
 
-int32_t kinoko_map_draw(int32_t layout,
-                                             float x, float y);
-int32_t kinoko_map_update(
-    int32_t layout, int32_t view_left, int32_t view_top,
-    int32_t view_right, int32_t view_bottom);
 int32_t kinoko_act_append_list(int32_t list_slot, int32_t value);
 int32_t __fastcall kinoko_delete_layout_sprite(int32_t sprite, void *unused, int32_t flags);
 void kinoko_act_free_map_records(int32_t layout);

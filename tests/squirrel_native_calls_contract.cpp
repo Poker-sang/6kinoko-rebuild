@@ -71,7 +71,7 @@ int32_t __cdecl bool_name(int32_t text) {
 }
 int32_t __cdecl string_object(int32_t text, int32_t vtable, int32_t type, int32_t data) {
     require(std::string(pointer<char>(text)) == "table", "string/object callback value");
-    ObjectStorage object{static_cast<uint32_t>(vtable), borrowed_value(type, data)};
+    ObjectStorage object{reinterpret_cast<const void*>(static_cast<uintptr_t>(vtable)), borrowed_value(type, data)};
     require(object.vtable == kinoko_squirrel_object_vtable(), "string/object wrapper vtable");
     require(sq_release(active_vm, &object.value) == SQTrue, "string/object callee consumes external handle");
     ++consumed; return 1;

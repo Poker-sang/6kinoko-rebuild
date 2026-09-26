@@ -38,16 +38,7 @@ extern "C" KinokoActLayout *kinoko_map_lookup_layout(KinokoMapManager *storage, 
     return 0;
 }
 
-extern "C" int32_t kinoko_map_find_layout(int32_t manager_address, const char *name) {
-    return kinoko::legacy::address(kinoko_map_lookup_layout(
-        kinoko::legacy::pointer<KinokoMapManager>(manager_address), name));
-}
 
-extern "C" int32_t kinoko_map_create_render_layer(int32_t manager_address,
-                                                   const char *name) {
-    return kinoko::legacy::address(kinoko_map_make_render_layer(
-        kinoko::legacy::pointer<KinokoMapManager>(manager_address), name));
-}
 extern "C" KinokoRenderLayer *kinoko_map_make_render_layer(KinokoMapManager *manager,
                                                           const char *name) {
     auto *layout = kinoko_map_lookup_layout(manager, name);

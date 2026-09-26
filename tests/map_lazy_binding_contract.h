@@ -75,18 +75,18 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
         if (!query) {
             /* Invisible Update must not consume the pending binding. */
             *(uint8_t*)(intptr_t)(cloned_layer+140) = 0;
-            CHECK(kinoko_map_update(PTR(layout),0,0,100,100) == 0);
+            CHECK(kinoko_map_update_visible((KinokoActLayout*)(uintptr_t)(PTR(layout)), 0, 0, 100, 100) == 0);
             CHECK(layout[79] == 0);
             *(uint8_t*)(intptr_t)(cloned_layer+140) = 1;
-            CHECK(kinoko_map_update(PTR(layout),0,0,100,100) == 0);
+            CHECK(kinoko_map_update_visible((KinokoActLayout*)(uintptr_t)(PTR(layout)), 0, 0, 100, 100) == 0);
             CHECK(layout[79] == cloned_resource);
             /* A non-null stale resource must fail without rebinding. */
             layout[79] = PTR(resource);
-            CHECK(kinoko_map_update(PTR(layout),0,0,100,100) == (int32_t)E_FAIL);
+            CHECK(kinoko_map_update_visible((KinokoActLayout*)(uintptr_t)(PTR(layout)), 0, 0, 100, 100) == (int32_t)E_FAIL);
             CHECK(layout[79] == PTR(resource));
             layout[79] = 0;
             *(int32_t*)(intptr_t)(cloned_layer+100) = 0;
-            CHECK(kinoko_map_update(PTR(layout),0,0,100,100) == (int32_t)E_FAIL);
+            CHECK(kinoko_map_update_visible((KinokoActLayout*)(uintptr_t)(PTR(layout)), 0, 0, 100, 100) == (int32_t)E_FAIL);
             CHECK(layout[79] == 0);
             *(int32_t*)(intptr_t)(cloned_layer+100) = cloned_resource;
         } else if (query == 1) {

@@ -135,12 +135,6 @@ extern "C" int32_t kinoko_map_draw_visible(KinokoActLayout *layout,float x,float
     return 0; // original ignores per-quad HRESULT and continues
 }
 
-extern "C" int32_t kinoko_map_update(int32_t layout,int32_t left,int32_t top,int32_t right,int32_t bottom) {
-    return kinoko_map_update_visible(pointer<KinokoActLayout>(layout),left,top,right,bottom);
-}
-extern "C" int32_t kinoko_map_draw(int32_t layout,float x,float y) {
-    return kinoko_map_draw_visible(pointer<KinokoActLayout>(layout),x,y);
-}
 
 extern "C" KinokoActLayer *__fastcall kinoko_act_layer_world_position(
     KinokoActLayer *layer, void *, float *x, float *y, float *z) {
