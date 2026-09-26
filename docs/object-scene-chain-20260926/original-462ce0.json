@@ -1,0 +1,22 @@
+{
+  "addr": "0x462ce0",
+  "code": "int __stdcall sub_462CE0(int a1, int a2)\n{\n  int result; // eax\n  _DWORD v3[3]; // [esp-Ch] [ebp-68h] BYREF\n  _DWORD v4[20]; // [esp+0h] [ebp-5Ch] BYREF\n  int v5; // [esp+58h] [ebp-4h]\n\n  v4[19] = v4; /*0x462d08*/\n  result = *(_DWORD *)(a2 + 320) & *(_DWORD *)(a1 + 324) | *(_DWORD *)(a2 + 324) & *(_DWORD *)(a1 + 320); /*0x462d29*/\n  if ( result != 0 ) /*0x462d2b*/\n  {\n    result = sub_4045C0(a1: a1 + 440, a2: a2 + 440); /*0x462d3f*/\n    if ( (_BYTE)result != 0 ) /*0x462d49*/\n    {\n      if ( (*(_DWORD *)(a1 + 324) & *(_DWORD *)(a2 + 320)) != 0 ) /*0x462d5b*/\n      {\n        result = sub_4A9A30(a1: a1 + 136); /*0x462d67*/\n        if ( result == 134217984 ) /*0x462d71*/\n        {\n          v4[18] = v3; /*0x462d7b*/\n          v5 = 0; /*0x462d7f*/\n          sub_404040(a1: a2 + 44); /*0x462d86*/\n          result = sub_45E020(a1: v3[0], a2: v3[1], a3: v3[2]); /*0x462d8e*/\n          v5 = -1; /*0x462d93*/\n        }\n      }\n      if ( (*(_DWORD *)(a1 + 320) & *(_DWORD *)(a2 + 324)) != 0 ) /*0x462df6*/\n      {\n        result = sub_4A9A30(a1: a2 + 136); /*0x462dfe*/\n        if ( result == 134217984 ) /*0x462e08*/\n        {\n          v5 = 3; /*0x462e16*/\n          sub_404040(a1: a1 + 44); /*0x462e1d*/\n          return sub_45E020(a1: v3[0], a2: v3[1], a3: v3[2]); /*0x462e25*/\n        }\n      }\n    }\n  }\n  return result; /*0x462e2a*/\n}",
+  "refs": [
+    {
+      "addr": "0x4045c0",
+      "name": "sub_4045C0"
+    },
+    {
+      "addr": "0x4a9a30",
+      "name": "sub_4A9A30"
+    },
+    {
+      "addr": "0x404040",
+      "name": "sub_404040"
+    },
+    {
+      "addr": "0x45e020",
+      "name": "sub_45E020"
+    }
+  ]
+}

@@ -15,7 +15,8 @@ namespace {
 ManagerPrefix manager{};
 std::array<ActorRecord,6> actors{};
 std::vector<int> steps,motions,renders,retired,phases;
-bool mutate=false;
+bool mutate=false, observe_retirement=false, insert_during_clear=false, clear_during_tick=false;
+std::vector<int> retirement_counts;
 bool initialize_ok=true;
 uint32_t next_handle=1;
 KinokoActor *actor_at(size_t i) { return reinterpret_cast<KinokoActor *>(&actors[i]); }
@@ -26,7 +27,16 @@ KinokoActor *__fastcall acquire_pool(KinokoActorPool *,void *,uint32_t *handle) 
     *handle=next_handle; return actor_at(next_handle++-1);
 }
 int32_t __fastcall retire_pool(KinokoActorPool *,void *,uint32_t handle) {
-    retired.push_back(handle); return 1;
+    retired.push_back(handle);
+    if (observe_retirement) {
+        retirement_counts.push_back(manager.iteration_count);
+        require(manager.iteration.begin[3]==actor_at(2));
+    }
+    if (insert_during_clear && handle==1) {
+        actors[5].owner_references=1; actors[5].priority=1;
+        require(kinoko_actor_manager_reindex(receiver(),actor_at(5)));
+    }
+    return 1;
 }
 #define CHECK(x) do { if (!(x)) { std::fprintf(stderr,"manager line %d: %s\n",__LINE__,#x);return 1; } } while(0)
 }
@@ -51,6 +61,7 @@ void kinoko_actor_manager_trace_actor(int32_t,KinokoActor *,KinokoCamera *,int32
 void kinoko_actor_tick(KinokoActor *actor) {
     auto &a=*reinterpret_cast<ActorRecord *>(actor);
     steps.push_back(a.id);
+    if (clear_during_tick) { kinoko_actor_manager_reset(receiver()); return; }
     if (mutate && a.id==0) {
         manager.update_mask=2; // the next actor and motion see the new mask
         actors[2].release_pending=1;
@@ -101,8 +112,10 @@ int main() {
     actors[4].priority=0;
     actors[0].update_group=1;
     manager.update_mask=1;
-    mutate=true;
+    mutate=true; observe_retirement=true;
     CHECK(kinoko_actor_manager_update(receiver(),nullptr)==4);
+    observe_retirement=false;
+    CHECK((retirement_counts==std::vector<int>{5}));
     CHECK((steps==std::vector<int>{0,1,2,3})); // deferred release until refresh
     CHECK((motions==std::vector<int>{3,1,4}));
     CHECK((retired==std::vector<int>{3}));
@@ -112,11 +125,32 @@ int main() {
     kinoko_actor_manager_reset(receiver());
     CHECK(actors[1].owner_references==1 && manager.iteration_count==0);
     CHECK((retired==std::vector<int>{3,4,1,5}));
-    CHECK(kinoko_actor_manager_refresh(receiver())==0 && !manager.cleanup_pending);
+    const auto old_end=layers[3].end;
+    CHECK(kinoko_actor_manager_refresh(receiver())==0 && manager.cleanup_pending);
+    CHECK(layers[3].end==old_end); // empty refresh does not publish new ranges
+    actors[0].priority_entry=nullptr;
+    actors[0].owner_references=1; actors[0].priority=0;
+    CHECK(kinoko_actor_manager_reindex(receiver(),actor_at(0)));
+    layers[0].begin=17;
+    CHECK(kinoko_actor_manager_refresh(receiver())==1 && layers[0].begin==17);
+    insert_during_clear=true;
+    const auto before_clear=retired.size();
+    kinoko_actor_manager_reset(receiver());
+    insert_during_clear=false;
+    CHECK(retired.size()==before_clear+2 && retired.back()==6);
+    CHECK(actors[5].owner_references==0 && manager.iteration_count==0);
     initialize_ok=false;
     KinokoOwnedObjectWords empty{};
     CHECK(!kinoko_actor_manager_create(receiver(),&empty,0,0,0,&empty,nullptr));
-    CHECK(retired.back()==1 && retired.size()==5); // 463CB6 failure cleanup
+    CHECK(retired.back()==1 && retired.size()==7); // 463CB6 failure cleanup
+    // Restart from inside update stops this frame's remaining actor work.
+    mutate=false; clear_during_tick=true; steps.clear(); motions.clear();
+    actors[0].priority_entry=nullptr; actors[0].owner_references=1;
+    actors[0].update_group=1; manager.update_mask=1;
+    CHECK(kinoko_actor_manager_reindex(receiver(),actor_at(0)));
+    CHECK(kinoko_actor_manager_update(receiver(),nullptr)==0);
+    CHECK((steps==std::vector<int>{0}) && motions.empty() && manager.cleanup_pending);
+    clear_during_tick=false;
     CameraBoundsRecord camera{};camera.bounds={0,0,10,10};
     actors[5].world_bounds={74,0,75,1};actors[5].active=0;
     CHECK(kinoko_actor_activate(actor_at(5),reinterpret_cast<KinokoCamera *>(&camera),64));

@@ -1,0 +1,14 @@
+{
+  "addr": "0x468950",
+  "code": "char __thiscall sub_468950(_DWORD *this, int a2)\n{\n  int v4; // esi\n  int v5; // eax\n  int v6; // ecx\n  int v7; // ebx\n\n  if ( a2 == 0 ) /*0x46895a*/\n    return 0; /*0x46895c*/\n  v4 = *(this + 1); /*0x468968*/\n  if ( v4 != *(this + 2) ) /*0x46896d*/\n    *(this + 2) = v4; /*0x46898a*/\n  v5 = *(this + 14); /*0x46898d*/\n  v6 = *(this + 13); /*0x468990*/\n  if ( v6 != v5 ) /*0x468995*/\n  {\n    v7 = sub_4683C0(a1: v5, a2: v5, a3: v6); /*0x4689a3*/\n    sub_468790(a1: v7, a2: *(this + 14)); /*0x4689b0*/\n    *(this + 14) = v7; /*0x4689b5*/\n  }\n  *this = a2; /*0x4689bd*/\n  *(this + 21) = 0; /*0x4689bf*/\n  return 1; /*0x46895e*/\n}",
+  "refs": [
+    {
+      "addr": "0x4683c0",
+      "name": "sub_4683C0"
+    },
+    {
+      "addr": "0x468790",
+      "name": "sub_468790"
+    }
+  ]
+}

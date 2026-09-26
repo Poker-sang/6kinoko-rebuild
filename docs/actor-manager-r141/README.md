@@ -1,5 +1,8 @@
 # R141: ActorManager lifecycle and scheduling batch
 
+2026-09-26 update: the historical empty-tree compatibility behavior below is
+superseded by [original object/scene lifecycle restoration](../object-scene-chain-20260926/README.md).
+
 Base: R140 (`06d451d`, source `671f741`). This batch completes the accepted
 ActorManager scope, not migration of the renderer or the entire game.
 

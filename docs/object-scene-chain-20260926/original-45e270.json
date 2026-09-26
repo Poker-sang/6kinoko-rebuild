@@ -1,0 +1,14 @@
+{
+  "addr": "0x45e270",
+  "code": "_DWORD *__thiscall sub_45E270(_DWORD *this, void *a2)\n{\n  _DWORD *v3; // eax\n  _DWORD v5[8]; // [esp+0h] [ebp-20h] BYREF\n\n  v5[4] = v5; /*0x45e296*/\n  *this = 0; /*0x45e29d*/\n  v5[7] = 0; /*0x45e2a3*/\n  v3 = operator new(Size: 0x10u); /*0x45e2aa*/\n  if ( v3 != nullptr ) /*0x45e2b4*/\n  {\n    v3[1] = 1; /*0x45e2bb*/\n    v3[2] = 1; /*0x45e2be*/\n    *v3 = &boost::detail::sp_counted_impl_p<Actor *>::`vftable'; /*0x45e2c4*/\n    v3[3] = a2; /*0x45e2ca*/\n  }\n  else\n  {\n    v3 = nullptr; /*0x45e2cf*/\n  }\n  *this = v3; /*0x45e2d1*/\n  return this; /*0x45e2d5*/\n}",
+  "refs": [
+    {
+      "addr": "0x4ab3fc",
+      "name": "??2@YAPAXI@Z"
+    },
+    {
+      "addr": "0x4d5484",
+      "name": "??_7?$sp_counted_impl_p@PAVActor@@@detail@boost@@6B@"
+    }
+  ]
+}

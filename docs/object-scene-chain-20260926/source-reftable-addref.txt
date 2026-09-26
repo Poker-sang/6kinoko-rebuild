@@ -1,0 +1,32 @@
+?AddRef@RefTable@@QAEXAAUtagSQObject@@@Z (public: void __thiscall RefTable::AddRef(struct tagSQObject &)):
+  00000000: 55                 push        ebp
+  00000001: 8B EC              mov         ebp,esp
+  00000003: 83 EC 08           sub         esp,8
+  00000006: 8D 45 FC           lea         eax,[ebp-4]
+  00000009: 6A 01              push        1
+  0000000B: 50                 push        eax
+  0000000C: 8D 45 F8           lea         eax,[ebp-8]
+  0000000F: 50                 push        eax
+  00000010: FF 75 08           push        dword ptr [ebp+8]
+  00000013: E8 00 00 00 00     call        ?Get@RefTable@@AAEPAURefNode@1@AAUtagSQObject@@AAIPAPAU21@_N@Z
+  00000018: FF 40 08           inc         dword ptr [eax+8]
+  0000001B: 8B E5              mov         esp,ebp
+  0000001D: 5D                 pop         ebp
+  0000001E: C2 04 00           ret         4
+
+?AddToChain@SQCollectable@@SAXPAPAU1@PAU1@@Z (public: static void __cdecl SQCollectable::AddToChain(struct SQCollectable * *,struct SQCollectable *)):
+  00000000: 55                 push        ebp
+  00000001: 8B EC              mov         ebp,esp
+  00000003: 8B 4D 0C           mov         ecx,dword ptr [ebp+0Ch]
+  00000006: 8B 55 08           mov         edx,dword ptr [ebp+8]
+  00000009: C7 41 10 00 00 00  mov         dword ptr [ecx+10h],0
+            00
+  00000010: 8B 02              mov         eax,dword ptr [edx]
+  00000012: 89 41 0C           mov         dword ptr [ecx+0Ch],eax
+  00000015: 8B 02              mov         eax,dword ptr [edx]
+  00000017: 85 C0              test        eax,eax
+  00000019: 74 03              je          0000001E
+  0000001B: 89 48 10           mov         dword ptr [eax+10h],ecx
+  0000001E: 89 0A              mov         dword ptr [edx],ecx
+  00000020: 5D                 pop         ebp
+  00000021: C3                 ret

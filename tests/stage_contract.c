@@ -2035,7 +2035,7 @@ static int test_branch_motion(int32_t manager) {
 }
 
 static int test_map_transition(int32_t vm, int32_t *root) {
-    const char *paths[]={"data/map/w1-c01a.act","data/map/w1-c01b.act","data/map/w1-c01a.act"};
+    const char *paths[]={"data/map/w1-c01a.act","data/map/w1-c01a.act","data/map/w1-c01b.act","data/map/w1-c01a.act"};
     int32_t map_state=PTR(g_retdec_map_manager_state);
     kinoko_initialize_render_queue();
     kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(g722)));
@@ -2068,10 +2068,34 @@ static int test_map_transition(int32_t vm, int32_t *root) {
         "function PlayBgm(a,b,c,d) {}\n"
         "function EventCallback(id,x1,y1,x2,y2) {}\n"
         "stageNoIntro=true;"));
-    for(int i=0;i<3;++i) {
+    for(int i=0;i<4;++i) {
+        int32_t manager=PTR(g_retdec_actor_manager_state);
+        int32_t previous_document=*(int32_t *)(intptr_t)(map_state+12);
+        int32_t previous_holder=*(int32_t *)(intptr_t)(map_state+16);
+        int32_t previous_runtime=*(int32_t *)(intptr_t)(map_state+20);
+        int32_t previous_animation_count=*(int32_t *)(intptr_t)(manager+44);
+        int32_t old_parent[2]={0,0},locked[2]={0,0};
+        if(i) {
+            CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)manager)>0);
+            int32_t previous_actor=**(int32_t **)(intptr_t)(manager+100);
+            old_parent[0]=*(int32_t *)(intptr_t)(previous_actor+24);
+            old_parent[1]=*(int32_t *)(intptr_t)(previous_actor+28);
+            kinoko_native_add_weak(old_parent[1]);
+        }
         fprintf(stderr,"map transition %s\n",paths[i]);
-        CHECK(execute_source(vm,root+2,i==1 ? "LoadStage(\"w1-c01b.act\");" : "LoadStage(\"w1-c01a.act\");"));
+        CHECK(execute_source(vm,root+2,i==2 ? "LoadStage(\"w1-c01b.act\");" : "LoadStage(\"w1-c01a.act\");"));
         CHECK(*(int32_t *)(intptr_t)(map_state+12));
+        CHECK(*(int32_t *)(intptr_t)(manager+44)==previous_animation_count);
+        if(i==1) { // original LoadStage skips LoadMap for the same stage name
+            CHECK(*(int32_t *)(intptr_t)(map_state+12)==previous_document);
+            CHECK(*(int32_t *)(intptr_t)(map_state+16)==previous_holder);
+            CHECK(*(int32_t *)(intptr_t)(map_state+20)==previous_runtime);
+        }
+        if(i) {
+            kinoko_native_weak_pair_lock(PTR(old_parent),locked);
+            CHECK(!locked[0] && !locked[1]); // old native owners expire on every restart
+            kinoko_native_release_weak(old_parent[1]);
+        }
         fprintf(stderr,"map actors=%d layers=%d\n",kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(PTR(g_retdec_actor_manager_state))),kinoko_render_queue_size());
         CHECK(execute_source(vm,root+2,
             "player <- {x=800.0,y=850.0,vx=2.5,vy=0.0,direction=1.0,hitBottom=1,\n"
@@ -2122,7 +2146,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
     CHECK(!kinoko_sqrat_get((void *)(intptr_t)(PTR(root)), retired_name, (void *)(intptr_t)(retired_environment)));
     kinoko_script_clear_render_layers();
     CHECK(kinoko_render_queue_size()==0);
-    puts("PASS: first-stage passage load/release/reload, camera, actors, ACT update and draw transforms");
+    puts("PASS: original passage load/same-map restart/change/return, owner expiration and retained animation resources");
     return 0;
 }
 

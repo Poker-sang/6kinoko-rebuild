@@ -1,0 +1,1143 @@
+FUNCTION data/script/global.nut: main stack=4 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 103]]
+K0 = "player"
+K1 = "star"
+K2 = "score"
+K3 = "life"
+K4 = "playerType"
+K5 = "TYPE_2HEAD"
+K6 = "playerItem"
+K7 = "waterFrame"
+K8 = "currentMap"
+K9 = "updateMaskPause"
+K10 = -1
+K11 = "currentTime"
+K12 = "clearCount"
+K13 = "globalUpdateFunc"
+K14 = "getroottable"
+K15 = "globalEnv"
+K16 = "SetGlobalUpdateFunction2"
+K17 = "InitGlobal"
+K18 = "UpdateGlobal"
+K19 = "UpdateWorldClear"
+K20 = "UpdateStageClear"
+K21 = "UpdateExClear"
+K22 = "UpdateExClear2"
+K23 = "UpdateExClear3"
+K24 = "UpdateExClear4"
+K25 = "UpdateDead"
+K26 = "AddStar"
+K27 = "AddRedStar"
+K28 = "AddScore"
+K29 = "AddLife"
+K30 = "AddPoint"
+K31 = "CreateEffect"
+K32 = "GetCallbackFuncTable"
+K33 = "SavePlayerState"
+K34 = "SavePlayerStateForce"
+K35 = "ResetPlayerState"
+K36 = "DisableInput"
+0000 LOAD           a0=  1 a1=          0 a2=  0 a3=  0
+0001 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0002 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0003 LOAD           a0=  1 a1=          1 a2=  0 a3=  0
+0004 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0005 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0006 LOAD           a0=  1 a1=          2 a2=  0 a3=  0
+0007 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0008 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0009 LOAD           a0=  1 a1=          3 a2=  0 a3=  0
+0010 LOADINT        a0=  2 a1=          5 a2=  0 a3=  0
+0011 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0012 DLOAD          a0=  1 a1=          4 a2=  2 a3=  5
+0013 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0014 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0015 LOAD           a0=  1 a1=          6 a2=  0 a3=  0
+0016 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0017 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0018 LOAD           a0=  1 a1=          7 a2=  0 a3=  0
+0019 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0020 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0021 LOAD           a0=  1 a1=          8 a2=  0 a3=  0
+0022 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0023 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0024 DLOAD          a0=  1 a1=          9 a2=  2 a3= 10
+0025 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0026 LOAD           a0=  1 a1=         11 a2=  0 a3=  0
+0027 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0028 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0029 LOAD           a0=  1 a1=         12 a2=  0 a3=  0
+0030 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0031 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0032 DLOAD          a0=  1 a1=         13 a2=  2 a3= 14
+0033 PREPCALL       a0=  2 a1=          2 a2=  0 a3=  3
+0034 CALL           a0=  2 a1=          2 a2=  3 a3=  1
+0035 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0036 DLOAD          a0=  1 a1=         15 a2=  2 a3= 14
+0037 PREPCALL       a0=  2 a1=          2 a2=  0 a3=  3
+0038 CALL           a0=  2 a1=          2 a2=  3 a3=  1
+0039 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0040 LOAD           a0=  1 a1=         16 a2=  0 a3=  0
+0041 CLOSURE        a0=  2 a1=          0 a2=  0 a3=  0
+0042 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0043 LOAD           a0=  1 a1=         17 a2=  0 a3=  0
+0044 CLOSURE        a0=  2 a1=          1 a2=  0 a3=  0
+0045 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0046 LOAD           a0=  1 a1=         18 a2=  0 a3=  0
+0047 CLOSURE        a0=  2 a1=          2 a2=  0 a3=  0
+0048 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0049 LOAD           a0=  1 a1=         19 a2=  0 a3=  0
+0050 CLOSURE        a0=  2 a1=          3 a2=  0 a3=  0
+0051 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0052 LOAD           a0=  1 a1=         20 a2=  0 a3=  0
+0053 CLOSURE        a0=  2 a1=          4 a2=  0 a3=  0
+0054 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0055 LOAD           a0=  1 a1=         21 a2=  0 a3=  0
+0056 CLOSURE        a0=  2 a1=          5 a2=  0 a3=  0
+0057 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0058 LOAD           a0=  1 a1=         22 a2=  0 a3=  0
+0059 CLOSURE        a0=  2 a1=          6 a2=  0 a3=  0
+0060 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0061 LOAD           a0=  1 a1=         23 a2=  0 a3=  0
+0062 CLOSURE        a0=  2 a1=          7 a2=  0 a3=  0
+0063 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0064 LOAD           a0=  1 a1=         24 a2=  0 a3=  0
+0065 CLOSURE        a0=  2 a1=          8 a2=  0 a3=  0
+0066 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0067 LOAD           a0=  1 a1=         25 a2=  0 a3=  0
+0068 CLOSURE        a0=  2 a1=          9 a2=  0 a3=  0
+0069 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0070 LOAD           a0=  1 a1=         26 a2=  0 a3=  0
+0071 CLOSURE        a0=  2 a1=         10 a2=  0 a3=  0
+0072 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0073 LOAD           a0=  1 a1=         27 a2=  0 a3=  0
+0074 CLOSURE        a0=  2 a1=         11 a2=  0 a3=  0
+0075 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0076 LOAD           a0=  1 a1=         28 a2=  0 a3=  0
+0077 CLOSURE        a0=  2 a1=         12 a2=  0 a3=  0
+0078 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0079 LOAD           a0=  1 a1=         29 a2=  0 a3=  0
+0080 CLOSURE        a0=  2 a1=         13 a2=  0 a3=  0
+0081 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0082 LOAD           a0=  1 a1=         30 a2=  0 a3=  0
+0083 CLOSURE        a0=  2 a1=         14 a2=  0 a3=  0
+0084 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0085 LOAD           a0=  1 a1=         31 a2=  0 a3=  0
+0086 CLOSURE        a0=  2 a1=         15 a2=  0 a3=  0
+0087 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0088 LOAD           a0=  1 a1=         32 a2=  0 a3=  0
+0089 CLOSURE        a0=  2 a1=         16 a2=  0 a3=  0
+0090 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0091 LOAD           a0=  1 a1=         33 a2=  0 a3=  0
+0092 CLOSURE        a0=  2 a1=         17 a2=  0 a3=  0
+0093 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0094 LOAD           a0=  1 a1=         34 a2=  0 a3=  0
+0095 CLOSURE        a0=  2 a1=         18 a2=  0 a3=  0
+0096 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0097 LOAD           a0=  1 a1=         35 a2=  0 a3=  0
+0098 CLOSURE        a0=  2 a1=         19 a2=  0 a3=  0
+0099 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0100 LOAD           a0=  1 a1=         36 a2=  0 a3=  0
+0101 CLOSURE        a0=  2 a1=         20 a2=  0 a3=  0
+0102 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0103 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: SetGlobalUpdateFunction2 stack=6 generator=False
+PARAMETERS ["this", "func", "env"]
+LOCALS [["env", 2, 0, 7], ["func", 1, 0, 7], ["this", 0, 0, 7]]
+K0 = "globalUpdateFunc"
+K1 = "globalEnv"
+K2 = "SetGlobalUpdateFunction"
+0000 LOAD           a0=  3 a1=          0 a2=  0 a3=  0
+0001 SET            a0=  3 a1=          0 a2=  3 a3=  1
+0002 LOAD           a0=  3 a1=          1 a2=  0 a3=  0
+0003 SET            a0=  3 a1=          0 a2=  3 a3=  2
+0004 PREPCALLK      a0=  3 a1=          2 a2=  0 a3=  4
+0005 CLOSURE        a0=  5 a1=          0 a2=  0 a3=  0
+0006 CALL           a0=  3 a1=          3 a2=  4 a3=  2
+0007 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: InitGlobal stack=4 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 40]]
+K0 = "star"
+K1 = "score"
+K2 = "life"
+K3 = "playerItem"
+K4 = "playerType"
+K5 = "TYPE_2HEAD"
+K6 = "PlayerStatus"
+K7 = "coin"
+K8 = "item"
+K9 = "ItemCross"
+0000 LOAD           a0=  1 a1=          0 a2=  0 a3=  0
+0001 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0002 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0003 LOAD           a0=  1 a1=          1 a2=  0 a3=  0
+0004 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0005 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0006 LOAD           a0=  1 a1=          2 a2=  0 a3=  0
+0007 LOADINT        a0=  2 a1=          5 a2=  0 a3=  0
+0008 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0009 LOAD           a0=  1 a1=          3 a2=  0 a3=  0
+0010 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0011 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0012 DLOAD          a0=  1 a1=          4 a2=  2 a3=  5
+0013 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0014 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0015 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0016 GETK           a0=  1 a1=          6 a2=  1 a3=  0
+0017 DLOAD          a0=  2 a1=          1 a2=  3 a3=  1
+0018 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0019 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0020 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0021 GETK           a0=  1 a1=          6 a2=  1 a3=  0
+0022 DLOAD          a0=  2 a1=          7 a2=  3 a3=  0
+0023 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0024 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0025 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0026 GETK           a0=  1 a1=          6 a2=  1 a3=  0
+0027 DLOAD          a0=  2 a1=          2 a2=  3 a3=  2
+0028 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0029 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0030 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0031 GETK           a0=  1 a1=          6 a2=  1 a3=  0
+0032 DLOAD          a0=  2 a1=          8 a2=  3 a3=  3
+0033 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0034 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0035 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0036 GETK           a0=  1 a1=          6 a2=  1 a3=  0
+0037 LOAD           a0=  2 a1=          9 a2=  0 a3=  0
+0038 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0039 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0040 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: UpdateGlobal stack=4 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 31]]
+K0 = "currentTime"
+K1 = "timeGetTime"
+K2 = "player"
+K3 = "input"
+K4 = "k1"
+K5 = "SetGlobalUpdateFunction"
+K6 = "updateMaskPause"
+K7 = "updateMask"
+K8 = "StagePause"
+K9 = "Resume"
+K10 = "UpdateStage"
+0000 DLOAD          a0=  1 a1=          0 a2=  2 a3=  1
+0001 PREPCALL       a0=  2 a1=          2 a2=  0 a3=  3
+0002 CALL           a0=  2 a1=          2 a2=  3 a3=  1
+0003 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0004 GETK           a0=  1 a1=          2 a2=  0 a3=  0
+0005 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0006 NE             a0=  1 a1=          2 a2=  1 a3=  0
+0007 JZ             a0=  1 a1=         23 a2=  0 a3=  0
+0008 GETK           a0=  1 a1=          3 a2=  0 a3=  0
+0009 GETK           a0=  1 a1=          4 a2=  1 a3=  0
+0010 LOADINT        a0=  2 a1=          1 a2=  0 a3=  0
+0011 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0012 JZ             a0=  1 a1=         16 a2=  0 a3=  0
+0013 PREPCALLK      a0=  1 a1=          5 a2=  0 a3=  2
+0014 LOADNULLS      a0=  3 a1=          1 a2=  0 a3=  0
+0015 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0016 LOAD           a0=  1 a1=          6 a2=  0 a3=  0
+0017 LOADROOTTABLE  a0=  2 a1=          0 a2=  0 a3=  0
+0018 GETK           a0=  2 a1=          7 a2=  2 a3=  0
+0019 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0020 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0021 LOAD           a0=  2 a1=          7 a2=  0 a3=  0
+0022 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0023 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0024 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0025 GETK           a0=  1 a1=          8 a2=  1 a3=  0
+0026 PREPCALLK      a0=  1 a1=          9 a2=  1 a3=  2
+0027 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0028 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0029 PREPCALLK      a0=  1 a1=         10 a2=  0 a3=  2
+0030 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0031 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: UpdateWorldClear stack=8 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 132]]
+K0 = "player"
+K1 = "SetGlobalUpdateFuncton"
+K2 = "user"
+K3 = "clearCount"
+K4 = "SavePlayerState"
+K5 = "ChangeStageToWorld"
+K6 = "CreateActor"
+K7 = "t_effect"
+K8 = "InitFrame"
+K9 = "camera"
+K10 = "x"
+K11 = "top"
+K12 = "bottom"
+K13 = "PlayerStatus"
+K14 = "time"
+K15 = "AddScore"
+K16 = "StageClear"
+K17 = "timescore"
+K18 = "pl"
+K19 = "BeginStage"
+K20 = "SetBonusType"
+K21 = "stageBonusType"
+K22 = "bonus"
+K23 = "stageBonus"
+0000 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0001 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0002 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0003 JZ             a0=  1 a1=          4 a2=  0 a3=  0
+0004 PREPCALLK      a0=  1 a1=          1 a2=  0 a3=  2
+0005 LOADNULLS      a0=  3 a1=          1 a2=  0 a3=  0
+0006 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0007 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0008 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0009 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0010 GETK           a0=  1 a1=          3 a2=  1 a3=  0
+0011 LOADINT        a0=  2 a1=         60 a2=  0 a3=  0
+0012 LOADINT        a0=  3 a1=         11 a2=  0 a3=  0
+0013 ARITH          a0=  2 a1=          3 a2=  2 a3= 42
+0014 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0015 JZ             a0=  1 a1=          5 a2=  0 a3=  0
+0016 PREPCALLK      a0=  1 a1=          4 a2=  0 a3=  2
+0017 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0018 PREPCALLK      a0=  1 a1=          5 a2=  0 a3=  2
+0019 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0020 JMP            a0=  0 a1=        111 a2=  0 a3=  0
+0021 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0022 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0023 GETK           a0=  1 a1=          3 a2=  1 a3=  0
+0024 LOADINT        a0=  2 a1=         60 a2=  0 a3=  0
+0025 LOADINT        a0=  3 a1=          8 a2=  0 a3=  0
+0026 ARITH          a0=  2 a1=          3 a2=  2 a3= 42
+0027 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0028 JZ             a0=  1 a1=         19 a2=  0 a3=  0
+0029 PREPCALLK      a0=  1 a1=          6 a2=  0 a3=  2
+0030 GETK           a0=  3 a1=          7 a2=  0 a3=  0
+0031 GETK           a0=  3 a1=          8 a2=  3 a3=  0
+0032 LOADROOTTABLE  a0=  4 a1=          0 a2=  0 a3=  0
+0033 GETK           a0=  4 a1=          9 a2=  4 a3=  0
+0034 GETK           a0=  4 a1=         10 a2=  4 a3=  0
+0035 LOADROOTTABLE  a0=  5 a1=          0 a2=  0 a3=  0
+0036 GETK           a0=  5 a1=          9 a2=  5 a3=  0
+0037 GETK           a0=  5 a1=         11 a2=  5 a3=  0
+0038 LOADROOTTABLE  a0=  6 a1=          0 a2=  0 a3=  0
+0039 GETK           a0=  6 a1=          9 a2=  6 a3=  0
+0040 GETK           a0=  6 a1=         12 a2=  6 a3=  0
+0041 ARITH          a0=  5 a1=          6 a2=  5 a3= 43
+0042 LOADINT        a0=  6 a1=          2 a2=  0 a3=  0
+0043 ARITH          a0=  5 a1=          6 a2=  5 a3= 47
+0044 LOADFLOAT      a0=  6 a1= 1065353216 a2=  0 a3=  0
+0045 LOADINT        a0=  7 a1=          0 a2=  0 a3=  0
+0046 CALL           a0=  1 a1=          1 a2=  2 a3=  6
+0047 JMP            a0=  0 a1=         84 a2=  0 a3=  0
+0048 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0049 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0050 GETK           a0=  1 a1=          3 a2=  1 a3=  0
+0051 LOADINT        a0=  2 a1=        400 a2=  0 a3=  0
+0052 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0053 JZ             a0=  1 a1=         48 a2=  0 a3=  0
+0054 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0055 GETK           a0=  1 a1=         13 a2=  1 a3=  0
+0056 GETK           a0=  1 a1=         14 a2=  1 a3=  0
+0057 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0058 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0059 JZ             a0=  1 a1=         41 a2=  0 a3=  0
+0060 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0061 GETK           a0=  1 a1=         13 a2=  1 a3=  0
+0062 GETK           a0=  1 a1=         14 a2=  1 a3=  0
+0063 LOADINT        a0=  2 a1=          4 a2=  0 a3=  0
+0064 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0065 JZ             a0=  1 a1=         14 a2=  0 a3=  0
+0066 PREPCALLK      a0=  1 a1=         15 a2=  0 a3=  2
+0067 LOADINT        a0=  3 a1=         30 a2=  0 a3=  0
+0068 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0069 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0070 GETK           a0=  1 a1=         16 a2=  1 a3=  0
+0071 LOAD           a0=  2 a1=         17 a2=  0 a3=  0
+0072 LOADINT        a0=  3 a1=         40 a2=  0 a3=  0
+0073 COMPARITH      a0=  1 a1=      65539 a2=  2 a3= 43
+0074 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0075 GETK           a0=  1 a1=         13 a2=  1 a3=  0
+0076 LOAD           a0=  2 a1=         14 a2=  0 a3=  0
+0077 LOADINT        a0=  3 a1=          4 a2=  0 a3=  0
+0078 COMPARITH      a0=  1 a1=      65539 a2=  2 a3= 45
+0079 JMP            a0=  0 a1=         21 a2=  0 a3=  0
+0080 PREPCALLK      a0=  1 a1=         15 a2=  0 a3=  2
+0081 LOADROOTTABLE  a0=  3 a1=          0 a2=  0 a3=  0
+0082 GETK           a0=  3 a1=         13 a2=  3 a3=  0
+0083 GETK           a0=  3 a1=         14 a2=  3 a3=  0
+0084 LOADINT        a0=  4 a1=         10 a2=  0 a3=  0
+0085 ARITH          a0=  3 a1=          4 a2=  3 a3= 42
+0086 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0087 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0088 GETK           a0=  1 a1=         16 a2=  1 a3=  0
+0089 LOAD           a0=  2 a1=         17 a2=  0 a3=  0
+0090 LOADROOTTABLE  a0=  3 a1=          0 a2=  0 a3=  0
+0091 GETK           a0=  3 a1=         13 a2=  3 a3=  0
+0092 GETK           a0=  3 a1=         14 a2=  3 a3=  0
+0093 LOADINT        a0=  4 a1=         10 a2=  0 a3=  0
+0094 ARITH          a0=  3 a1=          4 a2=  3 a3= 42
+0095 COMPARITH      a0=  1 a1=      65539 a2=  2 a3= 43
+0096 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0097 GETK           a0=  1 a1=         13 a2=  1 a3=  0
+0098 LOAD           a0=  2 a1=         14 a2=  0 a3=  0
+0099 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0100 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0101 JMP            a0=  0 a1=         30 a2=  0 a3=  0
+0102 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0103 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0104 GETK           a0=  1 a1=          3 a2=  1 a3=  0
+0105 LOADINT        a0=  2 a1=        400 a2=  0 a3=  0
+0106 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0107 JZ             a0=  1 a1=         24 a2=  0 a3=  0
+0108 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0109 GETK           a0=  1 a1=         16 a2=  1 a3=  0
+0110 GETK           a0=  1 a1=         18 a2=  1 a3=  0
+0111 PREPCALLK      a0=  1 a1=         19 a2=  1 a3=  2
+0112 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0113 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0114 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0115 GETK           a0=  1 a1=         16 a2=  1 a3=  0
+0116 PREPCALLK      a0=  1 a1=         20 a2=  1 a3=  2
+0117 GETK           a0=  3 a1=         21 a2=  0 a3=  0
+0118 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0119 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0120 GETK           a0=  1 a1=         16 a2=  1 a3=  0
+0121 DLOAD          a0=  2 a1=         22 a2=  3 a3= 23
+0122 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0123 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0124 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0125 GETK           a0=  1 a1=         16 a2=  1 a3=  0
+0126 LOAD           a0=  2 a1=         17 a2=  0 a3=  0
+0127 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0128 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0129 PREPCALLK      a0=  1 a1=         15 a2=  0 a3=  2
+0130 GETK           a0=  3 a1=         23 a2=  0 a3=  0
+0131 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0132 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: UpdateStageClear stack=5 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 103]]
+K0 = "player"
+K1 = "SetGlobalUpdateFuncton"
+K2 = "user"
+K3 = "goalCount"
+K4 = "SavePlayerState"
+K5 = "ChangeStageToWorld"
+K6 = "PlayerStatus"
+K7 = "time"
+K8 = "AddScore"
+K9 = "StageClear"
+K10 = "timescore"
+K11 = "pl"
+K12 = "BeginStage"
+K13 = "SetBonusType"
+K14 = "stageBonusType"
+K15 = "bonus"
+K16 = "stageBonus"
+0000 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0001 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0002 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0003 JZ             a0=  1 a1=          4 a2=  0 a3=  0
+0004 PREPCALLK      a0=  1 a1=          1 a2=  0 a3=  2
+0005 LOADNULLS      a0=  3 a1=          1 a2=  0 a3=  0
+0006 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0007 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0008 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0009 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0010 GETK           a0=  1 a1=          3 a2=  1 a3=  0
+0011 LOADINT        a0=  2 a1=        510 a2=  0 a3=  0
+0012 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0013 JZ             a0=  1 a1=          5 a2=  0 a3=  0
+0014 PREPCALLK      a0=  1 a1=          4 a2=  0 a3=  2
+0015 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0016 PREPCALLK      a0=  1 a1=          5 a2=  0 a3=  2
+0017 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0018 JMP            a0=  0 a1=         84 a2=  0 a3=  0
+0019 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0020 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0021 GETK           a0=  1 a1=          3 a2=  1 a3=  0
+0022 LOADINT        a0=  2 a1=        290 a2=  0 a3=  0
+0023 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0024 JZ             a0=  1 a1=         48 a2=  0 a3=  0
+0025 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0026 GETK           a0=  1 a1=          6 a2=  1 a3=  0
+0027 GETK           a0=  1 a1=          7 a2=  1 a3=  0
+0028 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0029 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0030 JZ             a0=  1 a1=         41 a2=  0 a3=  0
+0031 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0032 GETK           a0=  1 a1=          6 a2=  1 a3=  0
+0033 GETK           a0=  1 a1=          7 a2=  1 a3=  0
+0034 LOADINT        a0=  2 a1=          4 a2=  0 a3=  0
+0035 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0036 JZ             a0=  1 a1=         14 a2=  0 a3=  0
+0037 PREPCALLK      a0=  1 a1=          8 a2=  0 a3=  2
+0038 LOADINT        a0=  3 a1=         30 a2=  0 a3=  0
+0039 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0040 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0041 GETK           a0=  1 a1=          9 a2=  1 a3=  0
+0042 LOAD           a0=  2 a1=         10 a2=  0 a3=  0
+0043 LOADINT        a0=  3 a1=         40 a2=  0 a3=  0
+0044 COMPARITH      a0=  1 a1=      65539 a2=  2 a3= 43
+0045 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0046 GETK           a0=  1 a1=          6 a2=  1 a3=  0
+0047 LOAD           a0=  2 a1=          7 a2=  0 a3=  0
+0048 LOADINT        a0=  3 a1=          4 a2=  0 a3=  0
+0049 COMPARITH      a0=  1 a1=      65539 a2=  2 a3= 45
+0050 JMP            a0=  0 a1=         21 a2=  0 a3=  0
+0051 PREPCALLK      a0=  1 a1=          8 a2=  0 a3=  2
+0052 LOADROOTTABLE  a0=  3 a1=          0 a2=  0 a3=  0
+0053 GETK           a0=  3 a1=          6 a2=  3 a3=  0
+0054 GETK           a0=  3 a1=          7 a2=  3 a3=  0
+0055 LOADINT        a0=  4 a1=         10 a2=  0 a3=  0
+0056 ARITH          a0=  3 a1=          4 a2=  3 a3= 42
+0057 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0058 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0059 GETK           a0=  1 a1=          9 a2=  1 a3=  0
+0060 LOAD           a0=  2 a1=         10 a2=  0 a3=  0
+0061 LOADROOTTABLE  a0=  3 a1=          0 a2=  0 a3=  0
+0062 GETK           a0=  3 a1=          6 a2=  3 a3=  0
+0063 GETK           a0=  3 a1=          7 a2=  3 a3=  0
+0064 LOADINT        a0=  4 a1=         10 a2=  0 a3=  0
+0065 ARITH          a0=  3 a1=          4 a2=  3 a3= 42
+0066 COMPARITH      a0=  1 a1=      65539 a2=  2 a3= 43
+0067 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0068 GETK           a0=  1 a1=          6 a2=  1 a3=  0
+0069 LOAD           a0=  2 a1=          7 a2=  0 a3=  0
+0070 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0071 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0072 JMP            a0=  0 a1=         30 a2=  0 a3=  0
+0073 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0074 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0075 GETK           a0=  1 a1=          3 a2=  1 a3=  0
+0076 LOADINT        a0=  2 a1=        290 a2=  0 a3=  0
+0077 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0078 JZ             a0=  1 a1=         24 a2=  0 a3=  0
+0079 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0080 GETK           a0=  1 a1=          9 a2=  1 a3=  0
+0081 GETK           a0=  1 a1=         11 a2=  1 a3=  0
+0082 PREPCALLK      a0=  1 a1=         12 a2=  1 a3=  2
+0083 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0084 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0085 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0086 GETK           a0=  1 a1=          9 a2=  1 a3=  0
+0087 PREPCALLK      a0=  1 a1=         13 a2=  1 a3=  2
+0088 GETK           a0=  3 a1=         14 a2=  0 a3=  0
+0089 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0090 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0091 GETK           a0=  1 a1=          9 a2=  1 a3=  0
+0092 DLOAD          a0=  2 a1=         15 a2=  3 a3= 16
+0093 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0094 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0095 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0096 GETK           a0=  1 a1=          9 a2=  1 a3=  0
+0097 LOAD           a0=  2 a1=         10 a2=  0 a3=  0
+0098 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0099 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0100 PREPCALLK      a0=  1 a1=          8 a2=  0 a3=  2
+0101 GETK           a0=  3 a1=         16 a2=  0 a3=  0
+0102 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0103 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: UpdateExClear stack=7 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 21]]
+K0 = "timeGetTime"
+K1 = "player"
+K2 = "user"
+K3 = "clearCount"
+K4 = "Fader2"
+K5 = "FadeOut"
+K6 = "SetGlobalUpdateFunction"
+K7 = "UpdateExClear2"
+0000 PREPCALLK      a0=  1 a1=          0 a2=  0 a3=  2
+0001 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0002 GETK           a0=  2 a1=          1 a2=  0 a3=  0
+0003 GETK           a0=  2 a1=          2 a2=  2 a3=  0
+0004 GETK           a0=  2 a1=          3 a2=  2 a3=  0
+0005 ARITH          a0=  1 a1=          2 a2=  1 a3= 45
+0006 LOADINT        a0=  2 a1=       5300 a2=  0 a3=  0
+0007 CMP            a0=  1 a1=          2 a2=  1 a3=  3
+0008 JZ             a0=  1 a1=          1 a2=  0 a3=  0
+0009 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0010 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0011 GETK           a0=  1 a1=          4 a2=  1 a3=  0
+0012 PREPCALLK      a0=  1 a1=          5 a2=  1 a3=  2
+0013 LOADINT        a0=  3 a1=         59 a2=  0 a3=  0
+0014 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0015 LOADINT        a0=  5 a1=          0 a2=  0 a3=  0
+0016 LOADINT        a0=  6 a1=          0 a2=  0 a3=  0
+0017 CALL           a0=  1 a1=          1 a2=  2 a3=  5
+0018 PREPCALLK      a0=  1 a1=          6 a2=  0 a3=  2
+0019 GETK           a0=  3 a1=          7 a2=  0 a3=  0
+0020 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0021 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: UpdateExClear2 stack=7 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 26]]
+K0 = "timeGetTime"
+K1 = "player"
+K2 = "user"
+K3 = "clearCount"
+K4 = "ExtraClearImageAct"
+K5 = "pl"
+K6 = "BeginStage"
+K7 = "Fader2"
+K8 = "FadeIn"
+K9 = "SetGlobalUpdateFunction"
+K10 = "UpdateExClear3"
+0000 PREPCALLK      a0=  1 a1=          0 a2=  0 a3=  2
+0001 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0002 GETK           a0=  2 a1=          1 a2=  0 a3=  0
+0003 GETK           a0=  2 a1=          2 a2=  2 a3=  0
+0004 GETK           a0=  2 a1=          3 a2=  2 a3=  0
+0005 ARITH          a0=  1 a1=          2 a2=  1 a3= 45
+0006 LOADINT        a0=  2 a1=       6300 a2=  0 a3=  0
+0007 CMP            a0=  1 a1=          2 a2=  1 a3=  3
+0008 JZ             a0=  1 a1=          1 a2=  0 a3=  0
+0009 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0010 GETK           a0=  1 a1=          4 a2=  0 a3=  0
+0011 GETK           a0=  1 a1=          5 a2=  1 a3=  0
+0012 PREPCALLK      a0=  1 a1=          6 a2=  1 a3=  2
+0013 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0014 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0015 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0016 GETK           a0=  1 a1=          7 a2=  1 a3=  0
+0017 PREPCALLK      a0=  1 a1=          8 a2=  1 a3=  2
+0018 LOADINT        a0=  3 a1=         60 a2=  0 a3=  0
+0019 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0020 LOADINT        a0=  5 a1=          0 a2=  0 a3=  0
+0021 LOADINT        a0=  6 a1=          0 a2=  0 a3=  0
+0022 CALL           a0=  1 a1=          1 a2=  2 a3=  5
+0023 PREPCALLK      a0=  1 a1=          9 a2=  0 a3=  2
+0024 GETK           a0=  3 a1=         10 a2=  0 a3=  0
+0025 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0026 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: UpdateExClear3 stack=7 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 49]]
+K0 = "timeGetTime"
+K1 = "player"
+K2 = "user"
+K3 = "clearCount"
+K4 = "input"
+K5 = "b0"
+K6 = "b1"
+K7 = "b2"
+K8 = "b3"
+K9 = "Fader2"
+K10 = "FadeOut"
+K11 = "SetGlobalUpdateFunction"
+K12 = "UpdateExClear4"
+0000 PREPCALLK      a0=  1 a1=          0 a2=  0 a3=  2
+0001 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0002 GETK           a0=  2 a1=          1 a2=  0 a3=  0
+0003 GETK           a0=  2 a1=          2 a2=  2 a3=  0
+0004 GETK           a0=  2 a1=          3 a2=  2 a3=  0
+0005 ARITH          a0=  1 a1=          2 a2=  1 a3= 45
+0006 LOADINT        a0=  2 a1=      10000 a2=  0 a3=  0
+0007 CMP            a0=  1 a1=          2 a2=  1 a3=  3
+0008 JZ             a0=  1 a1=          1 a2=  0 a3=  0
+0009 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0010 GETK           a0=  1 a1=          4 a2=  0 a3=  0
+0011 GETK           a0=  1 a1=          5 a2=  1 a3=  0
+0012 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0013 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0014 OR             a0=  1 a1=         17 a2=  1 a3=  0
+0015 GETK           a0=  2 a1=          4 a2=  0 a3=  0
+0016 GETK           a0=  2 a1=          6 a2=  2 a3=  0
+0017 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0018 CMP            a0=  2 a1=          3 a2=  2 a3=  0
+0019 OR             a0=  2 a1=         11 a2=  2 a3=  0
+0020 GETK           a0=  3 a1=          4 a2=  0 a3=  0
+0021 GETK           a0=  3 a1=          7 a2=  3 a3=  0
+0022 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0023 CMP            a0=  3 a1=          4 a2=  3 a3=  0
+0024 OR             a0=  3 a1=          5 a2=  3 a3=  0
+0025 GETK           a0=  4 a1=          4 a2=  0 a3=  0
+0026 GETK           a0=  4 a1=          8 a2=  4 a3=  0
+0027 LOADINT        a0=  5 a1=          0 a2=  0 a3=  0
+0028 CMP            a0=  4 a1=          5 a2=  4 a3=  0
+0029 MOVE           a0=  3 a1=          4 a2=  0 a3=  0
+0030 MOVE           a0=  2 a1=          3 a2=  0 a3=  0
+0031 MOVE           a0=  1 a1=          2 a2=  0 a3=  0
+0032 JZ             a0=  1 a1=         16 a2=  0 a3=  0
+0033 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0034 GETK           a0=  1 a1=          9 a2=  1 a3=  0
+0035 PREPCALLK      a0=  1 a1=         10 a2=  1 a3=  2
+0036 LOADINT        a0=  3 a1=         30 a2=  0 a3=  0
+0037 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0038 LOADINT        a0=  5 a1=          0 a2=  0 a3=  0
+0039 LOADINT        a0=  6 a1=          0 a2=  0 a3=  0
+0040 CALL           a0=  1 a1=          1 a2=  2 a3=  5
+0041 GETK           a0=  1 a1=          1 a2=  0 a3=  0
+0042 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0043 LOAD           a0=  2 a1=          3 a2=  0 a3=  0
+0044 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0045 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0046 PREPCALLK      a0=  1 a1=         11 a2=  0 a3=  2
+0047 GETK           a0=  3 a1=         12 a2=  0 a3=  0
+0048 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0049 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: UpdateExClear4 stack=7 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 42]]
+K0 = "player"
+K1 = "user"
+K2 = "clearCount"
+K3 = "currentStagedata"
+K4 = "clear"
+K5 = "SavePlayerState"
+K6 = "ChangeStageToWorld"
+K7 = "ExtraClearImageAct"
+K8 = "pl"
+K9 = "EndStage"
+K10 = "Fader1"
+K11 = "FadeOut"
+K12 = "Fader2"
+K13 = "FadeIn"
+0000 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0001 GETK           a0=  1 a1=          1 a2=  1 a3=  0
+0002 LOAD           a0=  2 a1=          2 a2=  0 a3=  0
+0003 PINC           a0=  1 a1=          1 a2=  2 a3=  1
+0004 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0005 GETK           a0=  1 a1=          1 a2=  1 a3=  0
+0006 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0007 LOADINT        a0=  2 a1=         30 a2=  0 a3=  0
+0008 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0009 JZ             a0=  1 a1=         32 a2=  0 a3=  0
+0010 GETK           a0=  1 a1=          3 a2=  0 a3=  0
+0011 DLOAD          a0=  2 a1=          4 a2=  3 a3=  3
+0012 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0013 GETK           a0=  3 a1=          4 a2=  3 a3=  0
+0014 LOADINT        a0=  4 a1=          1 a2=  0 a3=  0
+0015 BITW           a0=  3 a1=          4 a2=  3 a3=  2
+0016 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0017 PREPCALLK      a0=  1 a1=          5 a2=  0 a3=  2
+0018 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0019 PREPCALLK      a0=  1 a1=          6 a2=  0 a3=  2
+0020 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0021 GETK           a0=  1 a1=          7 a2=  0 a3=  0
+0022 GETK           a0=  1 a1=          8 a2=  1 a3=  0
+0023 PREPCALLK      a0=  1 a1=          9 a2=  1 a3=  2
+0024 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0025 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0026 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0027 GETK           a0=  1 a1=         10 a2=  1 a3=  0
+0028 PREPCALLK      a0=  1 a1=         11 a2=  1 a3=  2
+0029 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0030 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0031 LOADINT        a0=  5 a1=          0 a2=  0 a3=  0
+0032 LOADINT        a0=  6 a1=          0 a2=  0 a3=  0
+0033 CALL           a0=  1 a1=          1 a2=  2 a3=  5
+0034 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0035 GETK           a0=  1 a1=         12 a2=  1 a3=  0
+0036 PREPCALLK      a0=  1 a1=         13 a2=  1 a3=  2
+0037 LOADINT        a0=  3 a1=         30 a2=  0 a3=  0
+0038 LOADINT        a0=  4 a1=          0 a2=  0 a3=  0
+0039 LOADINT        a0=  5 a1=          0 a2=  0 a3=  0
+0040 LOADINT        a0=  6 a1=          0 a2=  0 a3=  0
+0041 CALL           a0=  1 a1=          1 a2=  2 a3=  5
+0042 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: UpdateDead stack=4 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 32]]
+K0 = "player"
+K1 = "SetGlobalUpdateFuncton"
+K2 = "user"
+K3 = "deadCount"
+K4 = "life"
+K5 = "PlayerStatus"
+K6 = "ResetPlayerState"
+K7 = "ChangeStageToWorld"
+K8 = "SetGameOver"
+0000 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0001 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0002 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0003 JZ             a0=  1 a1=          4 a2=  0 a3=  0
+0004 PREPCALLK      a0=  1 a1=          1 a2=  0 a3=  2
+0005 LOADNULLS      a0=  3 a1=          1 a2=  0 a3=  0
+0006 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0007 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0008 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0009 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0010 GETK           a0=  1 a1=          3 a2=  1 a3=  0
+0011 LOADINT        a0=  2 a1=        300 a2=  0 a3=  0
+0012 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0013 JZ             a0=  1 a1=         18 a2=  0 a3=  0
+0014 LOAD           a0=  1 a1=          4 a2=  0 a3=  0
+0015 PINC           a0=  1 a1=          0 a2=  1 a3=255
+0016 GETK           a0=  1 a1=          4 a2=  0 a3=  0
+0017 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0018 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0019 JZ             a0=  1 a1=         10 a2=  0 a3=  0
+0020 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0021 GETK           a0=  1 a1=          5 a2=  1 a3=  0
+0022 DLOAD          a0=  2 a1=          4 a2=  3 a3=  4
+0023 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0024 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0025 PREPCALLK      a0=  1 a1=          6 a2=  0 a3=  2
+0026 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0027 PREPCALLK      a0=  1 a1=          7 a2=  0 a3=  2
+0028 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0029 JMP            a0=  0 a1=          2 a2=  0 a3=  0
+0030 PREPCALLK      a0=  1 a1=          8 a2=  0 a3=  2
+0031 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0032 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: AddStar stack=4 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 28]]
+K0 = "star"
+K1 = "PlayerStatus"
+K2 = "coin"
+K3 = "PlaySE"
+K4 = "AddScore"
+K5 = "currentSavedata"
+K6 = "result"
+K7 = "startotal"
+0000 LOAD           a0=  1 a1=          0 a2=  0 a3=  0
+0001 PINC           a0=  1 a1=          0 a2=  1 a3=  1
+0002 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0003 LOADINT        a0=  2 a1=        999 a2=  0 a3=  0
+0004 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0005 JZ             a0=  1 a1=          3 a2=  0 a3=  0
+0006 LOAD           a0=  1 a1=          0 a2=  0 a3=  0
+0007 LOADINT        a0=  2 a1=        999 a2=  0 a3=  0
+0008 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0009 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0010 GETK           a0=  1 a1=          1 a2=  1 a3=  0
+0011 DLOAD          a0=  2 a1=          2 a2=  3 a3=  0
+0012 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0013 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0014 PREPCALLK      a0=  1 a1=          3 a2=  0 a3=  2
+0015 LOADINT        a0=  3 a1=         13 a2=  0 a3=  0
+0016 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0017 PREPCALLK      a0=  1 a1=          4 a2=  0 a3=  2
+0018 LOADINT        a0=  3 a1=         10 a2=  0 a3=  0
+0019 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0020 GETK           a0=  1 a1=          5 a2=  0 a3=  0
+0021 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0022 NE             a0=  1 a1=          2 a2=  1 a3=  0
+0023 JZ             a0=  1 a1=          4 a2=  0 a3=  0
+0024 GETK           a0=  1 a1=          5 a2=  0 a3=  0
+0025 GETK           a0=  1 a1=          6 a2=  1 a3=  0
+0026 LOAD           a0=  2 a1=          7 a2=  0 a3=  0
+0027 PINC           a0=  1 a1=          1 a2=  2 a3=  1
+0028 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: AddRedStar stack=6 generator=False
+PARAMETERS ["this", "id"]
+LOCALS [["id", 1, 0, 21], ["this", 0, 0, 21]]
+K0 = "stageRedStar"
+K1 = "PlayerStatus"
+K2 = "RedStar"
+K3 = "AddScore"
+K4 = "AddStar"
+0000 DLOAD          a0=  2 a1=          0 a2=  3 a3=  0
+0001 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0002 LOADINT        a0=  4 a1=          1 a2=  0 a3=  0
+0003 BITW           a0=  4 a1=          1 a2=  4 a3=  4
+0004 BITW           a0=  3 a1=          4 a2=  3 a3=  2
+0005 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0006 LOADROOTTABLE  a0=  2 a1=          0 a2=  0 a3=  0
+0007 GETK           a0=  2 a1=          1 a2=  2 a3=  0
+0008 LOAD           a0=  3 a1=          2 a2=  0 a3=  0
+0009 LOADROOTTABLE  a0=  4 a1=          0 a2=  0 a3=  0
+0010 GETK           a0=  4 a1=          1 a2=  4 a3=  0
+0011 GETK           a0=  4 a1=          2 a2=  4 a3=  0
+0012 LOADINT        a0=  5 a1=          1 a2=  0 a3=  0
+0013 BITW           a0=  5 a1=          1 a2=  5 a3=  4
+0014 BITW           a0=  4 a1=          5 a2=  4 a3=  2
+0015 SET            a0=  2 a1=          2 a2=  3 a3=  4
+0016 PREPCALLK      a0=  2 a1=          3 a2=  0 a3=  3
+0017 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0018 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0019 PREPCALLK      a0=  2 a1=          4 a2=  0 a3=  3
+0020 CALL           a0=  2 a1=          2 a2=  3 a3=  1
+0021 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: AddScore stack=5 generator=False
+PARAMETERS ["this", "s"]
+LOCALS [["s", 1, 0, 14], ["this", 0, 0, 14]]
+K0 = "score"
+K1 = "PlayerStatus"
+0000 LOAD           a0=  2 a1=          0 a2=  0 a3=  0
+0001 COMPARITH      a0=  2 a1=          1 a2=  2 a3= 43
+0002 GETK           a0=  2 a1=          0 a2=  0 a3=  0
+0003 LOADINT        a0=  3 a1=  999999999 a2=  0 a3=  0
+0004 CMP            a0=  2 a1=          3 a2=  2 a3=  0
+0005 JZ             a0=  2 a1=          3 a2=  0 a3=  0
+0006 LOAD           a0=  2 a1=          0 a2=  0 a3=  0
+0007 LOADINT        a0=  3 a1=  999999999 a2=  0 a3=  0
+0008 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0009 LOADROOTTABLE  a0=  2 a1=          0 a2=  0 a3=  0
+0010 GETK           a0=  2 a1=          1 a2=  2 a3=  0
+0011 DLOAD          a0=  3 a1=          0 a2=  4 a3=  0
+0012 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0013 SET            a0=  2 a1=          2 a2=  3 a3=  4
+0014 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: AddLife stack=4 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 17]]
+K0 = "life"
+K1 = "PlayerStatus"
+K2 = "PlaySE"
+0000 LOAD           a0=  1 a1=          0 a2=  0 a3=  0
+0001 PINC           a0=  1 a1=          0 a2=  1 a3=  1
+0002 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0003 LOADINT        a0=  2 a1=         99 a2=  0 a3=  0
+0004 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0005 JZ             a0=  1 a1=          3 a2=  0 a3=  0
+0006 LOAD           a0=  1 a1=          0 a2=  0 a3=  0
+0007 LOADINT        a0=  2 a1=         99 a2=  0 a3=  0
+0008 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0009 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0010 GETK           a0=  1 a1=          1 a2=  1 a3=  0
+0011 DLOAD          a0=  2 a1=          0 a2=  3 a3=  0
+0012 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0013 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0014 PREPCALLK      a0=  1 a1=          2 a2=  0 a3=  2
+0015 LOADINT        a0=  3 a1=         16 a2=  0 a3=  0
+0016 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0017 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: AddPoint stack=4 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 6]]
+K0 = "AddScore"
+K1 = "PlaySE"
+0000 PREPCALLK      a0=  1 a1=          0 a2=  0 a3=  2
+0001 LOADINT        a0=  3 a1=        100 a2=  0 a3=  0
+0002 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0003 PREPCALLK      a0=  1 a1=          1 a2=  0 a3=  2
+0004 LOADINT        a0=  3 a1=         18 a2=  0 a3=  0
+0005 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0006 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: CreateEffect stack=12 generator=False
+PARAMETERS ["this", "x", "y", "direction", "take"]
+LOCALS [["take", 4, 0, 7], ["direction", 3, 0, 7], ["y", 2, 0, 7], ["x", 1, 0, 7], ["this", 0, 0, 7]]
+K0 = "CreateActor"
+K1 = "t_effect"
+K2 = "InitGeneral"
+0000 PREPCALLK      a0=  5 a1=          0 a2=  0 a3=  6
+0001 GETK           a0=  7 a1=          1 a2=  0 a3=  0
+0002 GETK           a0=  7 a1=          2 a2=  7 a3=  0
+0003 DMOVE          a0=  8 a1=          1 a2=  9 a3=  2
+0004 DMOVE          a0= 10 a1=          3 a2= 11 a3=  4
+0005 TAILCALL       a0=  5 a1=          5 a2=  6 a3=  6
+0006 RETURN         a0=  1 a1=          5 a2=  0 a3=  0
+0007 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: GetCallbackFuncTable stack=5 generator=False
+PARAMETERS ["this", "target"]
+LOCALS [["funcTable", 2, 1, 17], ["target", 1, 0, 18], ["this", 0, 0, 18]]
+K0 = "user"
+K1 = "eventHandler"
+K2 = "take"
+0000 GETK           a0=  2 a1=          0 a2=  1 a3=  0
+0001 LOAD           a0=  3 a1=          1 a2=  0 a3=  0
+0002 EXISTS         a0=  3 a1=          2 a2=  3 a3=  0
+0003 JZ             a0=  3 a1=          2 a2=  0 a3=  0
+0004 GETK           a0=  3 a1=          1 a2=  2 a3=  0
+0005 MOVE           a0=  2 a1=          3 a2=  0 a3=  0
+0006 DLOAD          a0=  3 a1=          2 a2=  4 a3=  0
+0007 GET            a0=  4 a1=          1 a2=  4 a3=  0
+0008 EXISTS         a0=  3 a1=          4 a2=  3 a3=  0
+0009 JZ             a0=  3 a1=          7 a2=  0 a3=  0
+0010 GETK           a0=  3 a1=          0 a2=  1 a3=  0
+0011 GETK           a0=  3 a1=          2 a2=  3 a3=  0
+0012 EXISTS         a0=  3 a1=          2 a2=  3 a3=  0
+0013 JZ             a0=  3 a1=          3 a2=  0 a3=  0
+0014 GETK           a0=  3 a1=          0 a2=  1 a3=  0
+0015 GETK           a0=  3 a1=          2 a2=  3 a3=  0
+0016 GET            a0=  2 a1=          2 a2=  3 a3=  0
+0017 RETURN         a0=  1 a1=          2 a2=  0 a3=  0
+0018 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: SavePlayerState stack=4 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 77]]
+K0 = "player"
+K1 = "user"
+K2 = "type"
+K3 = "TYPE_8HEAD"
+K4 = "beforeType"
+K5 = "TYPE_UFO"
+K6 = "TYPE_1HEAD"
+K7 = "TYPE_2HEAD"
+K8 = "playerType"
+K9 = "PlayerImage"
+K10 = "SetFaceType"
+K11 = "playerItem"
+K12 = "item"
+K13 = "PlayerStatus"
+K14 = "ItemCross"
+0000 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0001 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0002 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0003 JZ             a0=  1 a1=          1 a2=  0 a3=  0
+0004 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0005 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0006 GETK           a0=  1 a1=          1 a2=  1 a3=  0
+0007 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0008 GETK           a0=  2 a1=          3 a2=  0 a3=  0
+0009 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0010 JZ             a0=  1 a1=         29 a2=  0 a3=  0
+0011 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0012 GETK           a0=  1 a1=          1 a2=  1 a3=  0
+0013 GETK           a0=  1 a1=          4 a2=  1 a3=  0
+0014 GETK           a0=  2 a1=          5 a2=  0 a3=  0
+0015 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0016 OR             a0=  1 a1=          6 a2=  1 a3=  0
+0017 GETK           a0=  2 a1=          0 a2=  0 a3=  0
+0018 GETK           a0=  2 a1=          1 a2=  2 a3=  0
+0019 GETK           a0=  2 a1=          4 a2=  2 a3=  0
+0020 GETK           a0=  3 a1=          6 a2=  0 a3=  0
+0021 EQ             a0=  2 a1=          3 a2=  2 a3=  0
+0022 MOVE           a0=  1 a1=          2 a2=  0 a3=  0
+0023 JZ             a0=  1 a1=          5 a2=  0 a3=  0
+0024 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0025 GETK           a0=  1 a1=          1 a2=  1 a3=  0
+0026 GETK           a0=  1 a1=          4 a2=  1 a3=  0
+0027 GETK           a0=  2 a1=          7 a2=  0 a3=  0
+0028 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0029 DLOAD          a0=  1 a1=          8 a2=  2 a3=  0
+0030 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0031 GETK           a0=  2 a1=          1 a2=  2 a3=  0
+0032 GETK           a0=  2 a1=          4 a2=  2 a3=  0
+0033 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0034 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0035 GETK           a0=  1 a1=          9 a2=  1 a3=  0
+0036 PREPCALLK      a0=  1 a1=         10 a2=  1 a3=  2
+0037 GETK           a0=  3 a1=          8 a2=  0 a3=  0
+0038 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0039 JMP            a0=  0 a1=         27 a2=  0 a3=  0
+0040 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0041 GETK           a0=  1 a1=          1 a2=  1 a3=  0
+0042 GETK           a0=  1 a1=          2 a2=  1 a3=  0
+0043 GETK           a0=  2 a1=          5 a2=  0 a3=  0
+0044 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0045 OR             a0=  1 a1=          6 a2=  1 a3=  0
+0046 GETK           a0=  2 a1=          0 a2=  0 a3=  0
+0047 GETK           a0=  2 a1=          1 a2=  2 a3=  0
+0048 GETK           a0=  2 a1=          2 a2=  2 a3=  0
+0049 GETK           a0=  3 a1=          6 a2=  0 a3=  0
+0050 EQ             a0=  2 a1=          3 a2=  2 a3=  0
+0051 MOVE           a0=  1 a1=          2 a2=  0 a3=  0
+0052 JZ             a0=  1 a1=          9 a2=  0 a3=  0
+0053 DLOAD          a0=  1 a1=          8 a2=  2 a3=  7
+0054 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0055 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0056 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0057 GETK           a0=  1 a1=          9 a2=  1 a3=  0
+0058 PREPCALLK      a0=  1 a1=         10 a2=  1 a3=  2
+0059 GETK           a0=  3 a1=          8 a2=  0 a3=  0
+0060 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0061 JMP            a0=  0 a1=          5 a2=  0 a3=  0
+0062 DLOAD          a0=  1 a1=          8 a2=  2 a3=  0
+0063 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0064 GETK           a0=  2 a1=          1 a2=  2 a3=  0
+0065 GETK           a0=  2 a1=          2 a2=  2 a3=  0
+0066 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0067 DLOAD          a0=  1 a1=         11 a2=  2 a3=  0
+0068 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0069 GETK           a0=  2 a1=          1 a2=  2 a3=  0
+0070 GETK           a0=  2 a1=         12 a2=  2 a3=  0
+0071 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0072 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0073 GETK           a0=  1 a1=         13 a2=  1 a3=  0
+0074 LOAD           a0=  2 a1=         14 a2=  0 a3=  0
+0075 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0076 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0077 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: SavePlayerStateForce stack=4 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 20]]
+K0 = "player"
+K1 = "playerType"
+K2 = "user"
+K3 = "type"
+K4 = "playerItem"
+K5 = "item"
+K6 = "PlayerStatus"
+K7 = "ItemCross"
+0000 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0001 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0002 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0003 JZ             a0=  1 a1=          1 a2=  0 a3=  0
+0004 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0005 DLOAD          a0=  1 a1=          1 a2=  2 a3=  0
+0006 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0007 GETK           a0=  2 a1=          2 a2=  2 a3=  0
+0008 GETK           a0=  2 a1=          3 a2=  2 a3=  0
+0009 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0010 DLOAD          a0=  1 a1=          4 a2=  2 a3=  0
+0011 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0012 GETK           a0=  2 a1=          2 a2=  2 a3=  0
+0013 GETK           a0=  2 a1=          5 a2=  2 a3=  0
+0014 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0015 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0016 GETK           a0=  1 a1=          6 a2=  1 a3=  0
+0017 LOAD           a0=  2 a1=          7 a2=  0 a3=  0
+0018 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0019 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0020 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: ResetPlayerState stack=4 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 21]]
+K0 = "playerType"
+K1 = "TYPE_2HEAD"
+K2 = "playerItem"
+K3 = "PlayerImage"
+K4 = "SetFaceType"
+K5 = "PlayerStatus"
+K6 = "item"
+K7 = "ItemCross"
+0000 DLOAD          a0=  1 a1=          0 a2=  2 a3=  1
+0001 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0002 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0003 LOAD           a0=  1 a1=          2 a2=  0 a3=  0
+0004 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0005 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0006 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0007 GETK           a0=  1 a1=          3 a2=  1 a3=  0
+0008 PREPCALLK      a0=  1 a1=          4 a2=  1 a3=  2
+0009 GETK           a0=  3 a1=          0 a2=  0 a3=  0
+0010 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0011 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0012 GETK           a0=  1 a1=          5 a2=  1 a3=  0
+0013 DLOAD          a0=  2 a1=          6 a2=  3 a3=  2
+0014 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0015 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0016 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0017 GETK           a0=  1 a1=          5 a2=  1 a3=  0
+0018 LOAD           a0=  2 a1=          7 a2=  0 a3=  0
+0019 LOADBOOL       a0=  3 a1=          0 a2=  0 a3=  0
+0020 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0021 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/global.nut: DisableInput stack=4 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 20]]
+K0 = "input"
+K1 = "x"
+K2 = "y"
+K3 = "b0"
+K4 = "b2"
+K5 = "b3"
+0000 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0001 LOAD           a0=  2 a1=          1 a2=  0 a3=  0
+0002 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0003 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0004 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0005 LOAD           a0=  2 a1=          2 a2=  0 a3=  0
+0006 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0007 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0008 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0009 LOAD           a0=  2 a1=          3 a2=  0 a3=  0
+0010 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0011 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0012 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0013 LOAD           a0=  2 a1=          4 a2=  0 a3=  0
+0014 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0015 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0016 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0017 LOAD           a0=  2 a1=          5 a2=  0 a3=  0
+0018 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0019 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0020 RETURN         a0=255 a1=          0 a2=  0 a3=  0

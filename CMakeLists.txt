@@ -797,6 +797,13 @@ target_include_directories(kinoko_pat_animation_contract PRIVATE include)
 target_link_libraries(kinoko_pat_animation_contract PRIVATE kinoko_native_methods)
 add_test(NAME pat_animation_contract COMMAND kinoko_pat_animation_contract)
 
+add_executable(kinoko_actor_initialization_contract tests/actor_initialization_contract.cpp
+    src/squirrel/actor_initialization.cpp)
+target_include_directories(kinoko_actor_initialization_contract PRIVATE include
+    "${KINOKO_SQUIRREL2_ROOT}/include")
+target_compile_options(kinoko_actor_initialization_contract PRIVATE /Od /RTC1)
+add_test(NAME actor_initialization_contract COMMAND kinoko_actor_initialization_contract)
+
 add_executable(kinoko_actor_manager_contract tests/actor_manager_contract.cpp
     src/reconstructed/actor_manager.cpp src/reconstructed/actor_priority.cpp
     src/reconstructed/native_buffer.cpp)
@@ -870,7 +877,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_texture_binding_contract
     kinoko_texture_image_contract
     kinoko_bitmap_contract
-    kinoko_actor_state_contract
+    kinoko_actor_state_contract kinoko_actor_initialization_contract
     kinoko_map_manager_contract
     kinoko_scene_operations_contract
     kinoko_game_script_contract

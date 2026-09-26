@@ -1,0 +1,6 @@
+path=data/system/pause/stagepause.cv4
+archive=2
+offset=1521725
+size=15036
+hex=C5 C5 6D 76 6E 6C 3E 3F 3F 3F 6B 6D 7E 6F 2F 3F 3F 37 1F 3F 3F 3F 5B 5E 4B 5E 10 4C 46 4C 4B 5A 52 10 4F 5E 4A 4C 5A 10 6C 4B 5E 58 5A 6F 5E 4A 4C 5A 11 51 4A 4B 2F 3F 3F 37 3B 3F 3F 3F 52 5E
+ascii=..mvnl>???km~o/??7.???[^K^.LFLKZR.O^JLZ.lK^XZo^JLZ.QJK/??7;???R^

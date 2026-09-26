@@ -1,0 +1,78 @@
+{
+  "addr": "0x45e5e0",
+  "code": "char __thiscall sub_45E5E0(\n        int this,\n        int a2,\n        int a3,\n        int a4,\n        int a5,\n        float a6,\n        float a7,\n        float a8,\n        char a9,\n        int a10,\n        int a11)\n{\n  int v12; // eax\n  int v13; // eax\n  void *v14; // ebx\n  volatile signed __int32 *v15; // eax\n  void *v16; // ecx\n  volatile signed __int32 *v17; // edx\n  volatile signed __int32 *v18; // edi\n  volatile signed __int32 *v19; // edi\n  double v20; // st7\n  double v21; // st6\n  double v22; // st5\n  double v23; // st7\n  double v24; // st7\n  int v25; // eax\n  int v26; // ecx\n  int v27; // edx\n  int v28; // eax\n  double v29; // st7\n  char *v31; // [esp-8h] [ebp-54h] BYREF\n  int *v32; // [esp-4h] [ebp-50h]\n  int v33; // [esp+0h] [ebp-4Ch] BYREF\n  int v34; // [esp+10h] [ebp-3Ch]\n  _BYTE v35[12]; // [esp+14h] [ebp-38h] BYREF\n  _BYTE v36[12]; // [esp+20h] [ebp-2Ch] BYREF\n  char v37[4]; // [esp+2Ch] [ebp-20h] BYREF\n  void *v38; // [esp+30h] [ebp-1Ch] BYREF\n  volatile signed __int32 *v39; // [esp+34h] [ebp-18h]\n  int v40; // [esp+38h] [ebp-14h]\n  int *v41; // [esp+3Ch] [ebp-10h]\n  int v42; // [esp+48h] [ebp-4h]\n  float v43; // [esp+54h] [ebp+8h]\n  float v44; // [esp+54h] [ebp+8h]\n\n  v41 = &v33; /*0x45e608*/\n  v40 = this; /*0x45e60d*/\n  v12 = *(unsigned __int16 *)(this + 12); /*0x45e610*/\n  v32 = (int *)&unk_513C58; /*0x45e61a*/\n  v31 = v37; /*0x45e61f*/\n  v42 = 1; /*0x45e620*/\n  *(_DWORD *)(this + 224) = v12; /*0x45e627*/\n  *(_DWORD *)(this + 148) = a2; /*0x45e62d*/\n  v13 = sub_4A90C0(a1: v31, a2: v32); /*0x45e633*/\n  LOBYTE(v42) = 2; /*0x45e63f*/\n  sub_4A95C0(a1: v13); /*0x45e643*/\n  LOBYTE(v42) = 1; /*0x45e64b*/\n  sub_4A9D70(a1: v37); /*0x45e64f*/\n  sub_4A9BB0(a1: this); /*0x45e658*/\n  v14 = operator new(Size: 4u); /*0x45e664*/\n  v38 = v14; /*0x45e66d*/\n  sub_45E270(a1: v14); /*0x45e670*/\n  nullsub_1(a1: &v38, a2: v14, a3: v14); /*0x45e67b*/\n  v15 = v39; /*0x45e683*/\n  v16 = v38; /*0x45e686*/\n  LOBYTE(v42) = 3; /*0x45e68b*/\n  v17 = v39; /*0x45e68f*/\n  if ( v39 != nullptr ) /*0x45e693*/\n  {\n    _InterlockedExchangeAdd(v39 + 1, 1u); /*0x45e69d*/\n    v15 = v39; /*0x45e6a1*/\n  }\n  *(_DWORD *)(this + 24) = v16; /*0x45e6a4*/\n  v18 = *(volatile signed __int32 **)(this + 28); /*0x45e6a7*/\n  *(_DWORD *)(this + 28) = v17; /*0x45e6aa*/\n  if ( v18 != nullptr ) /*0x45e6af*/\n  {\n    if ( _InterlockedExchangeAdd(v18 + 1, 0xFFFFFFFF) == 0 ) /*0x45e6bb*/\n    {\n      (*(void (__thiscall **)(volatile signed __int32 *))(*v18 + 4))(a1: v18); /*0x45e6c4*/\n      if ( _InterlockedExchangeAdd(v18 + 2, 0xFFFFFFFF) == 0 ) /*0x45e6d0*/\n        (*(void (__thiscall **)(volatile signed __int32 *))(*v18 + 8))(a1: v18); /*0x45e6d9*/\n    }\n    v15 = v39; /*0x45e6db*/\n  }\n  LOBYTE(v42) = 1; /*0x45e6de*/\n  if ( v15 != nullptr ) /*0x45e6e4*/\n  {\n    v19 = v15; /*0x45e6e6*/\n    if ( _InterlockedExchangeAdd(v15 + 1, 0xFFFFFFFF) == 0 ) /*0x45e6f2*/\n    {\n      (*(void (__thiscall **)(volatile signed __int32 *))(*v15 + 4))(a1: v15); /*0x45e6fb*/\n      if ( _InterlockedExchangeAdd(v19 + 2, 0xFFFFFFFF) == 0 ) /*0x45e707*/\n        (*(void (__thiscall **)(volatile signed __int32 *))(*v19 + 8))(a1: v19); /*0x45e710*/\n    }\n  }\n  **(_DWORD **)(this + 24) = this; /*0x45e715*/\n  *(_BYTE *)(this + 40) = (*(_DWORD *)(this + 392) & 0x20000) == 0; /*0x45e72c*/\n  v32 = &a3; /*0x45e732*/\n  *(_WORD *)(this + 20) = 256; /*0x45e736*/\n  sub_4A95C0(a1: v32); /*0x45e73c*/\n  sub_4A95C0(a1: &a9); /*0x45e748*/\n  v20 = a6; /*0x45e74d*/\n  *(float *)(this + 80) = a6; /*0x45e750*/\n  *(_DWORD *)(this + 196) = 1; /*0x45e753*/\n  v21 = a7; /*0x45e75d*/\n  *(_DWORD *)(this + 228) = 0; /*0x45e760*/\n  *(float *)(this + 84) = v21; /*0x45e766*/\n  *(_DWORD *)(this + 216) = 0; /*0x45e769*/\n  v22 = a8; /*0x45e76f*/\n  *(_DWORD *)(this + 212) = 0; /*0x45e772*/\n  *(float *)(this + 88) = v22; /*0x45e778*/\n  *(_DWORD *)(this + 220) = 0; /*0x45e77b*/\n  *(_DWORD *)(this + 312) = 0; /*0x45e783*/\n  *(float *)(this + 176) = 1.0; /*0x45e789*/\n  *(_DWORD *)(this + 316) = 0; /*0x45e78f*/\n  *(float *)(this + 172) = 1.0; /*0x45e795*/\n  *(_DWORD *)(this + 320) = 0; /*0x45e79b*/\n  *(float *)(this + 168) = 1.0; /*0x45e7a1*/\n  *(_DWORD *)(this + 324) = 0; /*0x45e7a7*/\n  *(_DWORD *)(this + 236) = 0; /*0x45e7af*/\n  *(float *)(this + 164) = 0.0; /*0x45e7b5*/\n  *(_DWORD *)(this + 472) = 0; /*0x45e7bb*/\n  *(float *)(this + 160) = 0.0; /*0x45e7c1*/\n  *(float *)(this + 156) = 0.0; /*0x45e7cc*/\n  *(_DWORD *)(this + 192) = 255; /*0x45e7d2*/\n  *(_DWORD *)(this + 188) = 255; /*0x45e7da*/\n  *(float *)(this + 240) = v20; /*0x45e7e0*/\n  *(_DWORD *)(this + 184) = 255; /*0x45e7e6*/\n  *(float *)(this + 448) = v20; /*0x45e7ec*/\n  *(_DWORD *)(this + 180) = 255; /*0x45e7f2*/\n  *(float *)(this + 440) = v20; /*0x45e7f8*/\n  *(float *)(this + 244) = v21; /*0x45e805*/\n  *(_DWORD *)(this + 232) = -1; /*0x45e80b*/\n  *(float *)(this + 452) = v21; /*0x45e811*/\n  *(_DWORD *)(this + 476) = -1; /*0x45e817*/\n  *(float *)(this + 444) = v21; /*0x45e81d*/\n  v32 = nullptr; /*0x45e823*/\n  *(float *)(this + 272) = v22; /*0x45e827*/\n  *(float *)(this + 276) = 0.0; /*0x45e82d*/\n  *(float *)(this + 280) = 0.0; /*0x45e833*/\n  *(float *)(this + 256) = 0.0; /*0x45e839*/\n  *(float *)(this + 260) = 0.0; /*0x45e83f*/\n  *(_DWORD *)(this + 480) = 0; /*0x45e845*/\n  *(_DWORD *)(this + 484) = 0; /*0x45e84b*/\n  *(_DWORD *)(this + 488) = 0; /*0x45e851*/\n  *(_DWORD *)(this + 492) = 0; /*0x45e857*/\n  *(_DWORD *)(this + 496) = 0; /*0x45e85d*/\n  *(_DWORD *)(this + 500) = 0; /*0x45e863*/\n  *(_DWORD *)(this + 504) = 0; /*0x45e869*/\n  *(_DWORD *)(this + 508) = 0; /*0x45e86f*/\n  *(_DWORD *)(this + 512) = 0; /*0x45e875*/\n  *(_DWORD *)(this + 516) = 0; /*0x45e87b*/\n  *(_DWORD *)(this + 520) = 0; /*0x45e881*/\n  *(_DWORD *)(this + 524) = 0; /*0x45e887*/\n  *(_DWORD *)(this + 528) = 0; /*0x45e88d*/\n  *(_DWORD *)(this + 532) = 0; /*0x45e893*/\n  *(_DWORD *)(this + 536) = 0; /*0x45e899*/\n  *(_DWORD *)(this + 540) = 0; /*0x45e89f*/\n  *(_DWORD *)(this + 200) = 0; /*0x45e8a5*/\n  *(_DWORD *)(this + 204) = 0; /*0x45e8ab*/\n  sub_45DF10(Src: v32); /*0x45e8b1*/\n  LOBYTE(v42) = 4; /*0x45e8b9*/\n  v32 = (int *)v35; /*0x45e8c0*/\n  *(_DWORD *)(this + 92) = v34; /*0x45e8c4*/\n  sub_4A95C0(a1: v32); /*0x45e8c7*/\n  sub_4A95C0(a1: v36); /*0x45e8d3*/\n  LOBYTE(v42) = 5; /*0x45e8db*/\n  sub_4A9D70(a1: v36); /*0x45e8df*/\n  LOBYTE(v42) = 1; /*0x45e8e7*/\n  sub_4A9D70(a1: v35); /*0x45e8eb*/\n  *(_WORD *)(this + 410) = -1; /*0x45e8f6*/\n  *(_DWORD *)(this + 284) = 0; /*0x45e8fd*/\n  *(_DWORD *)(this + 288) = 0; /*0x45e903*/\n  *(_DWORD *)(this + 292) = 0; /*0x45e909*/\n  *(_DWORD *)(this + 296) = 0; /*0x45e90f*/\n  *(_DWORD *)(this + 424) = 0; /*0x45e915*/\n  *(_DWORD *)(this + 428) = 0; /*0x45e91b*/\n  *(_DWORD *)(this + 432) = 0; /*0x45e921*/\n  *(_DWORD *)(this + 436) = 0; /*0x45e927*/\n  *(float *)(this + 304) = 1000.0; /*0x45e92d*/\n  *(float *)(this + 308) = 1000.0; /*0x45e936*/\n  *(_BYTE *)(this + 300) = 0; /*0x45e93c*/\n  if ( sub_4A9A30(a1: &a3) == 134217984 ) /*0x45e94c*/\n  {\n    LOBYTE(v42) = 6; /*0x45e95e*/\n    sub_48ABE0(a1: &v31); /*0x45e968*/\n    sub_48AB90(a1: dword_5149DC, a2: a10, a3: a11); /*0x45e97c*/\n    sub_4A9660(a1: -1); /*0x45e988*/\n    sub_48AA50(a1: dword_5149DC); /*0x45e993*/\n    v34 = dword_5149DC; /*0x45e9a4*/\n    LOBYTE(v42) = 7; /*0x45e9ab*/\n    sub_4A9500(a1: this + 44); /*0x45e9af*/\n    LOBYTE(v42) = 8; /*0x45e9bb*/\n    sub_4A9500(a1: &a3); /*0x45e9bf*/\n    LOBYTE(v42) = 10; /*0x45e9cb*/\n    sub_45E020(a1: (char)&SquirrelObject::`vftable', a2: v31, a3: v32); /*0x45e9cf*/\n    LOBYTE(v42) = 11; /*0x45e9d7*/\n    sub_4A9D70(a1: v36); /*0x45e9db*/\n    LOBYTE(v42) = 6; /*0x45e9e3*/\n    sub_4A9D70(a1: v35); /*0x45e9e7*/\n    v42 = 1; /*0x45e9ec*/\n  }\n  v23 = *(float *)(this + 424); /*0x45ea19*/\n  LOBYTE(v42) = 0; /*0x45ea1f*/\n  v43 = v23 + *(float *)(this + 240); /*0x45ea28*/\n  v24 = v43; /*0x45ea2b*/\n  *(float *)(this + 440) = v43; /*0x45ea2e*/\n  *(float *)(this + 448) = *(float *)(this + 432) + *(float *)(this + 240); /*0x45ea40*/\n  v44 = *(float *)(this + 428) + *(float *)(this + 244); /*0x45ea52*/\n  *(float *)(this + 444) = v44; /*0x45ea58*/\n  *(float *)(this + 452) = *(float *)(this + 436) + *(float *)(this + 244); /*0x45ea6a*/\n  v25 = *(_DWORD *)(this + 440); /*0x45ea70*/\n  v26 = *(_DWORD *)(this + 444); /*0x45ea76*/\n  v27 = *(_DWORD *)(this + 448); /*0x45ea7e*/\n  *(float *)(this + 352) = v24; /*0x45ea84*/\n  *(_DWORD *)(this + 456) = v25; /*0x45ea8a*/\n  v28 = *(_DWORD *)(this + 452); /*0x45ea90*/\n  *(float *)(this + 356) = v44; /*0x45ea96*/\n  v29 = *(float *)(this + 240); /*0x45ea9c*/\n  *(_DWORD *)(this + 460) = v26; /*0x45eaa2*/\n  *(float *)(this + 248) = v29; /*0x45eaa8*/\n  *(_DWORD *)(this + 464) = v27; /*0x45eaae*/\n  *(float *)(this + 252) = *(float *)(this + 244); /*0x45eabd*/\n  *(_DWORD *)(this + 468) = v28; /*0x45eac3*/\n  sub_4A9D70(a1: &a3); /*0x45eac9*/\n  v42 = -1; /*0x45ead1*/\n  sub_4A9D70(a1: &a9); /*0x45ead8*/\n  return 1; /*0x45eadf*/\n}",
+  "refs": [
+    {
+      "addr": "0x513c58",
+      "name": "unk_513C58"
+    },
+    {
+      "addr": "0x4a90c0",
+      "name": "sub_4A90C0"
+    },
+    {
+      "addr": "0x4a95c0",
+      "name": "sub_4A95C0"
+    },
+    {
+      "addr": "0x4a9d70",
+      "name": "sub_4A9D70"
+    },
+    {
+      "addr": "0x4a9bb0",
+      "name": "sub_4A9BB0"
+    },
+    {
+      "addr": "0x4ab3fc",
+      "name": "??2@YAPAXI@Z"
+    },
+    {
+      "addr": "0x45e270",
+      "name": "sub_45E270"
+    },
+    {
+      "addr": "0x43e100",
+      "name": "nullsub_1"
+    },
+    {
+      "addr": "0x45df10",
+      "name": "sub_45DF10"
+    },
+    {
+      "addr": "0x48abe0",
+      "name": "sub_48ABE0"
+    },
+    {
+      "addr": "0x48ab90",
+      "name": "sub_48AB90"
+    },
+    {
+      "addr": "0x5149dc",
+      "name": "dword_5149DC"
+    },
+    {
+      "addr": "0x4a9660",
+      "name": "sub_4A9660"
+    },
+    {
+      "addr": "0x48aa50",
+      "name": "sub_48AA50"
+    },
+    {
+      "addr": "0x4a9500",
+      "name": "sub_4A9500"
+    },
+    {
+      "addr": "0x45e020",
+      "name": "sub_45E020"
+    },
+    {
+      "addr": "0x4d54a4",
+      "name": "??_7SquirrelObject@@6B@"
+    },
+    {
+      "addr": "0x4a9a30",
+      "name": "sub_4A9A30"
+    }
+  ]
+}

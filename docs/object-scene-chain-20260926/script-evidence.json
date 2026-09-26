@@ -1,0 +1,49 @@
+{
+  "method": "Read-only kinoko_asset_probe from source 7ca77b1; mounted original a/b/c DAT in override order; inspect_cv4.py follows Squirrel 2.2.2 sqobject.cpp. No VM or game execution.",
+  "original_directory": "C:/WorkSpace/6kinoko",
+  "opcodes": "C:/WorkSpace/squirrel-2.2.2/SQUIRREL2/squirrel/sqopcodes.h",
+  "assets": [
+    {
+      "file": "boot.cv4",
+      "size": 6779,
+      "sha256": "d26909c2b872c3b77aaf7a3790466ee0ab360b86e0e82e2ae4c7204a3acb7a98",
+      "asset_metadata": "boot-asset.txt",
+      "decoded": "boot-bytecode.txt"
+    },
+    {
+      "file": "global.cv4",
+      "size": 16936,
+      "sha256": "a2a8a4af2c141ea14e466c434b429cdfa7b3ea2102de3c86909c45c8c589720d",
+      "asset_metadata": "global-asset.txt",
+      "decoded": "global-bytecode.txt"
+    },
+    {
+      "file": "stage-pause.cv4",
+      "size": 15036,
+      "sha256": "b5a9b009b533a1e45232474bcbfa6f91cf67dbb7b5168227071341c214676cac",
+      "asset_metadata": "stage-pause-asset.txt",
+      "decoded": "stage-pause-bytecode.txt"
+    },
+    {
+      "file": "stage.cv4",
+      "size": 29259,
+      "sha256": "0c96d5631fe1549650d617b9370e2844977d19c36b19fec0f31dd11a617235dd",
+      "asset_metadata": "stage-asset.txt",
+      "decoded": "stage-bytecode.txt"
+    },
+    {
+      "file": "warp.cv4",
+      "size": 4167,
+      "sha256": "63ed5cbb0f85613a243115c14f44d4e88d9128bf97924b519e246ca94499fae3",
+      "asset_metadata": "warp-asset.txt",
+      "decoded": "warp-bytecode.txt"
+    },
+    {
+      "file": "world-map.cv4",
+      "size": 26648,
+      "sha256": "cbaedbd5503180c5bacdafc5f7b15333cefd013b2079f6fcd3f259b39d1747ef",
+      "asset_metadata": "world-map-asset.txt",
+      "decoded": "world-map-bytecode.txt"
+    }
+  ]
+}
