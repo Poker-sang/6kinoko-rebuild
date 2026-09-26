@@ -3022,7 +3022,7 @@ static int test_act_script_source_registration(int32_t vm, int32_t *root) {
     kinoko_string_assign_n(&kinoko_act_script_extension, ".cv4", 4);
     CHECK(kinoko_act_script_extension.length == 4 && kinoko_act_script_extension.capacity >= 16 && strcmp(kinoko_string_data((const void*)(&kinoko_act_script_extension)), ".cv4") == 0);
     CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), environment));
-    wrapper[0] = kinoko_sqrat_object_vtable(); wrapper[1] = vm;
+    wrapper[0] = (int32_t)(intptr_t)kinoko_sqrat_object_vtable(); wrapper[1] = vm;
     wrapper[2] = environment[0]; wrapper[3] = environment[1];
     script[21] = 15;
     CHECK(kinoko_register_act_script(PTR(script), PTR(wrapper)) == 0); /* No source yet. */
@@ -4851,7 +4851,7 @@ static int test_map_serialization(void) {
 static int test_dynamic_layer(int32_t vm, int32_t* root) {
     int32_t player[50]={0}, act[60]={0}, holder=PTR(act), player_pair[2]={kinoko_null_object_type,kinoko_null_object_value};
     const int top=sq_gettop(kinoko_vm(vm));
-    player[4]=PTR(&holder); player[37]=kinoko_sqrat_object_vtable(); player[38]=vm;
+    player[4]=PTR(&holder); player[37]=(int32_t)(intptr_t)kinoko_sqrat_object_vtable(); player[38]=vm;
     player[39]=root[2]; player[40]=root[3]; player[46]=15;
     kinoko_string_assign_cstr(player+41,"dynamicHost");
     InitializeCriticalSection((CRITICAL_SECTION*)(player+5));

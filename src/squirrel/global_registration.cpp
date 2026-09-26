@@ -80,7 +80,7 @@ namespace {
 // The root Sqrat wrapper is five Win32 words: vtable, VM, HSQOBJECT and flag.
 // Its HSQOBJECT is an external reference, not a SQObjectPtr placement object.
 struct RootTableStorage {
-    uint32_t vtable;
+    const void* vtable;
     SQVM *vm;
     HSQOBJECT value;
     int32_t owns_value;

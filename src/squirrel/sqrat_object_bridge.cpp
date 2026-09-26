@@ -23,7 +23,7 @@ using kinoko::script::data_bits;
 // Sqrat != SqPlus: the former stores its VM before the externally-owned pair.
 // Do not overlay an SQObjectPtr on either layout: its ownership is internal.
 struct SqratStorage {
-    uint32_t vtable;
+    const void* vtable;
     HSQUIRRELVM vm;
     HSQOBJECT value;
     uint8_t owns;
@@ -53,7 +53,7 @@ public:
     void vm(HSQUIRRELVM vm) { record_.set(&SqratStorage::vm, vm); }
     bool owns() const { return record_.get(&SqratStorage::owns) != 0; }
     void owns(bool flag) { record_.set(&SqratStorage::owns, uint8_t(flag ? 1 : 0)); }
-    void vtable(int32_t value) { record_.set(&SqratStorage::vtable, uint32_t(value)); }
+    void vtable(const void* value) { record_.set(&SqratStorage::vtable, value); }
     int32_t payload_address() const {
         return address(record_.bytes(&SqratStorage::value));
     }

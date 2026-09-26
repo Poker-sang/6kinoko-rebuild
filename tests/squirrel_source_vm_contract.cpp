@@ -115,7 +115,7 @@ void child_lifecycle(HSQUIRRELVM parent) {
         require(sq_getvmstate(child) == SQ_VMSTATE_IDLE, "new child must be idle");
         int32_t actual_vtable = 0;
         std::memcpy(&actual_vtable, child, sizeof(actual_vtable));
-        require(actual_vtable != 0 && actual_vtable == kinoko_sq_source_vm_vtable(), "collector must recognize source child vtable");
+        require(actual_vtable != 0 && actual_vtable == (int32_t)(intptr_t)kinoko_sq_source_vm_vtable(), "collector must recognize source child vtable");
         require(evaluate(child, "child-shared-root", "return native_twice(21);") == 42, "child must inherit parent root/native bindings");
         sq_pop(parent, 1);
         sq_collectgarbage(parent);

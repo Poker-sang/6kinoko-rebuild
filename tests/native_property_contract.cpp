@@ -7,8 +7,8 @@
 
 extern "C" {
 char kinoko_sqrat_trace_enabled = 0;
-int32_t kinoko_sqrat_object_vtable(void) { return 0x12121212; }
-int32_t kinoko_sqrat_root_vtable(void) { return 0x34343434; }
+const void* kinoko_sqrat_object_vtable(void) { return reinterpret_cast<const void*>(0x12121212); }
+const void* kinoko_sqrat_root_vtable(void) { return reinterpret_cast<const void*>(0x34343434); }
 void kinoko_trace_i32(const char*, int32_t) {}
 void kinoko_trace_squirrel_name(const char*, int32_t) {}
 

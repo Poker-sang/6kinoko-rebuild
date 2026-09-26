@@ -464,7 +464,7 @@ int32_t kinoko_publish_cact_layer_class(SQVM* vm, int32_t root_object)
 {
     int32_t existing[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t class_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    kinoko::act::LayerObjectRecord class_wrapper{(const void*)(uintptr_t)(address(kinoko_act_host_symbols()->sq_object_vtable)), (SQVM*)(uintptr_t)(0), {static_cast<int32_t>(OT_NULL), 0}, 1, {}};
+    kinoko::act::LayerObjectRecord class_wrapper{kinoko_act_host_symbols()->sq_object_vtable, (SQVM*)(uintptr_t)(0), {static_cast<int32_t>(OT_NULL), 0}, 1, {}};
     int32_t method_source[2] = {
         address(kinoko_act_layer_associate_method), 0
     };
@@ -493,7 +493,7 @@ int32_t kinoko_publish_cact_layer_class(SQVM* vm, int32_t root_object)
         return 0;
     }
 
-    class_wrapper.vm = (SQVM*)(uintptr_t)(address(vm));
+    class_wrapper.vm = vm;
     class_wrapper.value[0] = class_pair[0];
     class_wrapper.value[1] = class_pair[1];
     if ((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(&class_wrapper), (const char *)(intptr_t)((int32_t)(intptr_t)"AssociateResource"), (const void *)(method_source), 8, (void *)(kinoko_cact_associate_resource), 0)) < 0) {
@@ -875,7 +875,7 @@ int32_t kinoko_publish_acting_player(SQVM* vm,
     int32_t result;
     int32_t instance_slot;
     int32_t actual[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    kinoko::act::LayerObjectRecord object_wrapper{(const void*)(uintptr_t)(address(kinoko_act_host_symbols()->sq_root_vtable)), (SQVM*)(uintptr_t)(0), {static_cast<int32_t>(OT_NULL), 0}, 1, {}};
+    kinoko::act::LayerObjectRecord object_wrapper{kinoko_act_host_symbols()->sq_root_vtable, (SQVM*)(uintptr_t)(0), {static_cast<int32_t>(OT_NULL), 0}, 1, {}};
 
     if (vm == 0 || act_pair == nullptr || name == nullptr || out_pair == nullptr ||
         kinoko_acting_player_class_pair[0] != 0x08004000 || kinoko_acting_player_class_pair[1] == 0)
@@ -931,7 +931,7 @@ int32_t kinoko_publish_acting_player(SQVM* vm,
     if (std::strcmp(name, "pl") == 0 || std::strcmp(name, "player") == 0) {
         kinoko_trace_squirrel_name("act:acting-read-name",
                                    address(name));
-        object_wrapper.vm = (SQVM*)(uintptr_t)(address(vm));
+        object_wrapper.vm = vm;
         object_wrapper.value[0] = act_pair[0];
         object_wrapper.value[1] = act_pair[1];
         if (get_pair(address(&object_wrapper),
@@ -998,7 +998,7 @@ namespace {
 // insert is unique; re-registering an environment does not replace its owner.
 std::map<int32_t, int32_t> act_script_owners;
 void refresh_act_script_callbacks(SQVM* vm, int32_t script, const int32_t *environment) {
-    kinoko::act::LayerObjectRecord wrapper{(const void*)(uintptr_t)(kinoko_sqrat_object_vtable()), (SQVM*)(uintptr_t)(address(vm)), {environment[0], environment[1]}, 0, {}};
+    kinoko::act::LayerObjectRecord wrapper{kinoko_sqrat_object_vtable(), vm, {environment[0], environment[1]}, 0, {}};
     kinoko_copy_act_callback((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(script), 4, (void*)(uintptr_t)(address(&wrapper)), "Init");
     kinoko_copy_act_callback((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(script), 24, (void*)(uintptr_t)(address(&wrapper)), "Update");
     kinoko_copy_act_callback((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(script), 44, (void*)(uintptr_t)(address(&wrapper)), "OnCreate");
@@ -1067,7 +1067,7 @@ int32_t kinoko_publish_act_script_constants(SQVM* vm, const int32_t *environment
         "BLEND_NORMAL", "BLEND_ALPHA", "BLEND_ADD", "BLEND_SUB",
         "BLEND_MULTI", "BLEND_INVERT"
     };
-    kinoko::act::LayerObjectRecord object{(const void*)(uintptr_t)(address(kinoko_act_host_symbols()->sq_object_vtable)), (SQVM*)(uintptr_t)(address(vm)), {environment[0], environment[1]}, 0, {}};
+    kinoko::act::LayerObjectRecord object{kinoko_act_host_symbols()->sq_object_vtable, vm, {environment[0], environment[1]}, 0, {}};
     int32_t user[2] = {static_cast<int32_t>(OT_NULL), 0};
     int32_t have_user = get_pair(address(&object), "u", user);
     int32_t needs_user = !have_user || user[0] == static_cast<int32_t>(OT_NULL);
@@ -1806,9 +1806,9 @@ int32_t kinoko_bind_act_resource_object(int32_t resource_ptr)
 int32_t kinoko_register_runtime_act_script(SQVM* vm, int32_t resource_ptr,
                                                  int32_t act)
 {
-    kinoko::act::LayerObjectRecord root{(const void*)(uintptr_t)(0), (SQVM*)(uintptr_t)(address(vm)), {0, 0}, 0, {}};
+    kinoko::act::LayerObjectRecord root{(const void*)(uintptr_t)(0), vm, {0, 0}, 0, {}};
     int32_t parent[2] = { static_cast<int32_t>(OT_NULL), 0 }, global[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    kinoko::act::LayerObjectRecord object{(const void*)(uintptr_t)(0), (SQVM*)(uintptr_t)(address(vm)), {0, 0}, 0, {}};
+    kinoko::act::LayerObjectRecord object{(const void*)(uintptr_t)(0), vm, {0, 0}, 0, {}};
     int32_t script = act + 100, result = 0;
     root.value[0] = field<int32_t>(resource_ptr + 156);
     root.value[1] = field<int32_t>(resource_ptr + 160);
@@ -1818,7 +1818,7 @@ int32_t kinoko_register_runtime_act_script(SQVM* vm, int32_t resource_ptr,
     object.value[0] = parent[0]; object.value[1] = parent[1];
     if (!get_pair(address(&object), "global", global))
         break;
-    object.methods = (const void*)(uintptr_t)(address(kinoko_act_host_symbols()->sq_object_vtable));
+    object.methods = kinoko_act_host_symbols()->sq_object_vtable;
     object.value[0] = global[0]; object.value[1] = global[1];
     result = kinoko_register_act_script(script, address(&object)) >= 0;
     } while (false);
@@ -1989,7 +1989,7 @@ int32_t kinoko_root_table_register_resource(int32_t root_object,
     script_path = kinoko_string_data(ScriptPublicationView(pointer<void>(script_ptr)).bytes(&ScriptPublicationRecord::path));
     if (script_path && *script_path)
         kinoko_trace_squirrel_name("450f30:script-path", address(script_path));
-    global_object.methods = (const void*)(uintptr_t)(address(kinoko_act_host_symbols()->sq_object_vtable));
+    global_object.methods = kinoko_act_host_symbols()->sq_object_vtable;
     global_object.vm = (SQVM*)(uintptr_t)(vm);
     global_object.value[0] = global_pair[0];
     global_object.value[1] = global_pair[1];

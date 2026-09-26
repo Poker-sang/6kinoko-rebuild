@@ -543,9 +543,9 @@ int32_t kinoko_host_open_vm_abi(int32_t a1) {
     return (int32_t)(intptr_t)kinoko_script_open_primary_vm(a1);
 }
 
-int32_t kinoko_sqrat_object_vtable(void) { return (int32_t)(intptr_t)&kinoko_sqrat_object_methods_storage; }
+const void* kinoko_sqrat_object_vtable(void) { return &kinoko_sqrat_object_methods_storage; }
 
-int32_t kinoko_sqrat_root_vtable(void) { return (int32_t)(intptr_t)&kinoko_sqrat_root_methods_storage; }
+const void* kinoko_sqrat_root_vtable(void) { return &kinoko_sqrat_root_methods_storage; }
 
 int32_t kinoko_actor_vtable(void) { return (int32_t)(intptr_t)&kinoko_actor_methods_storage; }
 

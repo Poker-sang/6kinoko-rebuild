@@ -16,7 +16,7 @@ SQVM* kinoko_sq_create_thread(SQVM* parent, int32_t stack_size);
 /* Mixed-runtime GC still identifies recovered objects by their vtables.
  * Return the source SQVM vtable once a source child has been constructed,
  * or zero before then. This does not create a probe/dummy VM. */
-int32_t kinoko_sq_source_vm_vtable(void);
+const void* kinoko_sq_source_vm_vtable(void);
 
 #ifdef __cplusplus
 }

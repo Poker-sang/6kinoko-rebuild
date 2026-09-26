@@ -21,7 +21,7 @@ static_assert(sizeof(SQVM) == 168 && sizeof(SQVM::CallInfo) == 48);
 static_assert(offsetof(SQVM, _sharedstate) == 140 && offsetof(SQVM, ci) == 132);
 
 thread_local kinoko_sq_context_exchange exchange_receiver = nullptr;
-std::atomic<int32_t> source_vm_vtable{0};
+std::atomic<const void*> source_vm_vtable{nullptr};
 
 class ReceiverScope final {
 public:
@@ -37,7 +37,7 @@ private:
 
 void remember_vm(SQVM* vm) noexcept {
     if (!vm) return;
-    int32_t vtable = 0;
+    const void* vtable = nullptr;
     std::memcpy(&vtable, vm, sizeof(vtable));
     source_vm_vtable.store(vtable, std::memory_order_relaxed);
 }
@@ -55,7 +55,7 @@ SQInteger kinoko_squirrel_invoke_native(HSQUIRRELVM vm, SQFUNCTION function) {
     return function(vm);
 }
 
-extern "C" int32_t kinoko_sq_source_vm_vtable(void) {
+extern "C" const void* kinoko_sq_source_vm_vtable(void) {
     return source_vm_vtable.load(std::memory_order_relaxed);
 }
 extern "C" SQVM* kinoko_sq_open(int32_t stack_size) {
