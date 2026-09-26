@@ -39,7 +39,7 @@ bool check(int entry, int32_t result, std::initializer_list<uint32_t> expected) 
 // adapters via legacy_abi.cpp's __thiscall invocations (no inline assembly).
 
 extern "C" void* kinoko_destroy_cact_with_flags(KinokoActDocument* receiver, unsigned char flags) {
-    return record(1, {bits(receiver), bits(flags)});
+    return reinterpret_cast<void*>(static_cast<uintptr_t>(record(1, {bits(receiver), bits(flags)})));
 }
 
 extern "C" int32_t kinoko_c2dlayout_set_layer_impl(int32_t receiver, int32_t layer) {

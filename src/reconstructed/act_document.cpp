@@ -112,7 +112,7 @@ KinokoActLayout* kinoko_construct_c2dlayout(KinokoActLayout* layout) {
         static_cast<const void *>(kinoko_act_host_symbols()->layout_vtable));
     auto quad = record.view(&kinoko::act::Layout2DRecord::quad);
     quad.set(&kinoko::render::QuadRecord::vtable,
-        static_cast<uint32_t>(address(kinoko_act_host_symbols()->layout_sprite_vtable)));
+        kinoko_act_host_symbols()->layout_sprite_vtable);
     record.set(&kinoko::act::Layout2DRecord::scale,
         kinoko::render::Position3{1.0f, 1.0f, 1.0f});
     record.set(&kinoko::act::Layout2DRecord::alpha, 1.0f);

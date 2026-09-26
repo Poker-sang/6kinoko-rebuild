@@ -22,46 +22,51 @@ using kinoko::legacy::StringView;
 
 // 445230 / 423F00: the original assignment copies pixel pointers, not pixel
 // buffers. Keep that ownership contract; atlas compaction is not a deep clone.
-void assign_renderer(int32_t out,int32_t in) {
-    if(out==in) return;
-    std::copy_n(pointer<unsigned char>(in),348,pointer<unsigned char>(out));
-    kinoko_string_font_copy_pixels(out,in);
-    field<uint32_t>(out+360)=field<uint32_t>(in+360);
-    field<uint8_t>(out+364)=field<uint8_t>(in+364);
-    field<uint8_t>(out+365)=field<uint8_t>(in+365);
-    using Renderer=kinoko::text::FontRendererRecord;
-    const kinoko::native::RecordView<Renderer> target(pointer<void>(out)), source(pointer<void>(in));
-    StringView(target.bytes(&Renderer::label)).assign(StringView(source.bytes(&Renderer::label)),0,UINT32_MAX);
-    field<uint32_t>(out+396)=field<uint32_t>(in+396);
-    field<uint32_t>(out+400)=field<uint32_t>(in+400);
+void assign_renderer(void* out, const void* in) {
+    if (out == in) return;
+    using Renderer = kinoko::text::FontRendererRecord;
+    const kinoko::native::RecordView<Renderer> target(out), source(const_cast<void*>(in));
+    std::memcpy(out, in, offsetof(Renderer, pixel_owner));
+    kinoko_string_font_copy_pixels(out, const_cast<void*>(in));
+    target.set(&Renderer::color, source.get(&Renderer::color));
+    std::memcpy(target.bytes(&Renderer::state364), source.bytes(&Renderer::state364), 2);
+    StringView(target.bytes(&Renderer::label)).assign(StringView(source.bytes(&Renderer::label)), 0, UINT32_MAX);
+    // Assignment skips the first four bytes of this opaque tail (445230).
+    std::memcpy(target.bytes(&Renderer::state392) + 4, source.bytes(&Renderer::state392) + 4, 8);
 }
 
 // 40ED40 receives its renderer in ESI. The old C signature lost it entirely.
-void destroy_renderer(int32_t renderer) {
+void destroy_renderer(void* renderer) {
     kinoko_string_font_destroy_pixels(renderer);
-    using Renderer=kinoko::text::FontRendererRecord;
-    using StringRecord=kinoko::legacy::StringRecord;
-    const kinoko::native::RecordView<Renderer> record(pointer<void>(renderer));
+    using Renderer = kinoko::text::FontRendererRecord;
+    using StringRecord = kinoko::legacy::StringRecord;
+    const kinoko::native::RecordView<Renderer> record(renderer);
     std::free(record.get(&Renderer::bitmap));
-    record.set(&Renderer::bitmap,static_cast<void*>(nullptr));
-    const kinoko::native::RecordView<StringRecord> label(record.bytes(&Renderer::label));
+    record.set(&Renderer::bitmap, static_cast<void*>(nullptr));
+    const auto label = record.view(&Renderer::label);
     StringView(label.data()).destroy();
-    label.set(&StringRecord::capacity,uint32_t{15});
-    label.set(&StringRecord::length,uint32_t{0});
-    label.bytes(&StringRecord::characters)[0]=0;
+    label.set(&StringRecord::capacity, uint32_t{15});
+    label.set(&StringRecord::length, uint32_t{0});
+    label.bytes(&StringRecord::characters)[0] = 0;
 }
 struct Atlas {
-    alignas(4) unsigned char bytes[436];
-    int32_t address() const { return kinoko::legacy::address(bytes); }
-    Atlas() { kinoko_string_font_construct(address()+24);field<int32_t>(address()+428)=0; }
-    Atlas(const Atlas& other) : Atlas() { *this=other; }
-    Atlas& operator=(const Atlas& other) {
-        if(this==&other) return *this;
-        std::copy_n(other.bytes,24,bytes);
-        assign_renderer(address()+24,other.address()+24);
-        std::copy_n(other.bytes+428,8,bytes+428);return *this;
+    using Record = kinoko::text::AtlasLifecycle;
+    alignas(4) unsigned char bytes[sizeof(Record)];
+    kinoko::native::RecordView<Record> view() { return kinoko::native::RecordView<Record>(bytes); }
+    Atlas() {
+        kinoko_string_font_construct(view().bytes(&Record::renderer));
+        view().set(&Record::texture, int32_t{0});
     }
-    ~Atlas() { destroy_renderer(address()+24); }
+    Atlas(const Atlas& other) : Atlas() { *this = other; }
+    Atlas& operator=(const Atlas& other) {
+        if (this == &other) return *this;
+        std::copy_n(other.bytes, offsetof(Record, renderer), bytes);
+        assign_renderer(view().bytes(&Record::renderer), other.bytes + offsetof(Record, renderer));
+        std::copy_n(other.bytes + offsetof(Record, texture), sizeof(Record) - offsetof(Record, texture),
+                    view().bytes(&Record::texture));
+        return *this;
+    }
+    ~Atlas() { destroy_renderer(view().bytes(&Record::renderer)); }
 };
 static_assert(sizeof(Atlas)==436);
 using Atlases=std::vector<Atlas>;
@@ -84,13 +89,13 @@ extern "C" int32_t kinoko_string_prune_atlases(KinokoStringLayout* receiver) {
     int32_t minimum=INT_MAX;
     const uint32_t count=kinoko_string_queue_size((KinokoStringLayout*)(uintptr_t)(layout));
     for(uint32_t i=0;i<count;++i) {
-        const int32_t sprite=kinoko_string_queue_at((KinokoStringLayout*)(uintptr_t)(layout), i);
-        minimum=(std::min)(minimum,kinoko::native::RecordView<kinoko::act::StringGlyphRecord>(pointer<void>(sprite)).get(&kinoko::act::StringGlyphRecord::id));
+        auto* sprite=kinoko_string_queue_at((KinokoStringLayout*)(uintptr_t)(layout), i);
+        minimum=(std::min)(minimum,kinoko::native::RecordView<kinoko::act::StringGlyphRecord>(sprite).get(&kinoko::act::StringGlyphRecord::id));
     }
     auto& pages=*atlases(layout);
     for(size_t i=0;i<pages.size();) {
-        const int32_t atlas=pages[i].address();
-        const kinoko::native::RecordView<kinoko::text::AtlasLifecycle> lifetime(pointer<void>(atlas));
+        auto* atlas=pages[i].bytes;
+        const kinoko::native::RecordView<kinoko::text::AtlasLifecycle> lifetime(atlas);
         if(lifetime.get(&kinoko::text::AtlasLifecycle::last_glyph_id)>=minimum ||
            lifetime.get(&kinoko::text::AtlasLifecycle::references)>0) { ++i;continue; }
         kinoko_texture_release(lifetime.get(&kinoko::text::AtlasLifecycle::texture));
@@ -121,8 +126,8 @@ extern "C" int32_t kinoko_string_rebuild_queue(KinokoStringLayout* receiver) {
     queue.append(pending.c_str(),static_cast<uint32_t>(std::strlen(pending.c_str())));
     const uint32_t count=kinoko_string_queue_size((KinokoStringLayout*)(uintptr_t)(layout));
     for(uint32_t i=0;i<count;++i) {
-        const int32_t sprite=kinoko_string_queue_at((KinokoStringLayout*)(uintptr_t)(layout), i);
-        const auto glyph=kinoko::native::RecordView<kinoko::act::StringGlyphRecord>(pointer<void>(sprite));
+        auto* sprite=kinoko_string_queue_at((KinokoStringLayout*)(uintptr_t)(layout), i);
+        const auto glyph=kinoko::native::RecordView<kinoko::act::StringGlyphRecord>(sprite);
         auto* atlas=glyph.get(&kinoko::act::StringGlyphRecord::atlas);
         if(atlas) {
             const kinoko::native::RecordView<kinoko::text::AtlasLifecycle> lifetime(atlas);
@@ -221,11 +226,11 @@ extern "C" KinokoStringLayout* __fastcall kinoko_method_delete_string_layout(Kin
 }
 
 // Glyph pointers remain borrowed, including across original atlas relocation.
-extern "C" int32_t kinoko_string_append_atlas(KinokoStringLayout* layout) {
-    atlases(layout)->emplace_back();return atlases(layout)->back().address();
+extern "C" void* kinoko_string_append_atlas(KinokoStringLayout* layout) {
+    atlases(layout)->emplace_back();return atlases(layout)->back().bytes;
 }
 extern "C" uint32_t kinoko_string_atlas_size(KinokoStringLayout* layout) { return static_cast<uint32_t>(atlases(layout)->size()); }
-extern "C" int32_t kinoko_string_atlas_at(KinokoStringLayout* layout,uint32_t index) { return atlases(layout)->at(index).address(); }
+extern "C" void* kinoko_string_atlas_at(KinokoStringLayout* layout,uint32_t index) { return atlases(layout)->at(index).bytes; }
 
 extern "C" void kinoko_string_copy_queue_storage(KinokoStringLayout* object,KinokoStringLayout* source);
 extern "C" void kinoko_string_drop_queue_storage(KinokoStringLayout* object);

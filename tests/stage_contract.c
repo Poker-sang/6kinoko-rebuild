@@ -4522,12 +4522,12 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
     CHECK(((unsigned char*)object)[228]==1);
     int32_t atlas[109]={0};atlas[108]=2;
     for(int i=0;i<2;++i) {
-        int32_t* glyph=(int32_t*)(intptr_t)kinoko_string_append_glyph((KinokoStringLayout*)(uintptr_t)(PTR(object)));
+        int32_t* glyph=(int32_t*)(intptr_t)(int32_t)(intptr_t)kinoko_string_append_glyph((KinokoStringLayout*)(uintptr_t)(PTR(object)));
         glyph[0]=10+i;glyph[2]=0;glyph[63]=PTR(atlas);
     }
     CHECK(kinoko_string_replicate((KinokoStringLayout*)(uintptr_t)(PTR(copy)), (KinokoStringLayout*)(uintptr_t)(PTR(object)))==1 && atlas[108]==4 && kinoko_string_queue_size((KinokoStringLayout*)(uintptr_t)(PTR(copy)))==2);
     CHECK(copy[44]!=object[44]);
-    CHECK(((int32_t*)(intptr_t)kinoko_string_queue_at((KinokoStringLayout*)(uintptr_t)(PTR(copy)), 0))[0]==10);
+    CHECK(((int32_t*)(intptr_t)(int32_t)(intptr_t)kinoko_string_queue_at((KinokoStringLayout*)(uintptr_t)(PTR(copy)), 0))[0]==10);
     CHECK(kinoko_string_replicate((KinokoStringLayout*)(uintptr_t)(PTR(copy)), (KinokoStringLayout*)(uintptr_t)(PTR(copy)))==1 && atlas[108]==4);
     CHECK(kinoko_string_clear((KinokoStringLayout*)(uintptr_t)(PTR(copy)))==1 && atlas[108]==4 && kinoko_string_queue_size((KinokoStringLayout*)(uintptr_t)(PTR(copy)))==2);
     kinoko_clear_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(copy)));CHECK(atlas[108]==2);
@@ -4578,7 +4578,7 @@ static int test_string_layout_lifetime(void) {
 static int test_string_glyph_cache(void) {
     int32_t layout[65]={0};
     (int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(layout)));
-    int32_t* atlas=(int32_t*)(intptr_t)kinoko_string_append_atlas((KinokoStringLayout*)(uintptr_t)(PTR(layout)));
+    int32_t* atlas=(int32_t*)(intptr_t)(int32_t)(intptr_t)kinoko_string_append_atlas((KinokoStringLayout*)(uintptr_t)(PTR(layout)));
     atlas[(24+344)/4]=PTR(malloc(32));
     atlas[5]=4;atlas[108]=2;
     layout[6]=layout[13]=15;
@@ -4587,7 +4587,7 @@ static int test_string_glyph_cache(void) {
     layout[22]=19;
     const int32_t storage=layout[44];
     for(int i=0;i<2;++i) {
-        int32_t* glyph=(int32_t*)(intptr_t)kinoko_string_append_glyph((KinokoStringLayout*)(uintptr_t)(PTR(layout)));
+        int32_t* glyph=(int32_t*)(intptr_t)(int32_t)(intptr_t)kinoko_string_append_glyph((KinokoStringLayout*)(uintptr_t)(PTR(layout)));
         glyph[2]=4;glyph[63]=PTR(atlas);
     }
     CHECK(kinoko_string_prune_atlases((KinokoStringLayout*)layout)==1 && kinoko_string_atlas_size((KinokoStringLayout*)(uintptr_t)(PTR(layout)))==1);

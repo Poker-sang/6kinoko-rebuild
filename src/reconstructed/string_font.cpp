@@ -29,15 +29,15 @@ using kinoko::legacy::pointer;
 using kinoko::legacy::StringView;
 using Pixels=std::list<void*>;
 using Renderer=kinoko::text::FontRendererRecord;
-Pixels* pixels(int32_t renderer) {
-    const kinoko::native::RecordView<Renderer> record(pointer<void>(renderer));
+Pixels* pixels(void* renderer) {
+    const kinoko::native::RecordView<Renderer> record(renderer);
     return static_cast<Pixels*>(record.get(&Renderer::pixel_owner));
 }
-void set_pixels(int32_t renderer,Pixels* value) {
-    const kinoko::native::RecordView<Renderer> record(pointer<void>(renderer));
+void set_pixels(void* renderer,Pixels* value) {
+    const kinoko::native::RecordView<Renderer> record(renderer);
     record.set(&Renderer::pixel_owner,static_cast<void*>(value));
 }
-void clear_pixels(int32_t r) {
+void clear_pixels(void* r) {
     for(void* value:*pixels(r)) std::free(value);
     pixels(r)->clear();
 }
@@ -47,9 +47,9 @@ struct GraphicsLock {
 };
 // 40F1C0/40F2E0. Each character creates/selects a font, then restores the DC.
 struct FontSession {
-    int32_t r;
-    explicit FontSession(int32_t renderer):r(renderer) {
-        const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+    void* r;
+    explicit FontSession(void* renderer):r(renderer) {
+        const kinoko::native::RecordView<Renderer> record(r);
         auto font=CreateFontA(record.get(&Renderer::font_height),0,0,0,
             record.get(&Renderer::font_weight),record.get(&Renderer::style284),
             0,0,128,4,0,2,49,reinterpret_cast<char*>(record.bytes(&Renderer::face)));
@@ -61,13 +61,13 @@ struct FontSession {
         record.set(&Renderer::ascent,static_cast<int32_t>(metrics.tmAscent));
         record.set(&Renderer::cursor_x,int32_t(record.get(&Renderer::edge))+record.get(&Renderer::margin_left));
         record.set(&Renderer::cursor_y,int32_t(record.get(&Renderer::edge))+record.get(&Renderer::margin_top));
-        field<uint16_t>(r+364)=0;
+        std::memset(record.bytes(&Renderer::state364), 0, sizeof(uint16_t));
         record.set(&Renderer::gradient,record.get(&Renderer::bitmap));
         clear_pixels(r);
     }
     ~FontSession() {
         clear_pixels(r);
-        const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+        const kinoko::native::RecordView<Renderer> record(r);
         auto dc=static_cast<HDC>(record.get(&Renderer::device_context));
         DeleteObject(SelectObject(dc,static_cast<HGDIOBJ>(record.get(&Renderer::previous_font))));
         ReleaseDC(reinterpret_cast<HWND>(game_window_slot),dc);
@@ -76,10 +76,10 @@ struct FontSession {
         record.set(&Renderer::previous_font,static_cast<void*>(nullptr));
     }
 };
-void glyph(int32_t r,UINT character,int32_t& width,int32_t& height) {
+void glyph(void* r,UINT character,int32_t& width,int32_t& height) {
     MAT2 transform{};transform.eM11.value=transform.eM22.value=1;
     GLYPHMETRICS metrics{};
-    const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+    const kinoko::native::RecordView<Renderer> record(r);
     auto dc=static_cast<HDC>(record.get(&Renderer::device_context));
     const DWORD size=GetGlyphOutlineA(dc,character,GGO_GRAY4_BITMAP,&metrics,0,nullptr,&transform);
     if(size==GDI_ERROR) return;
@@ -115,8 +115,8 @@ void glyph(int32_t r,UINT character,int32_t& width,int32_t& height) {
         metrics.gmCellIncX+record.get(&Renderer::character_space));
     width=(std::max)(width,max_x);height=(std::max)(height,max_y);
 }
-void outline(int32_t r,const uint32_t* source,uint32_t* destination) {
-    const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+void outline(void* r,const uint32_t* source,uint32_t* destination) {
+    const kinoko::native::RecordView<Renderer> record(r);
     const int32_t stride=record.get(&Renderer::stride);
     for(int32_t y=1;y<record.get(&Renderer::bound_height)-1;++y)
         for(int32_t x=1;x<record.get(&Renderer::bound_width)-1;++x) {
@@ -135,9 +135,9 @@ void outline(int32_t r,const uint32_t* source,uint32_t* destination) {
         }
 }
 }
-extern "C" void kinoko_string_font_construct(int32_t r) {
+extern "C" void kinoko_string_font_construct(void* r) {
     // 40EC70 initializes only these members; do not clear unrelated padding.
-    const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+    const kinoko::native::RecordView<Renderer> record(r);
     record.set(&Renderer::font_weight,400);
     record.set(&Renderer::style284,uint8_t{0});
     record.set(&Renderer::edge,uint8_t{0});
@@ -146,7 +146,10 @@ extern "C" void kinoko_string_font_construct(int32_t r) {
     record.set(&Renderer::margin_top,0);
     record.set(&Renderer::character_space,0);
     record.set(&Renderer::line_space,0);
-    for(int offset:{352,0,4,8,324,340}) field<int32_t>(r+offset)=0;
+    std::memset(record.bytes(&Renderer::state352), 0, sizeof(uint32_t));
+    for (auto member : {&Renderer::device_context, &Renderer::font_handle,
+                        &Renderer::previous_font, &Renderer::destination, &Renderer::gradient})
+        record.set(member, static_cast<void*>(nullptr));
     record.set(&Renderer::bitmap,static_cast<void*>(nullptr));
     record.set(&Renderer::setting288,100000);
     const kinoko::native::RecordView<kinoko::legacy::StringRecord> label(record.bytes(&Renderer::label));
@@ -155,11 +158,11 @@ extern "C" void kinoko_string_font_construct(int32_t r) {
     label.bytes(&kinoko::legacy::StringRecord::characters)[0]=0;
     set_pixels(r,new Pixels);
 }
-extern "C" void kinoko_string_font_configure(int32_t r,int32_t layout) {
+extern "C" void kinoko_string_font_configure(void* r,KinokoStringLayout* layout) {
     // 440910/440CA0 preserve the other config bytes and set equal RGB endpoints.
     using Layout=kinoko::act::StringLayoutRecord;
-    const kinoko::native::RecordView<Layout> text(pointer<void>(layout));
-    const kinoko::native::RecordView<Renderer> renderer(pointer<void>(r));
+    const kinoko::native::RecordView<Layout> text(layout);
+    const kinoko::native::RecordView<Renderer> renderer(r);
     strcpy_s(reinterpret_cast<char*>(renderer.bytes(&Renderer::face)),256,
         StringView(text.bytes(&Layout::face)).data());
     const uint8_t colors[]={static_cast<uint8_t>(text.get(&Layout::red)),
@@ -178,8 +181,8 @@ extern "C" void kinoko_string_font_configure(int32_t r,int32_t layout) {
     // 40EE30's equal-color branch leaves an existing gradient allocation alone.
     clear_pixels(r);
 }
-extern "C" void kinoko_string_font_rasterize(int32_t r,const char* character,int32_t* width,int32_t* height) {
-    const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+extern "C" void kinoko_string_font_rasterize(void* r,const char* character,int32_t* width,int32_t* height) {
+    const kinoko::native::RecordView<Renderer> record(r);
     const bool edge=record.get(&Renderer::edge)!=0;
     std::vector<uint32_t> temporary;
     if(edge) {
@@ -204,7 +207,7 @@ extern "C" void kinoko_string_font_rasterize(int32_t r,const char* character,int
     if(width) *width=w+edge;
     if(height) *height=h+edge;
 }
-extern "C" int32_t kinoko_string_font_texture(int32_t r) {
+extern "C" int32_t kinoko_string_font_texture(void* r) {
     kinoko::ComOwner<IDirect3DTexture9> texture;
     IDirect3DTexture9* value=nullptr;
     {
@@ -217,20 +220,20 @@ extern "C" int32_t kinoko_string_font_texture(int32_t r) {
         GraphicsLock lock;D3DLOCKED_RECT rect{};
         if(FAILED(value->LockRect(0,&rect,nullptr,0))) return 0;
         std::memset(rect.pBits,0,4*512*512);
-        const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+        const kinoko::native::RecordView<Renderer> record(r);
         record.set(&Renderer::output,rect.pBits);
         record.set(&Renderer::destination,rect.pBits);
         record.set(&Renderer::bound_height,512);
         record.set(&Renderer::bound_width,512);
         record.set(&Renderer::stride,static_cast<int32_t>(rect.Pitch/4));
-        kinoko_string_font_rasterize(r,"",nullptr,nullptr);
+        kinoko_string_font_rasterize((void*)(uintptr_t)(r), "", nullptr, nullptr);
         value->UnlockRect(0);
     }
     const int32_t handle=kinoko_texture_register(value,512,512);
     if(handle) texture.detach();
     return handle;
 }
-extern "C" void kinoko_string_font_upload(int32_t r,int32_t handle,const char* character,
+extern "C" void kinoko_string_font_upload(void* r,int32_t handle,const char* character,
                                           int32_t x,int32_t y,int32_t* width,int32_t* height) {
     if(handle<=0 || handle>=KINOKO_TEXTURE_CAPACITY) return;
     auto* texture=static_cast<IDirect3DTexture9*>(kinoko_texture_slots[handle].texture);
@@ -245,13 +248,13 @@ extern "C" void kinoko_string_font_upload(int32_t r,int32_t handle,const char* c
     if(FAILED(texture->LockRect(0,&rect,&region,0))) return;
     try {
         std::vector<unsigned char> pixels(size_t(description.Height-y)*rect.Pitch);
-        const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+        const kinoko::native::RecordView<Renderer> record(r);
         record.set(&Renderer::output,static_cast<void*>(pixels.data()));
         record.set(&Renderer::destination,static_cast<void*>(pixels.data()));
         record.set(&Renderer::bound_height,static_cast<int32_t>(description.Height-y));
         record.set(&Renderer::bound_width,static_cast<int32_t>(description.Width-x));
         record.set(&Renderer::stride,static_cast<int32_t>(rect.Pitch/4));
-        kinoko_string_font_rasterize(r,character,width,height);
+        kinoko_string_font_rasterize((void*)(uintptr_t)(r), character, width, height);
         const uint32_t bytes_per_pixel=rect.Pitch/description.Width;
         for(int32_t row=0;row<*height;++row)
             memcpy_s(static_cast<unsigned char*>(rect.pBits)+row*rect.Pitch,
@@ -261,12 +264,12 @@ extern "C" void kinoko_string_font_upload(int32_t r,int32_t handle,const char* c
     texture->UnlockRect(0);
 }
 
-extern "C" void kinoko_string_font_copy_pixels(int32_t out,int32_t in) {
+extern "C" void kinoko_string_font_copy_pixels(void* out,void* in) {
     // Original list assignment copies borrowed pixel pointers. It destroys old
     // list nodes without releasing their pointed-to allocations.
     *pixels(out)=*pixels(in);
 }
-extern "C" void kinoko_string_font_destroy_pixels(int32_t renderer) {
+extern "C" void kinoko_string_font_destroy_pixels(void* renderer) {
     clear_pixels(renderer);delete pixels(renderer);set_pixels(renderer,nullptr);
 }
 

@@ -20,13 +20,13 @@ using kinoko::legacy::address;
 using kinoko::legacy::StringView;
 struct Glyph {
     alignas(4) unsigned char bytes[256];
-    Glyph() { field<void*>(address(bytes)+20)=const_cast<void*>(kinoko_act_host_symbols()->chip_quad_vtable);field<int32_t>(address(bytes)+24)=0; }
+    Glyph() { auto quad=kinoko::native::RecordView<kinoko::act::StringGlyphRecord>(bytes).view(&kinoko::act::StringGlyphRecord::quad); quad.set(&kinoko::render::QuadRecord::vtable, kinoko_act_host_symbols()->chip_quad_vtable); quad.set(&kinoko::render::QuadRecord::texture, int32_t{0}); }
     Glyph(const Glyph& other) : Glyph() { *this=other; }
     Glyph& operator=(const Glyph& other) {
         std::copy_n(other.bytes,20,bytes);
         std::copy_n(other.bytes+24,232,bytes+24);return *this;
     }
-    ~Glyph() { field<void*>(address(bytes)+20)=const_cast<void*>(kinoko_act_host_symbols()->color_vtable); }
+    ~Glyph() { kinoko::native::RecordView<kinoko::act::StringGlyphRecord>(bytes).view(&kinoko::act::StringGlyphRecord::quad).set(&kinoko::render::QuadRecord::vtable, kinoko_act_host_symbols()->color_vtable); }
 };
 using Deque=std::deque<Glyph>;
 using LayoutRecord=kinoko::act::StringLayoutRecord;
@@ -39,11 +39,11 @@ void set_storage(KinokoStringLayout* layout,Deque* value) {
     record.set(&LayoutRecord::glyph_owner,static_cast<void*>(value));
 }
 Deque& queue(KinokoStringLayout* layout) { return *storage(layout); }
-int32_t sprite(const Deque& q,uint32_t i) { return address(q[i].bytes); }
+const void* sprite(const Deque& q,uint32_t i) { return q[i].bytes; }
 using Layout=kinoko::act::StringLayoutRecord;
 using GlyphRecord=kinoko::act::StringGlyphRecord;
-void adjust_atlas_reference(int32_t glyph_address,int delta) {
-    const kinoko::native::RecordView<GlyphRecord> glyph(pointer<void>(glyph_address));
+void adjust_atlas_reference(const void* glyph_address,int delta) {
+    const kinoko::native::RecordView<GlyphRecord> glyph(const_cast<void*>(glyph_address));
     auto* atlas=glyph.get(&GlyphRecord::atlas);
     if(!atlas) return;
     const kinoko::native::RecordView<kinoko::text::AtlasLifecycle> lifetime(atlas);
@@ -56,7 +56,7 @@ void references(const Deque& q,int delta) {
     }
 }
 void pop(Deque& q,bool front) {
-    const int32_t value=sprite(q,front?0:static_cast<uint32_t>(q.size()-1));
+    const void* value=sprite(q,front?0:static_cast<uint32_t>(q.size()-1));
     adjust_atlas_reference(value,-1);
     if(front) q.pop_front();else q.pop_back();
 }
@@ -122,10 +122,10 @@ extern "C" int32_t kinoko_string_replicate(KinokoStringLayout* object,KinokoStri
 
 // 442300 appends a default CSpriteEx value into the one-element block deque.
 // The original leaves non-vtable/default-texture fields for 404EE0 to fill.
-extern "C" int32_t kinoko_string_append_glyph(KinokoStringLayout* layout) {
+extern "C" void* kinoko_string_append_glyph(KinokoStringLayout* layout) {
     auto& q=queue(layout);
     q.emplace_back();
-    return address(q.back().bytes);
+    return q.back().bytes;
 }
 
 // 43EC30 copies deque values without adjusting atlas references; 43EB80
@@ -140,4 +140,4 @@ extern "C" void kinoko_string_drop_queue_storage(KinokoStringLayout* object) {
 extern "C" void kinoko_string_queue_construct(KinokoStringLayout* object) { set_storage(object,new Deque); }
 extern "C" void kinoko_string_queue_destroy(KinokoStringLayout* object) { delete storage(object);set_storage(object,nullptr); }
 extern "C" uint32_t kinoko_string_queue_size(KinokoStringLayout* object) { return static_cast<uint32_t>(queue(object).size()); }
-extern "C" int32_t kinoko_string_queue_at(KinokoStringLayout* object,uint32_t index) { return address(queue(object).at(index).bytes); }
+extern "C" void* kinoko_string_queue_at(KinokoStringLayout* object,uint32_t index) { return queue(object).at(index).bytes; }
