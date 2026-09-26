@@ -24,17 +24,20 @@ namespace {
 constexpr uint32_t kMaximumString = 0x1000000u;
 constexpr uint32_t kFileBufferSize = 0x20000u;
 
-// 4722E0/472820 receive the first three words of a 16-word legacy stream.
-// Keep the integer representation at that ABI; recursion uses a real pointer.
+// Recovered stream prefix: borrowed buffer followed by cursor and limit.
+// memcpy permits the original unaligned callers without integer pointers.
+struct StreamPrefix { unsigned char* buffer; int32_t position; int32_t limit; };
+static_assert(sizeof(StreamPrefix) == 12);
 struct TableStream {
     unsigned char *buffer;
     int32_t position;
     int32_t limit;
 
-    explicit TableStream(int32_t *legacy) noexcept
-        : buffer(legacy ? reinterpret_cast<unsigned char *>(
-              static_cast<uintptr_t>(static_cast<uint32_t>(legacy[0]))) : nullptr),
-          position(legacy ? legacy[1] : 0), limit(legacy ? legacy[2] : 0) {}
+    explicit TableStream(int32_t *legacy) noexcept {
+        StreamPrefix prefix{};
+        if (legacy) std::memcpy(&prefix, legacy, sizeof prefix);
+        buffer = prefix.buffer; position = prefix.position; limit = prefix.limit;
+    }
     TableStream(unsigned char *data, int32_t size) noexcept
         : buffer(data), position(0), limit(size) {}
     void publish(int32_t *legacy) const noexcept {

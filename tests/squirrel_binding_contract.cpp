@@ -35,7 +35,7 @@ void * kinoko_sqplus_root_object(void) { return (void *)(intptr_t)(address(&root
 int32_t  kinoko_sqplus_select_vm(struct SQVM * vm) { kinoko_primary_vm = vm; return 1; }
 int32_t* kinoko_native_binding_type(int32_t category) {
     return category == -1 ? kinoko_sqplus_game_type(0,
-        [](int32_t, int32_t source) -> int32_t { return source; }) :
+        [](void*, void*) {}) :
         kinoko_sqplus_scalar_type(category);
 }
 }
@@ -198,15 +198,15 @@ void lookup_contract(HSQUIRRELVM vm) {
     int32_t context[2] = {static_cast<int32_t>(sq_gettop(vm)), address(vm)};
     // Use indices 1/2 exactly as a real native frame.
     require(context[0] == 2, "isolated variable test frame");
-    int32_t found = 0;
-    require(kinoko_sqplus_find_table_variable(&found, context) == 0 && found == data, "source table metadata lookup");
-    require(kinoko_sqplus_find_variable(context, &found) == 0 && found == data, "source raw metadata lookup");
+    void* found = nullptr;
+    require(kinoko_sqplus_find_table_variable(&found, context) == 0 && address(found) == data, "source table metadata lookup");
+    require(kinoko_sqplus_find_variable(context, &found) == 0 && address(found) == data, "source raw metadata lookup");
     sq_pop(vm, 1); sq_pushstring(vm, "absent", -1);
     sq_throwerror(vm, "sentinel");
     require(kinoko_sqplus_find_table_variable(&found, context) == -1 && found == 0, "missing table metadata");
     require(last_error(vm) == "sentinel", "table lookup does not overwrite last error");
-    found = 123;
-    require(kinoko_sqplus_find_variable(context, &found) == -1 && found == 123, "raw lookup preserves failed output");
+    found = reinterpret_cast<void*>(123);
+    require(kinoko_sqplus_find_variable(context, &found) == -1 && address(found) == 123, "raw lookup preserves failed output");
     require(last_error(vm) == "getVarInfo: Could not retrieve UserData", "raw lookup installs original error");
     sq_settop(vm, 0);
     table.view().push(vm); sq_pushstring(vm, "_vshort", -1); sq_newuserdata(vm, 19);
@@ -337,7 +337,7 @@ if(propertyActor.value != 123 || propertyActor.x != 7.25 || propertyActor.enable
     require(kinoko_sqplus_instance_get((struct SQVM *)(vm)) == 1 && integer(vm) == -25, "constant instance property"); sq_settop(vm, 0);
     info.flags = 0; store(metadata, info);
     instance.view().push(vm); sq_pushstring(vm, "value", -1);
-    int32_t resolved = 4, source = 4;
+    void* resolved = reinterpret_cast<void*>(4); int32_t source = 4;
     require(kinoko_sqplus_resolve_instance_variable((struct SQVM*)(uintptr_t)(address(vm)), 2, &resolved, &source) == 0 && !resolved && !source, "instance field rejects null native pointer");
 }
 
@@ -493,7 +493,7 @@ void mapped_property_contract(HSQUIRRELVM vm) {
     sq_pushuserpointer(vm, mapped);
     require(SQ_SUCCEEDED(sq_rawset(vm, -3)), "install declaring base pointer"); sq_pop(vm, 1);
     instance.view().push(vm); sq_pushstring(vm, "value", -1);
-    int32_t metadata = 0, source = 0;
+    void* metadata = nullptr; int32_t source = 0;
     require(kinoko_sqplus_resolve_instance_variable((struct SQVM*)(uintptr_t)(address(vm)), 2, &metadata, &source) == 1 &&
         source == address(mapped + 1), "original property resolver uses declaring base from __ot");
     require(sq_gettop(vm) == 2 && metadata != 0, "mapped resolution preserves caller stack");
@@ -510,7 +510,7 @@ void mapped_property_contract(HSQUIRRELVM vm) {
     mapping.view().push(vm); sq_pushinteger(vm, address(declaring_type));
     require(SQ_SUCCEEDED(sq_deleteslot(vm, -2, SQFalse)), "remove declaring base pointer"); sq_pop(vm, 1);
     instance.view().push(vm); sq_pushstring(vm, "value", -1);
-    metadata = source = 99;
+    metadata = reinterpret_cast<void*>(99); source = 99;
     require(!kinoko_sqplus_resolve_instance_variable((struct SQVM*)(uintptr_t)(address(vm)), 2, &metadata, &source) && !metadata && !source,
         "missing base mapping cannot fall back to primary pointer");
     require(sq_gettop(vm) == 2, "failed base resolution preserves stack");

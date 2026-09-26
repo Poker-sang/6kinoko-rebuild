@@ -1081,22 +1081,22 @@ extern "C" int32_t kinoko_register_act_script(void* script, void* object) {
     using namespace kinoko::act;
     if (!script || !object) return static_cast<int32_t>(E_FAIL);
     const LayerObjectView wrapper(object);
-    const auto environment = wrapper.get(&LayerObjectRecord::value);
+    const auto* environment = reinterpret_cast<const int32_t*>(wrapper.bytes(&LayerObjectRecord::value));
     if (environment[0] == static_cast<int32_t>(OT_NULL)) return static_cast<int32_t>(E_FAIL);
     auto* vm = wrapper.get(&LayerObjectRecord::vm);
-    if (!vm || !kinoko_publish_act_script_constants(vm, environment.data())) return static_cast<int32_t>(E_FAIL);
+    if (!vm || !kinoko_publish_act_script_constants(vm, environment)) return static_cast<int32_t>(E_FAIL);
     const ScriptStorageView record(script);
     if (!record.get(&ScriptStorageRecord::loaded)) return 0;
     bool ok = false;
     if (record.get(&ScriptStorageRecord::compiled)) {
-        ok = kinoko_execute_embedded_act_script(vm, script, environment.data()) != 0;
+        ok = kinoko_execute_embedded_act_script(vm, script, environment) != 0;
     } else {
         const char* path = kinoko_string_data(record.bytes(&ScriptStorageRecord::file_name));
-        ok = path && *path ? kinoko_compile_act_file(vm, path, environment.data()) != 0
-                          : kinoko_execute_act_source_script(vm, script, environment.data()) != 0;
+        ok = path && *path ? kinoko_compile_act_file(vm, path, environment) != 0
+                          : kinoko_execute_act_source_script(vm, script, environment) != 0;
     }
     if (!ok) return static_cast<int32_t>(E_FAIL);
-    refresh_act_script_callbacks(vm, script, environment.data());
+    refresh_act_script_callbacks(vm, script, environment);
     act_script_owners.emplace(environment[1], script);
     return 0;
 }

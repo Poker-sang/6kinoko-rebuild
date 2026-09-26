@@ -6844,12 +6844,12 @@ int main(int argc, char **argv) {
             kinoko_sqplus_object_copy_construct((void *)(intptr_t)((int32_t*)((char*)source + offsets[i])), (const void *)(intptr_t)(PTR(root + 1)));
             kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR((char*)destination + offsets[i])));
         }
-        CHECK(kinoko_actor_assign_instance(PTR(destination), PTR(source)) == PTR(destination));
+        CHECK(kinoko_actor_assign((KinokoActor*)destination, (KinokoActor*)source) == (KinokoActor*)destination);
         CHECK(destination[135] == 1234567 && destination[93] == 98765);
         CHECK(destination[7] == source[7] && destination[9] == source[9]);
         CHECK(((int32_t*)(intptr_t)source[7])[1] == 2);
         CHECK(((int32_t*)(intptr_t)source[7])[2] == 3);
-        CHECK(kinoko_actor_assign_instance(PTR(destination), PTR(destination)) == PTR(destination));
+        CHECK(kinoko_actor_assign((KinokoActor*)destination, (KinokoActor*)destination) == (KinokoActor*)destination);
         CHECK(((int32_t*)(intptr_t)source[7])[1] == 2);
         CHECK(((int32_t*)(intptr_t)source[7])[2] == 3);
         for (int i = 0; i < 7; ++i) {
