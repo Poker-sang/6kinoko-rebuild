@@ -257,6 +257,18 @@
     "retdec_valid_range": "kinoko_valid_range",
     "retdec_watch_g594": "kinoko_watch_map_binding",
     "retdec_watch_g644": "kinoko_watch_primary_vm",
-    "g_retdec_keyboard_state": "kinoko_keyboard_state"
+    "g_retdec_keyboard_state": "kinoko_keyboard_state",
+    "g_retdec_act_texture_slots": "g_kinoko_act_texture_slots",
+    "g_retdec_actor_manager_state": "g_kinoko_actor_manager_state",
+    "g_retdec_audio_manager_initialized": "g_kinoko_audio_manager_initialized",
+    "g_retdec_audio_manager_state": "g_kinoko_audio_manager_state",
+    "g_retdec_audio_master_volume": "g_kinoko_audio_master_volume",
+    "g_retdec_bgm_track": "g_kinoko_bgm_track",
+    "g_retdec_camera_state": "g_kinoko_camera_state",
+    "g_retdec_input_manager_state": "g_kinoko_input_manager_state",
+    "g_retdec_map_manager_state": "g_kinoko_map_manager_state",
+    "g_retdec_se_entries": "g_kinoko_se_entries",
+    "g_retdec_se_entry_count": "g_kinoko_se_entry_count",
+    "g_retdec_se_pool": "g_kinoko_se_pool"
   }
 }

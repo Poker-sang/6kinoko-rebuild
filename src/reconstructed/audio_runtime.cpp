@@ -118,12 +118,12 @@ struct AudioDevice {
 };
 // Declared before tracks: the device outlives all secondary-buffer owners.
 AudioDevice g_audio_device;
-ManagerRecord g_retdec_audio_manager_state{};
-int g_retdec_audio_manager_initialized = 0;
-SoundPool g_retdec_se_pool;
-SoundEntry g_retdec_se_entries[RETDEC_SE_MAX_ENTRIES];
-int g_retdec_se_entry_count = 0;
-BgmTrack g_retdec_bgm_track;
+ManagerRecord g_kinoko_audio_manager_state{};
+int g_kinoko_audio_manager_initialized = 0;
+SoundPool g_kinoko_se_pool;
+SoundEntry g_kinoko_se_entries[RETDEC_SE_MAX_ENTRIES];
+int g_kinoko_se_entry_count = 0;
+BgmTrack g_kinoko_bgm_track;
 std::list<BgmTrack> fading_tracks;
 inline int32_t& active_bgm_slot = kinoko_active_bgm_slot;
 inline char& packed_assets_slot = kinoko_packed_assets;
@@ -158,7 +158,7 @@ struct AudioWorkers {
     AudioWorkers(const AudioWorkers&) = delete;
     AudioWorkers& operator=(const AudioWorkers&) = delete;
 } audio_workers;
-float g_retdec_audio_master_volume = 1.0f;
+float g_kinoko_audio_master_volume = 1.0f;
 // The original C ABI publishes the currently selected BGM handle here. The
 // track pool owns playback resources; this slot is only its active identity.
 int32_t& active_bgm_handle() { return active_bgm_slot; }
@@ -285,8 +285,8 @@ static void kinoko_audio_clear_handle_allocations(HandleTable& table) noexcept {
     kinoko_audio_clear_queue(table.live_handles);
 }
 static void kinoko_audio_manager_destroy() noexcept {
-    if (!g_retdec_audio_manager_initialized) return;
-    auto& state = g_retdec_audio_manager_state;
+    if (!g_kinoko_audio_manager_initialized) return;
+    auto& state = g_kinoko_audio_manager_state;
     kinoko_audio_clear_queue(state.active.head);
     kinoko_audio_clear_queue(state.pending.head);
     kinoko_audio_clear_queue(state.retired.head);
@@ -294,7 +294,7 @@ static void kinoko_audio_manager_destroy() noexcept {
     DeleteCriticalSection(&state.handles.lock);
     DeleteCriticalSection(&state.lock);
     state = ManagerRecord{};
-    g_retdec_audio_manager_initialized = 0;
+    g_kinoko_audio_manager_initialized = 0;
 }
 
 static void kinoko_trace_audio_text(const char *label, const char *value)
@@ -628,9 +628,9 @@ static BgmTrack *kinoko_bgm_find_track(uint32_t handle)
 
     if (handle == 0)
         return NULL;
-    if (g_retdec_bgm_track.buffer.get() != NULL &&
-        g_retdec_bgm_track.handle == handle)
-        return &g_retdec_bgm_track;
+    if (g_kinoko_bgm_track.buffer.get() != NULL &&
+        g_kinoko_bgm_track.handle == handle)
+        return &g_kinoko_bgm_track;
     for (auto& track : fading_tracks)
         if (track.buffer && track.handle == handle) return &track;
     return NULL;
@@ -644,7 +644,7 @@ static void kinoko_bgm_apply_state_volume(BgmTrack *track,
     if (track == NULL || track->buffer.get() == NULL)
         return;
     track->volume = gain;
-    effective_gain = gain * g_retdec_audio_master_volume;
+    effective_gain = gain * g_kinoko_audio_master_volume;
     kinoko_set_dsound_volume(track->buffer.get(), effective_gain);
 }
 
@@ -816,7 +816,7 @@ static int kinoko_bgm_fill_chunk(BgmTrack *track, DWORD bytes)
 
 static void kinoko_bgm_release_track_locked(void)
 {
-    kinoko_bgm_release_state(&g_retdec_bgm_track);
+    kinoko_bgm_release_state(&g_kinoko_bgm_track);
 }
 
 static void kinoko_bgm_release_track(void)
@@ -830,7 +830,7 @@ static void kinoko_bgm_release_all_tracks_locked(void)
 {
     int index;
 
-    kinoko_bgm_release_state(&g_retdec_bgm_track);
+    kinoko_bgm_release_state(&g_kinoko_bgm_track);
     for (auto& track : fading_tracks) kinoko_bgm_release_state(&track);
     fading_tracks.clear();
     active_bgm_handle() = 0;
@@ -844,20 +844,20 @@ static void kinoko_bgm_release_all_tracks(void)
 }
 
 static void kinoko_se_entries_release() {
-    for (int index = 0; index < g_retdec_se_entry_count; ++index) {
-        auto& entry = g_retdec_se_entries[index];
+    for (int index = 0; index < g_kinoko_se_entry_count; ++index) {
+        auto& entry = g_kinoko_se_entries[index];
         if (entry.buffer) entry.buffer->Stop();
         entry.buffer.reset();
         entry.buffer_bytes = 0;
     }
-    for (auto& entry : g_retdec_se_entries) entry = SoundEntry{};
-    g_retdec_se_entry_count = 0;
+    for (auto& entry : g_kinoko_se_entries) entry = SoundEntry{};
+    g_kinoko_se_entry_count = 0;
 }
 
 static void kinoko_se_pool_release() {
     kinoko_se_entries_release();
-    for (auto& slot : g_retdec_se_pool.stream_slots) slot = SoundSlot{};
-    g_retdec_se_pool.initialized = 0;
+    for (auto& slot : g_kinoko_se_pool.stream_slots) slot = SoundSlot{};
+    g_kinoko_se_pool.initialized = 0;
 }
 
 static int kinoko_se_parse_wave_asset(const char *path,
@@ -965,7 +965,7 @@ static int kinoko_se_load_entry(int id, const char *source)
         return 0;
     }
     free(samples);
-    kinoko_set_dsound_volume(buffer, g_retdec_se_pool.master_volume);
+    kinoko_set_dsound_volume(buffer, g_kinoko_se_pool.master_volume);
 
     hr = (buffer)->SetCurrentPosition(0);
     if (FAILED(hr)) {
@@ -973,21 +973,21 @@ static int kinoko_se_load_entry(int id, const char *source)
         return 0;
     }
 
-    for (index = 0; index < g_retdec_se_entry_count; ++index) {
-        if (g_retdec_se_entries[index].id == id) {
-            g_retdec_se_entries[index].buffer.reset(buffer);
-            g_retdec_se_entries[index].buffer_bytes = sample_bytes;
+    for (index = 0; index < g_kinoko_se_entry_count; ++index) {
+        if (g_kinoko_se_entries[index].id == id) {
+            g_kinoko_se_entries[index].buffer.reset(buffer);
+            g_kinoko_se_entries[index].buffer_bytes = sample_bytes;
             return 1;
         }
     }
-    if (g_retdec_se_entry_count >= RETDEC_SE_MAX_ENTRIES) {
+    if (g_kinoko_se_entry_count >= RETDEC_SE_MAX_ENTRIES) {
         kinoko_release_dsound_buffer(buffer);
         return 0;
     }
-    g_retdec_se_entries[g_retdec_se_entry_count].id = id;
-    g_retdec_se_entries[g_retdec_se_entry_count].buffer.reset(buffer);
-    g_retdec_se_entries[g_retdec_se_entry_count].buffer_bytes = sample_bytes;
-    ++g_retdec_se_entry_count;
+    g_kinoko_se_entries[g_kinoko_se_entry_count].id = id;
+    g_kinoko_se_entries[g_kinoko_se_entry_count].buffer.reset(buffer);
+    g_kinoko_se_entries[g_kinoko_se_entry_count].buffer_bytes = sample_bytes;
+    ++g_kinoko_se_entry_count;
     kinoko_trace_i32("loadse:entry-loaded", id);
     return 1;
 }
@@ -998,9 +998,9 @@ static int kinoko_se_pool_initialize(void)
     int index;
     int created = 0;
 
-    if (g_retdec_se_pool.initialized)
+    if (g_kinoko_se_pool.initialized)
         return 1;
-    g_retdec_se_pool = SoundPool{};
+    g_kinoko_se_pool = SoundPool{};
     ZeroMemory(&format, sizeof(format));
     format.wFormatTag = 1;
     format.nChannels = 1;
@@ -1011,15 +1011,15 @@ static int kinoko_se_pool_initialize(void)
 
     for (index = 0; index < 32; ++index) {
         if (kinoko_create_secondary_buffer(&format, 0x40000,
-                                            g_retdec_se_pool.stream_slots[
+                                            g_kinoko_se_pool.stream_slots[
                                                 index].buffer.put())) {
-            g_retdec_se_pool.stream_slots[index].buffer_bytes = 0x40000;
-            g_retdec_se_pool.stream_slots[index].in_use = 0;
+            g_kinoko_se_pool.stream_slots[index].buffer_bytes = 0x40000;
+            g_kinoko_se_pool.stream_slots[index].in_use = 0;
             ++created;
         }
     }
-    g_retdec_se_pool.master_volume = 1.0f;
-    g_retdec_se_pool.initialized = 1;
+    g_kinoko_se_pool.master_volume = 1.0f;
+    g_kinoko_se_pool.initialized = 1;
     kinoko_trace_i32("40b520:secondary-created", created);
     return created != 0;
 }
@@ -1032,9 +1032,9 @@ static void kinoko_se_pool_set_volume(float gain)
         gain = 0.0f;
     if (gain > 1.0f)
         gain = 1.0f;
-    g_retdec_se_pool.master_volume = gain;
+    g_kinoko_se_pool.master_volume = gain;
     for (index = 0; index < 32; ++index)
-        kinoko_set_dsound_volume(g_retdec_se_pool.stream_slots[index].buffer.get(),
+        kinoko_set_dsound_volume(g_kinoko_se_pool.stream_slots[index].buffer.get(),
                                  gain);
 }
 
@@ -1046,9 +1046,9 @@ static void kinoko_bgm_apply_track_volume(float gain)
         gain = 0.0f;
     if (gain > 1.0f)
         gain = 1.0f;
-    g_retdec_audio_master_volume = gain;
-    kinoko_bgm_apply_state_volume(&g_retdec_bgm_track,
-                                  g_retdec_bgm_track.volume);
+    g_kinoko_audio_master_volume = gain;
+    kinoko_bgm_apply_state_volume(&g_kinoko_bgm_track,
+                                  g_kinoko_bgm_track.volume);
     for (auto& track : fading_tracks)
         kinoko_bgm_apply_state_volume(&track, track.volume);
 }
@@ -1070,7 +1070,7 @@ static void update_track_fade(BgmTrack& track, DWORD now) {
 }
 static void kinoko_bgm_update_fade_locked(void) {
     const DWORD now = timeGetTime();
-    update_track_fade(g_retdec_bgm_track, now);
+    update_track_fade(g_kinoko_bgm_track, now);
     for (auto& track : fading_tracks) update_track_fade(track, now);
 }
 
@@ -1103,7 +1103,7 @@ static void kinoko_bgm_begin_fade(DWORD duration, float target)
 {
     CriticalLock lock(&audio_workers.lock);
     kinoko_bgm_update_fade_locked();
-    kinoko_bgm_begin_fade_locked(&g_retdec_bgm_track, duration, target, 0);
+    kinoko_bgm_begin_fade_locked(&g_kinoko_bgm_track, duration, target, 0);
 
 }
 
@@ -1174,7 +1174,7 @@ static int kinoko_bgm_prepare_track_default_math(uint32_t handle, const char *pa
     std::unique_ptr<VorbisDecoder> decoder;
     VorbisDecoder::Format info;
     int error = 0;
-    BgmTrack *track = &g_retdec_bgm_track;
+    BgmTrack *track = &g_kinoko_bgm_track;
     IDirectSoundBuffer *buffer;
     unsigned char *scratch = NULL;
     short *decoded_scratch = NULL;
@@ -1290,7 +1290,7 @@ static int kinoko_bgm_prepare_track(uint32_t handle, const char *path,
 }
 
 static void retire_playback_request(uint32_t handle) {
-    auto& manager = g_retdec_audio_manager_state;
+    auto& manager = g_kinoko_audio_manager_state;
     if (!kinoko_audio_handle_lookup(&manager.handles, handle)) return;
     if (manager.active.head) manager.active.head->remove(handle);
     if (manager.retired.head && std::find(manager.retired.head->begin(),
@@ -1300,7 +1300,7 @@ static void retire_playback_request(uint32_t handle) {
 }
 
 static void release_retired_requests_locked() {
-    auto& manager = g_retdec_audio_manager_state;
+    auto& manager = g_kinoko_audio_manager_state;
     uint32_t handle;
     while (kinoko_audio_list_pop(manager.retired.head, &handle)) {
         if (auto* track = kinoko_bgm_find_track(handle)) kinoko_bgm_release_state(track);
@@ -1316,7 +1316,7 @@ static void release_retired_requests_locked() {
 
 static void kinoko_bgm_process_pending_locked(void)
 {
-    auto* list = g_retdec_audio_manager_state.pending.head;
+    auto* list = g_kinoko_audio_manager_state.pending.head;
     std::uint32_t handle;
 
     while (kinoko_audio_list_pop(list, &handle)) {
@@ -1343,10 +1343,10 @@ static void kinoko_bgm_process_pending_locked(void)
             continue;
         }
         buffer->ready = 1;
-        track = &g_retdec_bgm_track;
+        track = &g_kinoko_bgm_track;
         track->start_time = buffer->start_time;
         kinoko_audio_list_push(
-            g_retdec_audio_manager_state.active.head, handle);
+            g_kinoko_audio_manager_state.active.head, handle);
     }
 }
 
@@ -1441,7 +1441,7 @@ static void kinoko_bgm_service_all_locked(void)
 {
 #if !defined(RETDEC_DIAGNOSTIC_NO_BGM_SERVICE)
     kinoko_bgm_update_fade_locked();
-    auto* active = g_retdec_audio_manager_state.active.head;
+    auto* active = g_kinoko_audio_manager_state.active.head;
     if (!active) return;
     // 40AAE0 traverses active handles, not every slot in the backing store.
     for (auto cursor = active->begin(); cursor != active->end();) {
@@ -1455,28 +1455,28 @@ static void kinoko_bgm_service_all_locked(void)
 }
 
 static void kinoko_bgm_archive_current_track(void) {
-    if (!g_retdec_bgm_track.buffer) return;
+    if (!g_kinoko_bgm_track.buffer) return;
     // The BGM manager uses handle lists. The 32 fixed slots belong to the SE
     // pool, not to BGM: never evict an unrelated fading stream at slot 32.
-    fading_tracks.emplace_back(std::move(g_retdec_bgm_track));
-    g_retdec_bgm_track = BgmTrack{};
+    fading_tracks.emplace_back(std::move(g_kinoko_bgm_track));
+    g_kinoko_bgm_track = BgmTrack{};
 }
 
 static void kinoko_bgm_stop(int reset_position)
 {
 
 
-    if (g_retdec_bgm_track.buffer.get() == NULL)
+    if (g_kinoko_bgm_track.buffer.get() == NULL)
         return;
 
-            (g_retdec_bgm_track.buffer.get())->Stop();
+            (g_kinoko_bgm_track.buffer.get())->Stop();
     if (reset_position)
-        (g_retdec_bgm_track.buffer.get())->SetCurrentPosition(0);
-    g_retdec_bgm_track.playing = 0;
+        (g_kinoko_bgm_track.buffer.get())->SetCurrentPosition(0);
+    g_kinoko_bgm_track.playing = 0;
 }
 
 static ManagerRecord* kinoko_audio_manager_this() noexcept {
-    return &g_retdec_audio_manager_state;
+    return &g_kinoko_audio_manager_state;
 }
 
 
@@ -1534,8 +1534,8 @@ static bool kinoko_audio_handle_create(HandleTable* manager,std::uint32_t* outpu
 
 
 static void kinoko_audio_manager_construct() {
-    if (g_retdec_audio_manager_initialized) return;
-    auto& state = g_retdec_audio_manager_state;
+    if (g_kinoko_audio_manager_initialized) return;
+    auto& state = g_kinoko_audio_manager_state;
     state = ManagerRecord{};
     // Allocate every list before initializing either OS synchronization object.
     // A failed construction owns nothing and can be retried without leaks.
@@ -1558,7 +1558,7 @@ static void kinoko_audio_manager_construct() {
     InitializeCriticalSection(&state.lock);
     InitializeCriticalSection(&state.handles.lock);
     state.master_gain = state.stream_gain = 1.0f;
-    g_retdec_audio_manager_initialized = 1;
+    g_kinoko_audio_manager_initialized = 1;
 }
 
 
@@ -1567,8 +1567,8 @@ static std::uint32_t* allocate_playback_handle(ManagerRecord* manager,
     CriticalLock lock(&audio_workers.lock);
     if (!output) return nullptr;
     *output = 0;
-    if (!g_retdec_audio_manager_initialized) kinoko_audio_manager_construct();
-    if (g_retdec_audio_manager_initialized)
+    if (!g_kinoko_audio_manager_initialized) kinoko_audio_manager_construct();
+    if (g_kinoko_audio_manager_initialized)
         kinoko_audio_handle_create(&manager->handles, output);
     return output;
 }
@@ -1621,7 +1621,7 @@ static int32_t prepare_playback_request(ManagerRecord* this_ptr,
 
     if (queue_mode != 0) {
         kinoko_audio_list_push(
-            g_retdec_audio_manager_state.pending.head, handle);
+            g_kinoko_audio_manager_state.pending.head, handle);
         if (audio_workers.queue_event.get() != NULL)
             SetEvent(audio_workers.queue_event.get());
         return 1;
@@ -1637,7 +1637,7 @@ static int32_t prepare_playback_request(ManagerRecord* this_ptr,
     if (prepared) {
         buffer->ready = 1;
         kinoko_audio_list_push(
-            g_retdec_audio_manager_state.active.head, handle);
+            g_kinoko_audio_manager_state.active.head, handle);
         kinoko_trace("470220:prepared-sync");
     } else {
         retire_playback_request(handle);
@@ -1741,7 +1741,7 @@ int32_t kinoko_audio_stop_workers(void) {
     // 40A460 joins before releasing active, pending and retired resources.
     CriticalLock lock(&audio_workers.lock);
     kinoko_bgm_release_all_tracks_locked();
-    auto& manager = g_retdec_audio_manager_state;
+    auto& manager = g_kinoko_audio_manager_state;
     for (auto* queue : {&manager.active, &manager.pending, &manager.retired}) {
         if (queue->head) queue->head->clear();
         queue->count = 0;
@@ -1970,8 +1970,8 @@ int32_t kinoko_audio_stop_bgm(void) {
 
 int32_t kinoko_audio_play_sound(int32_t id) {
     kinoko_trace_i32("470980:se-id", id);
-    for (int index = 0; index < g_retdec_se_entry_count; ++index) {
-        const auto& entry = g_retdec_se_entries[index];
+    for (int index = 0; index < g_kinoko_se_entry_count; ++index) {
+        const auto& entry = g_kinoko_se_entries[index];
         if (entry.id != id) continue;
         auto* buffer = entry.buffer.get();
         if (!buffer) return 0;

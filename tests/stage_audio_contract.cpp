@@ -74,10 +74,10 @@ struct Module {
 
 extern "C" int kinoko_test_bgm_pause(void) {
     AudioTestBuffer buffer;
-    BgmTrack saved = std::move(g_retdec_bgm_track);
+    BgmTrack saved = std::move(g_kinoko_bgm_track);
     const int32_t old_handle = kinoko_active_bgm_slot;
-    g_retdec_bgm_track = BgmTrack{};
-    auto& track = g_retdec_bgm_track;
+    g_kinoko_bgm_track = BgmTrack{};
+    auto& track = g_kinoko_bgm_track;
     track.buffer.reset(&buffer);
     track.handle = kinoko_active_bgm_slot = 123;
     track.buffer_bytes = 65536;
@@ -96,7 +96,7 @@ extern "C" int kinoko_test_bgm_pause(void) {
         buffer.position == 4096 && track.playing && track.started;
     kinoko_bgm_stop_for_handle(123);
     const bool stopped = buffer.position == 0 && !track.started && !track.playing;
-    g_retdec_bgm_track = std::move(saved);
+    g_kinoko_bgm_track = std::move(saved);
     kinoko_active_bgm_slot = old_handle;
     CHECK(paused && serviced && resumed && stopped);
     CHECK(buffer.releases == 1);
@@ -107,13 +107,13 @@ extern "C" int kinoko_test_bgm_pause(void) {
 extern "C" int kinoko_test_sound_cleanup(int32_t (*clear_all)(void)) {
     AudioTestBuffer buffers[3];
     SoundCleanupGuard cleanup;
-    g_retdec_se_entry_count = 2;
-    g_retdec_se_entries[0].buffer.reset(&buffers[0]);
-    g_retdec_se_entries[1].buffer.reset(&buffers[1]);
-    g_retdec_se_pool.stream_slots[0].buffer.reset(&buffers[2]);
-    g_retdec_se_pool.initialized = 1;
+    g_kinoko_se_entry_count = 2;
+    g_kinoko_se_entries[0].buffer.reset(&buffers[0]);
+    g_kinoko_se_entries[1].buffer.reset(&buffers[1]);
+    g_kinoko_se_pool.stream_slots[0].buffer.reset(&buffers[2]);
+    g_kinoko_se_pool.initialized = 1;
     CHECK(clear_all() == 1);
-    CHECK(!g_retdec_se_entry_count && !g_retdec_se_pool.initialized);
+    CHECK(!g_kinoko_se_entry_count && !g_kinoko_se_pool.initialized);
     CHECK(clear_all() == 1);
     for (const auto& buffer : buffers) CHECK(buffer.releases == 1 && buffer.refs == 0);
     CHECK(buffers[0].stops == 1 && buffers[1].stops == 1);

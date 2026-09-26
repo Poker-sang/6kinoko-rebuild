@@ -68,7 +68,7 @@ int main() {
     CHECK(queue.head == nullptr);
 
     kinoko_audio_manager_construct();
-    CHECK(g_retdec_audio_manager_initialized);
+    CHECK(g_kinoko_audio_manager_initialized);
     auto& manager = *kinoko_audio_manager_this();
     CHECK(manager.master_gain == 1 && manager.stream_gain == 1);
     std::uint32_t first = 0, second = 0;
@@ -111,14 +111,14 @@ int main() {
         CHECK(source.releases == 1);
     }
     Buffer sound;
-    g_retdec_se_entry_count = 1;
-    g_retdec_se_entries[0].id = 123;
-    g_retdec_se_entries[0].buffer.reset(&sound);
+    g_kinoko_se_entry_count = 1;
+    g_kinoko_se_entries[0].id = 123;
+    g_kinoko_se_entries[0].buffer.reset(&sound);
     sound.status = DSBSTATUS_PLAYING;
     CHECK(kinoko_audio_play_sound(123) == 1);
     CHECK(sound.stops == 1 && sound.plays == 1 && sound.position == 0);
     kinoko_se_entries_release();
-    CHECK(sound.releases == 1 && g_retdec_se_entry_count == 0);
+    CHECK(sound.releases == 1 && g_kinoko_se_entry_count == 0);
     kinoko_se_entries_release();
     CHECK(sound.releases == 1);
 
@@ -166,9 +166,9 @@ int main() {
 
     // Retired playback leaves the active queue before the loader frees its owner.
     Buffer retired_buffer;
-    g_retdec_bgm_track.buffer.reset(&retired_buffer);
-    g_retdec_bgm_track.handle = first;
-    g_retdec_bgm_track.retirement_requested = true;
+    g_kinoko_bgm_track.buffer.reset(&retired_buffer);
+    g_kinoko_bgm_track.handle = first;
+    g_kinoko_bgm_track.retirement_requested = true;
     kinoko_active_bgm_slot = first;
     manager.active.head->push_back(first);
     kinoko_bgm_service_all_locked();
@@ -181,7 +181,7 @@ int main() {
     // More than 32 overlapping BGM streams must not evict an unrelated owner.
     std::array<Buffer, 34> overlapping;
     for (auto& buffer : overlapping) {
-        g_retdec_bgm_track.buffer.reset(&buffer);
+        g_kinoko_bgm_track.buffer.reset(&buffer);
         kinoko_bgm_archive_current_track();
     }
     CHECK(fading_tracks.size() == overlapping.size());
@@ -195,9 +195,9 @@ int main() {
     CHECK(kinoko_audio_shutdown_resources() == 1);
     CHECK(!audio_workers.initialized && !audio_workers.update_thread);
     CHECK(!audio_workers.loader_thread && !audio_workers.queue_event && !audio_workers.stop_event);
-    CHECK(!g_retdec_audio_manager_initialized);
+    CHECK(!g_kinoko_audio_manager_initialized);
     kinoko_audio_manager_construct();
-    CHECK(g_retdec_audio_manager_initialized);
+    CHECK(g_kinoko_audio_manager_initialized);
     CHECK(kinoko_audio_shutdown_resources() == 1);
     std::puts("PASS: audio layouts, handles, FIFO, buffer ownership, native SDK calls, CV3 and worker teardown");
 }

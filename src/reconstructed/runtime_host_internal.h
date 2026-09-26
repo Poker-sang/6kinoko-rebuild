@@ -110,7 +110,7 @@
 #define kinoko_compile_environment_slot kinoko_null_object_value
 
 #define RETDEC_ACT_TEXTURE_SLOT_COUNT KINOKO_TEXTURE_CAPACITY
-#define g_retdec_act_texture_slots kinoko_texture_slots
+#define g_kinoko_act_texture_slots kinoko_texture_slots
 
 #ifdef __cplusplus
 extern "C" {
