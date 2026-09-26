@@ -1879,11 +1879,13 @@ int32_t retdec_begin_stage_this(int32_t resource_ptr, int32_t stage)
             for (int32_t index = 0;; ++index) {
                 const auto active = field<int32_t>(resource_ptr + 12);
                 const ActPublicationView current(pointer<void>(active));
-                const auto begin = current.get(&ActPublicationRecord::layer_begin);
-                const auto end = current.get(&ActPublicationRecord::layer_end);
-                if (!begin || end < begin || index >= (end - begin) / 4) break;
-                const auto layer = field<int32_t>(begin + index * 4);
-                retdec_execute_act_callback(layer ? layer + 204 : 0, 4, "act:layer-callback-init");
+                const auto layers = current.get(&ActPublicationRecord::layers);
+                if (!kinoko::act::ordered_layers(layers) ||
+                    index >= kinoko::act::layer_distance(layers)) break;
+                auto* layer = kinoko::act::layer_at(layers, index);
+                const auto script = layer ? address(kinoko::act::LayerStorageView(layer).bytes(
+                    &kinoko::act::LayerStorageRecord::script)) : 0;
+                retdec_execute_act_callback(script, 4, "act:layer-callback-init");
             } // callback failures do not roll back the active state or skip later layers
         }
     }
