@@ -946,6 +946,18 @@ if(KINOKO_BUILD_ORIGINAL_ORACLE)
     list(APPEND KINOKO_TOOL_TARGETS kinoko_original_vm_oracle kinoko_original_vm_probe)
 endif()
 
+# Migration contracts are compiled with every Win32 build. Execution remains
+# opt-in, separate from the existing CI asset-free test selection (AGENTS.md).
+add_executable(kinoko_act_layer_storage_contract tests/act_layer_storage_contract.cpp)
+target_include_directories(kinoko_act_layer_storage_contract PRIVATE include)
+target_compile_options(kinoko_act_layer_storage_contract PRIVATE /O2)
+option(KINOKO_REGISTER_MIGRATION_TESTS "Register opt-in migration contracts" OFF)
+if(KINOKO_REGISTER_MIGRATION_TESTS)
+    add_test(NAME act_layer_storage_contract COMMAND kinoko_act_layer_storage_contract)
+endif()
+
+list(APPEND KINOKO_TOOL_TARGETS kinoko_act_layer_storage_contract)
+
 foreach(config Debug Release RelWithDebInfo MinSizeRel)
     string(TOUPPER "${config}" config_upper)
     set_target_properties(
@@ -965,13 +977,3 @@ set_source_files_properties(src/reconstructed/map_manager.cpp PROPERTIES COMPILE
 
 # Angle lookup must honor the caller rounding mode and original float stores.
 set_source_files_properties(src/reconstructed/angle_math.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")
-
-# Migration contracts are compiled with every Win32 build. Execution remains
-# opt-in, separate from the existing CI asset-free test selection (AGENTS.md).
-add_executable(kinoko_act_layer_storage_contract tests/act_layer_storage_contract.cpp)
-target_include_directories(kinoko_act_layer_storage_contract PRIVATE include)
-target_compile_options(kinoko_act_layer_storage_contract PRIVATE /O2)
-option(KINOKO_REGISTER_MIGRATION_TESTS "Register opt-in migration contracts" OFF)
-if(KINOKO_REGISTER_MIGRATION_TESTS)
-    add_test(NAME act_layer_storage_contract COMMAND kinoko_act_layer_storage_contract)
-endif()

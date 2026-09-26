@@ -76,8 +76,8 @@ ctest --test-dir $BuildTree -C "<configuration>" --output-on-failure
 - `-DKINOKO_RETDEC_DIAGNOSTIC_NO_BGM_SERVICE=ON`：诊断时停用 BGM 环形缓冲服务。
 - `-DKINOKO_RETDEC_DIAGNOSTIC_NO_BGM_WRITE=ON`：诊断时跳过 BGM 写入。
 - `-DKINOKO_RETDEC_MAP_FILE=<path>`：输出链接 map 文件。
-- `-DKINOKO_ENABLE_SQUIRREL_CPP_VM=ON`：启用实验性的 C++ Squirrel VM，要求
-  `..\squirrel-2.2.2\SQUIRREL2` 存在。
+- `-DKINOKO_ENABLE_SQUIRREL_CPP_VM=ON`：兼容旧配置的选项。当前默认使用仓库内
+  `third_party\squirrel-2.2.2`，不需要相邻的旧源码目录。
 
 生成 EXE 后必须把原版的三个 DAT 复制到 EXE 同目录：
 

@@ -97,8 +97,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("file", type=Path)
     parser.add_argument("--function", default=".")
-    parser.add_argument("--opcodes", type=Path, default=Path(__file__).resolve().parents[2]
-                        / "squirrel-2.2.2/SQUIRREL2/squirrel/sqopcodes.h")
+    parser.add_argument("--opcodes", type=Path, default=Path(__file__).resolve().parents[1]
+                        / "third_party/squirrel-2.2.2/squirrel/sqopcodes.h")
     args = parser.parse_args()
     reader = Reader(args.file.read_bytes())
     reader.tag(b"\xfa\xfaRIQS")
