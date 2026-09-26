@@ -28,7 +28,7 @@ int32_t bind_variable(int32_t* object, int32_t* instance_type, int32_t offset,
     // type/short payload is an invalid binding, not permission to corrupt it.
     if (!payload) return 0;
     Variable info{};
-    kinoko_sqplus_initialize_variable(reinterpret_cast<int32_t*>(&info), offset, category, address(instance_type), kinoko_native_binding_type(category), size, flags);
+    kinoko_sqplus_initialize_variable(&info, offset, category, address(instance_type), kinoko_native_binding_type(category), size, flags);
     store(payload, info);
     return kinoko_sqplus_install_variable_handlers(object);
 }
@@ -58,7 +58,7 @@ extern "C" void * kinoko_sqplus_bind_function(void * output, void * native, cons
     return output;
 }
 
-extern "C" void * kinoko_sqplus_bind_object_function(int32_t* output, void * object, void * native, const char* name, const char* mask) {
+extern "C" void * kinoko_sqplus_bind_object_function(void* output, void * object, void * native, const char* name, const char* mask) {
     auto* vm = current_vm();
     ObjectView(object).push(vm);
     auto* result = kinoko_sqplus_bind_function(output, native, name, mask);
@@ -96,7 +96,7 @@ extern "C" void * kinoko_sqplus_create_variable(void * object, const char * name
     return upstream::sqplus_create_variable(current_vm(), ObjectView(object).value(), name_address);
 }
 
-extern "C" int32_t* kinoko_sqplus_initialize_variable(int32_t* output, int32_t offset, int32_t category, int32_t instance_type, int32_t* value_type, int32_t size, int32_t flags) {
+extern "C" void* kinoko_sqplus_initialize_variable(void* output, int32_t offset, int32_t category, int32_t instance_type, int32_t* value_type, int32_t size, int32_t flags) {
     const Variable info{offset, category, instance_type, address(value_type),
         static_cast<uint16_t>(size), static_cast<uint16_t>(flags)};
     upstream::sqplus_variable_metadata(current_vm(),

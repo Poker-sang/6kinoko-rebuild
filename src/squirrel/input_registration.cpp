@@ -132,20 +132,20 @@ extern "C" int32_t kinoko_input_initialize_script_instance(KinokoInputManager* m
         kinoko_input_manager_construct_devices(manager, static_cast<uint32_t>(kinoko_input_snapshot.controller_count));
         devices_constructed = true;
     }
-    retdec_trace("46e6f0:begin");
-    retdec_trace_i32("46e6f0:this", static_cast<int32_t>(reinterpret_cast<uintptr_t>(manager)));
-    retdec_trace_i32("46e6f0:g644", static_cast<int32_t>(reinterpret_cast<uintptr_t>(host.vm)));
+    kinoko_trace("46e6f0:begin");
+    kinoko_trace_i32("46e6f0:this", static_cast<int32_t>(reinterpret_cast<uintptr_t>(manager)));
+    kinoko_trace_i32("46e6f0:g644", static_cast<int32_t>(reinterpret_cast<uintptr_t>(host.vm)));
     const auto* input_class = static_cast<const int32_t*>(host.input_class);
-    retdec_trace_i32("46e6f0:g629-type", input_class[0]);
-    retdec_trace_i32("46e6f0:g629-data", input_class[1]);
+    kinoko_trace_i32("46e6f0:g629-type", input_class[0]);
+    kinoko_trace_i32("46e6f0:g629-data", input_class[1]);
     std::array<int32_t, 3> instance{};
     kinoko_sqplus_object_new_instance(instance.data(), host.input_class);
-    retdec_trace_i32("46e6f0:instance-type", instance[1]);
-    retdec_trace_i32("46e6f0:instance-data", instance[2]);
+    kinoko_trace_i32("46e6f0:instance-type", instance[1]);
+    kinoko_trace_i32("46e6f0:instance-data", instance[2]);
     kinoko_sqplus_object_assign(manager->script_object, instance.data());
     kinoko_sqplus_object_destroy(instance.data());
     kinoko_sqplus_object_set_instance(manager->script_object, manager);
     kinoko_sqplus_object_raw_set_name(host.root, "input", manager->script_object);
-    retdec_trace("46e6f0:done");
+    kinoko_trace("46e6f0:done");
     return 1;
 }

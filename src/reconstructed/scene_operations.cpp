@@ -6,9 +6,9 @@
 #include <windows.h>
 #include <cstring>
 extern "C" {
-void retdec_trace(const char*);
-void retdec_trace_i32(const char*,int32_t);
-void retdec_trace_squirrel_name(const char*,int32_t);
+void kinoko_trace(const char*);
+void kinoko_trace_i32(const char*,int32_t);
+void kinoko_trace_squirrel_name(const char*,int32_t);
 }
 namespace {
 using namespace kinoko::actor;
@@ -23,9 +23,9 @@ extern "C" void kinoko_actor_move_with_camera(KinokoActorManager* manager,Kinoko
     const ManagerView owner(manager);
     const kinoko::camera::View view(camera);
     if(trace<=16) {
-        retdec_trace_i32("actor:move-dx",bits(dx)); retdec_trace_i32("actor:move-dy",bits(dy));
-        retdec_trace_i32("actor:move-camera-left-before",bits(view.get(&kinoko::camera::Record::bounds).left));
-        retdec_trace_i32("actor:move-camera-right-before",bits(view.get(&kinoko::camera::Record::bounds).right));
+        kinoko_trace_i32("actor:move-dx",bits(dx)); kinoko_trace_i32("actor:move-dy",bits(dy));
+        kinoko_trace_i32("actor:move-camera-left-before",bits(view.get(&kinoko::camera::Record::bounds).left));
+        kinoko_trace_i32("actor:move-camera-right-before",bits(view.get(&kinoko::camera::Record::bounds).right));
     }
     // 46260C jumps past BOTH actor movement and camera movement for an empty iteration.
     if(!owner.get(&ManagerPrefix::iteration_count)) return;
@@ -57,8 +57,8 @@ extern "C" void kinoko_actor_move_with_camera(KinokoActorManager* manager,Kinoko
     bounds.left+=dx; bounds.top+=dy; bounds.right+=dx; bounds.bottom+=dy;
     view.set(&kinoko::camera::Record::bounds,bounds);
     if(trace<=16) {
-        retdec_trace_i32("actor:move-camera-left-after",bits(bounds.left));
-        retdec_trace_i32("actor:move-camera-right-after",bits(bounds.right));
+        kinoko_trace_i32("actor:move-camera-left-after",bits(bounds.left));
+        kinoko_trace_i32("actor:move-camera-right-after",bits(bounds.right));
     }
 }
 extern "C" KinokoRenderLayer* kinoko_actor_render_layer_object(KinokoActorManager* manager,uint32_t index) {
@@ -66,7 +66,7 @@ extern "C" KinokoRenderLayer* kinoko_actor_render_layer_object(KinokoActorManage
 }
 extern "C" void kinoko_actor_trace_render_layers(KinokoActorManager* manager) {
     const char* labels[]={"actor:layer-back","actor:layer-middle","actor:layer-front","actor:layer-water"};
-    for(uint32_t i=0;i<4;++i) retdec_trace_i32(labels[i],address(kinoko_actor_render_layer_object(manager,i)));
+    for(uint32_t i=0;i<4;++i) kinoko_trace_i32(labels[i],address(kinoko_actor_render_layer_object(manager,i)));
 }
 extern "C" void* kinoko_scene_create_render_layer(const char* name) {
     if(!name) return nullptr; // existing script-entry guard
@@ -81,11 +81,11 @@ extern "C" void* kinoko_scene_create_render_layer(const char* name) {
     }
     if(!actor_layer) layer=kinoko_map_make_render_layer(objects.map,name);
     if(!layer) return nullptr; // existing null-layer compatibility guard
-    retdec_trace_squirrel_name("map:render-order-layer",address(name));
+    kinoko_trace_squirrel_name("map:render-order-layer",address(name));
     static volatile LONG trace_count;
     if(InterlockedIncrement(&trace_count)<=16) {
-        retdec_trace("46a210:entry"); retdec_trace_i32("46a210:value",address(layer));
-        retdec_trace_i32("46a210:g613",kinoko_render_queue_identity());
+        kinoko_trace("46a210:entry"); kinoko_trace_i32("46a210:value",address(layer));
+        kinoko_trace_i32("46a210:g613",kinoko_render_queue_identity());
     }
     return kinoko_render_queue_append(layer); // append even duplicates, in script order
 }

@@ -41,8 +41,8 @@ extern "C" KinokoActLayer* kinoko_act_layer_initialize(KinokoActLayer* layer, SQ
     keys.set(&LayerListRecord::count, int32_t{0});
     timelines.set(&LayerListRecord::head, static_cast<KeyNode*>(nullptr));
     timelines.set(&LayerListRecord::count, int32_t{0});
-    if (!retdec_act_make_list(reinterpret_cast<int32_t*>(keys.bytes(&LayerListRecord::head))) ||
-        !retdec_act_make_list(reinterpret_cast<int32_t*>(timelines.bytes(&LayerListRecord::head)))) {
+    if (!kinoko_act_make_list(reinterpret_cast<int32_t*>(keys.bytes(&LayerListRecord::head))) ||
+        !kinoko_act_make_list(reinterpret_cast<int32_t*>(timelines.bytes(&LayerListRecord::head)))) {
         kinoko_act_list_drop_storage(address(keys.get(&LayerListRecord::head)));
         kinoko_act_list_drop_storage(address(timelines.get(&LayerListRecord::head)));
         keys.set(&LayerListRecord::head, static_cast<KeyNode*>(nullptr));
@@ -51,7 +51,7 @@ extern "C" KinokoActLayer* kinoko_act_layer_initialize(KinokoActLayer* layer, SQ
         return nullptr;
     }
     const auto script = record.view(&LayerStorageRecord::script);
-    retdec_construct_cact_script(address(script.data()));
+    kinoko_construct_cact_script(address(script.data()));
     for (const auto member : {&ScriptStorageRecord::initialize, &ScriptStorageRecord::update,
                               &ScriptStorageRecord::release})
         script.view(member).set(&ActCallbackRecord::vm, vm);
@@ -69,18 +69,18 @@ extern "C" KinokoActLayer* kinoko_act_layer_initialize(KinokoActLayer* layer, SQ
                       kinoko_act_host_symbols()->layer_layout_vtable);
     if (vm && !kinoko_sqrat_new_table(vm,
             reinterpret_cast<int32_t*>(script_object.bytes(&LayerObjectRecord::value)))) {
-        retdec_destroy_cact_layer(address(layer));
+        kinoko_destroy_cact_layer(address(layer));
         return nullptr;
     }
     association.set(&LayerAssociationRecord::property_aliases, std::array<unsigned char, 68>{});
     return layer;
 }
 
-int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
+int32_t kinoko_construct_cact_layer(int32_t layer, int32_t vm) {
     return address(kinoko_act_layer_initialize(pointer<KinokoActLayer>(layer), pointer<SQVM>(vm)));
 }
 
-int32_t retdec_act_make_layer(void) {
+int32_t kinoko_act_make_layer(void) {
     // Parent document owns the allocation; containers and script references
     // are initialized by the same constructor used by cloning/publication.
     auto layer = std::unique_ptr<KinokoActLayer, decltype(&std::free)>(
@@ -115,7 +115,7 @@ extern "C" void kinoko_act_layer_clear(KinokoActLayer* layer)
         std::memcpy(object.bytes(&LayerObjectRecord::value), &empty, sizeof(empty));
         object.set(&LayerObjectRecord::owns_reference, uint8_t{0});
     }
-    retdec_destroy_cact_script(address(record.bytes(&LayerStorageRecord::script)));
+    kinoko_destroy_cact_script(address(record.bytes(&LayerStorageRecord::script)));
     kinoko_act_list_drop_storage(address(timelines.get(&LayerListRecord::head)));
     timelines.set(&LayerListRecord::head, static_cast<KeyNode *>(nullptr));
     kinoko_act_list_drop_storage(address(keys.get(&LayerListRecord::head)));
@@ -132,6 +132,6 @@ extern "C" void kinoko_act_layer_clear(KinokoActLayer* layer)
     association.set(&LayerAssociationRecord::children, DocumentPointerSpan<KinokoActLayer>{});
 }
 
-void retdec_destroy_cact_layer(int32_t layer) {
+void kinoko_destroy_cact_layer(int32_t layer) {
     kinoko_act_layer_clear(pointer<KinokoActLayer>(layer));
 }

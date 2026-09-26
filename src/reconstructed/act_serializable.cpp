@@ -52,6 +52,6 @@ extern "C" int32_t __fastcall kinoko_method_destroy_serializable(int32_t object,
     if (!object) return 0;
     // 446210: only classes with their deleting destructor at slot four use
     // this entry. C2DLayout and C2DMapLayout have a different slot arrangement.
-    return retdec_call_thiscall1_result(pointer<void>(object),
+    return kinoko_call_thiscall1_result(pointer<void>(object),
         field<void*>(field<int32_t>(object)+16),1);
 }

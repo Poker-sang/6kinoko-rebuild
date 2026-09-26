@@ -19,7 +19,7 @@ using namespace kinoko::map;
 using namespace kinoko::render;
 using kinoko::legacy::address;
 using kinoko::legacy::pointer;
-struct VisibleChip { retdec_mcd_chip *chip; Placement *placement; int32_t index; };
+struct VisibleChip { kinoko_mcd_chip *chip; Placement *placement; int32_t index; };
 
 Position3 world_position(KinokoActLayer *layer) {
     Position3 result{};
@@ -33,7 +33,7 @@ Position3 world_position(KinokoActLayer *layer) {
 }
 }
 
-extern "C" int32_t retdec_map_sprite_init(int32_t sprite, int32_t handle, const unsigned char *bytes) {
+extern "C" int32_t kinoko_map_sprite_init(int32_t sprite, int32_t handle, const unsigned char *bytes) {
     return initialize_chip_quad(pointer<QuadRecord>(sprite),handle,reinterpret_cast<const ChipDefinition *>(bytes));
 }
 
@@ -53,7 +53,7 @@ extern "C" int32_t kinoko_map_update_visible(KinokoActLayout *layout,
     std::vector<VisibleChip> visible;
     auto cache=map.get(&LayoutRecord::render_scan_cache);
     if (!query_visible(layout,&cache,left,top,right,bottom,
-        [&](retdec_mcd_chip *chip, Placement *record, int32_t index) {
+        [&](kinoko_mcd_chip *chip, Placement *record, int32_t index) {
             visible.push_back({chip,record,index}); return true;
         })) return E_FAIL;
     map.set(&LayoutRecord::render_scan_cache,cache);
@@ -81,7 +81,7 @@ extern "C" int32_t kinoko_map_update_visible(KinokoActLayout *layout,
         } else {
             const auto references=map.get(&LayoutRecord::texture_references);
             auto *texture=references.begin!=references.end ? references.begin[visible[i].index] :
-                retdec_mcd_find_texture(data,chip.texture_id);
+                kinoko_mcd_find_texture(data,chip.texture_id);
             if (!texture || !initialize_chip_quad(output+i,texture->handle,definition)) continue;
         }
         // 434DC7/434DDA store integer subtraction + world origin before translation.
@@ -99,7 +99,7 @@ extern "C" int32_t kinoko_map_update_visible(KinokoActLayout *layout,
         quad.set(&QuadRecord::vertices,vertices);
     }
     map.set(&LayoutRecord::render_count,static_cast<int32_t>(visible.size()));
-    retdec_trace_i32("map:update-draw-records",static_cast<int32_t>(visible.size()));
+    kinoko_trace_i32("map:update-draw-records",static_cast<int32_t>(visible.size()));
     return 0;
 }
 

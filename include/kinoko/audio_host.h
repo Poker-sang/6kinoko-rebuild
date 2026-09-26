@@ -15,10 +15,10 @@ extern char kinoko_packed_assets;
 extern int32_t kinoko_audio_primary_device_slot;
 extern char* kinoko_audio_device_slot;
 extern int32_t kinoko_audio_listener_slot;
-void retdec_trace(const char* message);
-void retdec_trace_i32(const char* label, int32_t value);
-void retdec_trace_hresult(const char* label, long value);
-void retdec_trace_squirrel_name(const char* label, int32_t name);
+void kinoko_trace(const char* message);
+void kinoko_trace_i32(const char* label, int32_t value);
+void kinoko_trace_hresult(const char* label, long value);
+void kinoko_trace_squirrel_name(const char* label, int32_t name);
 #ifdef __cplusplus
 }
 #endif

@@ -28,7 +28,7 @@ int32_t kinoko_act_append_blit(KinokoActRuntime* resource, int32_t x, int32_t y,
     int32_t width, int32_t height, KinokoActResource* texture_resource, int32_t sx, int32_t sy,
     int32_t blend, float alpha);
 /* Shared script callback still carries integer receiver slots. */
-int32_t retdec_act_bitblt_this(int32_t resource, int32_t x, int32_t y,
+int32_t kinoko_act_bitblt_this(int32_t resource, int32_t x, int32_t y,
     int32_t width, int32_t height, int32_t texture_resource, int32_t sx, int32_t sy,
     int32_t blend, float alpha);
 #ifdef __cplusplus

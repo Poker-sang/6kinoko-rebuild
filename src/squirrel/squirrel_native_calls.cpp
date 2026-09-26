@@ -13,7 +13,7 @@ extern "C" int32_t function_471720(int32_t, int32_t, int32_t);
 
 extern "C" {
 extern char kinoko_sqrat_trace_enabled;
-void retdec_trace_i32(const char*, int32_t);
+void kinoko_trace_i32(const char*, int32_t);
 }
 
 namespace {
@@ -130,7 +130,7 @@ int32_t kinoko_native_invoke_integer_member(HSQUIRRELVM machine) {
     const auto self = native_self(vm);
     SQInteger argument = 0;
     if (!method || !self || SQ_FAILED(sq_getinteger(vm, 2, &argument))) return 0;
-    retdec_call_thiscall1(pointer(self), pointer(method), argument);
+    kinoko_call_thiscall1(pointer(self), pointer(method), argument);
     return 0;
 }
 } // namespace
@@ -141,14 +141,14 @@ extern "C" int32_t function_445730(int32_t id) { return kinoko_native_integer_me
 namespace {
 int32_t kinoko_native_invoke_nullary_member(HSQUIRRELVM machine) {
     auto vm=machine;
-    retdec_trace_i32("450950:zero-wrapper-entry", address(machine));
+    kinoko_trace_i32("450950:zero-wrapper-entry", address(machine));
     if (!vm || sq_gettop(vm) < 2) return 0;
     const auto method = word(capture(vm, false));
     const auto self = native_self(vm);
     if (!method || !self) return 0;
-    retdec_trace_i32("450950:zero-wrapper-method", method);
-    retdec_trace_i32("450950:zero-wrapper-instance", self);
-    retdec_call_thiscall0(pointer(self), pointer(method));
+    kinoko_trace_i32("450950:zero-wrapper-method", method);
+    kinoko_trace_i32("450950:zero-wrapper-instance", self);
+    kinoko_call_thiscall0(pointer(self), pointer(method));
     return 0;
 }
 } // namespace

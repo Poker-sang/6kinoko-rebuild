@@ -18,7 +18,7 @@ struct ChipResourceRecord {
     uint32_t unknown32;
     legacy::StringRecord source_name;
     uint32_t unknown60;
-    retdec_mcd_data *data;
+    kinoko_mcd_data *data;
     kinoko::native::upstream::CountedControl *shared_data; // one strong reference
     legacy::StringRecord loaded_path;
     uint32_t unknown96;

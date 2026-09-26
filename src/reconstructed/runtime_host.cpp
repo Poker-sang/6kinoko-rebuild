@@ -6,6 +6,9 @@
 #include "kinoko/input_manager.h"
 #include <array>
 #include <cstddef>
+#include "kinoko/legacy_string.hpp"
+#include "kinoko/squirrel_host_object.hpp"
+#include "kinoko/squirrel_variable_record.hpp"
 
 namespace {
 // Retain the established host extents; record sizes are verified prefixes,
@@ -27,20 +30,20 @@ static_assert(sizeof(collision_state) == 120 && sizeof(global_callback) == 28);
 
 #pragma comment(linker, "/alternatename:_D3DXCreateTexture@32=_D3DXCreateTexture")
 
-int32_t retdec_primary_shared_state;
+int32_t kinoko_primary_shared_state;
 
-int32_t retdec_release_watch_data[8];
+int32_t kinoko_release_watch_data[8];
 
-int32_t retdec_release_watch_count;
+int32_t kinoko_release_watch_count;
 
-int32_t retdec_is_release_watch_data(int32_t data) {
+int32_t kinoko_is_release_watch_data(int32_t data) {
     int32_t index;
 
     if (data == 0)
         return 0;
-    for (index = 0; index < retdec_release_watch_count && index < 8;
+    for (index = 0; index < kinoko_release_watch_count && index < 8;
          ++index) {
-        if (retdec_release_watch_data[index] == data)
+        if (kinoko_release_watch_data[index] == data)
             return 1;
     }
     return 0;
@@ -74,7 +77,10 @@ char kinoko_ime_enabled = 0;
 
 int32_t kinoko_ime_cursor = 0;
 
-int32_t kinoko_act_script_extension[7] = {0, 0, 0, 0, 0, 15, 0};
+KinokoScriptExtension kinoko_act_script_extension{{}, 0, 15, 0};
+static_assert(sizeof(KinokoScriptExtension) == 28);
+static_assert(offsetof(KinokoScriptExtension, length) == offsetof(kinoko::legacy::StringRecord, length));
+static_assert(offsetof(KinokoScriptExtension, capacity) == offsetof(kinoko::legacy::StringRecord, capacity));
 
 char kinoko_sqrat_trace_enabled = 1;
 
@@ -128,7 +134,7 @@ int32_t kinoko_script_root_storage[3] = { 0, 0, 0 };
 
 char * kinoko_game_window_slot;
 
-unsigned char g_retdec_keyboard_state[256];
+unsigned char kinoko_keyboard_state[256];
 
 char kinoko_packed_assets = 0;
 
@@ -170,14 +176,14 @@ int32_t kinoko_layer_get_pair[2] = {0, 0};
 
 int32_t kinoko_script_void_result_identity;
 
-int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
+int32_t kinoko_layout_submit_impl(int32_t vertex_buffer,
                                           float32_t x, float32_t y)
 {
     return kinoko_quad_submit((KinokoQuad *)(intptr_t)vertex_buffer,x,y);
 }
 
 static int32_t kinoko_register_act_script_objects(void* script, void* environment) {
-    return retdec_register_act_script((int32_t)(intptr_t)script, (int32_t)(intptr_t)environment);
+    return kinoko_register_act_script((int32_t)(intptr_t)script, (int32_t)(intptr_t)environment);
 }
 
 int32_t kinoko_host_register_act_script_abi(int32_t script, int32_t environment) {
@@ -185,7 +191,7 @@ int32_t kinoko_host_register_act_script_abi(int32_t script, int32_t environment)
 }
 
 static int32_t kinoko_construct_layer_global_vm(void* storage) {
-    return retdec_construct_cact_layer((int32_t)(intptr_t)storage, kinoko_act_vm_abi_slot);
+    return kinoko_construct_cact_layer((int32_t)(intptr_t)storage, kinoko_act_vm_abi_slot);
 }
 
 int32_t kinoko_host_construct_layer_abi(int32_t storage) {
@@ -194,7 +200,7 @@ int32_t kinoko_host_construct_layer_abi(int32_t storage) {
 
 int32_t __fastcall kinoko_act_layer_associate_method(int32_t receiver, void* unused_edx) {
     int32_t *methods = *(int32_t **)(intptr_t)receiver;
-    return retdec_call_thiscall0_result((void *)(intptr_t)receiver,
+    return kinoko_call_thiscall0_result((void *)(intptr_t)receiver,
         (void *)(intptr_t)methods[6]);
 }
 
@@ -226,7 +232,7 @@ int32_t __fastcall kinoko_color_destroy(int32_t receiver, void* unused_edx, char
     return receiver;
 }
 
-void retdec_trace_squirrel_name(const char *label, int32_t name_ptr) {
+void kinoko_trace_squirrel_name(const char *label, int32_t name_ptr) {
     char message[512];
     if (!kinoko_diagnostics_accepts(label)) return;
 
@@ -237,7 +243,7 @@ void retdec_trace_squirrel_name(const char *label, int32_t name_ptr) {
                   (unsigned long)(uint32_t)name_ptr,
                   (const char *)(intptr_t)name_ptr);
     }
-    retdec_trace(message);
+    kinoko_trace(message);
 }
 
 uint32_t kinoko_actor_motion_update_mask(void) { return (uint32_t)kinoko_game_masks.update; }
@@ -282,9 +288,9 @@ static int32_t kinoko_append_render_item(int32_t *item) {
     static volatile LONG trace_count;
     LONG trace_index = InterlockedIncrement(&trace_count);
     if (trace_index <= 16) {
-        retdec_trace("46a210:entry");
-        retdec_trace_i32("46a210:value", item != NULL ? *item : 0);
-        retdec_trace_i32("46a210:g613", kinoko_render_queue_identity());
+        kinoko_trace("46a210:entry");
+        kinoko_trace_i32("46a210:value", item != NULL ? *item : 0);
+        kinoko_trace_i32("46a210:g613", kinoko_render_queue_identity());
     }
     return item ? kinoko_append_render_queue(*item) : 0;
 }
@@ -309,38 +315,38 @@ int32_t kinoko_host_clear_sound(void) {
     return kinoko_clear_global_sound();
 }
 
-static int32_t kinoko_install_root_integer_delegate(int32_t a1) {
-    int32_t temporary_object[3];
-    int32_t binding_object[3];
+static int32_t kinoko_install_root_integer_delegate(void *object) {
+    kinoko::script::ObjectStorage temporary_object;
+    kinoko::script::ObjectStorage binding_object;
     int32_t setdelegate_result;
 
-    retdec_trace_i32("470d00:enter-g582", (*kinoko_native_binding_type(0)));
-    kinoko_host_get_delegate_abi(a1, binding_object);
-    retdec_trace_i32("470d00:after-4aa210-g582", (*kinoko_native_binding_type(0)));
-    retdec_trace_i32("470d00:delegate-type", binding_object[1]);
-    retdec_trace_i32("470d00:delegate-data", binding_object[2]);
-    if (kinoko_sqplus_object_exists(binding_object, "_set") == 0) {
-        retdec_trace_i32("470d00:after-4aa1a0-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_object_new_table(temporary_object);
-        retdec_trace_i32("470d00:after-4a91c0-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_object_assign(binding_object, temporary_object);
-        retdec_trace_i32("470d00:after-4a95c0-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_object_destroy(temporary_object);
-        retdec_trace_i32("470d00:after-first-dtor-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_bind_object_function(temporary_object, binding_object, reinterpret_cast<void*>(&kinoko_sqplus_table_set), "_set", "sn|b|s");
-        retdec_trace_i32("470d00:after-set-binding-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_object_destroy(temporary_object);
-        retdec_trace_i32("470d00:after-second-dtor-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_bind_object_function(temporary_object, binding_object, reinterpret_cast<void*>(&kinoko_sqplus_table_get), "_get", "s");
-        retdec_trace_i32("470d00:after-get-binding-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_object_destroy(temporary_object);
-        retdec_trace_i32("470d00:after-third-dtor-g582", (*kinoko_native_binding_type(0)));
-        setdelegate_result = kinoko_sqplus_object_set_delegate((void *)(uintptr_t)(uint32_t)a1, binding_object);
-        retdec_trace_i32("470d00:setdelegate-result", setdelegate_result);
-        retdec_trace_i32("470d00:after-4a9f60-g582", (*kinoko_native_binding_type(0)));
+    kinoko_trace_i32("470d00:enter-g582", (*kinoko_native_binding_type(0)));
+    kinoko_sqplus_object_get_delegate(object, &binding_object);
+    kinoko_trace_i32("470d00:after-4aa210-g582", (*kinoko_native_binding_type(0)));
+    kinoko_trace_i32("470d00:delegate-type", static_cast<int32_t>(binding_object.value._type));
+    kinoko_trace_i32("470d00:delegate-data", kinoko::script::data_bits(binding_object.value));
+    if (kinoko_sqplus_object_exists(&binding_object, "_set") == 0) {
+        kinoko_trace_i32("470d00:after-4aa1a0-g582", (*kinoko_native_binding_type(0)));
+        kinoko_sqplus_object_new_table(&temporary_object);
+        kinoko_trace_i32("470d00:after-4a91c0-g582", (*kinoko_native_binding_type(0)));
+        kinoko_sqplus_object_assign(&binding_object, &temporary_object);
+        kinoko_trace_i32("470d00:after-4a95c0-g582", (*kinoko_native_binding_type(0)));
+        kinoko_sqplus_object_destroy(&temporary_object);
+        kinoko_trace_i32("470d00:after-first-dtor-g582", (*kinoko_native_binding_type(0)));
+        kinoko_sqplus_bind_object_function(&temporary_object, &binding_object, reinterpret_cast<void*>(&kinoko_sqplus_table_set), "_set", "sn|b|s");
+        kinoko_trace_i32("470d00:after-set-binding-g582", (*kinoko_native_binding_type(0)));
+        kinoko_sqplus_object_destroy(&temporary_object);
+        kinoko_trace_i32("470d00:after-second-dtor-g582", (*kinoko_native_binding_type(0)));
+        kinoko_sqplus_bind_object_function(&temporary_object, &binding_object, reinterpret_cast<void*>(&kinoko_sqplus_table_get), "_get", "s");
+        kinoko_trace_i32("470d00:after-get-binding-g582", (*kinoko_native_binding_type(0)));
+        kinoko_sqplus_object_destroy(&temporary_object);
+        kinoko_trace_i32("470d00:after-third-dtor-g582", (*kinoko_native_binding_type(0)));
+        setdelegate_result = kinoko_sqplus_object_set_delegate(object, &binding_object);
+        kinoko_trace_i32("470d00:setdelegate-result", setdelegate_result);
+        kinoko_trace_i32("470d00:after-4a9f60-g582", (*kinoko_native_binding_type(0)));
     }
-    int32_t result = (int32_t)(uintptr_t)kinoko_sqplus_object_destroy(binding_object);
-    retdec_trace_i32("470d00:exit-g582", (*kinoko_native_binding_type(0)));
+    int32_t result = (int32_t)(uintptr_t)kinoko_sqplus_object_destroy(&binding_object);
+    kinoko_trace_i32("470d00:exit-g582", (*kinoko_native_binding_type(0)));
     return result;
 }
 
@@ -377,34 +383,35 @@ int32_t kinoko_host_close_window(void) {
     return kinoko_script_close_window();
 }
 
-int32_t retdec_compile_file_native(int32_t vm) {
+int32_t kinoko_compile_file_native(int32_t vm) {
     int32_t path;
     int32_t result;
-    int32_t environment[2] = { retdec_compile_environment_type, retdec_compile_environment_slot };
+    HSQOBJECT environment = kinoko::script::borrowed_value(
+        kinoko_compile_environment_type, kinoko_compile_environment_slot);
 
     if (!kinoko_native_string_arg(kinoko_vm(vm), 2, &path))
         return 0;
     
     if (sq_gettop(kinoko_vm(vm)) > 3 &&
-        sq_getstackobj(kinoko_vm(vm), 3, (HSQOBJECT*)(environment)) < 0)
+        sq_getstackobj(kinoko_vm(vm), 3, &environment) < 0)
         return -1;
-    result = kinoko_script_compile_file_argument(path, (int32_t)(uintptr_t)&retdec_compile_environment_vtable, vm,
-                             environment[0], environment[1], 0);
+    result = kinoko_script_compile_file_argument(path, (int32_t)(uintptr_t)&kinoko_compile_environment_vtable, vm,
+                             static_cast<int32_t>(environment._type), kinoko::script::data_bits(environment), 0);
     sq_pushbool(kinoko_vm(vm), ((result) != 0));
     return 1;
 }
 
 static int32_t kinoko_bind_root_integer(int32_t *object, int32_t value,
                                         const char *name, int32_t flags) {
-    int32_t *slot = (int32_t *)kinoko_sqplus_create_variable(object, name);
-    int32_t metadata[5];
+    void *slot = kinoko_sqplus_create_variable(object, name);
+    kinoko::script::binding::Variable metadata;
     int32_t *type = kinoko_native_binding_type(0);
-    retdec_trace_i32("root-integer:g582-before", *type);
-    kinoko_sqplus_initialize_variable(metadata, value, 0, 0, type, 4, flags);
-    retdec_trace_i32("root-integer:g582-after", *type);
+    kinoko_trace_i32("root-integer:g582-before", *type);
+    kinoko_sqplus_initialize_variable(&metadata, value, 0, 0, type, 4, flags);
+    kinoko_trace_i32("root-integer:g582-after", *type);
     
-    memcpy(slot, metadata, sizeof(metadata));
-    return kinoko_install_root_integer_delegate((int32_t)(intptr_t)object);
+    memcpy(slot, &metadata, sizeof(metadata));
+    return kinoko_install_root_integer_delegate(object);
 }
 
 int32_t kinoko_script_bind_root_value(int32_t *object, int32_t *value, char *name, int32_t flags) {
@@ -415,18 +422,18 @@ int32_t kinoko_script_bind_root_integer(int32_t *object, int32_t value, char *na
     return kinoko_bind_root_integer(object, value, name, 2);
 }
 
-static int32_t retdec_active_vm;
-static thread_local int32_t retdec_explicit_vm;
+static SQVM *kinoko_active_vm;
+static thread_local SQVM *kinoko_explicit_vm;
 
-static int32_t retdec_exchange_source_receiver(int32_t vm) {
-    int32_t previous = retdec_explicit_vm;
-    retdec_explicit_vm = vm;
+static int32_t kinoko_exchange_source_receiver(int32_t vm) {
+    int32_t previous = (int32_t)(intptr_t)kinoko_explicit_vm;
+    kinoko_explicit_vm = reinterpret_cast<SQVM*>(static_cast<uintptr_t>(vm));
     return previous;
 }
 
-__declspec(noinline) int32_t retdec_stack_vm(void) {
-    if (retdec_explicit_vm != 0)
-        return retdec_explicit_vm;
+__declspec(noinline) int32_t kinoko_stack_vm(void) {
+    if (kinoko_explicit_vm != 0)
+        return (int32_t)(intptr_t)kinoko_explicit_vm;
     static int32_t null_stack_trace_count;
     
     if (kinoko_primary_vm != NULL) {
@@ -436,90 +443,90 @@ __declspec(noinline) int32_t retdec_stack_vm(void) {
         if ((stack_block == 0 || stack_block < 0x02000000u ||
              stack_block >= 0x70000000u) &&
             null_stack_trace_count < 16) {
-            retdec_trace_i32("stack-vm-invalid", vm);
-            retdec_trace_i32("stack-vm-block", (int32_t)stack_block);
-            retdec_trace_i32("stack-vm-top", stack.top);
-            retdec_trace_i32("stack-vm-base", stack.base);
-            retdec_trace_i32("stack-vm-caller",
+            kinoko_trace_i32("stack-vm-invalid", vm);
+            kinoko_trace_i32("stack-vm-block", (int32_t)stack_block);
+            kinoko_trace_i32("stack-vm-top", stack.top);
+            kinoko_trace_i32("stack-vm-base", stack.base);
+            kinoko_trace_i32("stack-vm-caller",
                              (int32_t)(uintptr_t)_ReturnAddress());
             ++null_stack_trace_count;
         }
         return vm;
     }
-    if (retdec_active_vm != 0)
-        return retdec_active_vm;
+    if (kinoko_active_vm != 0)
+        return (int32_t)(intptr_t)kinoko_active_vm;
     return 0;
 }
 
-static volatile int32_t retdec_g594_watch_value;
+static volatile int32_t kinoko_map_binding_watch_value;
 
-static volatile int32_t retdec_g594_watch_initialized;
+static volatile int32_t kinoko_map_binding_watch_initialized;
 
-static volatile int32_t retdec_g594_watch_busy;
+static volatile int32_t kinoko_map_binding_watch_busy;
 
-static volatile int32_t retdec_g644_watch_value;
+static volatile int32_t kinoko_primary_vm_watch_value;
 
-static volatile int32_t retdec_g644_watch_initialized;
+static volatile int32_t kinoko_primary_vm_watch_initialized;
 
-static volatile int32_t retdec_g644_watch_busy;
+static volatile int32_t kinoko_primary_vm_watch_busy;
 
-static __declspec(noinline) void retdec_watch_g594(void) {
+static __declspec(noinline) void kinoko_watch_map_binding(void) {
     int32_t current;
     char message[160];
 
-    if (retdec_g594_watch_busy != 0)
+    if (kinoko_map_binding_watch_busy != 0)
         return;
-    retdec_g594_watch_busy = 1;
+    kinoko_map_binding_watch_busy = 1;
     current = (*kinoko_native_binding_type(3));
-    if (retdec_g594_watch_initialized == 0 ||
-        current != retdec_g594_watch_value) {
+    if (kinoko_map_binding_watch_initialized == 0 ||
+        current != kinoko_map_binding_watch_value) {
         wsprintfA(message,
                   "watch:g594=0x%08lX caller=0x%08lX",
                   (unsigned long)current,
                   (unsigned long)(uintptr_t)_ReturnAddress());
-        retdec_trace(message);
-        retdec_g594_watch_value = current;
-        retdec_g594_watch_initialized = 1;
+        kinoko_trace(message);
+        kinoko_map_binding_watch_value = current;
+        kinoko_map_binding_watch_initialized = 1;
     }
-    retdec_g594_watch_busy = 0;
+    kinoko_map_binding_watch_busy = 0;
 }
 
-static __declspec(noinline) void retdec_watch_g644(void) {
+static __declspec(noinline) void kinoko_watch_primary_vm(void) {
     int32_t current;
     char message[160];
 
-    if (retdec_g644_watch_busy != 0)
+    if (kinoko_primary_vm_watch_busy != 0)
         return;
-    retdec_g644_watch_busy = 1;
+    kinoko_primary_vm_watch_busy = 1;
     current = (int32_t)(intptr_t)kinoko_primary_vm;
-    if (retdec_g644_watch_initialized == 0 ||
-        current != retdec_g644_watch_value) {
+    if (kinoko_primary_vm_watch_initialized == 0 ||
+        current != kinoko_primary_vm_watch_value) {
         wsprintfA(message,
                   "watch:g644=0x%08lX caller=0x%08lX",
                   (unsigned long)current,
                   (unsigned long)(uintptr_t)_ReturnAddress());
-        retdec_trace(message);
-        retdec_g644_watch_value = current;
-        retdec_g644_watch_initialized = 1;
+        kinoko_trace(message);
+        kinoko_primary_vm_watch_value = current;
+        kinoko_primary_vm_watch_initialized = 1;
     }
-    retdec_g644_watch_busy = 0;
+    kinoko_primary_vm_watch_busy = 0;
 }
 
-__declspec(noinline) void retdec_trace_i32(const char *label,
+__declspec(noinline) void kinoko_trace_i32(const char *label,
                                                   int32_t value) {
     char message[128];
     if (!kinoko_diagnostics_accepts(label)) return;
-    retdec_watch_g594();
-    retdec_watch_g644();
+    kinoko_watch_map_binding();
+    kinoko_watch_primary_vm();
     wsprintfA(message, "%s:0x%08lX", label, (unsigned long)value);
-    retdec_trace(message);
+    kinoko_trace(message);
 }
 
 static int32_t kinoko_open_primary_script_vm(int32_t stack_size) {
-    kinoko_sq_set_context_exchange(retdec_exchange_source_receiver);
+    kinoko_sq_set_context_exchange(kinoko_exchange_source_receiver);
     int32_t vm = kinoko_sq_open(stack_size);
-    retdec_active_vm = vm;
-    retdec_primary_shared_state = kinoko_sq_shared_state(vm);
+    kinoko_active_vm = reinterpret_cast<SQVM*>(static_cast<uintptr_t>(vm));
+    kinoko_primary_shared_state = kinoko_sq_shared_state(vm);
     return vm;
 }
 
@@ -715,7 +722,7 @@ void kinoko_application_open_archives(void) {
     kinoko_archive_mount("6kinoko_a.dat");
     kinoko_archive_mount("6kinoko_b.dat");
     kinoko_archive_mount("6kinoko_c.dat");
-    kinoko_string_assign_n(kinoko_act_script_extension, ".cv4", 4);
+    kinoko_string_assign_n(&kinoko_act_script_extension, ".cv4", 4);
 }
 
 const KinokoGameObjects *kinoko_game_objects(void) {
@@ -732,18 +739,18 @@ static struct SQVM *game_startup_vm;
 
 void kinoko_game_prepare_scripts(void) {
     if (!game_startup_vm) game_startup_vm = (struct SQVM *)kinoko_primary_vm;
-    retdec_trace_i32("469640:vm-before", (int32_t)(intptr_t)kinoko_primary_vm);
+    kinoko_trace_i32("469640:vm-before", (int32_t)(intptr_t)kinoko_primary_vm);
 }
 
 void kinoko_game_register_scripts(void) {
-    retdec_trace("469640:sqrat-begin");
-    retdec_trace("469640:before-473010");
+    kinoko_trace("469640:sqrat-begin");
+    kinoko_trace("469640:before-473010");
     kinoko_register_root_bindings_entry();
-    retdec_trace("469640:after-473010");
+    kinoko_trace("469640:after-473010");
     if (kinoko_primary_vm) game_startup_vm = (struct SQVM *)kinoko_primary_vm;
     else if (game_startup_vm) kinoko_primary_vm = (struct SQVM *)game_startup_vm;
-    retdec_trace_i32("469640:vm-after-sqrat", (int32_t)(intptr_t)kinoko_primary_vm);
-    retdec_trace("469640:sqrat-done");
+    kinoko_trace_i32("469640:vm-after-sqrat", (int32_t)(intptr_t)kinoko_primary_vm);
+    kinoko_trace("469640:sqrat-done");
 }
 
 int32_t kinoko_game_initialize_input(KinokoInputManager *input) {
@@ -760,13 +767,13 @@ void kinoko_game_update_callback(int32_t trace_index) {
     if (kinoko_sqplus_object_type(&global_callback.closure) ==
         0x08000100) {
 
-        retdec_trace("stagevm:global-callback");
+        kinoko_trace("stagevm:global-callback");
         if (trace_index <= 16) {
-            retdec_trace_i32("stagevm:global-state-vm", (int32_t)(intptr_t)global_callback.vm);
-            retdec_trace_i32("stagevm:global-env-type", global_callback.environment.type);
-            retdec_trace_i32("stagevm:global-env-data", global_callback.environment.value);
-            retdec_trace_i32("stagevm:global-func-type", global_callback.closure.type);
-            retdec_trace_i32("stagevm:global-func-data", global_callback.closure.value);
+            kinoko_trace_i32("stagevm:global-state-vm", (int32_t)(intptr_t)global_callback.vm);
+            kinoko_trace_i32("stagevm:global-env-type", global_callback.environment.type);
+            kinoko_trace_i32("stagevm:global-env-data", global_callback.environment.value);
+            kinoko_trace_i32("stagevm:global-func-type", global_callback.closure.type);
+            kinoko_trace_i32("stagevm:global-func-data", global_callback.closure.value);
         }
         if (kinoko_script_callback_invoke(&global_callback) < 0)
             kinoko_script_callback_clear(&global_callback);
@@ -791,10 +798,10 @@ void kinoko_game_clear_actors(KinokoActorManager *actors) {
 
 void kinoko_game_trace_map(KinokoMapManager *map, int32_t drawing) {
     const auto state = kinoko::map::ManagerView(map).load();
-    if (drawing) retdec_trace_i32("render:map-layer", (int32_t)(intptr_t)state.source_act);
+    if (drawing) kinoko_trace_i32("render:map-layer", (int32_t)(intptr_t)state.source_act);
     else {
-        retdec_trace_i32("469900:map-act", (int32_t)(intptr_t)state.source_act);
-        retdec_trace_i32("469900:map-resource", (int32_t)(intptr_t)state.player);
+        kinoko_trace_i32("469900:map-act", (int32_t)(intptr_t)state.source_act);
+        kinoko_trace_i32("469900:map-resource", (int32_t)(intptr_t)state.player);
     }
 }
 
@@ -821,5 +828,5 @@ void kinoko_game_split_path(const char *path, char *directory) {
     kinoko_path_split(path, directory, NULL);
 }
 
-int32_t kinoko_host_explicit_vm(void) { return retdec_explicit_vm; }
+int32_t kinoko_host_explicit_vm(void) { return (int32_t)(intptr_t)kinoko_explicit_vm; }
 

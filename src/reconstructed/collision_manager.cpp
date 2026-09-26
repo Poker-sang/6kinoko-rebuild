@@ -9,7 +9,7 @@
 #include <climits>
 #include <cstring>
 
-extern "C" void retdec_trace_i32(const char *, int32_t);
+extern "C" void kinoko_trace_i32(const char *, int32_t);
 
 namespace {
 using namespace kinoko::collision;
@@ -147,7 +147,7 @@ extern "C" KinokoActor *kinoko_collision_register_map(KinokoCollisionState *stat
     auto *hit_ends = ends.get(&Buffer<int32_t>::begin);
     hit_ends[count] = 0;
     ends.set(&Buffer<int32_t>::end, hit_ends + required);
-    retdec_trace_i32("actor:collision-layout-count", count + 1);
+    kinoko_trace_i32("actor:collision-layout-count", count + 1);
     return actor;
 }
 

@@ -8,7 +8,7 @@
 
 extern "C" {
 extern struct SQVM *kinoko_primary_vm;
-void retdec_trace_i32(const char*, int32_t);
+void kinoko_trace_i32(const char*, int32_t);
 }
 
 namespace {
@@ -87,7 +87,7 @@ extern "C" int32_t kinoko_script_read_memory(void* stream, void* destination, in
     write(stream, state);
     return static_cast<int32_t>(count);
 }
-extern "C" int32_t retdec_create_bound_instance(int32_t id, const int32_t* parent,
+extern "C" int32_t kinoko_create_bound_instance(int32_t id, const int32_t* parent,
     const char* name, const int32_t* type, int32_t native, int32_t* output) {
     auto vm = pointer<SQVM>(id);
     auto* native_pointer = pointer<void>(native);
@@ -107,7 +107,7 @@ extern "C" int32_t retdec_create_bound_instance(int32_t id, const int32_t* paren
     write(output, result);
     return result._type == OT_INSTANCE && data_bits(result) != 0;
 }
-extern "C" int32_t retdec_create_unbound_instance(int32_t id, const int32_t* type,
+extern "C" int32_t kinoko_create_unbound_instance(int32_t id, const int32_t* type,
     int32_t native, int32_t* output) {
     auto vm = pointer<SQVM>(id);
     auto* native_pointer = pointer<void>(native);
@@ -120,7 +120,7 @@ extern "C" int32_t retdec_create_unbound_instance(int32_t id, const int32_t* typ
     write(output, result);
     return result._type == OT_INSTANCE && data_bits(result) != 0;
 }
-extern "C" void retdec_release_act_callback(int32_t record) {
+extern "C" void kinoko_release_act_callback(int32_t record) {
     if (!record) return;
     auto callback = read<ActCallback>(pointer(record));
     if (callback.closure._type == OT_NULL) return;
@@ -129,18 +129,18 @@ extern "C" void retdec_release_act_callback(int32_t record) {
     callback.environment = empty(); callback.closure = empty();
     write(pointer(record), callback);
 }
-extern "C" void retdec_copy_act_callback(int32_t id, int32_t script, int32_t offset,
+extern "C" void kinoko_copy_act_callback(int32_t id, int32_t script, int32_t offset,
     int32_t global, const char* name) {
     auto vm = pointer<SQVM>(id);
     if (!vm || !script || !global || !name) return;
     auto* destination = bytes(script) + offset;
-    retdec_release_act_callback(address(destination));
+    kinoko_release_act_callback(address(destination));
     auto callback = read<ActCallback>(destination);
     int32_t pair[2]; write(pair, empty());
     const auto found = kinoko_sqrat_get((void *)(intptr_t)(global), name, (void *)(pair));
     // Only metadata diagnostics: no additional scripted lookup or path dereference.
-    retdec_trace_i32("act:copy-update-script", script);
-    retdec_trace_i32("act:copy-update-result", found);
+    kinoko_trace_i32("act:copy-update-script", script);
+    kinoko_trace_i32("act:copy-update-result", found);
     if (found) {
         callback.vm = id;
         callback.environment = read<HSQOBJECT>(bytes(global) + 8);
@@ -150,7 +150,7 @@ extern "C" void retdec_copy_act_callback(int32_t id, int32_t script, int32_t off
     }
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(id), pair);
 }
-extern "C" int32_t retdec_bind_act_resource_root(int32_t resource, int32_t id,
+extern "C" int32_t kinoko_bind_act_resource_root(int32_t resource, int32_t id,
     const int32_t* pair) {
     if (!resource || !id || !pair) return 0;
     auto incoming = read<HSQOBJECT>(pair);
@@ -164,8 +164,8 @@ extern "C" int32_t retdec_bind_act_resource_root(int32_t resource, int32_t id,
     if ((previous.root._type & SQOBJECT_REF_COUNTED) && data_bits(previous.root))
         sq_release(vm, &previous.root);
     write(storage, ResourceRoot{id, incoming});
-    retdec_trace_i32("450e30:root-resource", resource);
-    retdec_trace_i32("450e30:root-vm", id);
+    kinoko_trace_i32("450e30:root-resource", resource);
+    kinoko_trace_i32("450e30:root-vm", id);
     return 1;
 }
 static int32_t execute_embedded_act_script(int32_t id, int32_t script,
@@ -179,7 +179,7 @@ static int32_t execute_embedded_act_script(int32_t id, int32_t script,
     MemoryReader reader{pointer<const unsigned char>(data), size, pointer<const unsigned char>(data)};
     TrimStack restore(vm);
     const auto load = sq_readclosure(vm, read_bytecode, &reader);
-    retdec_trace_i32("act-script:readclosure-result", load);
+    kinoko_trace_i32("act-script:readclosure-result", load);
     if (SQ_FAILED(load) || sq_gettop(vm) <= restore.top()) return 0;
     HSQOBJECT closure = empty(); sq_getstackobj(vm, -1, &closure);
     if (closure._type != OT_CLOSURE || !data_bits(closure)) return 0;
@@ -191,14 +191,14 @@ static int32_t execute_embedded_act_script(int32_t id, int32_t script,
                 return kinoko_sq_call(address(target), count, value, errors);
             });
     }
-    retdec_trace_i32("act-script:execute-result", result ? SQ_OK : SQ_ERROR);
+    kinoko_trace_i32("act-script:execute-result", result ? SQ_OK : SQ_ERROR);
     return result;
 }
-extern "C" int32_t retdec_execute_embedded_act_script(int32_t vm, int32_t script,
+extern "C" int32_t kinoko_execute_embedded_act_script(int32_t vm, int32_t script,
     const int32_t* environment) {
     return execute_embedded_act_script(vm, script, environment, 1);
 }
-extern "C" int32_t retdec_execute_act_file_bytecode(int32_t vm, int32_t script,
+extern "C" int32_t kinoko_execute_act_file_bytecode(int32_t vm, int32_t script,
     const int32_t* environment) {
     // 416A8D calls the loaded closure, then 416AE8 calls LocalScript::Run on
     // that same closure. The first call's failure is not used as a branch.

@@ -64,7 +64,7 @@ extern "C" int kinoko_test_act_ownership_chain() {
         kinoko_act_document_initialize(reinterpret_cast<KinokoActDocument *>(documents+i));
         kinoko_act_array_append(address(&documents[i].layers),address(i?&last:&first));
     }
-    retdec_destroy_cact_with_flags(address(documents),3);
+    kinoko_destroy_cact_with_flags(address(documents),3);
     REQUIRE((events==std::vector<int>{1,2,4,3}));
 
     // Key owns a layout whose slot 4 is deliberately absent (not a CAct dtor).
@@ -81,8 +81,8 @@ extern "C" int kinoko_test_act_ownership_chain() {
     observed_layer=storage;
     storage->script.bytes=std::malloc(8);storage->script.size=8;
     Payload key_payload{payload_methods,6},timeline{payload_methods,7};
-    REQUIRE(retdec_act_append_list(address(&storage->keys.head),address(&key_payload)));
-    REQUIRE(retdec_act_append_list(address(&storage->timelines.head),address(&timeline)));
+    REQUIRE(kinoko_act_append_list(address(&storage->keys.head),address(&key_payload)));
+    REQUIRE(kinoko_act_append_list(address(&storage->timelines.head),address(&timeline)));
     dispose_owned(reinterpret_cast<KinokoActLayer *>(storage));
     observed_layer=nullptr;
     REQUIRE((events==std::vector<int>{1,2,4,3,5,6,7}));
@@ -98,7 +98,7 @@ extern "C" int kinoko_test_act_ownership_chain() {
     KinokoActSourceHolder holder{reinterpret_cast<KinokoActDocument *>(&source)};
     runtime.source_holder=&holder;
     runtime.active_document=reinterpret_cast<KinokoActDocument *>(&clone);
-    REQUIRE(retdec_bind_act_resource_object(address(&runtime)));
+    REQUIRE(kinoko_bind_act_resource_object(address(&runtime)));
     REQUIRE(events[events.size()-2]==8 && events.back()==9);
     REQUIRE(runtime.active_document && runtime.active_document != holder.document);
     REQUIRE(runtime.active_holder->document==runtime.active_document);

@@ -13,9 +13,9 @@
 #include <windows.h>
 #include <cstdio>
 extern "C" {
-void retdec_trace(const char*);
-void retdec_trace_i32(const char*,int32_t);
-void retdec_trace_squirrel_name(const char*,int32_t);
+void kinoko_trace(const char*);
+void kinoko_trace_i32(const char*,int32_t);
+void kinoko_trace_squirrel_name(const char*,int32_t);
 }
 namespace {
 using namespace kinoko::script;
@@ -38,13 +38,13 @@ extern "C" int32_t kinoko_script_load_animation(const char* path) {
     char directory[260]{};
     static volatile LONG trace_count;
     const auto trace=InterlockedIncrement(&trace_count);
-    if(trace<=32) { retdec_trace_i32("actor:load-animation-entry",address(path)); retdec_trace_squirrel_name("actor:load-animation-path",address(path)); }
+    if(trace<=32) { kinoko_trace_i32("actor:load-animation-entry",address(path)); kinoko_trace_squirrel_name("actor:load-animation-path",address(path)); }
     kinoko_game_split_path(path,directory);
-    retdec_trace_i32("464f80:path",address(path));
-    retdec_trace_squirrel_name("464f80:path-text",address(path));
-    retdec_trace_i32("464f80:directory",address(directory));
+    kinoko_trace_i32("464f80:path",address(path));
+    kinoko_trace_squirrel_name("464f80:path-text",address(path));
+    kinoko_trace_i32("464f80:directory",address(directory));
     const auto result=kinoko_pat_load(kinoko_game_objects()->actors,path,directory);
-    if(trace<=32) retdec_trace_i32("actor:load-animation-result",result);
+    if(trace<=32) kinoko_trace_i32("actor:load-animation-result",result);
     return result; // 4696ED returns the PAT result; old reconstruction returned zero.
 }
 extern "C" void* kinoko_script_clear_actors() { return kinoko_actor_manager_reset(kinoko_game_objects()->actors); }
@@ -60,9 +60,9 @@ extern "C" KinokoActor* kinoko_script_create_collision(const char* name) {
 extern "C" int32_t kinoko_script_load_act(const char* path) { return kinoko_stage_load(path)!=nullptr; }
 extern "C" int32_t kinoko_script_load_map(const char* path) {
     static int32_t trace_count;
-    if(trace_count<32) { retdec_trace("469840:LoadMap-entry"); retdec_trace_squirrel_name("469840:path",address(path)); }
+    if(trace_count<32) { kinoko_trace("469840:LoadMap-entry"); kinoko_trace_squirrel_name("469840:path",address(path)); }
     const auto result=kinoko_game_load_map_file(path);
-    if(trace_count<32) { retdec_trace_i32("469840:LoadMap-result",result); ++trace_count; }
+    if(trace_count<32) { kinoko_trace_i32("469840:LoadMap-result",result); ++trace_count; }
     return static_cast<uint8_t>(result)!=0; // 469856 tests AL, not the complete word.
 }
 extern "C" int32_t kinoko_script_release_map() { return kinoko_game_release_map_state(); }
@@ -74,11 +74,11 @@ extern "C" int32_t kinoko_script_set_global_update(KinokoOwnedObjectWords closur
     const kinoko::native::RecordView<KinokoScriptCallback> state(kinoko_game_global_callback());
     static volatile LONG trace_count;
     if(InterlockedIncrement(&trace_count)<=8) {
-        retdec_trace("stagevm:set-global-update");
-        retdec_trace_i32("stagevm:set-global-first-type",closure.type);
-        retdec_trace_i32("stagevm:set-global-first-data",closure.value);
-        retdec_trace_i32("stagevm:set-global-second-type",environment.type);
-        retdec_trace_i32("stagevm:set-global-second-data",environment.value);
+        kinoko_trace("stagevm:set-global-update");
+        kinoko_trace_i32("stagevm:set-global-first-type",closure.type);
+        kinoko_trace_i32("stagevm:set-global-first-data",closure.value);
+        kinoko_trace_i32("stagevm:set-global-second-type",environment.type);
+        kinoko_trace_i32("stagevm:set-global-second-data",environment.value);
     }
     {
         KinokoScriptCallback replacement{};
@@ -94,9 +94,9 @@ extern "C" int32_t kinoko_script_set_global_update(KinokoOwnedObjectWords closur
     }
     if(trace_count<=8) {
         const auto env=state.get(&KinokoScriptCallback::environment),fn=state.get(&KinokoScriptCallback::closure);
-        retdec_trace_i32("stagevm:set-global-vm",address(state.get(&KinokoScriptCallback::vm)));
-        retdec_trace_i32("stagevm:set-global-env-type",env.type); retdec_trace_i32("stagevm:set-global-env-data",env.value);
-        retdec_trace_i32("stagevm:set-global-func-type",fn.type); retdec_trace_i32("stagevm:set-global-func-data",fn.value);
+        kinoko_trace_i32("stagevm:set-global-vm",address(state.get(&KinokoScriptCallback::vm)));
+        kinoko_trace_i32("stagevm:set-global-env-type",env.type); kinoko_trace_i32("stagevm:set-global-env-data",env.value);
+        kinoko_trace_i32("stagevm:set-global-func-type",fn.type); kinoko_trace_i32("stagevm:set-global-func-data",fn.value);
     }
     return 0;
 }
@@ -106,7 +106,7 @@ extern "C" int32_t kinoko_script_set_init(int32_t id,KinokoOwnedObjectWords clos
     if(closure.type==OT_CLOSURE && environment.type==OT_TABLE) {
         char name[256]; sprintf_s(name,sizeof(name),"Init%04x",static_cast<unsigned>(id));
         result=kinoko_sqplus_object_raw_set_name((void *)(&environment), name, (const void *)(&closure));
-        retdec_trace_i32("actor:init-registration-id",id); retdec_trace_i32("actor:init-registration-result",result);
+        kinoko_trace_i32("actor:init-registration-id",id); kinoko_trace_i32("actor:init-registration-result",result);
     }
     return result;
 }
@@ -118,16 +118,16 @@ extern "C" KinokoOwnedObjectWords* kinoko_script_create_actor(KinokoOwnedObjectW
     static volatile LONG trace_count;
     const auto trace=InterlockedIncrement(&trace_count);
     if(trace<=32) {
-        retdec_trace_i32("actor-create:result-object",address(result)); retdec_trace_i32("actor-create:manager-state",address(manager));
-        retdec_trace_i32("actor-create:first-type",closure.type); retdec_trace_i32("actor-create:first-data",closure.value);
-        retdec_trace_i32("actor-create:second-type",argument.type); retdec_trace_i32("actor-create:second-data",argument.value);
+        kinoko_trace_i32("actor-create:result-object",address(result)); kinoko_trace_i32("actor-create:manager-state",address(manager));
+        kinoko_trace_i32("actor-create:first-type",closure.type); kinoko_trace_i32("actor-create:first-data",closure.value);
+        kinoko_trace_i32("actor-create:second-type",argument.type); kinoko_trace_i32("actor-create:second-data",argument.value);
     }
     if(!closure.vtable) closure.vtable=kinoko_squirrel_object_vtable();
     if(!argument.vtable) argument.vtable=kinoko_squirrel_object_vtable();
     // Native manager borrows these values throughout initialization. The owning
     // by-value parameters remain alive until after result's reference is acquired.
     auto* actor=kinoko_actor_manager_create(manager,&closure,x,y,z,&argument,nullptr);
-    if(trace<=32) retdec_trace_i32("actor-create:callback-result",address(actor));
+    if(trace<=32) kinoko_trace_i32("actor-create:callback-result",address(actor));
     kinoko_sqplus_object_initialize((void *)(result));
     if(actor) assign(result,kinoko::actor::ActorView(actor).bytes(&kinoko::actor::ActorRecord::script_object));
     return result;
@@ -136,7 +136,7 @@ extern "C" int32_t kinoko_script_create_map_actors(const char* name,KinokoOwnedO
     Reference owner(environment);
     const auto& objects=*kinoko_game_objects();
     auto* layout=kinoko_map_lookup_layout(objects.map,name);
-    retdec_trace_squirrel_name("actor:map-layer",address(name)); retdec_trace_i32("actor:map-layout",address(layout));
+    kinoko_trace_squirrel_name("actor:map-layer",address(name)); kinoko_trace_i32("actor:map-layout",address(layout));
     return layout ? kinoko_map_create_actors(objects.actors,layout,reinterpret_cast<const KinokoSquirrelObject*>(&environment)) : 0;
 }
 extern "C" int32_t kinoko_script_create_event(const char* name,KinokoOwnedObjectWords closure,KinokoOwnedObjectWords environment) {

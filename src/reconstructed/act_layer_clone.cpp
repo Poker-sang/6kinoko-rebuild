@@ -27,7 +27,7 @@ struct LayerDelete {
     }
 };
 struct KeyDelete {
-    void operator()(unsigned char* key) const { retdec_destroy_cact_key(address(key)); }
+    void operator()(unsigned char* key) const { kinoko_destroy_cact_key(address(key)); }
 };
 
 void assign_object(kinoko::act::LayerObjectView destination, kinoko::act::LayerObjectView source) {
@@ -53,14 +53,14 @@ void clone_list(int32_t destination, int32_t source, int32_t offset, bool bind) 
         if (!node || visited.size()>=0x10000 || !visited.insert(node).second) throw std::bad_alloc();
         const auto original=field<int32_t>(node+8);
         if (!original) throw std::bad_alloc();
-        const auto copy=retdec_call_thiscall0_result(pointer<void>(original),
+        const auto copy=kinoko_call_thiscall0_result(pointer<void>(original),
             field<void*>(field<int32_t>(original)+20));
         std::unique_ptr<unsigned char,KeyDelete> owner(pointer<unsigned char>(copy));
-        if (!copy || !retdec_act_append_list(destination+offset,copy)) throw std::bad_alloc();
+        if (!copy || !kinoko_act_append_list(destination+offset,copy)) throw std::bad_alloc();
         owner.release();
         ++field<int32_t>(destination+offset+4);
         const auto layout=field<int32_t>(copy+4);
-        if (bind && layout) retdec_call_thiscall1_result(pointer<void>(layout),
+        if (bind && layout) kinoko_call_thiscall1_result(pointer<void>(layout),
             field<void*>(field<int32_t>(layout)+24),destination);
     }
 }

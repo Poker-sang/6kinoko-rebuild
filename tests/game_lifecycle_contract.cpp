@@ -25,8 +25,8 @@ void expect(std::initializer_list<int> expected) { CHECK(calls==std::vector<int>
 }
 extern "C" {
 KinokoGraphics kinoko_graphics{};
-void retdec_trace(const char*) {}
-void retdec_trace_i32(const char*,int32_t) {}
+void kinoko_trace(const char*) {}
+void kinoko_trace_i32(const char*,int32_t) {}
 const KinokoGameObjects* kinoko_game_objects() { return &objects; }
 void kinoko_game_prepare_scripts() { calls.push_back(1); }
 int32_t kinoko_audio_initialize_playback() { calls.push_back(2); return 0; }

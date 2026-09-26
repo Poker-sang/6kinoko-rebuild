@@ -255,7 +255,7 @@ extern "C" void kinoko_diagnostics_shutdown() {
 
 // This remains an out-of-line sink in quiet builds. Removing VM call sites
 // changes the stack shape of the remaining reconstructed C code.
-extern "C" __declspec(noinline) void retdec_trace(const char *message) {
+extern "C" __declspec(noinline) void kinoko_trace(const char *message) {
     if (!message)
         return;
     capture_script_failure(message);
@@ -291,13 +291,13 @@ extern "C" __declspec(noinline) void retdec_trace(const char *message) {
         flush_locked();
 }
 
-extern "C" void retdec_trace_hresult(const char *label, long value) {
+extern "C" void kinoko_trace_hresult(const char *label, long value) {
     if (!kinoko_diagnostics_accepts(label))
         return;
     char message[128];
     std::snprintf(message, sizeof(message), "%s:0x%08lX", label,
         static_cast<unsigned long>(value));
-    retdec_trace(message);
+    kinoko_trace(message);
 }
 
 extern "C" int kinoko_report_exception(EXCEPTION_POINTERS *exception) {
@@ -311,7 +311,7 @@ extern "C" int kinoko_report_exception(EXCEPTION_POINTERS *exception) {
             exception->ExceptionRecord->ExceptionCode,
             exception->ExceptionRecord->ExceptionAddress,
             context.Eip, context.Esp, context.Ebp);
-        retdec_trace(message);
+        kinoko_trace(message);
     }
     return EXCEPTION_EXECUTE_HANDLER;
 }

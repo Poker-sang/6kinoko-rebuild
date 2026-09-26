@@ -21,8 +21,8 @@
 #include "kinoko/legacy_memory.hpp"
 #include <cstdlib>
 extern "C" {
-void retdec_trace(const char*);
-void retdec_trace_i32(const char*,int32_t);
+void kinoko_trace(const char*);
+void kinoko_trace_i32(const char*,int32_t);
 int __cdecl _purecall(void);
 KinokoGameMasks kinoko_game_masks{-1,-1};
 }
@@ -36,21 +36,21 @@ void render_defaults() {
 }
 extern "C" int32_t kinoko_game_initialize(void) {
     const auto& objects=*kinoko_game_objects();
-    retdec_trace("469640:enter");
+    kinoko_trace("469640:enter");
     kinoko_game_prepare_scripts();
-    retdec_trace("469640:audio-begin");
+    kinoko_trace("469640:audio-begin");
     kinoko_audio_initialize_playback();
-    retdec_trace("469640:audio-done");
+    kinoko_trace("469640:audio-done");
     kinoko_game_register_scripts();
-    retdec_trace("469640:alloc-begin");
+    kinoko_trace("469640:alloc-begin");
     kinoko_game_initialize_input(objects.input);
-    retdec_trace("469640:alloc-done");
-    retdec_trace("469640:actor-begin");
+    kinoko_trace("469640:alloc-done");
+    kinoko_trace("469640:actor-begin");
     kinoko_actor_manager_initialize(objects.actors);
-    retdec_trace("469640:actor-done");
-    retdec_trace("469640:global-begin");
+    kinoko_trace("469640:actor-done");
+    kinoko_trace("469640:global-begin");
     kinoko_camera_initialize(objects.camera);
-    retdec_trace("469640:global-done");
+    kinoko_trace("469640:global-done");
     return kinoko_game_load_boot_script();
 }
 extern "C" int32_t kinoko_game_release_script_state(void) {
@@ -71,9 +71,9 @@ extern "C" int32_t kinoko_game_update(void) {
     static volatile LONG trace_count;
     const LONG trace_index=InterlockedIncrement(&trace_count);
     if (trace_index<=16) {
-        retdec_trace("469900:entry");
-        retdec_trace_i32("469900:update-mask",kinoko_game_masks.update);
-        retdec_trace_i32("469900:render-mask",kinoko_game_masks.render);
+        kinoko_trace("469900:entry");
+        kinoko_trace_i32("469900:update-mask",kinoko_game_masks.update);
+        kinoko_trace_i32("469900:render-mask",kinoko_game_masks.render);
         kinoko_game_trace_map(objects.map,0);
     }
     kinoko_game_update_input(objects.input);
@@ -87,14 +87,14 @@ extern "C" int32_t kinoko_game_update(void) {
         result=kinoko_actor_manager_update(objects.actors,objects.camera);
     }
     if (mask & KINOKO_GAME_MAP) {
-        if (trace_index<=16) retdec_trace("469900:map-update");
+        if (trace_index<=16) kinoko_trace("469900:map-update");
         result=kinoko_game_update_map(objects.map);
     }
     if (mask & KINOKO_GAME_STAGES) {
-        if (trace_index<=16) retdec_trace("469900:global-update");
+        if (trace_index<=16) kinoko_trace("469900:global-update");
         result=kinoko_stages_update();
     }
-    if (trace_index<=16) retdec_trace_i32("469900:result",result);
+    if (trace_index<=16) kinoko_trace_i32("469900:result",result);
     return result;
 }
 extern "C" int32_t kinoko_game_draw(void) {
@@ -103,8 +103,8 @@ extern "C" int32_t kinoko_game_draw(void) {
     static volatile LONG trace_count;
     const LONG trace_index=InterlockedIncrement(&trace_count);
     if (trace_index==1) {
-        retdec_trace_i32("render:g613",kinoko_render_queue_identity());
-        retdec_trace_i32("render:g613-first",kinoko_render_queue_first());
+        kinoko_trace_i32("render:g613",kinoko_render_queue_identity());
+        kinoko_trace_i32("render:g613-first",kinoko_render_queue_first());
     }
     render_defaults();
     if (trace_index<=3) kinoko_game_trace_map(objects.map,1);
@@ -146,10 +146,10 @@ const SceneMethods game_methods{
     reinterpret_cast<void*>(scene_noop),SCENE_METHOD(enter,scene_transition),SCENE_METHOD(leave,scene_transition)};
 #undef SCENE_METHOD
 int32_t __fastcall initialize(Manager*,void*) {
-    retdec_trace("45da00:enter"); render_defaults();
-    retdec_trace("45da00:before-469640");
+    kinoko_trace("45da00:enter"); render_defaults();
+    kinoko_trace("45da00:before-469640");
     const auto result=kinoko_game_initialize();
-    retdec_trace_i32("45da00:after-469640",result); return result;
+    kinoko_trace_i32("45da00:after-469640",result); return result;
 }
 int32_t __fastcall shutdown(Manager*,void*) { return kinoko_game_shutdown(); }
 int32_t __fastcall update(Manager*,void*) { return 0; }

@@ -34,9 +34,9 @@ static ULONG WINAPI release_texture(IDirect3DTexture9*) { ++releases;return 0; }
 extern "C" {
 KinokoGraphics kinoko_graphics{};
 KinokoCriticalSection kinoko_graphics_lock{};
-void retdec_trace(const char*) {}
-void retdec_trace_i32(const char*,int32_t) {}
-void retdec_trace_hresult(const char*,long) {}
+void kinoko_trace(const char*) {}
+void kinoko_trace_i32(const char*,int32_t) {}
+void kinoko_trace_hresult(const char*,long) {}
 int32_t kinoko_bitmap_load_cv2(KinokoBitmap* bitmap,const char* path) {
     loaded_path=path;
     if (missing) return 0;

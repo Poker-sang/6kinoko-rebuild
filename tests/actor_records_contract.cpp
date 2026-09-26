@@ -41,7 +41,7 @@ int32_t kinoko_collision_event_at_point(KinokoMapManager*,int32_t x,int32_t y,ui
 }
 void * kinoko_sqplus_object_instance(void * , void * ) { return (void *)(intptr_t)(0); }
 void*  kinoko_sqplus_object_destroy(void * object) { ++object_releases; return (void*)(intptr_t)((int32_t)(intptr_t)(object) + 4); }
-void retdec_trace_star_state(const char*, int32_t) {}
+void kinoko_trace_star_state(const char*, int32_t) {}
 int32_t kinoko_texture_release(int32_t handle) { cleanup_order.push_back(handle); return 0; }
 void *kinoko_actor_manager_clear_actors(KinokoActorManager *) { cleanup_order.push_back(-1); return nullptr; }
 }

@@ -10,8 +10,8 @@
 
 extern "C" {
 extern char kinoko_sqrat_trace_enabled;
-void retdec_trace_i32(const char*, int32_t);
-void retdec_trace_squirrel_name(const char*, int32_t);
+void kinoko_trace_i32(const char*, int32_t);
+void kinoko_trace_squirrel_name(const char*, int32_t);
 }
 
 namespace {
@@ -75,8 +75,8 @@ void reset_pair(void* storage) {
     HSQOBJECT empty; sq_resetobject(&empty); write(storage, empty);
 }
 void trace_pair(const char* type_label, const char* data_label, const HSQOBJECT& value) {
-    retdec_trace_i32(type_label, value._type);
-    retdec_trace_i32(data_label, data_bits(value));
+    kinoko_trace_i32(type_label, value._type);
+    kinoko_trace_i32(data_label, data_bits(value));
 }
 int32_t set_pair(SQVM* id, const int32_t* object, const char* name,
                  const int32_t* value, bool raw) {
@@ -88,7 +88,7 @@ int32_t set_pair(SQVM* id, const int32_t* object, const char* name,
     if (!raw) {
         static std::atomic<unsigned> traces{0};
         if (traces.fetch_add(1, std::memory_order_relaxed) < 96) {
-            retdec_trace_squirrel_name("sqrat:set-name", address(name));
+            kinoko_trace_squirrel_name("sqrat:set-name", address(name));
             trace_pair("sqrat:set-object-type", "sqrat:set-object-data", receiver);
             trace_pair("sqrat:set-value-type", "sqrat:set-value-data", incoming);
         }
@@ -123,8 +123,8 @@ extern "C" void * kinoko_sqrat_root_construct(void * storage, struct SQVM * id) 
     if (!storage || !id) return 0;
     auto vm = static_cast<SQVM *>(id);
     ObjectView object(storage);
-    retdec_trace_i32("450e30:construct-object", address(storage));
-    retdec_trace_i32("450e30:construct-pair", object.payload_address());
+    kinoko_trace_i32("450e30:construct-object", address(storage));
+    kinoko_trace_i32("450e30:construct-pair", object.payload_address());
     object.vtable(kinoko_sqrat_object_vtable());
     object.vm(vm); object.owns(true); object.reset();
     object.vtable(kinoko_sqrat_root_vtable());
@@ -259,9 +259,9 @@ extern "C" struct SQVM * kinoko_sqrat_bind_object_function(void * storage, const
     ObjectView object(storage);
     auto vm = object.vm();
     if (!vm || !function || size < 0 || (size && !source)) return nullptr;
-    retdec_trace_squirrel_name("415550:name", address(name));
-    retdec_trace_i32("415550:size", size);
-    retdec_trace_i32("415550:native", address(function));
+    kinoko_trace_squirrel_name("415550:name", address(name));
+    kinoko_trace_i32("415550:size", size);
+    kinoko_trace_i32("415550:native", address(function));
     // Execute Sqrat's actual BindFunc body, including userdata copy, closure,
     // publication and pop. The legacy entry returns VM, not BindFunc's void.
     kinoko::script::upstream::sqrat_bind_function(vm, object.value(),
@@ -293,7 +293,7 @@ extern "C" int32_t kinoko_sqrat_invoke_callback(const void * storage) {
     if (!callback.vm) return -1;
     static std::atomic<unsigned> traces{0};
     if (traces.fetch_add(1, std::memory_order_relaxed) < 96) {
-        retdec_trace_i32("415810:self", address(storage));
+        kinoko_trace_i32("415810:self", address(storage));
         trace_pair("415810:env-type", "415810:env-data", callback.environment);
         trace_pair("415810:closure-type", "415810:closure-data", callback.closure);
     }

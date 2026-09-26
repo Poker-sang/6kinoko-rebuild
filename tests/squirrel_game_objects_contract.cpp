@@ -17,9 +17,9 @@ int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
 int32_t kinoko_sqrat_object_vtable(void) { return 0x12121212; }
 int32_t kinoko_sqrat_root_vtable(void) { return 0x34343434; }
 int32_t kinoko_native_void_type(void) { return 0x13572468; }
-void retdec_trace(const char*) {}
-void retdec_trace_i32(const char*, int32_t) {}
-void retdec_trace_squirrel_name(const char*, int32_t) {}
+void kinoko_trace(const char*) {}
+void kinoko_trace_i32(const char*, int32_t) {}
+void kinoko_trace_squirrel_name(const char*, int32_t) {}
 void kinoko_host_free_allocation(int32_t* value) { std::free(value); }
 }
 namespace {
@@ -51,8 +51,8 @@ void constructors(HSQUIRRELVM vm) {
     Pair class_value(vm), parent(vm), bound(vm), unbound(vm), wrong(vm);
     evaluate(vm,"return Bound;",&class_value); root(vm,parent);
     const auto base=sq_gettop(vm); const auto before=releases;
-    require(retdec_create_bound_instance(address(vm),parent.data(),"bound",class_value.data(),address(&native),bound.data())==1,"create/publish instance");
-    require(retdec_create_unbound_instance(address(vm),class_value.data(),address(&native),unbound.data())==1,"create unbound instance");
+    require(kinoko_create_bound_instance(address(vm),parent.data(),"bound",class_value.data(),address(&native),bound.data())==1,"create/publish instance");
+    require(kinoko_create_unbound_instance(address(vm),class_value.data(),address(&native),unbound.data())==1,"create unbound instance");
     top(vm,base,"instance creation balances stack");
     evaluate(vm,"if (ctor_calls != 0) throw \"constructor executed\";\nif (typeof bound != \"instance\") throw \"published type\";\n");
     for (auto* object : {&bound,&unbound}) {
@@ -61,11 +61,11 @@ void constructors(HSQUIRRELVM vm) {
         sq_setreleasehook(vm,-1,release_native); sq_pop(vm,1);
     }
     const auto unchanged=std::array<int32_t,2>{17,29}; auto output=unchanged;
-    require(!retdec_create_unbound_instance(address(vm),wrong.data(),address(&native),output.data()) && output==unchanged,"invalid class preserves outputs");
+    require(!kinoko_create_unbound_instance(address(vm),wrong.data(),address(&native),output.data()) && output==unchanged,"invalid class preserves outputs");
     // The supplied 2.2.2 sq_newslot returns SQ_OK for a non-table/class parent,
     // without publishing anything. Preserve the recovered helper's success and
     // its owned instance output instead of inventing a failure for this case.
-    require(retdec_create_bound_instance(address(vm),wrong.data(),"unpublished",class_value.data(),address(&native),output.data())==1,
+    require(kinoko_create_bound_instance(address(vm),wrong.data(),"unpublished",class_value.data(),address(&native),output.data())==1,
         "non-table parent retains 2.2.2 newslot success convention");
     auto unpublished=load<HSQOBJECT>(output.data());
     require(unpublished._type==OT_INSTANCE && data_bits(unpublished)!=0,"unpublished instance output is owned");
@@ -82,9 +82,9 @@ void resource_roots(HSQUIRRELVM vm) {
     std::array<unsigned char,180> storage; storage.fill(0xa7);
     auto* resource=storage.data()+1; // Deliberately unaligned legacy storage.
     store(resource+152,address(vm)); store(resource+156,empty());
-    require(retdec_bind_act_resource_root(address(resource),address(vm),table.data())==1,"bind resource root");
+    require(kinoko_bind_act_resource_root(address(resource),address(vm),table.data())==1,"bind resource root");
     destroy(table); // The resource is now the table's only strong owner.
-    require(retdec_bind_act_resource_root(address(resource),address(vm),reinterpret_cast<int32_t*>(resource+156))==1,"self-rebinding retains last root");
+    require(kinoko_bind_act_resource_root(address(resource),address(vm),reinterpret_cast<int32_t*>(resource+156))==1,"self-rebinding retains last root");
     weak.push(); require(SQ_SUCCEEDED(sq_getweakrefval(vm,-1)) && sq_gettype(vm,-1)==OT_TABLE,"self-bind does not invalidate weakref"); sq_pop(vm,2);
     auto value=load<HSQOBJECT>(resource+156); sq_release(vm,&value); store(resource+156,empty());
     weak.push(); sq_getweakrefval(vm,-1); require(sq_gettype(vm,-1)==OT_NULL,"last root releases table"); sq_pop(vm,2);
@@ -110,18 +110,18 @@ void callbacks(HSQUIRRELVM vm) {
         sq_addref(vm,&value); sq_pop(vm,1);
         return last == SQFalse;
     };
-    retdec_copy_act_callback(address(vm),address(script.data()),offset,address(object.data()),"Update");
+    kinoko_copy_act_callback(address(vm),address(script.data()),offset,address(object.data()),"Update");
     require(load<int32_t>(script.data()+offset)==address(vm),"callback stores actual VM");
     require(data_bits(load<HSQOBJECT>(script.data()+offset+4))==data_bits(environment),"callback environment");
     require(data_bits(load<HSQOBJECT>(script.data()+offset+12))==data_bits(function),"callback closure");
     require(has_extra_handle(environment) && has_extra_handle(function),"callback owns both pairs independently");
-    retdec_copy_act_callback(address(vm),address(script.data()),offset,address(object.data()),"Update");
+    kinoko_copy_act_callback(address(vm),address(script.data()),offset,address(object.data()),"Update");
     require(has_extra_handle(environment) && has_extra_handle(function),"callback replacement balances handles");
-    retdec_release_act_callback(address(script.data()+offset));
-    retdec_release_act_callback(address(script.data()+offset));
+    kinoko_release_act_callback(address(script.data()+offset));
+    kinoko_release_act_callback(address(script.data()+offset));
     require(!has_extra_handle(environment) && !has_extra_handle(function),"source callback destruction is balanced and repeatable");
-    retdec_copy_act_callback(address(vm),address(script.data()),offset,address(object.data()),"Update");
-    retdec_copy_act_callback(address(vm),address(script.data()),offset,address(object.data()),"Missing");
+    kinoko_copy_act_callback(address(vm),address(script.data()),offset,address(object.data()),"Update");
+    kinoko_copy_act_callback(address(vm),address(script.data()),offset,address(object.data()),"Missing");
     require(load<HSQOBJECT>(script.data()+offset+4)._type==OT_NULL && load<HSQOBJECT>(script.data()+offset+12)._type==OT_NULL,"missing callback clears old pairs");
     require(!has_extra_handle(environment) && !has_extra_handle(function),"missing lookup releases callback references");
     for (auto* owner : {&table,&closure}) {
@@ -156,17 +156,17 @@ void embedded(HSQUIRRELVM vm) {
     std::array<unsigned char,110> script{};
     store(script.data()+92,address(data.data())); store(script.data()+96,static_cast<int32_t>(data.size()));
     sq_pushinteger(vm,812); const auto base=sq_gettop(vm);
-    require(retdec_execute_embedded_act_script(address(vm),address(script.data()),environment.data())==1,"load and execute supplied bytecode");
+    require(kinoko_execute_embedded_act_script(address(vm),address(script.data()),environment.data())==1,"load and execute supplied bytecode");
     top(vm,base,"embedded execution restores stack"); require(get_integer(vm)==812,"embedded sentinel survives");
     environment.push(); sq_pushstring(vm,"answer",-1); require(SQ_SUCCEEDED(sq_get(vm,-2)) && get_integer(vm)==713,"uses supplied environment, not root"); sq_pop(vm,2);
     for(int32_t truncated : {0,1,2,7,static_cast<int32_t>(data.size()-1)}) {
         store(script.data()+96,truncated);
-        require(retdec_execute_embedded_act_script(address(vm),address(script.data()),environment.data())==0,"truncated bytecode rejected");
+        require(kinoko_execute_embedded_act_script(address(vm),address(script.data()),environment.data())==0,"truncated bytecode rejected");
         top(vm,base,"failed read restores stack");
     }
     auto throwing=bytecode(vm,"throw \"embedded failure\";\n");
     store(script.data()+92,address(throwing.data())); store(script.data()+96,static_cast<int32_t>(throwing.size()));
-    require(!retdec_execute_embedded_act_script(address(vm),address(script.data()),environment.data()),"script execution failure reported"); top(vm,base,"throwing closure cleanup");
+    require(!kinoko_execute_embedded_act_script(address(vm),address(script.data()),environment.data()),"script execution failure reported"); top(vm,base,"throwing closure cleanup");
     unsigned char raw[5]={1,2,3,4,5}, result[9]; std::memset(result,0xa7,sizeof(result));
     std::array<int32_t,3> stream{address(raw),5,address(raw)};
     require(kinoko_script_read_memory(stream.data(),result+1,3)==3,"partial stream read");
@@ -211,24 +211,24 @@ void text_scripts(HSQUIRRELVM vm) {
 void values(HSQUIRRELVM vm) {
     Top restore(vm); std::array<int32_t,3> object{},copy{};
     const char raw[5]={'a','b','\0','c','d'};
-    require(retdec_squirrel_object_from_string(object.data(),raw,5),"construct from bounded string");
-    const char* text=nullptr; require(retdec_squirrel_object_string(object.data(),&text) && std::string(text)=="ab","embedded NUL retains old string semantics");
-    require(retdec_squirrel_object_copy(copy.data(),object.data()),"construct owned copy");
-    require(retdec_squirrel_object_copy(copy.data(),copy.data()),"self-copy keeps owned value");
+    require(kinoko_squirrel_object_from_string(object.data(),raw,5),"construct from bounded string");
+    const char* text=nullptr; require(kinoko_squirrel_object_string(object.data(),&text) && std::string(text)=="ab","embedded NUL retains old string semantics");
+    require(kinoko_squirrel_object_copy(copy.data(),object.data()),"construct owned copy");
+    require(kinoko_squirrel_object_copy(copy.data(),copy.data()),"self-copy keeps owned value");
     const auto slot=function_4029b0(address(vm),copy.data());
     require(slot==kinoko_sq_get_up(address(vm),-1) && get_string(vm)=="ab","push returns source slot address"); sq_pop(vm,1);
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object.data())));
-    require(retdec_squirrel_object_string(copy.data(),&text) && std::string(text)=="ab","copy survives source destruction");
+    require(kinoko_squirrel_object_string(copy.data(),&text) && std::string(text)=="ab","copy survives source destruction");
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(copy.data())));
-    require(retdec_squirrel_object_from_pair(object.data(),OT_INTEGER,-71),"integer pair construction");
-    text=raw; require(!retdec_squirrel_object_string(object.data(),&text) && text==raw,"failed string conversion leaves output");
+    require(kinoko_squirrel_object_from_pair(object.data(),OT_INTEGER,-71),"integer pair construction");
+    text=raw; require(!kinoko_squirrel_object_string(object.data(),&text) && text==raw,"failed string conversion leaves output");
     const auto previous=object;
-    require(!retdec_squirrel_object_from_string(object.data(),raw,0x1000001u) && object==previous,"oversized length rejected before read/write");
+    require(!kinoko_squirrel_object_from_string(object.data(),raw,0x1000001u) && object==previous,"oversized length rejected before read/write");
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object.data())));
-    require(retdec_squirrel_object_from_string(object.data(),raw,0),"empty string construction");
-    require(retdec_squirrel_object_string(object.data(),&text) && !*text,"zero length is empty"); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object.data())));
-    require(retdec_squirrel_object_from_string(object.data(),raw,2),"nonterminated bounded prefix");
-    require(retdec_squirrel_object_string(object.data(),&text) && std::string(text)=="ab","bounded no-overread text"); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object.data())));
+    require(kinoko_squirrel_object_from_string(object.data(),raw,0),"empty string construction");
+    require(kinoko_squirrel_object_string(object.data(),&text) && !*text,"zero length is empty"); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object.data())));
+    require(kinoko_squirrel_object_from_string(object.data(),raw,2),"nonterminated bounded prefix");
+    require(kinoko_squirrel_object_string(object.data(),&text) && std::string(text)=="ab","bounded no-overread text"); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object.data())));
 }
 void callback_call(HSQUIRRELVM vm) {
     Top restore(vm); Pair closure(vm), environment(vm); root(vm,environment);

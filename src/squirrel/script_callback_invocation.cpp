@@ -2,7 +2,7 @@
 #include "kinoko/native_record_view.hpp"
 #include "kinoko/squirrel_binding_detail.hpp"
 #include "kinoko/squirrel_source_runtime.h"
-extern "C" void retdec_trace_i32(const char *,int32_t);
+extern "C" void kinoko_trace_i32(const char *,int32_t);
 namespace {
 using namespace kinoko::script;
 using namespace kinoko::script::binding;
@@ -19,7 +19,7 @@ extern "C" int32_t kinoko_script_callback_invoke(KinokoScriptCallback *callback)
     ObjectView(view.bytes(&KinokoScriptCallback::environment)).push(vm);
     const auto result=kinoko_sq_call(address(vm),1,1,1);
     if (result<0) {
-        retdec_trace_i32("actor:step-call-failed",result);
+        kinoko_trace_i32("actor:step-call-failed",result);
         sq_settop(vm,base);
         return result;
     }

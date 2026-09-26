@@ -79,7 +79,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <windows.h>
 #include <intrin.h>
 #include <d3d9.h>
@@ -106,9 +105,9 @@
 #include "kinoko/map_render.h"
 #include "kinoko/map_activation.h"
 
-#define retdec_compile_environment_vtable kinoko_sqrat_object_methods_storage
-#define retdec_compile_environment_type kinoko_null_object_type
-#define retdec_compile_environment_slot kinoko_null_object_value
+#define kinoko_compile_environment_vtable kinoko_sqrat_object_methods_storage
+#define kinoko_compile_environment_type kinoko_null_object_type
+#define kinoko_compile_environment_slot kinoko_null_object_value
 
 #define RETDEC_ACT_TEXTURE_SLOT_COUNT KINOKO_TEXTURE_CAPACITY
 #define g_retdec_act_texture_slots kinoko_texture_slots
@@ -119,15 +118,15 @@ extern "C" {
 
 extern int32_t kinoko_script_assets_packed(void);
 
-extern int32_t retdec_primary_shared_state;
+extern int32_t kinoko_primary_shared_state;
 
-extern int32_t retdec_release_watch_data[8];
+extern int32_t kinoko_release_watch_data[8];
 
-extern int32_t retdec_release_watch_count;
+extern int32_t kinoko_release_watch_count;
 
-struct retdec_mcd_data;
+struct kinoko_mcd_data;
 
-void retdec_trace_star_state(const char *phase, int32_t actor);
+void kinoko_trace_star_state(const char *phase, int32_t actor);
 
 uint32_t timeGetTime(void);
 
@@ -457,7 +456,7 @@ extern char kinoko_ime_enabled;
 
 extern int32_t kinoko_ime_cursor;
 
-extern int32_t kinoko_act_script_extension[7];
+
 
 extern char kinoko_sqrat_trace_enabled;
 
@@ -509,7 +508,7 @@ extern int32_t kinoko_script_root_storage[3];
 
 extern char * kinoko_game_window_slot;
 
-extern unsigned char g_retdec_keyboard_state[256];
+extern unsigned char kinoko_keyboard_state[256];
 
 extern char kinoko_packed_assets;
 
@@ -609,13 +608,13 @@ int32_t kinoko_host_find_map_layout_abi(int32_t name_ptr);
 
 int32_t kinoko_host_create_map_layer_abi(int32_t name_ptr);
 
-int32_t retdec_compile_file_native(int32_t vm);
+int32_t kinoko_compile_file_native(int32_t vm);
 
 int32_t kinoko_script_bind_root_value(int32_t *object, int32_t *value, char *name, int32_t flags);
 
 int32_t kinoko_script_bind_root_integer(int32_t *object, int32_t value, char *name);
 
-__declspec(noinline) int32_t retdec_stack_vm(void);
+__declspec(noinline) int32_t kinoko_stack_vm(void);
 
 int32_t kinoko_host_get_delegate_abi(int32_t source_ptr, int32_t *target_ptr);
 

@@ -10,7 +10,7 @@
 extern "C" {
 void * kinoko_sqplus_object_instance(void * object, void * index);
 void*  kinoko_sqplus_object_destroy(void * object);
-void retdec_trace_star_state(const char *phase, int32_t actor);
+void kinoko_trace_star_state(const char *phase, int32_t actor);
 }
 
 namespace {
@@ -49,7 +49,7 @@ public:
     }
 
     int32_t release() const {
-        retdec_trace_star_state("release", address(actor_));
+        kinoko_trace_star_state("release", address(actor_));
         view_.set(&ActorRecord::release_pending, uint8_t{1});
         ManagerView(view_.get(&ActorRecord::manager))
             .set(&ManagerPrefix::cleanup_pending, uint8_t{1});

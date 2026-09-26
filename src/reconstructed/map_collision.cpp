@@ -39,7 +39,7 @@ extern "C" int32_t kinoko_map_collision_query(KinokoCollisionState *state,
     KinokoActLayout *layout, int32_t *cached, int32_t left, int32_t top,
     int32_t right, int32_t bottom, int32_t *count) {
     return kinoko::map::query_visible(layout, cached, left, top, right, bottom,
-        [&](retdec_mcd_chip *chip, Placement *record, int32_t index) {
+        [&](kinoko_mcd_chip *chip, Placement *record, int32_t index) {
             return kinoko_map_collision_append(state, count, chip->bytes, record, index);
         });
 }

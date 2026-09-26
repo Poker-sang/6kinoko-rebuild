@@ -24,7 +24,7 @@ KinokoRenderer kinoko_renderer{};
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY]{};
 int32_t kinoko_texture_bind_stage(int32_t,int32_t texture) { calls.push_back(500+texture);return E_FAIL; }
 int32_t kinoko_quad_submit(KinokoQuad*,float,float) { ++submitted;calls.push_back(900);return E_FAIL; }
-void retdec_trace_i32(const char*,int32_t) {}
+void kinoko_trace_i32(const char*,int32_t) {}
 KinokoActLayer *__fastcall kinoko_act_layer_world_position(KinokoActLayer *layer,void*,float *x,float *y,float *z) { *x=3;*y=4;*z=5;return layer; }
 uint32_t kinoko_string_queue_size(int32_t) { return 1; }
 int32_t kinoko_string_queue_at(int32_t,uint32_t) { return address(&glyph); }

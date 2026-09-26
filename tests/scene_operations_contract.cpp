@@ -98,9 +98,9 @@ void rendering() {
 }
 extern "C" {
 const KinokoGameObjects* kinoko_game_objects() { return &objects; }
-void retdec_trace(const char*) {}
-void retdec_trace_i32(const char*,int32_t) {}
-void retdec_trace_squirrel_name(const char*,int32_t) {}
+void kinoko_trace(const char*) {}
+void kinoko_trace_i32(const char*,int32_t) {}
+void kinoko_trace_squirrel_name(const char*,int32_t) {}
 KinokoRenderLayer* kinoko_map_make_render_layer(KinokoMapManager* map,const char* name) {
     CHECK(map==objects.map); ++map_lookups;
     return std::strcmp(name,"map_back")==0 ? reinterpret_cast<KinokoRenderLayer*>(&layers[4]) : nullptr;

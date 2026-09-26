@@ -15,11 +15,11 @@ struct List {
 };
 static_assert(offsetof(List,head)==0);
 }
-extern "C" int32_t retdec_act_make_list(int32_t* slot) {
+extern "C" int32_t kinoko_act_make_list(int32_t* slot) {
     if(!slot) return 0;
     try { *slot=address(new List);return 1; } catch(const std::bad_alloc&) { return 0; }
 }
-extern "C" int32_t retdec_act_append_list(int32_t slot,int32_t value) {
+extern "C" int32_t kinoko_act_append_list(int32_t slot,int32_t value) {
     if(!slot || !field<int32_t>(slot)) return 0;
     auto& list=*pointer<List>(field<int32_t>(slot));
     try {

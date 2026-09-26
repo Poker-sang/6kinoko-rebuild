@@ -36,7 +36,7 @@ uint32_t word(const void *p) { uint32_t value; std::memcpy(&value, p, sizeof(val
 }
 extern "C" {
 void kinoko_act_commands_clear(KinokoActRuntime* runtime) { test::command_runtime = kinoko::legacy::address(runtime); ++test::command_clears; }
-void retdec_trace_i32(const char *, int32_t) {}
+void kinoko_trace_i32(const char *, int32_t) {}
 unsigned char* kinoko_act_clear_sprites(KinokoActSpriteStorage* slot) { test::cleared_slot = kinoko::legacy::address(slot); ++test::clears; return 0; }
 }
 #define CHECK(condition) do { if (!(condition)) { std::fprintf(stderr,"clock line %d: %s\n",__LINE__,#condition); return 1; } } while (0)

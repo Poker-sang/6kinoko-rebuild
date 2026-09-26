@@ -9,8 +9,8 @@ extern "C" {
 char kinoko_sqrat_trace_enabled = 0;
 int32_t kinoko_sqrat_object_vtable(void) { return 0x12121212; }
 int32_t kinoko_sqrat_root_vtable(void) { return 0x34343434; }
-void retdec_trace_i32(const char*, int32_t) {}
-void retdec_trace_squirrel_name(const char*, int32_t) {}
+void kinoko_trace_i32(const char*, int32_t) {}
+void kinoko_trace_squirrel_name(const char*, int32_t) {}
 
 }
 namespace {
@@ -65,9 +65,9 @@ public:
 };
 void scalar_fields(HSQUIRRELVM vm) {
     Top restore(vm); const auto base = sq_gettop(vm); Fixture f(vm);
-    f.bind("get_i", 21, retdec_cact_layer_get_int); f.bind("set_i", 21, retdec_cact_layer_set_int);
-    f.bind("get_f", 29, retdec_cact_layer_get_float); f.bind("set_f", 29, retdec_cact_layer_set_float);
-    f.bind("get_b", 0x8c, retdec_cact_layer_get_bool); f.bind("set_b", 0x8c, retdec_cact_layer_set_bool);
+    f.bind("get_i", 21, kinoko_cact_layer_get_int); f.bind("set_i", 21, kinoko_cact_layer_set_int);
+    f.bind("get_f", 29, kinoko_cact_layer_get_float); f.bind("set_f", 29, kinoko_cact_layer_set_float);
+    f.bind("get_b", 0x8c, kinoko_cact_layer_get_bool); f.bind("set_b", 0x8c, kinoko_cact_layer_set_bool);
     f.set_int("set_i", -123456789); require(f.get_int("get_i") == -123456789, "unaligned integer round trip");
     f.set_float("set_i", 12.75f); require(f.get_int("get_i") == 12, "property integers retain source numeric coercion");
     f.set_string("set_i", "wrong"); require(f.get_int("get_i") == 12, "wrong integer type does not overwrite");
@@ -79,16 +79,16 @@ void scalar_fields(HSQUIRRELVM vm) {
     f.prepare("set_b"); sq_pushnull(vm); f.call(2, false); require(!f.get_bool("get_b"), "null truthiness");
     f.set_string("set_b", ""); require(f.get_bool("get_b"), "empty string truthiness follows 2.2.2");
     require(load<uint8_t>(f.object() + 0x8b) == 0xa7 && load<uint8_t>(f.object() + 0x8d) == 0xa7, "boolean touches one byte");
-    f.bind("get_l_i", 21, retdec_c2dlayout_get_int); f.bind("set_l_i", 21, retdec_c2dlayout_set_int);
-    f.bind("get_l_f", 29, retdec_c2dlayout_get_float); f.bind("set_l_f", 29, retdec_c2dlayout_set_float);
-    f.bind("color", 21, retdec_c2dlayout_set_color);
+    f.bind("get_l_i", 21, kinoko_c2dlayout_get_int); f.bind("set_l_i", 21, kinoko_c2dlayout_set_int);
+    f.bind("get_l_f", 29, kinoko_c2dlayout_get_float); f.bind("set_l_f", 29, kinoko_c2dlayout_set_float);
+    f.bind("color", 21, kinoko_c2dlayout_set_color);
     f.set_int("set_l_i", -20); require(f.get_int("get_l_i") == -20, "layout integer");
     f.set_float("set_l_f", 4.5f); require(f.get_float("get_l_f") == 4.5f, "layout float");
     f.set_int("color", -12); require(f.get_int("get_l_i") == 0, "color lower clamp");
     f.set_int("color", 300); require(f.get_int("get_l_i") == 255, "color upper clamp");
     f.set_int("color", 127); require(f.get_int("get_l_i") == 127, "color middle");
     f.set_string("color", "wrong"); require(f.get_int("get_l_i") == 127, "invalid color unchanged");
-    f.bind("short_get", 41, retdec_native_view_get_short); f.bind("short_set", 41, retdec_native_view_set_short);
+    f.bind("short_get", 41, kinoko_native_view_get_short); f.bind("short_set", 41, kinoko_native_view_set_short);
     for (const auto value : {0, 32767, 32768, -1, 65537, -32769}) {
         f.set_int("short_set", value);
         const auto bits = static_cast<uint16_t>(value);
@@ -101,8 +101,8 @@ void scalar_fields(HSQUIRRELVM vm) {
 void indirect_fields(HSQUIRRELVM vm) {
     Top restore(vm); const auto base = sq_gettop(vm); Fixture f(vm);
     store(f.object() + 0x34, f.aliased()); store(f.object() + 0x38, f.aliased() + 8);
-    f.bind("pf_get", 0x34, retdec_cact_layer_get_pointer_float); f.bind("pf_set", 0x34, retdec_cact_layer_set_pointer_float);
-    f.bind("pi_get", 0x38, retdec_cact_layer_get_pointer_int); f.bind("pi_set", 0x38, retdec_cact_layer_set_pointer_int);
+    f.bind("pf_get", 0x34, kinoko_cact_layer_get_pointer_float); f.bind("pf_set", 0x34, kinoko_cact_layer_set_pointer_float);
+    f.bind("pi_get", 0x38, kinoko_cact_layer_get_pointer_int); f.bind("pi_set", 0x38, kinoko_cact_layer_set_pointer_int);
     f.set_float("pf_set", 12.5f); require(f.get_float("pf_get") == 12.5f, "aliased float round trip");
     f.set_int("pi_set", -200); require(f.get_int("pi_get") == -200, "aliased integer round trip");
     f.set_string("pi_set", "invalid"); require(f.get_int("pi_get") == -200, "alias type mismatch does not mutate");
@@ -116,11 +116,11 @@ void indirect_fields(HSQUIRRELVM vm) {
 }
 void player_and_strings(HSQUIRRELVM vm) {
     Top restore(vm); const auto base = sq_gettop(vm); Fixture f(vm);
-    f.bind("staging_get", 8, retdec_acting_player_get_property); f.bind("staging_set", 8, retdec_acting_player_set_property);
-    f.bind("visible_get", 132, retdec_acting_player_get_property); f.bind("visible_set", 132, retdec_acting_player_set_property);
-    f.bind("float_get", 124, retdec_acting_player_get_property); f.bind("float_set", 124, retdec_acting_player_set_property);
-    f.bind("int_get", 108, retdec_acting_player_get_property); f.bind("int_set", 108, retdec_acting_player_set_property);
-    f.bind("name_get", 148, retdec_acting_player_get_property); f.bind("name_set", 148, retdec_acting_player_set_property);
+    f.bind("staging_get", 8, kinoko_acting_player_get_property); f.bind("staging_set", 8, kinoko_acting_player_set_property);
+    f.bind("visible_get", 132, kinoko_acting_player_get_property); f.bind("visible_set", 132, kinoko_acting_player_set_property);
+    f.bind("float_get", 124, kinoko_acting_player_get_property); f.bind("float_set", 124, kinoko_acting_player_set_property);
+    f.bind("int_get", 108, kinoko_acting_player_get_property); f.bind("int_set", 108, kinoko_acting_player_set_property);
+    f.bind("name_get", 148, kinoko_acting_player_get_property); f.bind("name_set", 148, kinoko_acting_player_set_property);
     store(f.object() + 132, f.aliased()); store(f.object() + 124, f.aliased() + 4);
     store(f.object() + 108, f.aliased() + 8); store(f.object() + 148, f.aliased() + 16);
     f.prepare("staging_set"); sq_pushbool(vm, SQFalse); f.call(2, false); require(!f.get_bool("staging_get"), "staging is direct byte not pointer");
@@ -149,7 +149,7 @@ void player_and_strings(HSQUIRRELVM vm) {
     f.set_int("name_set", 5);
     require(f.get_string("name_get") == "short", "string setter rejects wrong type");
     owned_name.destroy();
-    f.bind("layer_name_get", 177, retdec_cact_layer_get_string); f.bind("layer_name_set", 177, retdec_cact_layer_set_string);
+    f.bind("layer_name_get", 177, kinoko_cact_layer_get_string); f.bind("layer_name_set", 177, kinoko_cact_layer_set_string);
     std::memcpy(f.object() + 177, "layer", 6);
     store<uint32_t>(f.object() + 193, 5); store<uint32_t>(f.object() + 197, 15);
     require(f.get_string("layer_name_get") == "layer", "layer string inline layout");
@@ -273,26 +273,26 @@ void coercing_string_fields(HSQUIRRELVM vm) {
 void malformed_descriptors(HSQUIRRELVM vm) {
     Top restore(vm); const auto base = sq_gettop(vm); Fixture f(vm);
     // Directly exercise malformed ABI inputs that source APIs do not bounds-check.
-    require(!retdec_cact_layer_get_int(0), "null VM guard");
-    require(!retdec_c2dlayout_get_int(address(vm)), "empty stack guard");
+    require(!kinoko_cact_layer_get_int(0), "null VM guard");
+    require(!kinoko_c2dlayout_get_int(address(vm)), "empty stack guard");
     int32_t offset = -999;
-    f.instance.push(); require(!retdec_c2dlayout_property_offset(address(vm), &offset), "missing descriptor guard");
+    f.instance.push(); require(!kinoko_c2dlayout_property_offset(address(vm), &offset), "missing descriptor guard");
     require(offset == -999, "failed descriptor leaves output unchanged");
     sq_newuserdata(vm, 1);
-    require(!retdec_cact_layer_property_offset(address(vm), &offset), "short descriptor cannot read four bytes");
+    require(!kinoko_cact_layer_property_offset(address(vm), &offset), "short descriptor cannot read four bytes");
     require(offset == -999, "short descriptor leaves output unchanged");
     sq_pop(vm, 1); sq_pushinteger(vm, 123);
-    require(!retdec_c2dlayout_get_float(address(vm)), "wrong descriptor type rejected");
+    require(!kinoko_c2dlayout_get_float(address(vm)), "wrong descriptor type rejected");
     sq_pop(vm, 1); auto descriptor = sq_newuserdata(vm, 4); store<int32_t>(descriptor, 21);
     const auto before = f.native;
-    require(!retdec_cact_layer_set_bool(address(vm)), "missing setter value rejected");
+    require(!kinoko_cact_layer_set_bool(address(vm)), "missing setter value rejected");
     require(f.native == before, "malformed setter did not write native memory");
     sq_settop(vm, base);
     sq_pushnull(vm); sq_newuserdata(vm, 4);
-    require(!retdec_c2dlayout_property_offset(address(vm), &offset), "wrong receiver type rejected");
+    require(!kinoko_c2dlayout_property_offset(address(vm), &offset), "wrong receiver type rejected");
     sq_settop(vm, base);
     f.instance.push(); sq_setinstanceup(vm, -1, nullptr); sq_newuserdata(vm, 4);
-    require(!retdec_c2dlayout_property_offset(address(vm), &offset), "null native pointer rejected");
+    require(!kinoko_c2dlayout_property_offset(address(vm), &offset), "null native pointer rejected");
     sq_settop(vm, base); f.require_canaries();
 }
 }

@@ -16,12 +16,12 @@ int32_t* kinoko_native_binding_type(int32_t category);
 
 void * kinoko_sqplus_new_string(void * result, const char * a2);
 void * kinoko_sqplus_bind_function(void * a1, void * a2, const char * a3, const char * a4);
-void * kinoko_sqplus_bind_object_function(int32_t * a1, void * a2, void * a3, const char * a4, const char * a5);
+void * kinoko_sqplus_bind_object_function(void * a1, void * a2, void * a3, const char * a4, const char * a5);
 int32_t  kinoko_sqplus_create_class(struct SQVM * a1, void * a2, int32_t * a3, const char * a4, const char * a5);
 int32_t  kinoko_sqplus_install_variable_handlers(void * a1);
 void*  kinoko_sqplus_setup_hierarchy(int32_t *root_object);
 void * kinoko_sqplus_create_variable(void * a1, const char * a2);
-int32_t * kinoko_sqplus_initialize_variable(int32_t *this_ptr, int32_t a1, int32_t a2, int32_t a3, int32_t *a4, int32_t a5, int32_t a6);
+void * kinoko_sqplus_initialize_variable(void *this_ptr, int32_t a1, int32_t a2, int32_t a3, int32_t *a4, int32_t a5, int32_t a6);
 int32_t kinoko_sqplus_bind_integer(int32_t * a1, int32_t * a2, int32_t a3, char * a4, int32_t a5);
 int32_t kinoko_sqplus_bind_float(int32_t * a1, int32_t * a2, int32_t a3, char * a4, int32_t a5);
 int32_t kinoko_sqplus_bind_boolean(int32_t * a1, int32_t * a2, int32_t a3, char * a4, int32_t a5);

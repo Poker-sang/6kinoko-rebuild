@@ -23,7 +23,7 @@ int32_t kinoko_ime_context_slot = 0;
 char kinoko_packed_assets = 0;
 // Isolated host/device ports. No game startup, timer or device is invoked by
 // this contract; only the callback/state functions below are under examination.
-void retdec_trace(const char*) {}
+void kinoko_trace(const char*) {}
 void kinoko_application_initialize_host() {}
 void kinoko_application_open_archives() {}
 void kinoko_application_set_archive_mode(int32_t enabled) { kinoko_packed_assets = enabled != 0; }

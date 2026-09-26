@@ -11,9 +11,9 @@
 #include "kinoko/squirrel_binding_detail.hpp"
 #include <cstdlib>
 extern "C" {
-void retdec_trace(const char *);
-void retdec_trace_i32(const char *, int32_t);
-void retdec_trace_squirrel_name(const char *, int32_t);
+void kinoko_trace(const char *);
+void kinoko_trace_i32(const char *, int32_t);
+void kinoko_trace_squirrel_name(const char *, int32_t);
 }
 namespace {
 using namespace kinoko::map;
@@ -66,9 +66,9 @@ void publish(KinokoMapManager *storage, SQVM *vm, void *map_class, void *root_st
     // 46F99A -> 46F9AF always publishes the lookup result (including null).
     // The old reconstruction indexed current_map+4 in a three-word array.
     kinoko_sqplus_object_raw_set_name(root.data(), "currentMap", current.data());
-    retdec_trace_squirrel_name("map:act-name", address(name));
-    retdec_trace_i32("map:current-map-type", current.view().value()._type);
-    retdec_trace_i32("map:current-map-data", data_bits(current.view().value()));
+    kinoko_trace_squirrel_name("map:act-name", address(name));
+    kinoko_trace_i32("map:current-map-type", current.view().value()._type);
+    kinoko_trace_i32("map:current-map-data", data_bits(current.view().value()));
     // current, root, names release in the original order.
 }
 }
@@ -81,7 +81,7 @@ extern "C" int32_t kinoko_map_manager_load(KinokoMapManager *storage, const char
     manager.set(&ManagerRecord::source_act, source);
     if (!source) return 0;
     if (!kinoko_act_document_load(source, path)) {
-        retdec_trace("map:act-load-failed");
+        kinoko_trace("map:act-load-failed");
         // No runtime or holder exists yet. Release only the failed document,
         // as 46F740 does, without resetting the script/containers a second time.
         source = manager.get(&ManagerRecord::source_act);
@@ -105,15 +105,15 @@ extern "C" int32_t kinoko_map_manager_load(KinokoMapManager *storage, const char
     // Null allocation is a retained native boundary. Negative callback results
     // are NOT failure branches in 46F7EE/46F7F9; continue and re-read the player.
     if (!player) { kinoko_map_manager_clear(storage); return 0; }
-    retdec_root_table_construct_this(address(player), address(vm), 0);
-    retdec_begin_stage_this(address(manager.get(&ManagerRecord::player)), 0);
+    kinoko_root_table_construct_this(address(player), address(vm), 0);
+    kinoko_begin_stage_this(address(manager.get(&ManagerRecord::player)), 0);
     source = manager.get(&ManagerRecord::source_act);
     manager.set(&ManagerRecord::width, kinoko_act_document_screen_width(source));
     manager.set(&ManagerRecord::height, kinoko_act_document_screen_height(source));
     if (!map_class || !root_object) return 0; // invalid native caller, retain ownership
     publish(storage, vm, map_class, root_object);
-    retdec_trace_i32("map:instance", address(storage));
-    retdec_trace_i32("map:act", address(source));
-    retdec_trace_squirrel_name("map:path", address(path));
+    kinoko_trace_i32("map:instance", address(storage));
+    kinoko_trace_i32("map:act", address(source));
+    kinoko_trace_squirrel_name("map:path", address(path));
     return 1;
 }

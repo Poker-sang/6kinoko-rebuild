@@ -171,7 +171,7 @@ void substring_assignment() {
 }
 
 void scanner_contract() {
-    require(retdec_safe_c_string_length(nullptr) == 0, "null missing-length source");
+    require(kinoko_safe_c_string_length(nullptr) == 0, "null missing-length source");
     SYSTEM_INFO system{}; GetSystemInfo(&system);
     const size_t size = 0x100000u + system.dwPageSize;
     auto* memory = static_cast<char*>(VirtualAlloc(nullptr, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE));
@@ -181,17 +181,17 @@ void scanner_contract() {
     memory[system.dwPageSize + 3] = 0;
     DWORD old;
     require(VirtualProtect(memory, system.dwPageSize, PAGE_READONLY, &old) != 0, "read-only first region");
-    require(retdec_safe_c_string_length(memory) == system.dwPageSize + 3, "scan across distinct readable regions");
+    require(kinoko_safe_c_string_length(memory) == system.dwPageSize + 3, "scan across distinct readable regions");
     require(VirtualProtect(memory + system.dwPageSize, system.dwPageSize, PAGE_NOACCESS, &old) != 0,
         "inaccessible second region");
-    require(retdec_safe_c_string_length(memory) == 0, "unterminated inaccessible region returns zero");
-    require(retdec_safe_c_string_length(memory + system.dwPageSize) == 0, "inaccessible first byte returns zero");
+    require(kinoko_safe_c_string_length(memory) == 0, "unterminated inaccessible region returns zero");
+    require(kinoko_safe_c_string_length(memory + system.dwPageSize) == 0, "inaccessible first byte returns zero");
     require(VirtualProtect(memory, size, PAGE_READWRITE, &old) != 0, "restore pages");
     std::memset(memory, 'b', size);
     memory[0x100000u - 1] = 0;
-    require(retdec_safe_c_string_length(memory) == 0x100000u - 1, "last permitted terminator");
+    require(kinoko_safe_c_string_length(memory) == 0x100000u - 1, "last permitted terminator");
     memory[0x100000u - 1] = 'b'; memory[0x100000u] = 0;
-    require(retdec_safe_c_string_length(memory) == 0, "do not extend the historical one-MiB scan");
+    require(kinoko_safe_c_string_length(memory) == 0, "do not extend the historical one-MiB scan");
 }
 }
 int main() {

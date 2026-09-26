@@ -7,8 +7,8 @@
 
 extern "C" {
 void kinoko_host_free_allocation(int32_t* object);
-void retdec_trace(const char* message);
-void retdec_trace_i32(const char* message, int32_t value);
+void kinoko_trace(const char* message);
+void kinoko_trace_i32(const char* message, int32_t value);
 }
 
 using namespace kinoko::script;
@@ -28,22 +28,22 @@ extern "C" int32_t kinoko_squirrel_object_destroy(int32_t object, int32_t vm_add
     if (!object) return 0;
     ObjectView destination(object);
     const auto value = destination.value();
-    retdec_trace("4a9d70:begin");
-    retdec_trace_i32("4a9d70:this", object);
-    retdec_trace_i32("4a9d70:caller", address(_ReturnAddress()));
-    retdec_trace_i32("4a9d70:type", value._type);
-    retdec_trace_i32("4a9d70:data", data_bits(value));
+    kinoko_trace("4a9d70:begin");
+    kinoko_trace_i32("4a9d70:this", object);
+    kinoko_trace_i32("4a9d70:caller", address(_ReturnAddress()));
+    kinoko_trace_i32("4a9d70:type", value._type);
+    kinoko_trace_i32("4a9d70:data", data_bits(value));
     destination.set_vtable(vtable);
     if (vm_address) {
         destination.release(pointer<SQVM>(vm_address));
-        retdec_trace_i32("4a9d70:gvm-after-release", vm_address);
+        kinoko_trace_i32("4a9d70:gvm-after-release", vm_address);
         destination.reset();
-        retdec_trace("4a9d70:after-release");
+        kinoko_trace("4a9d70:after-release");
     } else {
         if (value._type != OT_NULL && data_bits(value))
             std::printf("SquirrelObject::~SquirrelObject - Cannot release\n");
         destination.reset();
-        retdec_trace("4a9d70:after-clear");
+        kinoko_trace("4a9d70:after-clear");
     }
     return destination.payload_address();
 }

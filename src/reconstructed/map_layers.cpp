@@ -69,7 +69,7 @@ static_assert(offsetof(ResourceMethods, query) == 8);
 static_assert(offsetof(LayoutMethods, set_layer) == 24);
 }
 
-extern "C" retdec_mcd_data *kinoko_map_layer_chip_data(KinokoActLayout *layout) {
+extern "C" kinoko_mcd_data *kinoko_map_layer_chip_data(KinokoActLayout *layout) {
     if (!layout) return nullptr;
     auto *layer = LayoutView(layout).get(&LayoutRecord::owning_layer);
     if (!layer) return nullptr;
@@ -83,13 +83,13 @@ extern "C" retdec_mcd_data *kinoko_map_layer_chip_data(KinokoActLayout *layout) 
     return ChipResourceView(chip).get(&ChipResourceRecord::data);
 }
 
-extern "C" retdec_mcd_data *kinoko_map_cached_chip_data(KinokoActLayout *layout) {
+extern "C" kinoko_mcd_data *kinoko_map_cached_chip_data(KinokoActLayout *layout) {
     if (!layout) return nullptr;
     auto *resource = LayoutView(layout).get(&LayoutRecord::cached_chip_resource);
     return resource ? ChipResourceView(resource).get(&ChipResourceRecord::data) : nullptr;
 }
 
-extern "C" retdec_mcd_data *kinoko_map_query_chip_data(KinokoActLayout *layout) {
+extern "C" kinoko_mcd_data *kinoko_map_query_chip_data(KinokoActLayout *layout) {
     if (!layout) return nullptr;
     const LayoutView map(layout);
     if (!map.get(&LayoutRecord::cached_chip_resource)) {

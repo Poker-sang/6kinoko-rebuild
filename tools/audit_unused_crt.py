@@ -13,7 +13,8 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-TARGET = 'src/platform/retdec_runtime_compat.cpp'
+TARGET = 'src/platform/windows_crt_compat.cpp'
+HISTORICAL_TARGET = 'src/platform/retdec_runtime_compat.cpp'
 REFERENCE = 'src/decompiled/6kinoko.exe.c'
 LEX = re.compile(r'//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
 DEFINITION = re.compile(
@@ -52,7 +53,11 @@ def definitions(text):
 
 
 def audit(source_ref, map_paths):
+    global TARGET
     commit = git('rev-parse', '--verify', source_ref + '^{commit}').decode().strip()
+    paths = git('ls-tree', '-r', '--name-only', commit).decode().splitlines()
+    TARGET = ('src/platform/windows_crt_compat.cpp' if 'src/platform/windows_crt_compat.cpp' in paths
+              else HISTORICAL_TARGET)
     source = git('show', commit + ':' + TARGET)
     text = source.decode('utf-8')
     local_tokens = mask(text)

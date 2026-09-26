@@ -109,13 +109,13 @@ void kinoko_act_runtime_dispose(KinokoActRuntime *storage) {
     state.latest_runtime = nullptr;
     // production stage cleanup owns the raw runtime allocation
 }
-int32_t retdec_root_table_construct_this(int32_t, int32_t, int32_t) {
+int32_t kinoko_root_table_construct_this(int32_t, int32_t, int32_t) {
     if (state.throw_publish) fail_next_new = true;
     return 1;
 }
-void retdec_trace(const char *) {}
-void retdec_trace_i32(const char *, int32_t) {}
-void retdec_trace_squirrel_name(const char *, int32_t) {}
+void kinoko_trace(const char *) {}
+void kinoko_trace_i32(const char *, int32_t) {}
+void kinoko_trace_squirrel_name(const char *, int32_t) {}
 int32_t __fastcall kinoko_act_increment_frame(KinokoActRuntime *, void *) { return 0; }
 int32_t kinoko_act_update_frame(int32_t) { return 0; }
 int32_t kinoko_act_prepare_draw(int32_t) { return 0; }

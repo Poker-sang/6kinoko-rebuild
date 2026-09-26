@@ -5,7 +5,7 @@
 static int32_t order[8];
 static unsigned calls;
 extern "C" {
-unsigned char g_retdec_keyboard_state[256]{};
+unsigned char kinoko_keyboard_state[256]{};
 void* kinoko_sqplus_object_assign(void* destination, const void* source) {
     std::memcpy(destination, source, 12); return destination;
 }
@@ -19,7 +19,7 @@ static int32_t __fastcall cluster_update(KinokoInputDevice* device, void*) {
     for (int i = 0; i < 14; ++i) device->state.counts[i] = 70 + i;
     for (int i = 0; i < 4; ++i) device->state.released[i + 2] = static_cast<uint8_t>(i & 1);
     // A key changed in the virtual cluster callback must reach this frame.
-    g_retdec_keyboard_state[10] = 0x80;
+    kinoko_keyboard_state[10] = 0x80;
     return 0;
 }
 int main() {
@@ -40,7 +40,7 @@ int main() {
         kinoko_input_cluster_methods.destroy,
         reinterpret_cast<decltype(KinokoInputDeviceMethods::update)>(cluster_update)};
     manager.cluster.device.methods = &cluster_methods;
-    g_retdec_keyboard_state[11] = g_retdec_keyboard_state[2] = 0x80;
+    kinoko_keyboard_state[11] = kinoko_keyboard_state[2] = 0x80;
     CHECK(kinoko_input_manager_update(&manager) == 1);
     CHECK(calls == 4 && order[0] == 0 && order[1] == 1 && order[2] == 255 && order[3] == 999);
     CHECK(manager.published.x == 70 && manager.published.y == 71);

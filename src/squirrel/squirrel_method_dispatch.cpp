@@ -66,7 +66,7 @@ extern "C" int32_t kinoko_sqplus_call_integer(void * object, void * method, int3
     auto* vm = static_cast<SQVM *>(vm_address);
     if (!exact_arguments(vm, index, OT_INTEGER, 1)) return argument_error(vm);
     const auto value = kinoko_sqplus_argument_integer(vm_address, index);
-    if (method) retdec_call_thiscall1(static_cast<unsigned char*>(object)+offset, method, value);
+    if (method) kinoko_call_thiscall1(static_cast<unsigned char*>(object)+offset, method, value);
     return 0;
 }
 extern "C" int32_t kinoko_sqplus_call_rectangle(void * object, void * method, int32_t offset, struct SQVM * vm_address, int32_t index) {
@@ -77,7 +77,7 @@ extern "C" int32_t kinoko_sqplus_call_rectangle(void * object, void * method, in
         const auto value = static_cast<float>(kinoko_sqplus_argument_float(vm_address, index + i));
         bits[i] = load<int32_t>(&value);
     }
-    const auto result = retdec_call_thiscall4_result(static_cast<unsigned char*>(object)+offset,
+    const auto result = kinoko_call_thiscall4_result(static_cast<unsigned char*>(object)+offset,
         method, bits[0], bits[1], bits[2], bits[3]);
     // Preserve the original low-byte BOOL result, not result != 0.
     sq_pushbool(vm, result & 255);
@@ -88,7 +88,7 @@ extern "C" int32_t kinoko_sqplus_call_move(void * object, void * method, int32_t
     if (!exact_arguments(vm, index, OT_FLOAT, 2)) return argument_error(vm);
     const auto second = static_cast<float>(kinoko_sqplus_argument_float(vm_address, index + 1));
     const auto first = static_cast<float>(kinoko_sqplus_argument_float(vm_address, index));
-    if (method) retdec_call_thiscall2_result(static_cast<unsigned char*>(object)+offset, method,
+    if (method) kinoko_call_thiscall2_result(static_cast<unsigned char*>(object)+offset, method,
         load<int32_t>(&first), load<int32_t>(&second));
     return 0;
 }
@@ -135,7 +135,7 @@ extern "C" void * kinoko_sqplus_resolve_method(void * output_address, struct SQV
 extern "C" int32_t kinoko_sqplus_void_method(struct SQVM * vm) {
     ResolvedMethod method;
     if (!resolve(vm, method)) return instance_error(vm);
-    retdec_call_thiscall0(receiver(method), method.function);
+    kinoko_call_thiscall0(receiver(method), method.function);
     return 0;
 }
 extern "C" int32_t kinoko_sqplus_object_method(struct SQVM * vm) {
@@ -146,7 +146,7 @@ extern "C" int32_t kinoko_sqplus_object_method(struct SQVM * vm) {
     if (!kinoko_sqplus_argument_object_at(arguments, 0, vm, 2)) return argument_error(static_cast<SQVM *>(vm));
     // This owning 12-byte value is passed by value. The original native
     // callee consumes it; a caller-side RAII release would be a double release.
-    retdec_call_thiscall3_result(receiver(method), method.function,
+    kinoko_call_thiscall3_result(receiver(method), method.function,
         arguments[0], arguments[1], arguments[2]);
     return 0;
 }
@@ -158,7 +158,7 @@ extern "C" int32_t kinoko_sqplus_integer_method(struct SQVM * vm) {
 extern "C" int32_t kinoko_sqplus_integer_result_method(struct SQVM * vm) {
     ResolvedMethod method;
     if (!resolve(vm, method)) return instance_error(vm);
-    sq_pushinteger(static_cast<SQVM *>(vm), retdec_call_thiscall0_result(receiver(method), method.function));
+    sq_pushinteger(static_cast<SQVM *>(vm), kinoko_call_thiscall0_result(receiver(method), method.function));
     return 1;
 }
 extern "C" int32_t kinoko_sqplus_rectangle_method(struct SQVM * vm) {

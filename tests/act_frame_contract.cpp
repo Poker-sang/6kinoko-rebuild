@@ -143,9 +143,9 @@ const KinokoActHostSymbols* kinoko_act_host_symbols() { return &test::symbols; }
 int32_t _3f__3f_2_40_YAPAXI_40_Z(int32_t size) {
     return test::allocation_fails ? 0 : address(std::malloc(size));
 }
-void retdec_trace(const char*) {}
-void retdec_trace_i32(const char*, int32_t) {}
-void retdec_trace_squirrel_name(const char*, int32_t) {}
+void kinoko_trace(const char*) {}
+void kinoko_trace_i32(const char*, int32_t) {}
+void kinoko_trace_squirrel_name(const char*, int32_t) {}
 const char* kinoko_string_data(const void*) { return "fixture"; }
 int32_t kinoko_texture_bind_stage(int32_t stage, int32_t handle) {
     if (!stage && !handle) ++test::texture_unbinds; return 0;
@@ -212,7 +212,7 @@ static int test_storage_and_draw() {
     texture_resource[0] = address(&texture_identity); texture_resource[17] = 1;
     kinoko_texture_slots[1].width = 128; kinoko_texture_slots[1].height = 64;
     for (int blend = 0; blend < 6; ++blend)
-        CHECK(retdec_act_bitblt_this(address(fixture.runtime), 3, 4, 32, 16,
+        CHECK(kinoko_act_bitblt_this(address(fixture.runtime), 3, 4, 32, 16,
             address(texture_resource), 8, 4, blend, blend == 0 ? -1.0f : blend == 5 ? 2.0f : 0.5f) == 0);
     const auto* commands = reinterpret_cast<BlitCommand*>(kinoko_act_command_span((KinokoActRuntime*)(fixture.runtime)).begin);
     CHECK(commands[0].alpha == 0 && commands[5].alpha == 1 && commands[2].alpha == 0.5f);

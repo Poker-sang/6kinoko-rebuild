@@ -8,7 +8,7 @@
 #include <atomic>
 
 extern "C" {
-void retdec_trace_i32(const char*, int32_t);
+void kinoko_trace_i32(const char*, int32_t);
 }
 
 namespace {
@@ -41,9 +41,9 @@ int32_t descriptor(int32_t id, int32_t* offset, bool trace) {
     if (trace && (value == 0x8c || (value >= 0x34 && value <= 0x44))) {
         static std::atomic<unsigned> count{0};
         if (count.fetch_add(1, std::memory_order_relaxed) < 256) {
-            retdec_trace_i32("cact:property-target", address(target));
-            retdec_trace_i32("cact:property-offset", value);
-            retdec_trace_i32("cact:property-vtable", read<int32_t>(target));
+            kinoko_trace_i32("cact:property-target", address(target));
+            kinoko_trace_i32("cact:property-offset", value);
+            kinoko_trace_i32("cact:property-vtable", read<int32_t>(target));
         }
     }
     return address(target);
@@ -98,9 +98,9 @@ int32_t set_bool(int32_t id, bool trace) {
     if (trace && (field.offset() == 0x8c || field.offset() == 0x8d)) {
         static std::atomic<unsigned> count{0};
         if (count.fetch_add(1, std::memory_order_relaxed) < 128) {
-            retdec_trace_i32("cact:set-bool-target", field.target());
-            retdec_trace_i32("cact:set-bool-offset", field.offset());
-            retdec_trace_i32("cact:set-bool-value", value != 0);
+            kinoko_trace_i32("cact:set-bool-target", field.target());
+            kinoko_trace_i32("cact:set-bool-offset", field.offset());
+            kinoko_trace_i32("cact:set-bool-value", value != 0);
         }
     }
     return 0;
@@ -110,23 +110,23 @@ void assign_string(void* field, const char* value) {
 }
 }
 
-extern "C" int32_t retdec_cact_layer_property_offset(int32_t id, int32_t* offset) { return descriptor(id, offset, true); }
-extern "C" int32_t retdec_c2dlayout_property_offset(int32_t id, int32_t* offset) { return descriptor(id, offset, false); }
-extern "C" int32_t retdec_cact_layer_get_int(int32_t id) { return get_number<SQInteger>(id, true); }
-extern "C" int32_t retdec_cact_layer_set_int(int32_t id) { return set_number<SQInteger>(id, true); }
-extern "C" int32_t retdec_cact_layer_get_float(int32_t id) { return get_number<SQFloat>(id, true); }
-extern "C" int32_t retdec_cact_layer_set_float(int32_t id) { return set_number<SQFloat>(id, true); }
-extern "C" int32_t retdec_cact_layer_get_pointer_int(int32_t id) { return get_number<SQInteger>(id, true, true); }
-extern "C" int32_t retdec_cact_layer_set_pointer_int(int32_t id) { return set_number<SQInteger>(id, true, true); }
-extern "C" int32_t retdec_cact_layer_get_pointer_float(int32_t id) { return get_number<SQFloat>(id, true, true); }
-extern "C" int32_t retdec_cact_layer_set_pointer_float(int32_t id) { return set_number<SQFloat>(id, true, true); }
-extern "C" int32_t retdec_c2dlayout_get_int(int32_t id) { return get_number<SQInteger>(id, false); }
-extern "C" int32_t retdec_c2dlayout_set_int(int32_t id) { return set_number<SQInteger>(id, false); }
-extern "C" int32_t retdec_c2dlayout_get_float(int32_t id) { return get_number<SQFloat>(id, false); }
-extern "C" int32_t retdec_c2dlayout_set_float(int32_t id) { return set_number<SQFloat>(id, false); }
-extern "C" int32_t retdec_cact_layer_get_bool(int32_t id) { return get_bool(id, true); }
-extern "C" int32_t retdec_cact_layer_set_bool(int32_t id) { return set_bool(id, true); }
-extern "C" int32_t retdec_cact_layer_get_string(int32_t id) {
+extern "C" int32_t kinoko_cact_layer_property_offset(int32_t id, int32_t* offset) { return descriptor(id, offset, true); }
+extern "C" int32_t kinoko_c2dlayout_property_offset(int32_t id, int32_t* offset) { return descriptor(id, offset, false); }
+extern "C" int32_t kinoko_cact_layer_get_int(int32_t id) { return get_number<SQInteger>(id, true); }
+extern "C" int32_t kinoko_cact_layer_set_int(int32_t id) { return set_number<SQInteger>(id, true); }
+extern "C" int32_t kinoko_cact_layer_get_float(int32_t id) { return get_number<SQFloat>(id, true); }
+extern "C" int32_t kinoko_cact_layer_set_float(int32_t id) { return set_number<SQFloat>(id, true); }
+extern "C" int32_t kinoko_cact_layer_get_pointer_int(int32_t id) { return get_number<SQInteger>(id, true, true); }
+extern "C" int32_t kinoko_cact_layer_set_pointer_int(int32_t id) { return set_number<SQInteger>(id, true, true); }
+extern "C" int32_t kinoko_cact_layer_get_pointer_float(int32_t id) { return get_number<SQFloat>(id, true, true); }
+extern "C" int32_t kinoko_cact_layer_set_pointer_float(int32_t id) { return set_number<SQFloat>(id, true, true); }
+extern "C" int32_t kinoko_c2dlayout_get_int(int32_t id) { return get_number<SQInteger>(id, false); }
+extern "C" int32_t kinoko_c2dlayout_set_int(int32_t id) { return set_number<SQInteger>(id, false); }
+extern "C" int32_t kinoko_c2dlayout_get_float(int32_t id) { return get_number<SQFloat>(id, false); }
+extern "C" int32_t kinoko_c2dlayout_set_float(int32_t id) { return set_number<SQFloat>(id, false); }
+extern "C" int32_t kinoko_cact_layer_get_bool(int32_t id) { return get_bool(id, true); }
+extern "C" int32_t kinoko_cact_layer_set_bool(int32_t id) { return set_bool(id, true); }
+extern "C" int32_t kinoko_cact_layer_get_string(int32_t id) {
     NativeField field(id, true);
     if (!field.storage()) return 0;
     const auto value = kinoko_string_data(field.storage());
@@ -135,26 +135,26 @@ extern "C" int32_t retdec_cact_layer_get_string(int32_t id) {
     // SQRESULT (sq_pushstring is void). Its unusual return ABI is not changed.
     return kinoko_sq_get_up(id, -1) >= 0;
 }
-extern "C" int32_t retdec_cact_layer_set_string(int32_t id) {
+extern "C" int32_t kinoko_cact_layer_set_string(int32_t id) {
     NativeField field(id, true, false, true);
     const SQChar* value = nullptr;
     if (field.storage() && SQ_SUCCEEDED(sq_getstring(field.vm(), 2, &value))) assign_string(field.storage(), value);
     return 0;
 }
-extern "C" int32_t retdec_c2dlayout_set_color(int32_t id) {
+extern "C" int32_t kinoko_c2dlayout_set_color(int32_t id) {
     NativeField field(id, false, false, true);
     SQInteger value = 0;
     if (field.storage() && argument(field.vm(), value)) field.value(std::clamp(value, 0, 255));
     return 0;
 }
-extern "C" int32_t retdec_acting_player_property(int32_t id, int32_t* offset) {
+extern "C" int32_t kinoko_acting_player_property(int32_t id, int32_t* offset) {
     const auto target = descriptor(id, offset, false);
     if (!target) return 0;
     return *offset == 8 ? address(field(target, 8)) : read<int32_t>(field(target, *offset));
 }
-extern "C" int32_t retdec_acting_player_get_property(int32_t id) {
+extern "C" int32_t kinoko_acting_player_get_property(int32_t id) {
     int32_t offset = 0;
-    auto storage = pointer(retdec_acting_player_property(id, &offset));
+    auto storage = pointer(kinoko_acting_player_property(id, &offset));
     if (!storage) return 0;
     auto vm = pointer<SQVM>(id);
     if (offset == 8 || offset == 132) sq_pushbool(vm, read<uint8_t>(storage) != 0);
@@ -163,10 +163,10 @@ extern "C" int32_t retdec_acting_player_get_property(int32_t id) {
     else sq_pushinteger(vm, read<SQInteger>(storage));
     return 1;
 }
-extern "C" int32_t retdec_acting_player_set_property(int32_t id) {
+extern "C" int32_t kinoko_acting_player_set_property(int32_t id) {
     if (!id || sq_gettop(pointer<SQVM>(id)) < 3) return 0;
     int32_t offset = 0;
-    auto storage = pointer(retdec_acting_player_property(id, &offset));
+    auto storage = pointer(kinoko_acting_player_property(id, &offset));
     if (!storage) return 0;
     auto vm = pointer<SQVM>(id);
     if (offset == 8 || offset == 132) {
@@ -181,12 +181,12 @@ extern "C" int32_t retdec_acting_player_set_property(int32_t id) {
     }
     return 0;
 }
-extern "C" int32_t retdec_native_view_get_short(int32_t id) {
+extern "C" int32_t kinoko_native_view_get_short(int32_t id) {
     NativeField field(id, false);
     if (!field.storage()) return 0;
     sq_pushinteger(field.vm(), field.value<int16_t>()); return 1;
 }
-extern "C" int32_t retdec_native_view_set_short(int32_t id) {
+extern "C" int32_t kinoko_native_view_set_short(int32_t id) {
     NativeField field(id, false, false, true);
     SQInteger value = 0;
     if (field.storage() && argument(field.vm(), value)) field.value(static_cast<uint16_t>(value));
@@ -202,8 +202,8 @@ extern "C" SQInteger kinoko_sqrat_get_float(HSQUIRRELVM vm) { return get_number<
 extern "C" SQInteger kinoko_sqrat_set_float(HSQUIRRELVM vm) { return set_number<SQFloat>(address(vm), false); }
 extern "C" SQInteger kinoko_sqrat_get_bool(HSQUIRRELVM vm) { return get_bool(address(vm), false); }
 extern "C" SQInteger kinoko_sqrat_set_bool(HSQUIRRELVM vm) { return set_bool(address(vm), false); }
-extern "C" SQInteger kinoko_sqrat_get_short(HSQUIRRELVM vm) { return retdec_native_view_get_short(address(vm)); }
-extern "C" SQInteger kinoko_sqrat_set_short(HSQUIRRELVM vm) { return retdec_native_view_set_short(address(vm)); }
+extern "C" SQInteger kinoko_sqrat_get_short(HSQUIRRELVM vm) { return kinoko_native_view_get_short(address(vm)); }
+extern "C" SQInteger kinoko_sqrat_set_short(HSQUIRRELVM vm) { return kinoko_native_view_set_short(address(vm)); }
 extern "C" SQInteger kinoko_sqrat_get_pointer_int(HSQUIRRELVM vm) { return get_number<SQInteger>(address(vm), false, true); }
 extern "C" SQInteger kinoko_sqrat_set_pointer_int(HSQUIRRELVM vm) { return set_number<SQInteger>(address(vm), false, true); }
 extern "C" SQInteger kinoko_sqrat_get_pointer_float(HSQUIRRELVM vm) { return get_number<SQFloat>(address(vm), false, true); }

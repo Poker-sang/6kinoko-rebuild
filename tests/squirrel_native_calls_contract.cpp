@@ -5,7 +5,7 @@
 extern "C" {
 char kinoko_sqrat_trace_enabled = 0;
 int32_t kinoko_squirrel_object_vtable(void) { return 0x13572468; }
-void retdec_trace_i32(const char*, int32_t) {}
+void kinoko_trace_i32(const char*, int32_t) {}
 }
 namespace {
 using namespace bridge_test;

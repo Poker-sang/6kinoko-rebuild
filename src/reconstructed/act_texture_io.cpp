@@ -125,7 +125,7 @@ struct StreamMethods { void *destroy, *slot1, *slot2, *transfer, *slot4, *seek; 
 struct Stream { StreamMethods *methods; };
 static_assert(offsetof(StreamMethods, transfer) == 12 && offsetof(StreamMethods, seek) == 20);
 bool transfer(int32_t stream, void* bytes, uint32_t size) {
-    return stream && (retdec_call_thiscall2_result(pointer<Stream>(stream),
+    return stream && (kinoko_call_thiscall2_result(pointer<Stream>(stream),
         pointer<Stream>(stream)->methods->transfer, address(bytes), size) & 0xff) != 0;
 }
 template<class T> bool transfer(int32_t stream, T& value) {
@@ -387,8 +387,8 @@ extern "C" int32_t __fastcall kinoko_method_map_set_layer(
         if (end < begin || (end-begin)%4 || (end-begin)/4 > 0x10000 || (!begin && end)) return fail;
         if (end != begin) texture_refs.assign(pointer<int32_t>(begin), pointer<int32_t>(end));
         for (uint32_t i=0; i<count; ++i) {
-            auto chip = retdec_mcd_find_chip(data, static_cast<uint32_t>(records[i][0]));
-            auto texture = chip ? retdec_mcd_find_texture(data, kinoko::legacy::load<uint32_t>(chip->bytes+4)) : nullptr;
+            auto chip = kinoko_mcd_find_chip(data, static_cast<uint32_t>(records[i][0]));
+            auto texture = chip ? kinoko_mcd_find_texture(data, kinoko::legacy::load<uint32_t>(chip->bytes+4)) : nullptr;
             chip_refs.push_back(chip ? address(chip->bytes) : 0);
             texture_refs.push_back(address(texture));
         }
@@ -520,10 +520,10 @@ bool object_hash(int32_t layout,uint32_t& hash,int32_t type_slot) {
     // GetType/GetName. Keep this boundary until their registries are migrated;
     // do not confuse modern compiler RTTI spelling with the original raw name.
     if (!table) return false;
-    const auto binder=retdec_call_thiscall0_result(pointer<void>(layout),field<void*>(table+type_slot));
+    const auto binder=kinoko_call_thiscall0_result(pointer<void>(layout),field<void*>(table+type_slot));
     if (!binder || !field<int32_t>(binder)) return false;
     TypeName result;
-    retdec_call_thiscall1_result(pointer<void>(binder),field<void*>(field<int32_t>(binder)+4),address(result.bytes));
+    kinoko_call_thiscall1_result(pointer<void>(binder),field<void*>(field<int32_t>(binder)+4),address(result.bytes));
     const kinoko::legacy::StringView text(result.bytes);
     hash=type_hash(text.data(),text.length());
     return true;
@@ -539,7 +539,7 @@ bool write_layer_list(int32_t layer,int32_t offset,int32_t writer,const char* ty
         const auto object=field<int32_t>(node+8);
         // Original 41F990 ignores each element writer's return value, but
         // propagates failure to emit the list count/type and final script.
-        if (object) retdec_call_thiscall1_result(pointer<void>(object),
+        if (object) kinoko_call_thiscall1_result(pointer<void>(object),
             field<void*>(field<int32_t>(object)),writer);
         node=field<int32_t>(node);
     }
@@ -553,7 +553,7 @@ extern "C" int32_t __fastcall kinoko_method_write_act_layer(int32_t layer,void*,
             !write_layer_list(layer,180,writer,".?AVCActKey@@") ||
             !write_layer_list(layer,192,writer,".?AVCActTimeLine@@")) return 0;
         const auto script=layer+204;
-        return (retdec_call_thiscall1_result(pointer<void>(script),
+        return (kinoko_call_thiscall1_result(pointer<void>(script),
             field<void*>(field<int32_t>(script)),writer)&0xff)!=0;
     } catch (...) { return 0; }
 }
@@ -588,10 +588,10 @@ extern "C" int32_t kinoko_act_read_map_properties(int32_t layout,int32_t reader)
         pointer<KinokoArchiveReader>(reader));
 }
 extern "C" int32_t __fastcall kinoko_method_read_act_layer(int32_t layer,void*,int32_t holder,int32_t version) {
-    return layer && holder && version==1 ? retdec_act_load_layer(layer,field<int32_t>(holder),version) : 0;
+    return layer && holder && version==1 ? kinoko_act_load_layer(layer,field<int32_t>(holder),version) : 0;
 }
 extern "C" int32_t __fastcall kinoko_method_read_act_key(int32_t key,void*,int32_t holder,int32_t version) {
-    return key && holder && version==1 ? retdec_act_load_key(key,field<int32_t>(holder),version) : 0;
+    return key && holder && version==1 ? kinoko_act_load_key(key,field<int32_t>(holder),version) : 0;
 }
 extern "C" int32_t __fastcall kinoko_method_write_act_key(int32_t key,void*,int32_t writer) {
     if (!key || !writer) return 0;
@@ -603,7 +603,7 @@ extern "C" int32_t __fastcall kinoko_method_write_act_key(int32_t key,void*,int3
         if (!layout) return 1;
         uint32_t hash=0;
         if (!object_hash(layout,hash,16) || !transfer(writer,hash)) return 0;
-        return (retdec_call_thiscall1_result(pointer<void>(layout),
+        return (kinoko_call_thiscall1_result(pointer<void>(layout),
             field<void*>(field<int32_t>(layout)),writer)&0xff)!=0;
     } catch (...) { return 0; }
 }
@@ -646,7 +646,7 @@ extern "C" int32_t kinoko_act_read_properties(int32_t act,int32_t reader) {
         pointer<KinokoArchiveReader>(reader));
 }
 extern "C" int32_t __fastcall kinoko_method_read_act(int32_t act,void*,int32_t holder,int32_t version) {
-    return act && holder && version==1 ? retdec_act_load(act,field<int32_t>(holder),version) : 0;
+    return act && holder && version==1 ? kinoko_act_load(act,field<int32_t>(holder),version) : 0;
 }
 namespace {
 std::vector<int32_t> object_vector(int32_t slot) {
@@ -662,7 +662,7 @@ extern "C" int32_t __fastcall kinoko_method_write_act(int32_t act,void*,int32_t 
     try {
         if (!write(pointer<void>(act),writer,act_schema)) return 0;
         const auto script=act+100;
-        if (!(retdec_call_thiscall1_result(pointer<void>(script),
+        if (!(kinoko_call_thiscall1_result(pointer<void>(script),
             field<void*>(field<int32_t>(script)),writer)&0xff)) return 0;
         auto layers=object_vector(act+208);
         // 4287D9/428822 omit only debugOnly==1 when kinoko_act_script_output_compiled()!=0. Values other
@@ -675,7 +675,7 @@ extern "C" int32_t __fastcall kinoko_method_write_act(int32_t act,void*,int32_t 
         auto hash=type_hash(".?AVCActLayer@@");
         for (auto layer:layers) {
             if (!transfer(writer,hash)) return 0;
-            if (layer) retdec_call_thiscall1_result(pointer<void>(layer),
+            if (layer) kinoko_call_thiscall1_result(pointer<void>(layer),
                 field<void*>(field<int32_t>(layer)),writer);
         }
         const auto resources=object_vector(act+224);
@@ -683,7 +683,7 @@ extern "C" int32_t __fastcall kinoko_method_write_act(int32_t act,void*,int32_t 
         if (!transfer(writer,count)) return 0;
         for (auto resource:resources) {
             if (!resource || !object_hash(resource,hash,20) || !transfer(writer,hash)) return 0;
-            retdec_call_thiscall1_result(pointer<void>(resource),
+            kinoko_call_thiscall1_result(pointer<void>(resource),
                 field<void*>(field<int32_t>(resource)),writer);
         }
         return 1;
@@ -693,7 +693,7 @@ extern "C" int32_t __fastcall kinoko_method_write_act(int32_t act,void*,int32_t 
 
 // CActResource2D stores extensionless names. The CV2 loader returns the
 // logical handle; ownership of the D3D texture stays with the texture store.
-extern "C" int32_t retdec_load_act_texture(const char *texture_name) {
+extern "C" int32_t kinoko_load_act_texture(const char *texture_name) {
     char path[MAX_PATH];
     if (!texture_name || !kinoko_graphics.device) return 0;
     const size_t length = std::strlen(texture_name);

@@ -434,34 +434,34 @@ extern "C" int32_t function_49a520_this(int32_t shared_state, int32_t vm) {
     return shared_state && vm ? kinoko_sq_collect(shared_state, vm) : 0;
 }
 
-extern "C" void retdec_squirrel_addref(int32_t type, int32_t data) {
+extern "C" void kinoko_squirrel_addref(int32_t type, int32_t data) {
     if (ISREFCOUNTED(type) && data) ++ptr<SQRefCounted>(data)->_uiRef;
 }
 
-extern "C" void retdec_squirrel_release(int32_t type, int32_t data) {
+extern "C" void kinoko_squirrel_release(int32_t type, int32_t data) {
     if (ISREFCOUNTED(type) && data) {
         auto* object = ptr<SQRefCounted>(data);
         if (--object->_uiRef == 0) object->Release();
     }
 }
 
-extern "C" void retdec_squirrel_assign(int32_t *dst, const int32_t *src) {
+extern "C" void kinoko_squirrel_assign(int32_t *dst, const int32_t *src) {
     if (dst && src) *reinterpret_cast<SQObjectPtr*>(dst) = *reinterpret_cast<const SQObjectPtr*>(src);
 }
 
-extern "C" void retdec_release_squirrel_value(int32_t *value_ptr) {
+extern "C" void kinoko_release_squirrel_value(int32_t *value_ptr) {
     if (value_ptr) reinterpret_cast<SQObjectPtr*>(value_ptr)->Null();
 }
 
-extern "C" int32_t retdec_gc_object_type(int32_t object_ptr) {
+extern "C" int32_t kinoko_gc_object_type(int32_t object_ptr) {
     return kinoko_sq_source_object_type(object_ptr);
 }
 
-extern "C" void retdec_gc_mark_value(const int32_t *value, int32_t *chain_head) {
+extern "C" void kinoko_gc_mark_value(const int32_t *value, int32_t *chain_head) {
     kinoko_sq_mark_value(value, chain_head);
 }
 
-extern "C" void retdec_gc_finalize_collectable(int32_t object_ptr,
+extern "C" void kinoko_gc_finalize_collectable(int32_t object_ptr,
                                             int32_t object_type) {
     kinoko_sq_finalize_object(object_ptr, object_type);
 }

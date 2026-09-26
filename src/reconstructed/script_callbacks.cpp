@@ -5,8 +5,8 @@
 #include <windows.h>
 extern "C" {
 extern int32_t kinoko_actor_user_key_storage[3], kinoko_actor_step_key_storage[3], kinoko_actor_class_storage[3];
-void retdec_trace(const char *);
-void retdec_trace_i32(const char *, int32_t);
+void kinoko_trace(const char *);
+void kinoko_trace_i32(const char *, int32_t);
 }
 namespace {
 inline auto class_update_method = kinoko_actor_class_storage;
@@ -120,15 +120,15 @@ extern "C" int32_t __fastcall kinoko_actor_set_collision_callback(KinokoActor *a
 extern "C" int32_t __fastcall kinoko_camera_set_update_callback(KinokoCamera *camera,void *,int32_t vtable,int32_t type,int32_t value) {
     if (!camera) return 0;
     LocalObject incoming(vtable,type,value);
-    retdec_trace("4663c0:begin");
-    retdec_trace_i32("4663c0:this",address(camera));
-    retdec_trace_i32("4663c0:argument-type",vtable);
-    retdec_trace_i32("4663c0:argument-data",type);
-    retdec_trace_i32("4663c0:argument-aux",value);
+    kinoko_trace("4663c0:begin");
+    kinoko_trace_i32("4663c0:this",address(camera));
+    kinoko_trace_i32("4663c0:argument-type",vtable);
+    kinoko_trace_i32("4663c0:argument-data",type);
+    kinoko_trace_i32("4663c0:argument-aux",value);
     const kinoko::camera::View view(camera);
     bind(reinterpret_cast<KinokoScriptCallback *>(view.bytes(&kinoko::camera::Record::update_vm)),
         view.bytes(&kinoko::camera::Record::script_object),incoming.data());
-    incoming.release(); retdec_trace("4663c0:end"); return 0;
+    incoming.release(); kinoko_trace("4663c0:end"); return 0;
 }
 extern "C" int32_t __fastcall kinoko_camera_update(KinokoCamera *camera,void *) {
     const kinoko::camera::View view(camera);

@@ -9,8 +9,8 @@
 #include <mmsystem.h>
 
 extern "C" {
-void retdec_trace_i32(const char*, int32_t);
-void retdec_trace_squirrel_name(const char*, int32_t);
+void kinoko_trace_i32(const char*, int32_t);
+void kinoko_trace_squirrel_name(const char*, int32_t);
 
 int32_t  kinoko_sqrat_invoke_callback(const void * );
 }
@@ -37,10 +37,10 @@ extern "C" int32_t kinoko_act_layer_update(KinokoActLayer *object) {
     static volatile LONG trace_count;
     if (InterlockedIncrement(&trace_count) <= 160) {
         const auto callback = layer.get(&LayerKeys::update_callback);
-        retdec_trace_i32("41efb0:layer", address(object));
+        kinoko_trace_i32("41efb0:layer", address(object));
         const char* labels[] = {"41efb0:callback-vm", "41efb0:callback-env-type",
             "41efb0:callback-env-data", "41efb0:callback-type", "41efb0:callback-data"};
-        for (int i = 0; i < 5; ++i) retdec_trace_i32(labels[i], callback[i]);
+        for (int i = 0; i < 5; ++i) kinoko_trace_i32(labels[i], callback[i]);
     }
     layer.set(&LayerKeys::previous_position, layer.get(&LayerKeys::position));
     return layer.get(&LayerKeys::update_callback)[3] != 0x1000001
@@ -55,16 +55,16 @@ extern "C" int32_t kinoko_act_update_frame(int32_t self) {
     const auto trace_index = InterlockedIncrement(&trace_count);
     if (trace_index <= 48) {
         const auto act = self ? resource.get(&RuntimeRecord::active_document) : 0;
-        retdec_trace_i32("451640:resource", self);
-        retdec_trace_i32("451640:active", self ? load<int32_t>(resource.bytes(&RuntimeRecord::stage_active)) : 0);
-        retdec_trace_i32("451640:suspend", self ? load<int32_t>(resource.bytes(&RuntimeRecord::hidden)) : 0);
-        retdec_trace_i32("451640:time", self ? resource.get(&RuntimeRecord::wake_time) : 0);
-        retdec_trace_i32("451640:current", self ? resource.get(&RuntimeRecord::current_time) : 0);
-        retdec_trace_i32("451640:act", address(act));
-        if (act) retdec_trace_squirrel_name("451640:act-name", address(kinoko_string_data((const void*)(DocumentView(act).bytes(&DocumentRecord::name)))));
+        kinoko_trace_i32("451640:resource", self);
+        kinoko_trace_i32("451640:active", self ? load<int32_t>(resource.bytes(&RuntimeRecord::stage_active)) : 0);
+        kinoko_trace_i32("451640:suspend", self ? load<int32_t>(resource.bytes(&RuntimeRecord::hidden)) : 0);
+        kinoko_trace_i32("451640:time", self ? resource.get(&RuntimeRecord::wake_time) : 0);
+        kinoko_trace_i32("451640:current", self ? resource.get(&RuntimeRecord::current_time) : 0);
+        kinoko_trace_i32("451640:act", address(act));
+        if (act) kinoko_trace_squirrel_name("451640:act-name", address(kinoko_string_data((const void*)(DocumentView(act).bytes(&DocumentRecord::name)))));
     }
     if (!self || resource.get(&RuntimeRecord::hidden)) {
-        if (trace_index <= 48) retdec_trace("451640:skip-suspended");
+        if (trace_index <= 48) kinoko_trace("451640:skip-suspended");
         return 0;
     }
     kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION*>(resource.bytes(&RuntimeRecord::lock)));
@@ -72,24 +72,24 @@ extern "C" int32_t kinoko_act_update_frame(int32_t self) {
     kinoko_act_commands_clear((KinokoActRuntime*)(intptr_t)(self));
     // 4516C4 is JNB: compare DWORDs, including uptime above 0x80000000.
     if (resource.get(&RuntimeRecord::wake_time) >= timeGetTime()) {
-        if (trace_index <= 48) retdec_trace("451640:skip-time");
+        if (trace_index <= 48) kinoko_trace("451640:skip-time");
         return 0;
     }
     const auto document = source_document(resource);
     if (!document) {
-        if (trace_index <= 48) retdec_trace("451640:skip-no-act-object");
+        if (trace_index <= 48) kinoko_trace("451640:skip-no-act-object");
         return 0;
     }
     const auto script = DocumentView(document).view(&DocumentRecord::script);
     const RecordView<ScriptUpdatePrefix> source(script.data());
     const auto callback_type = source.get(&ScriptUpdatePrefix::update_callback)[3];
-    if (trace_index <= 48) retdec_trace_i32("451640:root-update-type", callback_type);
+    if (trace_index <= 48) kinoko_trace_i32("451640:root-update-type", callback_type);
     if (callback_type != 0x1000001) {
         const auto result = kinoko_sqrat_invoke_callback((const void *)(source.bytes(&ScriptUpdatePrefix::update_callback)));
-        if (trace_index <= 48) retdec_trace_i32("451640:root-update-result", result);
+        if (trace_index <= 48) kinoko_trace_i32("451640:root-update-result", result);
     }
     const auto count = layer_count(source_document(resource));
-    if (trace_index <= 48) retdec_trace_i32("451640:layer-count", count < 0 ? -1 : count);
+    if (trace_index <= 48) kinoko_trace_i32("451640:layer-count", count < 0 ? -1 : count);
     if (count <= 0) return 0;
     for (int32_t index = 0;;) {
         if (resource.get(&RuntimeRecord::stage_active) && resource.get(&RuntimeRecord::active_holder)) {

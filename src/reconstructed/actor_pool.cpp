@@ -131,14 +131,14 @@ extern "C" int32_t __fastcall kinoko_method_actor_pool_delete(int32_t manager, v
     return kinoko_method_actor_pool_base_delete(manager, nullptr, flags);
 }
 
-extern "C" void retdec_trace_i32(const char *,int32_t);
+extern "C" void kinoko_trace_i32(const char *,int32_t);
 extern "C" KinokoActor *kinoko_actor_pool_request(KinokoActorPool *pool,uint32_t *handle) {
     static uint32_t count;
-    if (count<3 || (count&63u)==0) retdec_trace_i32("actor:request",static_cast<int32_t>(count));
+    if (count<3 || (count&63u)==0) kinoko_trace_i32("actor:request",static_cast<int32_t>(count));
     auto *actor=kinoko_actor_pool_acquire(pool,handle);
     if (actor) {
         ++count;
-        if (count<=3 || (count&63u)==0) retdec_trace_i32("actor:created",static_cast<int32_t>(count));
+        if (count<=3 || (count&63u)==0) kinoko_trace_i32("actor:created",static_cast<int32_t>(count));
     }
     return actor;
 }

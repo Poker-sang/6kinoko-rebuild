@@ -14,13 +14,13 @@ static_assert(sizeof(void*) == sizeof(int32_t), "Original Win32 object addresses
 // Only the ABI is adapted here. Recovered game/loading bodies remain the
 // single source of truth; the adapters do not add ordering or fallback logic.
 extern "C" {
-int32_t retdec_destroy_cact_with_flags(int32_t receiver, unsigned char flags);
-int32_t retdec_c2dlayout_set_layer_impl(int32_t receiver, int32_t layer);
-int32_t retdec_c2dlayout_update_faithful_impl(int32_t receiver);
-int32_t retdec_c2dlayout_draw_impl(int32_t receiver, float x, float y);
-int32_t retdec_begin_stage_this(int32_t receiver, int32_t stage);
-int32_t retdec_root_table_construct_this(int32_t receiver, int32_t vm, int32_t output);
-int32_t retdec_act_bitblt_this(int32_t receiver, int32_t x, int32_t y, int32_t width, int32_t height,
+int32_t kinoko_destroy_cact_with_flags(int32_t receiver, unsigned char flags);
+int32_t kinoko_c2dlayout_set_layer_impl(int32_t receiver, int32_t layer);
+int32_t kinoko_c2dlayout_update_faithful_impl(int32_t receiver);
+int32_t kinoko_c2dlayout_draw_impl(int32_t receiver, float x, float y);
+int32_t kinoko_begin_stage_this(int32_t receiver, int32_t stage);
+int32_t kinoko_root_table_construct_this(int32_t receiver, int32_t vm, int32_t output);
+int32_t kinoko_act_bitblt_this(int32_t receiver, int32_t x, int32_t y, int32_t width, int32_t height,
     int32_t resource, int32_t source_x, int32_t source_y, int32_t blend, float alpha);
 int32_t kinoko_update_mesh_children(void* receiver, int32_t argument);
 
@@ -34,24 +34,24 @@ int32_t kinoko_update_mesh_children(void* receiver, int32_t argument);
 // retdec_cact_destructor_bridge
 extern "C" int32_t __fastcall kinoko_method_destroy_act(int32_t receiver, void* /* unused_edx */,
     unsigned char flags) {
-    return retdec_destroy_cact_with_flags(receiver, flags);
+    return kinoko_destroy_cact_with_flags(receiver, flags);
 }
 
 // function_42bcc0
 extern "C" int32_t __fastcall kinoko_method_layout_set_layer(int32_t receiver, void* /* unused_edx */,
     int32_t layer) {
-    return retdec_c2dlayout_set_layer_impl(receiver, layer);
+    return kinoko_c2dlayout_set_layer_impl(receiver, layer);
 }
 
 // function_42c100
 extern "C" int32_t __fastcall kinoko_method_layout_update(int32_t receiver, void* /* unused_edx */) {
-    return retdec_c2dlayout_update_faithful_impl(receiver);
+    return kinoko_c2dlayout_update_faithful_impl(receiver);
 }
 
 // function_42c300
 extern "C" int32_t __fastcall kinoko_method_layout_draw(int32_t receiver, void* /* unused_edx */,
     float x, float y) {
-    return retdec_c2dlayout_draw_impl(receiver, x, y);
+    return kinoko_c2dlayout_draw_impl(receiver, x, y);
 }
 
 // function_43c860
@@ -65,20 +65,20 @@ extern "C" int32_t __fastcall kinoko_method_layout3d_assign(int32_t receiver, vo
 // function_450950
 extern "C" int32_t __fastcall kinoko_method_begin_stage(int32_t receiver, void* /* unused_edx */,
     int32_t stage) {
-    return retdec_begin_stage_this(receiver, stage);
+    return kinoko_begin_stage_this(receiver, stage);
 }
 
 // function_450e30
 extern "C" int32_t __fastcall kinoko_method_root_table_construct(int32_t receiver,
     void* /* unused_edx */, int32_t vm, int32_t output) {
-    return retdec_root_table_construct_this(receiver, vm, output);
+    return kinoko_root_table_construct_this(receiver, vm, output);
 }
 
 // function_4514a0
 extern "C" int32_t __fastcall kinoko_method_act_bitblt(int32_t receiver, void* /* unused_edx */,
     int32_t x, int32_t y, int32_t width, int32_t height, int32_t resource, int32_t source_x,
     int32_t source_y, int32_t blend, float alpha) {
-    return retdec_act_bitblt_this(receiver, x, y, width, height, resource, source_x, source_y, blend, alpha);
+    return kinoko_act_bitblt_this(receiver, x, y, width, height, resource, source_x, source_y, blend, alpha);
 }
 
 // function_457a10

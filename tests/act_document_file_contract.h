@@ -37,23 +37,23 @@ static int test_act_document_file_lifetime(void) {
     kinoko_compile_act_output = 0; kinoko_archive_count = 0; kinoko_primary_vm = NULL;
     KinokoActDocument *source = kinoko_act_document_create();
     CHECK(source);
-    const int32_t layer = retdec_act_make_layer();
+    const int32_t layer = kinoko_act_make_layer();
     CHECK(layer);
     kinoko_act_array_append(PTR(source) + 208, layer);
     /* Forward parent reference: child is serialized before its parent. */
     *(int32_t *)(intptr_t)(layer + 104) = 20;
     *(int32_t *)(intptr_t)(layer + 108) = 10;
-    const int32_t parent = retdec_act_make_layer();
+    const int32_t parent = kinoko_act_make_layer();
     CHECK(parent);
     *(int32_t *)(intptr_t)(parent + 104) = 10;
     kinoko_act_array_append(PTR(source) + 208, parent);
     const int32_t key = PTR(calloc(1, 36));
     const int32_t layout = PTR(calloc(1, 316));
-    CHECK(key && layout && retdec_construct_c2dlayout(layout));
+    CHECK(key && layout && kinoko_construct_c2dlayout(layout));
     *(int32_t *)(intptr_t)key = PTR(kinoko_act_host_symbols()->key_vtable);
     *(int32_t *)(intptr_t)(key + 4) = layout;
     *(int32_t *)(intptr_t)(key + 28) = 15;
-    CHECK(retdec_act_append_list(layer + 180, key));
+    CHECK(kinoko_act_append_list(layer + 180, key));
     ++*(int32_t *)(intptr_t)(layer + 184);
     kinoko_string_assign_cstr((int32_t *)(intptr_t)(layer + 112),
         "heap-owned layer from generated ACT");
@@ -63,7 +63,7 @@ static int test_act_document_file_lifetime(void) {
     memcpy(encoded + 19, stream.bytes, stream.size);
     const DWORD total = 19 + stream.size;
     CHECK(act_file_write(valid_path, encoded, total));
-    retdec_destroy_cact_with_flags(PTR(source), 1);
+    kinoko_destroy_cact_with_flags(PTR(source), 1);
 
     /* Observe the real virtual deleting destructor, forwarding to its normal
        implementation. An exclusive file open proves the reader closed first. */
@@ -90,7 +90,7 @@ static int test_act_document_file_lifetime(void) {
     loaded_layers = *(int32_t **)((char *)loaded + 208);
     CHECK(loaded_layers[0] == first_owned_layer);
     CHECK((*(int32_t *)((char *)loaded + 212) - *(int32_t *)((char *)loaded + 208)) / 4 == old_layer_count * 2);
-    CHECK(retdec_call_thiscall1_result(loaded, (void *)kinoko_act_document_methods_storage.delete_object, 1));
+    CHECK(kinoko_call_thiscall1_result(loaded, (void *)kinoko_act_document_methods_storage.delete_object, 1));
     CHECK(act_file_deletes == 1 && !act_file_close_error);
 
     kinoko_stage_list_construct();

@@ -30,13 +30,13 @@ int main() {
     Probe object;
     void **methods = *reinterpret_cast<void ***>(&object);
     for (int i = 0; i < 10000; ++i) {
-        retdec_call_thiscall0(&object, methods[0]);
-        retdec_call_thiscall1(&object, methods[1], 17);
-        if (retdec_call_thiscall0_result(&object, methods[2]) != 17 ||
-            retdec_call_thiscall1_result(&object, methods[3], -3) != 14 ||
-            retdec_call_thiscall2_result(&object, methods[4], -3, 5) != 24 ||
-            retdec_call_thiscall3_result(&object, methods[5], -3, 5, 7) != 45 ||
-            retdec_call_thiscall4_result(&object, methods[6], -3, 5, 7, 11) != 89 ||
+        kinoko_call_thiscall0(&object, methods[0]);
+        kinoko_call_thiscall1(&object, methods[1], 17);
+        if (kinoko_call_thiscall0_result(&object, methods[2]) != 17 ||
+            kinoko_call_thiscall1_result(&object, methods[3], -3) != 14 ||
+            kinoko_call_thiscall2_result(&object, methods[4], -3, 5) != 24 ||
+            kinoko_call_thiscall3_result(&object, methods[5], -3, 5, 7) != 45 ||
+            kinoko_call_thiscall4_result(&object, methods[6], -3, 5, 7, 11) != 89 ||
             kinoko_call_draw_method(&object, methods[7], 1, 2, 3, 4, 5, 6, 7, 8,
                 0.75f) != 233 || object.calls != i + 1)
             return 1;

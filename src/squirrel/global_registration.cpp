@@ -65,7 +65,7 @@ extern "C" void kinoko_register_global_methods(int32_t root_table) {
         pointer<void>(entry(show_call_stack_entry)), 0);
     target = entry(&kinoko_script_compile_file_argument);
     kinoko_sqrat_bind_object_function(pointer<void>(root_table), "CompileFile", &target, 4,
-        pointer<void>(entry(retdec_compile_file_native)), 0);
+        pointer<void>(entry(kinoko_compile_file_native)), 0);
     for (const auto& method : methods) {
         auto* vm = current_vm();
         sq_pushroottable(vm);
@@ -98,16 +98,16 @@ void bind_root_mask(ObjectStorage &object, int32_t *storage, const char *name,
     const auto result = kinoko_script_bind_root_value(reinterpret_cast<int32_t *>(&object),
         storage, const_cast<char *>(name), 0);
     const auto value = ObjectView(&object).value();
-    retdec_trace_i32(result_label, result);
-    retdec_trace_i32(storage_label, *storage);
-    retdec_trace_i32(type_label, value._type);
-    retdec_trace_i32(data_label, data_bits(value));
-    retdec_trace_i32(present_label, kinoko_sqplus_object_exists(&object, name));
+    kinoko_trace_i32(result_label, result);
+    kinoko_trace_i32(storage_label, *storage);
+    kinoko_trace_i32(type_label, value._type);
+    kinoko_trace_i32(data_label, data_bits(value));
+    kinoko_trace_i32(present_label, kinoko_sqplus_object_exists(&object, name));
     kinoko_sqplus_object_destroy(&object);
 }
 
 int32_t kinoko_register_root_bindings() {
-    retdec_trace("473010:enter");
+    kinoko_trace("473010:enter");
     kinoko_script_initialize_root();
     primary_vm_slot = address(current_vm());
     const int32_t vm_address = primary_vm_slot;

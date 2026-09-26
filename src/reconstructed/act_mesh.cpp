@@ -339,7 +339,7 @@ extern "C" int32_t kinoko_update_mesh_children(void *node, int32_t argument) {
         const auto manager_methods = field<int32_t>(manager);
         int32_t handle = 0;
         if (manager_methods && field<int32_t>(manager_methods + 12)) {
-            handle = retdec_call_thiscall2_result(pointer<void>(manager),
+            handle = kinoko_call_thiscall2_result(pointer<void>(manager),
                 pointer<void>(field<int32_t>(manager_methods + 12)), entry, argument);
         }
         if (!handle) continue;
@@ -347,7 +347,7 @@ extern "C" int32_t kinoko_update_mesh_children(void *node, int32_t argument) {
         if (!object) continue;
         const auto methods = field<int32_t>(object);
         if (methods && field<int32_t>(methods)) {
-            result = retdec_call_thiscall1_result(pointer<void>(object),
+            result = kinoko_call_thiscall1_result(pointer<void>(object),
                 pointer<void>(field<int32_t>(methods)), argument);
         }
     }

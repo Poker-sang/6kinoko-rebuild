@@ -9,7 +9,7 @@ extern "C" {
    These functions borrow caller-owned, possibly unaligned record storage. */
 void kinoko_string_destroy(void* object);
 const char* kinoko_string_data(const void* object);
-uint32_t retdec_safe_c_string_length(const char* source);
+uint32_t kinoko_safe_c_string_length(const char* source);
 void* kinoko_string_assign_n(void* object, const char* source, uint32_t size);
 void* kinoko_string_assign_cstr(void* object, const char* source);
 void* kinoko_string_assign_substring(void* object, const void* source,

@@ -7,7 +7,7 @@ void * kinoko_sqplus_object_assign(void * , const void * );
 void*  kinoko_sqplus_object_destroy(void *);
 int32_t  kinoko_sqplus_object_set_instance(void * , void * );
 int32_t  kinoko_sqplus_object_raw_set_name(void * , const char *, const void * );
-void retdec_trace_i32(const char *,int32_t);
+void kinoko_trace_i32(const char *,int32_t);
 }
 namespace {
 using namespace kinoko::camera;
@@ -30,8 +30,8 @@ extern "C" int32_t kinoko_camera_initialize(KinokoCamera *camera) {
     state.set(&Record::center_y,0.0f);state.set(&Record::center_x,0.0f);
     state.set(&Record::bounds,Bounds{});
     state.set(&Record::offset_x,0.0f);state.set(&Record::offset_y,0.0f);
-    retdec_trace_i32("actor:camera-init-left",0);
-    retdec_trace_i32("actor:camera-init-right",0);
+    kinoko_trace_i32("actor:camera-init-left",0);
+    kinoko_trace_i32("actor:camera-init-right",0);
     return result;
 }
 extern "C" KinokoCamera *kinoko_camera_copy(KinokoCamera *destination,KinokoCamera *source) {

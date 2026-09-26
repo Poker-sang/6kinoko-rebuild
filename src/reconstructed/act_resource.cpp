@@ -8,7 +8,7 @@
 #include <mmsystem.h>
 
 extern "C" {
-void retdec_trace_i32(const char *label, int32_t value);
+void kinoko_trace_i32(const char *label, int32_t value);
 }
 
 namespace {
@@ -86,11 +86,11 @@ public:
         auto *source = holder ? RecordView<SourceHolderRecord>(holder).get(&SourceHolderRecord::document) : nullptr;
         const int32_t step = source ? RecordView<DocumentRecord>(source).get(&DocumentRecord::resolution_ms) : 0;
         if (index <= 64) {
-            retdec_trace_i32("451620:resource", address(storage_));
-            retdec_trace_i32("451620:before", time());
-            retdec_trace_i32("451620:holder", address(holder));
-            retdec_trace_i32("451620:act", address(source));
-            retdec_trace_i32("451620:resolution", step);
+            kinoko_trace_i32("451620:resource", address(storage_));
+            kinoko_trace_i32("451620:before", time());
+            kinoko_trace_i32("451620:holder", address(holder));
+            kinoko_trace_i32("451620:act", address(source));
+            kinoko_trace_i32("451620:resolution", step);
         }
         // Original 451620 uses a DWORD ADD. Compute modulo 2^32, then copy the
         // result bits to the signed clock; no signed-overflow expression.
@@ -98,7 +98,7 @@ public:
             const uint32_t next = static_cast<uint32_t>(time()) + static_cast<uint32_t>(step);
             record_.set(&RuntimeRecord::current_time, kinoko::legacy::load<int32_t>(&next));
         }
-        if (index <= 64) retdec_trace_i32("451620:after", time());
+        if (index <= 64) kinoko_trace_i32("451620:after", time());
         return 0;
     }
 

@@ -15,8 +15,8 @@ extern "C" struct SQVM *kinoko_primary_vm;
 // container boundary, distinct from the compiled LocalScript VM.
 namespace { HSQUIRRELVM serialization_vm() { return reinterpret_cast<HSQUIRRELVM>(kinoko_primary_vm); } }
 
-extern "C" void retdec_trace(const char *);
-extern "C" void retdec_trace_i32(const char *, int32_t);
+extern "C" void kinoko_trace(const char *);
+extern "C" void kinoko_trace_i32(const char *, int32_t);
 
 namespace kinoko::savedata {
 namespace {
@@ -76,10 +76,10 @@ struct Object {
     void initialize() noexcept { kinoko_sqplus_object_initialize(raw()); }
     void destroy() noexcept { kinoko_sqplus_object_destroy(raw()); }
     bool assign(int32_t type_tag, int32_t bits) noexcept {
-        return retdec_squirrel_object_from_pair(raw(), type_tag, bits) != 0;
+        return kinoko_squirrel_object_from_pair(raw(), type_tag, bits) != 0;
     }
     bool copy_from(Object &source) noexcept {
-        return retdec_squirrel_object_copy(raw(), source.raw()) != 0;
+        return kinoko_squirrel_object_copy(raw(), source.raw()) != 0;
     }
 };
 static_assert(sizeof(Object) == 12);
@@ -91,12 +91,12 @@ bool read_string(TableStream &stream, Object &object) {
         static_cast<char *>(std::malloc(static_cast<size_t>(length) + 1)), &std::free);
     if (!text || !stream.read_bytes(text.get(), length)) return false;
     text.get()[length] = 0;
-    return retdec_squirrel_object_from_string(object.raw(), text.get(), length) != 0;
+    return kinoko_squirrel_object_from_string(object.raw(), text.get(), length) != 0;
 }
 
 bool write_string(TableStream &stream, Object &object) {
     const char *text = nullptr;
-    if (!retdec_squirrel_object_string(object.raw(), &text)) return false;
+    if (!kinoko_squirrel_object_string(object.raw(), &text)) return false;
     const uint32_t length = static_cast<uint32_t>(std::strlen(text));
     return stream.write(length) && stream.write_bytes(text, length);
 }
@@ -221,8 +221,8 @@ Bytes allocate_buffer() {
 }
 
 int32_t load_file(const char *path, Object input) {
-    retdec_trace("savedata:load-begin");
-    retdec_trace(path);
+    kinoko_trace("savedata:load-begin");
+    kinoko_trace(path);
     int32_t result = 0;
     {
         File file(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, OPEN_EXISTING);
@@ -238,26 +238,26 @@ int32_t load_file(const char *path, Object input) {
                 const int32_t decoded_size = kinoko_decompress_buffer(
                     encoded.get(), static_cast<int32_t>(encoded_size),
                     decoded.get(), kFileBufferSize);
-                retdec_trace_i32("savedata:decoded-size", decoded_size);
+                kinoko_trace_i32("savedata:decoded-size", decoded_size);
                 if (decoded_size > 0) {
                     TableStream stream(decoded.get(), decoded_size);
                     Object table;
                     if (table.assign(input.type(), input.data())) {
                         result = read_table(stream, table);
-                        retdec_trace_i32("savedata:decoded-consumed", stream.position);
+                        kinoko_trace_i32("savedata:decoded-consumed", stream.position);
                     }
                 }
             }
         }
     }
     input.destroy();
-    retdec_trace_i32("savedata:load-result", result);
+    kinoko_trace_i32("savedata:load-result", result);
     return result;
 }
 
 int32_t save_file(const char *path, Object input) {
-    retdec_trace("savedata:save-begin");
-    retdec_trace(path);
+    kinoko_trace("savedata:save-begin");
+    kinoko_trace(path);
     int32_t result = 0;
     {
         File file(path, GENERIC_WRITE, 0, CREATE_ALWAYS);
@@ -268,10 +268,10 @@ int32_t save_file(const char *path, Object input) {
                 TableStream stream(raw.get(), kFileBufferSize);
                 Object table;
                 if (table.assign(input.type(), input.data()) && write_table(stream, table)) {
-                    retdec_trace_i32("savedata:raw-size", stream.position);
+                    kinoko_trace_i32("savedata:raw-size", stream.position);
                     const DWORD encoded_size = static_cast<DWORD>(kinoko_compress_buffer(
                         raw.get(), stream.position, encoded.get(), kFileBufferSize));
-                    retdec_trace_i32("savedata:encoded-size", static_cast<int32_t>(encoded_size));
+                    kinoko_trace_i32("savedata:encoded-size", static_cast<int32_t>(encoded_size));
                     DWORD bytes_written = 0;
                     if (encoded_size && encoded_size <= kFileBufferSize &&
                         WriteFile(file.handle, &encoded_size, sizeof(encoded_size), &bytes_written, nullptr) &&
@@ -283,7 +283,7 @@ int32_t save_file(const char *path, Object input) {
         }
     }
     input.destroy();
-    retdec_trace_i32("savedata:save-result", result);
+    kinoko_trace_i32("savedata:save-result", result);
     return result;
 }
 } // namespace

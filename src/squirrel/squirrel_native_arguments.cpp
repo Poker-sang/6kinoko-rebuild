@@ -2,7 +2,7 @@
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/squirrel_host_object.hpp"
 
-extern "C" void retdec_trace_i32(const char*, int32_t);
+extern "C" void kinoko_trace_i32(const char*, int32_t);
 
 namespace {
 using namespace kinoko::script;
@@ -47,13 +47,13 @@ extern "C" void* kinoko_native_target_from_userdata(struct SQVM * vm_address) {
     const bool readable = SQ_SUCCEEDED(status) && payload &&
         sq_getsize(vm, -1) >= static_cast<SQInteger>(sizeof(int32_t));
     if (trace_count < 96) {
-        retdec_trace_i32("native-userdata:vm", address(vm_address));
-        retdec_trace_i32("native-userdata:top", top);
-        retdec_trace_i32("native-userdata:lookup", status);
-        retdec_trace_i32("native-userdata:payload", address(payload));
+        kinoko_trace_i32("native-userdata:vm", address(vm_address));
+        kinoko_trace_i32("native-userdata:top", top);
+        kinoko_trace_i32("native-userdata:lookup", status);
+        kinoko_trace_i32("native-userdata:payload", address(payload));
         const auto bits = static_cast<uint32_t>(address(payload));
         if (readable && bits >= 0x10000u && bits < 0x7f000000u)
-            retdec_trace_i32("native-userdata:value", payload_word(payload));
+            kinoko_trace_i32("native-userdata:value", payload_word(payload));
         ++trace_count;
     }
     return (void*)(intptr_t)(readable ? payload_word(payload) : 0);
@@ -71,9 +71,9 @@ extern "C" int32_t kinoko_native_string_arg(struct SQVM * vm_address, int32_t in
     static int trace_count;
     auto* vm = vm_address;
     if (trace_count < 64) {
-        retdec_trace_i32("native-string-arg:vm", address(vm_address));
-        retdec_trace_i32("native-string-arg:index", index);
-        retdec_trace_i32("native-string-arg:type", valid_index(vm, index) ? sq_gettype(vm, index) : OT_NULL);
+        kinoko_trace_i32("native-string-arg:vm", address(vm_address));
+        kinoko_trace_i32("native-string-arg:index", index);
+        kinoko_trace_i32("native-string-arg:type", valid_index(vm, index) ? sq_gettype(vm, index) : OT_NULL);
         ++trace_count;
     }
     const SQChar* text = nullptr;

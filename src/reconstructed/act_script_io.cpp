@@ -27,12 +27,12 @@ struct StreamMethods { void *destroy, *slot1, *slot2, *transfer, *slot4, *seek; 
 struct Stream { StreamMethods *methods; };
 static_assert(offsetof(StreamMethods, transfer) == 12 && offsetof(StreamMethods, seek) == 20);
 bool transfer(int32_t stream, void* bytes, uint32_t size) {
-    return stream && (retdec_call_thiscall2_result(pointer<void>(stream),
+    return stream && (kinoko_call_thiscall2_result(pointer<void>(stream),
         pointer<Stream>(stream)->methods->transfer, address(bytes), size) & 0xff) != 0;
 }
 template<class T> bool transfer(int32_t stream, T& value) { return transfer(stream, &value, sizeof(value)); }
 int32_t seek(int32_t writer, int32_t offset, int32_t origin) {
-    return retdec_call_thiscall2_result(pointer<void>(writer),
+    return kinoko_call_thiscall2_result(pointer<void>(writer),
         pointer<Stream>(writer)->methods->seek, offset, origin);
 }
 bool read_string(int32_t reader, std::string& value, uint32_t maximum) {

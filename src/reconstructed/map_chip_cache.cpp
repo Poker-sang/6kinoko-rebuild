@@ -31,7 +31,7 @@ void rebuild_chip_index(KinokoActLayout *layout) {
     auto *data=kinoko_map_cached_chip_data(layout);
     if(!data) return; // original callers ignore the failed rebuild result
     const LayoutView map(layout);
-    std::vector<const retdec_mcd_chip *> chips;
+    std::vector<const kinoko_mcd_chip *> chips;
     for(uint32_t i=0;i<data->chip_count;++i) chips.push_back(data->chips+i);
     std::sort(chips.begin(),chips.end(),[](auto a,auto b){return a->chip_id<b->chip_id;});
     auto maximum=map.get(&LayoutRecord::maximum_chip_id);
@@ -71,7 +71,7 @@ void prepare_placements(KinokoActLayout *layout) {
     }
     for(uint32_t i=0;i<size;++i) {
         const auto &record=placements.begin[i];
-        if(auto *chip=retdec_mcd_find_chip(data,record.chip_id)) {
+        if(auto *chip=kinoko_mcd_find_chip(data,record.chip_id)) {
             const auto definition=ChipView(chip->bytes).load();
             max_width=(std::max)(max_width,static_cast<int32_t>(definition.width));
             max_height=(std::max)(max_height,static_cast<int32_t>(definition.height));
@@ -140,7 +140,7 @@ int32_t refresh_chip_sprite(KinokoActLayout *layout,const ChipDefinition *source
     if(std::memcmp(&chip,&cached.definition,sizeof(chip))) cached.valid=0;
     if(cached.valid) return S_OK;
     cached.definition=chip;
-    auto *texture=retdec_mcd_find_texture(data,chip.texture_id);
+    auto *texture=kinoko_mcd_find_texture(data,chip.texture_id);
     if(!texture) return E_FAIL;
     if(!initialize_chip_quad(&cached.quad,texture->handle,&chip)) return E_FAIL;
     cached.valid=1;
@@ -165,7 +165,7 @@ void flush_changed_chips(KinokoActLayout *layout) {
 }
 bool set_chip_rectangle(KinokoActLayout *layout,int32_t id,int16_t x,int16_t y,int16_t width,int16_t height) {
     auto *data=kinoko_map_cached_chip_data(layout);
-    auto *record=retdec_mcd_find_chip(data,static_cast<uint32_t>(id));
+    auto *record=kinoko_mcd_find_chip(data,static_cast<uint32_t>(id));
     if(!record) return false;
     const ChipView chip(record->bytes);
     chip.set(&ChipDefinition::source_left,x);chip.set(&ChipDefinition::source_top,y);

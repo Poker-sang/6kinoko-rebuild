@@ -34,9 +34,9 @@ void expect_last_release_order() {
 }
 }
 extern "C" {
-void retdec_trace(const char*) {}
-void retdec_trace_i32(const char*,int32_t) {}
-void retdec_trace_squirrel_name(const char*,int32_t) {}
+void kinoko_trace(const char*) {}
+void kinoko_trace_i32(const char*,int32_t) {}
+void kinoko_trace_squirrel_name(const char*,int32_t) {}
 int32_t kinoko_squirrel_object_vtable() { return 0x12345678; }
 void * kinoko_sqplus_object_initialize(void * id) { kinoko::script::ObjectView(id).initialize(kinoko_squirrel_object_vtable()); return id; }
 void * kinoko_sqplus_object_copy_construct(void * out, const void * source) {

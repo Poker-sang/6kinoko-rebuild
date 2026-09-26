@@ -6,8 +6,8 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
     kinoko_act_vm_abi_slot = vm;
     int32_t source[60] = {0};
     int32_t *resource = (int32_t*)calloc(1,100);
-    struct retdec_mcd_data *data = (struct retdec_mcd_data*)calloc(1,sizeof(*data));
-    int32_t layer = retdec_act_make_layer();
+    struct kinoko_mcd_data *data = (struct kinoko_mcd_data*)calloc(1,sizeof(*data));
+    int32_t layer = kinoko_act_make_layer();
     int32_t *key = (int32_t*)calloc(1,36);
     int32_t *map = (int32_t*)calloc(1,464);
     int32_t records[1][8] = {{4,7,8,0,0,0,1,0}};
@@ -18,7 +18,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
     ((float*)map)[80] = 1.0f;
     map[60] = map[61] = 16;
     data->chip_count = 1;
-    data->chips = (struct retdec_mcd_chip*)calloc(1,sizeof(*data->chips));
+    data->chips = (struct kinoko_mcd_chip*)calloc(1,sizeof(*data->chips));
     CHECK(data->chips);
     data->chips[0].chip_id = 4;
     *(uint32_t*)data->chips[0].bytes = 4;
@@ -33,7 +33,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
     map[0] = PTR(&kinoko_map_layout_methods_storage); map[1] = PTR(&kinoko_map_color_methods_storage); map[113] = -1;
     kinoko_native_buffer_replace(PTR(map)+264,records,sizeof(records));
     key[0] = PTR(&kinoko_act_key_methods_storage); key[1] = PTR(map); key[7] = 15;
-    CHECK(retdec_act_append_list(layer+180,PTR(key)));
+    CHECK(kinoko_act_append_list(layer+180,PTR(key)));
     *(int32_t*)(intptr_t)(layer+184) = 1;
     kinoko_act_array_append(PTR(source)+224,PTR(resource));
     kinoko_act_array_append(PTR(source)+208,layer);
@@ -57,7 +57,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
         /* Creation consults the owner even when a different cache is present.
            Query preserves a non-null cache; only Update rejects stale binding. */
         {
-            struct retdec_mcd_data other_data = {0};
+            struct kinoko_mcd_data other_data = {0};
             int32_t other_resource[17] = {0};
             other_resource[16] = PTR(&other_data);
             layout[79] = PTR(other_resource);
@@ -91,8 +91,8 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
         } else if (query == 1) {
             int32_t klass[2] = {kinoko_null_object_type,kinoko_null_object_value}, instance[2] = {kinoko_null_object_type,kinoko_null_object_value};
             *(uint8_t*)(intptr_t)(cloned_layer+140) = 0;
-            CHECK(retdec_publish_c2dmaplayout_class(vm,PTR(root),klass));
-            CHECK(retdec_create_bound_instance(vm,root+2,"LazyMapProbe",klass,PTR(layout),instance));
+            CHECK(kinoko_publish_c2dmaplayout_class(vm,PTR(root),klass));
+            CHECK(kinoko_create_bound_instance(vm,root+2,"LazyMapProbe",klass,PTR(layout),instance));
             CHECK(execute_source(vm,root+2,
                 "if (LazyMapProbe.GetChipByPosition(8,9) != 0) throw \"unbound event map\";\n"
                 "if (LazyMapProbe.GetChipByPosition(100,100) != -1) throw \"outside map\";"));
@@ -111,14 +111,14 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             int32_t runtime[48] = {0}, parent[2] = {kinoko_null_object_type,kinoko_null_object_value}, active = 0;
             CHECK(*(int32_t*)(intptr_t)(cloned_layer+52) == 0);
             CHECK(*(int32_t*)(intptr_t)(cloned_layer+56) == 0);
-            CHECK(retdec_publish_cact_layer_class(vm,PTR(root)));
+            CHECK(kinoko_publish_cact_layer_class(vm,PTR(root)));
             CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
             CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, "RegistrationProbe", parent));
             CHECK(execute_source(vm,parent,"resource <- {}; global <- {};"));
             runtime[39] = root[2]; runtime[40] = root[3];
             /* Original 452040 excludes layers with timeline extras. */
             if (query == 3) *(int32_t*)(intptr_t)(cloned_layer+196) = 1;
-            CHECK(retdec_publish_act_layers(vm,PTR(copy),PTR(runtime),&active));
+            CHECK(kinoko_publish_act_layers(vm,PTR(copy),PTR(runtime),&active));
             CHECK(active == 1);
             if (query == 2) {
                 CHECK(*(int32_t*)(intptr_t)(cloned_layer+52) == PTR(layout)+320);
@@ -195,9 +195,9 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             *(int32_t*)(intptr_t)(cloned_layer+100) = cloned_resource;
         }
         CHECK(map[79] == 0); /* No mutation of the source layout's cache. */
-        retdec_destroy_cact_with_flags(PTR(copy),1);
+        kinoko_destroy_cact_with_flags(PTR(copy),1);
     }
-    retdec_destroy_cact_object(PTR(source));
+    kinoko_destroy_cact_object(PTR(source));
     kinoko_act_vm_abi_slot = previous_default_vm;
     puts("PASS: virtual ACT clone lazy map binding and publication property aliases");
     return 0;

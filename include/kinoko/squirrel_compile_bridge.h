@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 /* The caller frees the bytecode buffer. No C++ VM objects cross this boundary. */
-int32_t retdec_squirrel_compile_source(const char *source, int32_t length,
+int32_t kinoko_squirrel_compile_source(const char *source, int32_t length,
     const char *name, unsigned char **bytecode, int32_t *bytecode_size);
 
 int32_t kinoko_sq_compile_proto(int32_t vm, int32_t reader, int32_t context,

@@ -9,7 +9,7 @@
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 
-int32_t retdec_construct_cact_script(int32_t this_ptr)
+int32_t kinoko_construct_cact_script(int32_t this_ptr)
 {
     using namespace kinoko::act;
     if (!this_ptr) return 0;
@@ -39,17 +39,17 @@ int32_t retdec_construct_cact_script(int32_t this_ptr)
     return this_ptr;
 }
 
-void retdec_destroy_cact_script(int32_t script_ptr)
+void kinoko_destroy_cact_script(int32_t script_ptr)
 {
     using namespace kinoko::act;
     if (!script_ptr) return;
-    retdec_forget_act_script(script_ptr);
+    kinoko_forget_act_script(script_ptr);
     const ScriptStorageView script(pointer<void>(script_ptr));
     script.set(&ScriptStorageRecord::methods, kinoko_act_host_symbols()->script_vtable);
     // Reverse callback release, then payload and filename: keep the order.
     for (const auto member : {&ScriptStorageRecord::release, &ScriptStorageRecord::update,
                               &ScriptStorageRecord::initialize})
-        retdec_release_act_callback(address(script.bytes(member)));
+        kinoko_release_act_callback(address(script.bytes(member)));
     std::free(script.get(&ScriptStorageRecord::bytes));
     script.set(&ScriptStorageRecord::bytes, static_cast<void*>(nullptr));
     script.set(&ScriptStorageRecord::size, uint32_t{0});

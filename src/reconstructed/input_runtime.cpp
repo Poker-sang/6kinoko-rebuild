@@ -7,9 +7,9 @@
 #include <cstring>
 
 extern "C" {
-void retdec_trace(const char*);
-void retdec_trace_i32(const char*, int32_t);
-void retdec_trace_squirrel_name(const char*, int32_t);
+void kinoko_trace(const char*);
+void kinoko_trace_i32(const char*, int32_t);
+void kinoko_trace_squirrel_name(const char*, int32_t);
 }
 namespace {
 // 4074C0 validates the signed low byte, not the full integer identifier.
@@ -59,8 +59,8 @@ int32_t diagnostic_address(const void* pointer) {
 }
 }
 extern "C" int32_t kinoko_input_save_config(KinokoInputManager* manager, const char* path) {
-    retdec_trace_i32("46b7c0:this", diagnostic_address(manager));
-    retdec_trace_i32("46b7c0:path", diagnostic_address(path));
+    kinoko_trace_i32("46b7c0:this", diagnostic_address(manager));
+    kinoko_trace_i32("46b7c0:path", diagnostic_address(path));
     {
         ConfigFile file(CreateFileA(path, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
                                    FILE_ATTRIBUTE_NORMAL, nullptr));
@@ -68,13 +68,13 @@ extern "C" int32_t kinoko_input_save_config(KinokoInputManager* manager, const c
         file.write(manager->keyboard.assignment);
         if (kinoko_input_devices_size(manager)) file.write(kinoko_input_devices_at(manager, 0)->assignment);
     }
-    retdec_trace_squirrel_name("input:config-saved", diagnostic_address(path));
+    kinoko_trace_squirrel_name("input:config-saved", diagnostic_address(path));
     return 0;
 }
 extern "C" int32_t kinoko_input_load_config(KinokoInputManager* manager, const char* path) {
-    retdec_trace_i32("46b880:this", diagnostic_address(manager));
-    retdec_trace_i32("46b880:path", diagnostic_address(path));
-    retdec_trace_squirrel_name("input:config-load", diagnostic_address(path));
+    kinoko_trace_i32("46b880:this", diagnostic_address(manager));
+    kinoko_trace_i32("46b880:path", diagnostic_address(path));
+    kinoko_trace_squirrel_name("input:config-load", diagnostic_address(path));
     {
         ConfigFile file(CreateFileA(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
                                    nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
@@ -82,14 +82,14 @@ extern "C" int32_t kinoko_input_load_config(KinokoInputManager* manager, const c
         KinokoInputAssignment record;
         if (file.read(record)) {
             apply_assignment(manager->keyboard, record);
-            retdec_trace("input:config-keyboard-loaded");
+            kinoko_trace("input:config-keyboard-loaded");
             // One saved controller record is broadcast to all registered devices.
             if (file.read(record))
                 for (uint32_t i = 0; i < kinoko_input_devices_size(manager); ++i)
                     apply_assignment(*kinoko_input_devices_at(manager, i), record);
         }
     }
-    retdec_trace("46b880:done");
+    kinoko_trace("46b880:done");
     return 0;
 }
 extern "C" int32_t kinoko_input_set_assignment(KinokoInputManager* manager, int32_t device,
@@ -110,8 +110,8 @@ extern "C" int32_t kinoko_input_wait_assignment(KinokoInputManager* manager, int
             auto record = manager->keyboard.assignment;
             keyboard_field(record, field) = scan;
             apply_assignment(manager->keyboard, record);
-            retdec_trace_i32("input:assign-keyboard-field", field);
-            retdec_trace_i32("input:assign-keyboard-scan", scan);
+            kinoko_trace_i32("input:assign-keyboard-field", field);
+            kinoko_trace_i32("input:assign-keyboard-scan", scan);
             return 1;
         }
         return 0;

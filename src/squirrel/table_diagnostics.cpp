@@ -6,7 +6,7 @@
 #include <intrin.h>
 #include <cstring>
 
-extern "C" void retdec_trace_i32(const char*, int32_t);
+extern "C" void kinoko_trace_i32(const char*, int32_t);
 namespace {
 using kinoko::legacy::pointer;
 struct TableHeader {
@@ -38,7 +38,7 @@ uint32_t key_hash(int32_t type, int32_t data) {
 }
 }
 // Diagnostic traversal of the original 20-byte SQTable bucket record.
-extern "C" void retdec_trace_squirrel_table_entries(const char* label, int32_t table_address) {
+extern "C" void kinoko_trace_squirrel_table_entries(const char* label, int32_t table_address) {
     if (!label || static_cast<uint32_t>(table_address) < 0x10000u) return;
     char message[640];
     __try {
@@ -47,7 +47,7 @@ extern "C" void retdec_trace_squirrel_table_entries(const char* label, int32_t t
             label, static_cast<unsigned long>(static_cast<uint32_t>(table_address)),
             static_cast<unsigned long>(static_cast<uint32_t>(table.nodes)),
             static_cast<long>(table.capacity), static_cast<long>(table.used));
-        retdec_trace(message);
+        kinoko_trace(message);
         if (!table.nodes || table.capacity <= 0 || table.capacity > 4096) return;
         for (int bucket = 0; bucket < table.capacity; ++bucket) {
             int32_t entry = table.nodes + static_cast<int32_t>(sizeof(TableNode)) * bucket;
@@ -65,22 +65,22 @@ extern "C" void retdec_trace_squirrel_table_entries(const char* label, int32_t t
                     static_cast<unsigned long>(static_cast<uint32_t>(node.value_type)),
                     static_cast<unsigned long>(static_cast<uint32_t>(node.value_data)),
                     static_cast<unsigned long>(static_cast<uint32_t>(node.next)));
-                retdec_trace(message);
+                kinoko_trace(message);
                 entry = node.next;
             }
             if (entry) {
-                retdec_trace_i32("sq-table:cycle-or-long-chain", bucket);
-                retdec_trace_i32("sq-table:chain-entry", entry);
+                kinoko_trace_i32("sq-table:cycle-or-long-chain", bucket);
+                kinoko_trace_i32("sq-table:chain-entry", entry);
             }
         }
     } __except (EXCEPTION_EXECUTE_HANDLER) {
-        retdec_trace("sq-table:snapshot-fault");
+        kinoko_trace("sq-table:snapshot-fault");
     }
 }
 // The shared-state RefTable starts at +24 and stores 16-byte linked nodes.
-extern "C" void retdec_trace_ref_watch(const char* label, int32_t shared_state,
+extern "C" void kinoko_trace_ref_watch(const char* label, int32_t shared_state,
     int32_t type, int32_t data) {
-    if (!retdec_is_release_watch_data(data)) return;
+    if (!kinoko_is_release_watch_data(data)) return;
     const LONG sequence = InterlockedIncrement(&watch_events);
     if (sequence > 4096) return;
     char message[256];
@@ -109,8 +109,8 @@ extern "C" void retdec_trace_ref_watch(const char* label, int32_t shared_state,
             static_cast<unsigned long>(static_cast<uint32_t>(vtable)),
             static_cast<unsigned long>(static_cast<uint32_t>(node_address)), static_cast<long>(refs),
             static_cast<unsigned long>(reinterpret_cast<uintptr_t>(_ReturnAddress())));
-        retdec_trace(message);
+        kinoko_trace(message);
     } __except (EXCEPTION_EXECUTE_HANDLER) {
-        retdec_trace("sq-watch:fault");
+        kinoko_trace("sq-watch:fault");
     }
 }

@@ -11,8 +11,8 @@
 #include <cstdlib>
 #include <atomic>
 extern "C" {
-void retdec_trace(const char *);
-void retdec_trace_i32(const char *, int32_t);
+void kinoko_trace(const char *);
+void kinoko_trace_i32(const char *, int32_t);
 }
 namespace {
 using namespace kinoko::map;
@@ -51,23 +51,23 @@ extern "C" void kinoko_map_manager_clear(KinokoMapManager *storage) {
 extern "C" int32_t kinoko_map_manager_update(KinokoMapManager *storage) {
     static std::atomic<int32_t> trace_count{0};
     const auto trace = ++trace_count <= 16;
-    if (trace) { retdec_trace("46f0b0:entry"); retdec_trace_i32("46f0b0:manager", address(storage)); }
+    if (trace) { kinoko_trace("46f0b0:entry"); kinoko_trace_i32("46f0b0:manager", address(storage)); }
     if (!storage) return 0;
     const ManagerView manager(storage);
     auto *player = manager.get(&ManagerRecord::player);
     if (trace) {
-        retdec_trace_i32("46f0b0:act", address(manager.get(&ManagerRecord::source_act)));
-        retdec_trace_i32("46f0b0:holder", address(manager.get(&ManagerRecord::source_holder)));
-        retdec_trace_i32("46f0b0:resource", address(player));
+        kinoko_trace_i32("46f0b0:act", address(manager.get(&ManagerRecord::source_act)));
+        kinoko_trace_i32("46f0b0:holder", address(manager.get(&ManagerRecord::source_holder)));
+        kinoko_trace_i32("46f0b0:resource", address(player));
     }
     if (!manager.get(&ManagerRecord::source_act) || !player) {
-        if (trace) retdec_trace("46f0b0:skip");
+        if (trace) kinoko_trace("46f0b0:skip");
         return 0;
     }
     kinoko_act_increment_frame(player, nullptr);
     // 46F0C5 reloads the receiver after IncrementFrame.
     const auto result = kinoko_act_update_frame(address(manager.get(&ManagerRecord::player)));
-    if (trace) retdec_trace_i32("46f0b0:result", result);
+    if (trace) kinoko_trace_i32("46f0b0:result", result);
     return result;
 }
 extern "C" KinokoActDocument *kinoko_map_manager_prepare(KinokoMapManager *storage, KinokoCamera *camera) {

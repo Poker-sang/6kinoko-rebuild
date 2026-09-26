@@ -6,8 +6,8 @@
 #include <cstring>
 #include <cstddef>
 extern "C" {
-extern unsigned char g_retdec_keyboard_state[256];
-void retdec_trace_i32(const char*, int32_t);
+extern unsigned char kinoko_keyboard_state[256];
+void kinoko_trace_i32(const char*, int32_t);
 KinokoInputSnapshot kinoko_input_snapshot{};
 }
 namespace {
@@ -76,7 +76,7 @@ static void poll_fallback_keyboard(void)
     static int previous_z;
     HKL keyboard_layout = GetKeyboardLayout(0);
 
-    memset(g_retdec_keyboard_state, 0, sizeof(g_retdec_keyboard_state));
+    memset(kinoko_keyboard_state, 0, sizeof(kinoko_keyboard_state));
     /* 408B30 uses DISCL_FOREGROUND. Keep that contract in the fallback,
        and expose the full keyboard to the original WaitAssign scan. */
     if (kinoko_input_window() != NULL && GetForegroundWindow() == kinoko_input_window()) {
@@ -102,12 +102,12 @@ static void poll_fallback_keyboard(void)
             }
             if (virtual_key == VK_PAUSE) scan = DIK_PAUSE;
             if (virtual_key == VK_SNAPSHOT) scan = DIK_SYSRQ;
-            g_retdec_keyboard_state[scan] = 0x80;
+            kinoko_keyboard_state[scan] = 0x80;
         }
     }
-    if (previous_z != (g_retdec_keyboard_state[0x2c] != 0)) {
-        previous_z = g_retdec_keyboard_state[0x2c] != 0;
-        retdec_trace_i32("input:z", previous_z);
+    if (previous_z != (kinoko_keyboard_state[0x2c] != 0)) {
+        previous_z = kinoko_keyboard_state[0x2c] != 0;
+        kinoko_trace_i32("input:z", previous_z);
     }
 }
 extern "C" HWND kinoko_input_window(void) { return service.window; }
@@ -157,9 +157,9 @@ extern "C" int32_t kinoko_input_poll(void) {
         device->GetDeviceState(sizeof(KinokoControllerState), &service.states[i]);
     }
     if (service.keyboard) {
-        if (FAILED(service.keyboard->GetDeviceState(256, g_retdec_keyboard_state))) {
+        if (FAILED(service.keyboard->GetDeviceState(256, kinoko_keyboard_state))) {
             service.keyboard->Acquire();
-            std::memset(g_retdec_keyboard_state, 0, 256);
+            std::memset(kinoko_keyboard_state, 0, 256);
         }
     } else {
         // Established reconstruction fallback: foreground-only scan mapping.
@@ -169,7 +169,7 @@ extern "C" int32_t kinoko_input_poll(void) {
         service.mouse->Acquire();
     return 1;
 }
-extern "C" int32_t kinoko_input_key_down(int32_t scan) { return g_retdec_keyboard_state[uint8_t(scan)] >> 7; }
+extern "C" int32_t kinoko_input_key_down(int32_t scan) { return kinoko_keyboard_state[uint8_t(scan)] >> 7; }
 extern "C" const KinokoControllerState* kinoko_input_controller_state(int32_t index) {
     return index >= 0 && index < kinoko_input_snapshot.controller_count && kinoko_input_snapshot.controllers
         ? &kinoko_input_snapshot.controllers[index] : nullptr;

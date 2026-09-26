@@ -9,7 +9,7 @@ inline SQVM*& current_vm_storage = kinoko_primary_vm;
 HSQUIRRELVM current_vm() { return reinterpret_cast<HSQUIRRELVM>(current_vm_storage); }
 void initialize(int32_t* object) { ObjectView(object).initialize(kinoko_squirrel_object_vtable()); }
 }
-extern "C" int32_t retdec_squirrel_object_from_pair(int32_t* object, int32_t type, int32_t data) {
+extern "C" int32_t kinoko_squirrel_object_from_pair(int32_t* object, int32_t type, int32_t data) {
     auto vm = current_vm();
     if (!object || !vm) return 0;
     initialize(object);
@@ -18,7 +18,7 @@ extern "C" int32_t retdec_squirrel_object_from_pair(int32_t* object, int32_t typ
     sq_pop(vm, 1);
     return 1;
 }
-extern "C" int32_t retdec_squirrel_object_string(int32_t* object, const char** output) {
+extern "C" int32_t kinoko_squirrel_object_string(int32_t* object, const char** output) {
     auto vm = current_vm();
     if (!object || !output || !vm) return 0;
     ObjectView(object).push(vm);
@@ -29,7 +29,7 @@ extern "C" int32_t retdec_squirrel_object_string(int32_t* object, const char** o
     *output = value;
     return value != nullptr;
 }
-extern "C" int32_t retdec_squirrel_object_copy(int32_t* destination, const int32_t* source) {
+extern "C" int32_t kinoko_squirrel_object_copy(int32_t* destination, const int32_t* source) {
     auto vm = current_vm();
     if (!destination || !source || !vm) return 0;
     if (destination == source) return 1;
@@ -38,7 +38,7 @@ extern "C" int32_t retdec_squirrel_object_copy(int32_t* destination, const int32
     ObjectView(destination).assign(vm, value);
     return 1;
 }
-extern "C" int32_t retdec_squirrel_object_from_string(int32_t* object, const char* data, uint32_t length) {
+extern "C" int32_t kinoko_squirrel_object_from_string(int32_t* object, const char* data, uint32_t length) {
     auto vm = current_vm();
     if (!object || !data || !vm || length > 0x1000000u) return 0;
     // The old temporary was NUL-terminated and pushed with length -1. Preserve

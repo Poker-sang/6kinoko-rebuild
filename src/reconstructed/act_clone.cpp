@@ -23,7 +23,7 @@ template<class T> T &field(Address address, size_t offset=0) {
 }
 void *pointer(Address address) { return reinterpret_cast<void *>(static_cast<uintptr_t>(address)); }
 Address address(const void *p) { return static_cast<Address>(reinterpret_cast<uintptr_t>(p)); }
-void dispose_chip_data(void* data) { retdec_mcd_free(static_cast<retdec_mcd_data*>(data)); }
+void dispose_chip_data(void* data) { kinoko_mcd_free(static_cast<kinoko_mcd_data*>(data)); }
 
 }
 
@@ -34,7 +34,7 @@ extern "C" int32_t __fastcall kinoko_method_clone_c2d_layout(int32_t source, voi
     if (!source) return 0;
     auto* result=static_cast<unsigned char*>(std::calloc(1,316));
     if (!result) return 0;
-    retdec_construct_c2dlayout(static_cast<int32_t>(address(result)));
+    kinoko_construct_c2dlayout(static_cast<int32_t>(address(result)));
     std::memcpy(result+8,static_cast<unsigned char*>(pointer(source))+8,305);
     return static_cast<int32_t>(address(result));
 }
@@ -60,7 +60,7 @@ extern "C" int32_t __fastcall kinoko_method_clone_act_key(int32_t source, void*)
     output.assign(input.data(),input.length());
     if (output.length()!=input.length()) return 0;
     const auto layout=field<Address>(source,4);
-    if (layout) field<int32_t>(key,4)=retdec_call_thiscall0_result(
+    if (layout) field<int32_t>(key,4)=kinoko_call_thiscall0_result(
         pointer(layout),field<void*>(field<Address>(layout),20));
     return static_cast<int32_t>(address(result.release()));
 }
@@ -73,7 +73,7 @@ std::unordered_set<Address> cloned_texture_owners;
 int32_t clone_resource(int32_t source, const void* vtable, bool chip) {
     if (!source) return 0;
     auto destroy=[](unsigned char* value) {
-        if (value) retdec_destroy_cact_resource(static_cast<int32_t>(address(value)));
+        if (value) kinoko_destroy_cact_resource(static_cast<int32_t>(address(value)));
     };
     std::unique_ptr<unsigned char,decltype(destroy)> owned(
         static_cast<unsigned char*>(std::calloc(1,100)),destroy);

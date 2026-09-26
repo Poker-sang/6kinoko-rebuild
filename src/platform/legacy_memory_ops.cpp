@@ -1,4 +1,4 @@
-#include "kinoko/retdec_memory.h"
+#include "kinoko/legacy_memory_ops.h"
 
 #include <array>
 #include <cstddef>

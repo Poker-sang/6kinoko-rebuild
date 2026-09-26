@@ -27,9 +27,9 @@ extern "C" {
 struct SQVM *kinoko_primary_vm = nullptr;
 int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
 int32_t kinoko_native_void_type(void) { return 0x13572468; }
-void retdec_trace(const char*) {}
-void retdec_trace_i32(const char*, int32_t) {}
-void retdec_trace_squirrel_name(const char*, int32_t) {}
+void kinoko_trace(const char*) {}
+void kinoko_trace_i32(const char*, int32_t) {}
+void kinoko_trace_squirrel_name(const char*, int32_t) {}
 void kinoko_host_free_allocation(int32_t* p) { std::free(p); }
 void * kinoko_sqplus_root_object(void) { return (void *)(intptr_t)(address(&root_storage)); }
 int32_t  kinoko_sqplus_select_vm(struct SQVM * vm) { kinoko_primary_vm = vm; return 1; }

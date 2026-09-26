@@ -11,7 +11,7 @@
 #include "sqfuncproto.h"
 #include "sqcompiler.h"
 
-extern "C" void retdec_trace(const char *message);
+extern "C" void kinoko_trace(const char *message);
 
 namespace {
 SQInteger write_bytecode(SQUserPointer context, SQUserPointer data, SQInteger size) {
@@ -26,11 +26,11 @@ void compiler_error(HSQUIRRELVM, const SQChar *error, const SQChar *source,
     char message[1024];
     std::snprintf(message, sizeof(message), "stagevm:compile-error %s:%d:%d %s",
                   source, line, column, error);
-    retdec_trace(message);
+    kinoko_trace(message);
 }
 }
 
-extern "C" int32_t retdec_squirrel_compile_source(const char *source,
+extern "C" int32_t kinoko_squirrel_compile_source(const char *source,
     int32_t length, const char *name, unsigned char **bytecode, int32_t *bytecode_size) {
     *bytecode = nullptr;
     *bytecode_size = 0;

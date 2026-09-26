@@ -22,9 +22,9 @@ char kinoko_sqrat_trace_enabled = 0;
 int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
 int32_t kinoko_actor_vtable(void) { return 0x14141414; }
 int32_t kinoko_actor_step_key(void) { return address(&step_key); }
-void retdec_trace(const char*) {}
-void retdec_trace_i32(const char*, int32_t) {}
-void retdec_trace_squirrel_name(const char*, int32_t) {}
+void kinoko_trace(const char*) {}
+void kinoko_trace_i32(const char*, int32_t) {}
+void kinoko_trace_squirrel_name(const char*, int32_t) {}
 void kinoko_host_free_allocation(int32_t* allocation) {
     ++deletes; deleted_address = address(allocation); std::free(allocation);
 }

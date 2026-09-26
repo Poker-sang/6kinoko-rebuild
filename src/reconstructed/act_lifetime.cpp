@@ -58,7 +58,7 @@ using kinoko::legacy::field;
 
 extern "C" int32_t __fastcall kinoko_method_delete_act_script(int32_t script, void *) {
     if (script) {
-        retdec_destroy_cact_script(script);
+        kinoko_destroy_cact_script(script);
         std::free(pointer<void>(script));
     }
     return 0;
@@ -84,7 +84,7 @@ void clear_key(int32_t value) {
     field<uint32_t>(value+28)=15;
 }
 }
-void retdec_destroy_cact_key(int32_t value) {
+void kinoko_destroy_cact_key(int32_t value) {
     if (!value) return;
     // The layer's second list owns CActTimeLine, not a key with a layout.
     if (field<int32_t>(value)==address(kinoko_act_timeline_vtable()))
@@ -98,7 +98,7 @@ extern "C" int32_t __fastcall kinoko_method_destroy_layout(int32_t layout,void*)
     return layout;
 }
 
-void retdec_destroy_cact_list(int32_t *list_slot)
+void kinoko_destroy_cact_list(int32_t *list_slot)
 {
     if (!list_slot || !*list_slot) return;
     kinoko_act_list_dispose_payloads(*list_slot);
@@ -127,8 +127,8 @@ static void clear_resource(int32_t resource)
         // 42F1B0: loaded path, shared MCD, source name, then base name.
         clear_string(chip.bytes(&ChipResourceRecord::loaded_path));
         if (kinoko_act_release_chip_data(resource))
-            retdec_mcd_free(chip.get(&ChipResourceRecord::data));
-        chip.set(&ChipResourceRecord::data, static_cast<retdec_mcd_data *>(nullptr));
+            kinoko_mcd_free(chip.get(&ChipResourceRecord::data));
+        chip.set(&ChipResourceRecord::data, static_cast<kinoko_mcd_data *>(nullptr));
         clear_string(chip.bytes(&ChipResourceRecord::source_name));
         clear_string(chip.bytes(&ChipResourceRecord::name));
     } else {
@@ -148,12 +148,12 @@ static void clear_resource(int32_t resource)
     }
 }
 
-void retdec_destroy_cact_resource(int32_t resource) {
+void kinoko_destroy_cact_resource(int32_t resource) {
     clear_resource(resource);
     std::free(pointer<void>(resource));
 }
 
-void retdec_destroy_cact_object(int32_t object_ptr)
+void kinoko_destroy_cact_object(int32_t object_ptr)
 {
     if (!object_ptr) return;
     const kinoko::act::DocumentView document(pointer<void>(object_ptr));
@@ -176,7 +176,7 @@ void retdec_destroy_cact_object(int32_t object_ptr)
     kinoko_act_array_destroy(address(document.bytes(&DocumentRecord::resources)));
     kinoko_act_array_destroy(address(document.bytes(&DocumentRecord::layers)));
 
-    retdec_destroy_cact_script(address(document.bytes(&kinoko::act::DocumentRecord::script)));
+    kinoko_destroy_cact_script(address(document.bytes(&kinoko::act::DocumentRecord::script)));
     auto clear_string = [](unsigned char* storage) {
         kinoko_string_destroy(storage);
         const kinoko::native::RecordView<kinoko::legacy::StringRecord> record(storage);
@@ -188,7 +188,7 @@ void retdec_destroy_cact_object(int32_t object_ptr)
     clear_string(document.bytes(&kinoko::act::DocumentRecord::name));
 }
 
-int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
+int32_t kinoko_destroy_cact_with_flags(int32_t object_ptr,
                                                unsigned char flags)
 {
     if (object_ptr == 0)
@@ -196,12 +196,12 @@ int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
     if ((flags & 2) != 0) {
         uint32_t count = field<uint32_t>(object_ptr - 4);
         for (uint32_t index = count; index > 0; --index)
-            retdec_destroy_cact_object(object_ptr + (index - 1) * sizeof(kinoko::act::DocumentRecord));
+            kinoko_destroy_cact_object(object_ptr + (index - 1) * sizeof(kinoko::act::DocumentRecord));
         if ((flags & 1) != 0)
             std::free(pointer<void>(object_ptr - 4));
         return object_ptr - 4;
     }
-    retdec_destroy_cact_object(object_ptr);
+    kinoko_destroy_cact_object(object_ptr);
     if ((flags & 1) != 0)
         std::free(pointer<void>(object_ptr));
     return object_ptr;
@@ -229,7 +229,7 @@ extern "C" int32_t __fastcall kinoko_method_delete_act_key(int32_t object,void*,
     return delete_with_flags<clear_key>(object,36,flags);
 }
 extern "C" int32_t __fastcall kinoko_method_delete_act_layer(int32_t object,void*,unsigned char flags) {
-    return delete_with_flags<retdec_destroy_cact_layer>(object,sizeof(kinoko::act::LayerStorageRecord),flags);
+    return delete_with_flags<kinoko_destroy_cact_layer>(object,sizeof(kinoko::act::LayerStorageRecord),flags);
 }
 extern "C" int32_t __fastcall kinoko_method_delete_act_resource(int32_t object,void*,unsigned char flags) {
     return delete_with_flags<clear_resource>(object,100,flags);

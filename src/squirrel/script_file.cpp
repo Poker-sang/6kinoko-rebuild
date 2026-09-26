@@ -16,9 +16,9 @@ extern struct SQVM *kinoko_primary_vm;
 extern char* kinoko_game_window_slot;
 extern char kinoko_packed_assets;
 extern int32_t kinoko_act_vm_abi_slot, kinoko_script_root_storage[3];
-void retdec_trace(const char*);
-void retdec_trace_i32(const char*, int32_t);
-void retdec_trace_squirrel_name(const char*, int32_t);
+void kinoko_trace(const char*);
+void kinoko_trace_i32(const char*, int32_t);
+void kinoko_trace_squirrel_name(const char*, int32_t);
 void* kinoko_sqplus_object_assign(void*, const void*);
 int32_t kinoko_squirrel_object_vtable(void);
 }
@@ -48,7 +48,7 @@ void trace_error(HSQUIRRELVM vm) {
     sq_getlasterror(vm);
     const SQChar* message = nullptr;
     if (SQ_SUCCEEDED(sq_getstring(vm, -1, &message)) && message)
-        retdec_trace_squirrel_name("402d40:error", address(message));
+        kinoko_trace_squirrel_name("402d40:error", address(message));
 }
 class Reference final {
 public:
@@ -70,7 +70,7 @@ void execute_bytecode(SQVM* vm, unsigned char* bytes, size_t size,
                       const HSQOBJECT& scope, bool has_environment) {
     KinokoScriptMemoryReader stream{bytes, static_cast<int32_t>(size), bytes};
     const auto loaded = sq_readclosure(vm, read_bytecode, &stream);
-    retdec_trace_i32("402d40:compiled-result", loaded);
+    kinoko_trace_i32("402d40:compiled-result", loaded);
     if (SQ_FAILED(loaded)) return;
     HSQOBJECT closure;
     sq_resetobject(&closure);
@@ -80,21 +80,21 @@ void execute_bytecode(SQVM* vm, unsigned char* bytes, size_t size,
     if (!has_environment || sq_isnull(scope)) sq_pushroottable(vm);
     else sq_pushobject(vm, scope);
     const auto executed = invoke(vm, 1, SQFalse, SQTrue);
-    retdec_trace_i32("402d40:execute-result", executed);
+    kinoko_trace_i32("402d40:execute-result", executed);
     if (SQ_FAILED(executed)) trace_error(vm);
 }
 }
 
 extern "C" void* kinoko_script_initialize_root() noexcept(false) {
-    retdec_trace("402aa0:begin");
+    kinoko_trace("402aa0:begin");
     kinoko_sqplus_select_vm(nullptr);
-    retdec_trace("402aa0:after-debug");
-    retdec_trace("402aa0:before-4a8cc0");
+    kinoko_trace("402aa0:after-debug");
+    kinoko_trace("402aa0:before-4a8cc0");
     auto source = kinoko_sqplus_root_object();
-    retdec_trace_i32("402aa0:source", address(source));
-    retdec_trace("402aa0:after-4a8cc0");
+    kinoko_trace_i32("402aa0:source", address(source));
+    kinoko_trace("402aa0:after-4a8cc0");
     auto result = kinoko_sqplus_object_assign(kinoko_script_root(), source);
-    retdec_trace("402aa0:done");
+    kinoko_trace("402aa0:done");
     return result;
 }
 extern "C" void* kinoko_script_root() { return script_root_slot; }
@@ -106,10 +106,10 @@ extern "C" int32_t kinoko_script_close_vm() {
 }
 
 extern "C" int32_t kinoko_script_load_file(const char* path, const void* environment) noexcept(false) {
-    retdec_trace("402d40:entry");
-    retdec_trace_i32("402d40:archives", kinoko_archive_count);
+    kinoko_trace("402d40:entry");
+    kinoko_trace_i32("402d40:archives", kinoko_archive_count);
     if (!path) return 0;
-    retdec_trace_squirrel_name("402d40:file", address(path));
+    kinoko_trace_squirrel_name("402d40:file", address(path));
     const char* lookup = path;
     char packed_lookup[MAX_PATH];
     if (compiled_assets()) {
@@ -121,12 +121,12 @@ extern "C" int32_t kinoko_script_load_file(const char* path, const void* environ
     }
     KinokoArchiveReader* opened = nullptr;
     if (!kinoko_reader_open(&opened, lookup) || !opened) {
-        retdec_trace("402d40:reader-failed");
+        kinoko_trace("402d40:reader-failed");
         return 0;
     }
     std::unique_ptr<KinokoArchiveReader, decltype(&kinoko_reader_close)> reader(opened, kinoko_reader_close);
     const auto size = kinoko_reader_size(opened);
-    retdec_trace_i32("402d40:size", static_cast<int32_t>(size));
+    kinoko_trace_i32("402d40:size", static_cast<int32_t>(size));
     // Keep the size + 1 allocation from wrapping on malformed input.
     if (size == UINT32_MAX) return 0;
     std::unique_ptr<unsigned char, decltype(&std::free)> bytes(
@@ -143,7 +143,7 @@ extern "C" int32_t kinoko_script_load_file(const char* path, const void* environ
         if (!vm) return 0;
         execute_bytecode(vm, bytes.get(), size, scope, environment != nullptr);
     } else {
-        retdec_trace("402d40:plain-script");
+        kinoko_trace("402d40:plain-script");
         auto vm = primary_vm();
         if (!vm) return 0;
         // Unlike LocalScript, an explicitly supplied null value stays null.
@@ -168,7 +168,7 @@ extern "C" int32_t kinoko_script_compile_file_argument(int32_t path, int32_t,
 }
 
 extern "C" int32_t kinoko_script_show_call_stack() noexcept(false) {
-    retdec_trace("402af0:entry");
+    kinoko_trace("402af0:entry");
     auto vm = primary_vm();
     const auto root = ObjectView(kinoko_sqplus_root_object()).value();
     Reference files(vm, upstream::sqplus_get_value(vm, root, "debug_call_stack_file"));

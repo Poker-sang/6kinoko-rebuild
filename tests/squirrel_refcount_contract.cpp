@@ -23,7 +23,7 @@ void base_destructor(int flags) {
     SQWeakRef* weak = value->GetWeakRef(OT_USERDATA);
     ++weak->_uiRef; // keep it alive after its target is destroyed
     const int32_t receiver = address(value);
-    require(retdec_call_thiscall1_result(value,
+    require(kinoko_call_thiscall1_result(value,
         reinterpret_cast<void*>(&kinoko_sq_delete_refcounted), flags) == receiver,
         "base destructor receiver/result");
     require(type(weak->_obj) == OT_NULL && weak->_obj._unVal.pRefCounted == nullptr,

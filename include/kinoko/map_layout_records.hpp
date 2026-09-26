@@ -8,8 +8,8 @@
 #include <cstddef>
 #include <cstdint>
 
-struct retdec_mcd_data;
-struct retdec_mcd_texture;
+struct kinoko_mcd_data;
+struct kinoko_mcd_texture;
 
 namespace kinoko::map {
 // Schemas for existing Win32 storage, not objects constructed over its bytes.
@@ -47,7 +47,7 @@ using ChipDefinitionBuffer=MapRecordBuffer<ChipDefinition>;
 using ChangedChipBuffer=MapRecordBuffer<const ChipDefinition *>;
 using ChipIndexBuffer=MapRecordBuffer<int32_t>;
 using ChipReferenceBuffer=MapRecordBuffer<const ChipDefinition *>;
-using TextureReferenceBuffer=MapRecordBuffer<retdec_mcd_texture *>;
+using TextureReferenceBuffer=MapRecordBuffer<kinoko_mcd_texture *>;
 struct RenderLayerRecord { const void *methods; KinokoActLayout *layout; };
 struct LayoutRecord {
     const unsigned char *methods;
@@ -99,7 +99,7 @@ struct LayerRecord {
 struct ChipResourceRecord {
     const unsigned char *methods;
     std::array<uint8_t, 60> prefix;
-    retdec_mcd_data *data; // shared MCD; retained by the resource's control
+    kinoko_mcd_data *data; // shared MCD; retained by the resource's control
 };
 using LayoutView = kinoko::native::RecordView<LayoutRecord>;
 using LayerView = kinoko::native::RecordView<LayerRecord>;

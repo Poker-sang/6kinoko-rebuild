@@ -46,8 +46,8 @@ int32_t kinoko_reader_read_exact(KinokoArchiveReader *source,void *output,uint32
 }
 int32_t kinoko_texture_acquire(const char *name) { ++loads;loaded_path=name;return 2; }
 const void *kinoko_pat_frame_methods(void) { return nullptr; }
-void retdec_trace_i32(const char *,int32_t) {}
-void retdec_trace_squirrel_name(const char *,int32_t) {}
+void kinoko_trace_i32(const char *,int32_t) {}
+void kinoko_trace_squirrel_name(const char *,int32_t) {}
 }
 #define CHECK(x) do { if (!(x)) { std::fprintf(stderr,"PAT line %d: %s\n",__LINE__,#x);return 1; } } while(0)
 int main() {

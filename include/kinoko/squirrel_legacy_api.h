@@ -62,13 +62,13 @@ int32_t function_48e120_this(int32_t this_ptr, float value);
 int32_t function_499b00(int32_t this_ptr, int32_t value_ptr);
 int32_t kinoko_sq_raise_formatted_error(int32_t this_ptr, const char *format, ...);
 int32_t function_49a520_this(int32_t shared_state, int32_t vm);
-void retdec_squirrel_addref(int32_t type, int32_t data);
-void retdec_squirrel_release(int32_t type, int32_t data);
-void retdec_squirrel_assign(int32_t *dst, const int32_t *src);
-void retdec_release_squirrel_value(int32_t *value_ptr);
-int32_t retdec_gc_object_type(int32_t object_ptr);
-void retdec_gc_mark_value(const int32_t *value, int32_t *chain_head);
-void retdec_gc_finalize_collectable(int32_t object_ptr,
+void kinoko_squirrel_addref(int32_t type, int32_t data);
+void kinoko_squirrel_release(int32_t type, int32_t data);
+void kinoko_squirrel_assign(int32_t *dst, const int32_t *src);
+void kinoko_release_squirrel_value(int32_t *value_ptr);
+int32_t kinoko_gc_object_type(int32_t object_ptr);
+void kinoko_gc_mark_value(const int32_t *value, int32_t *chain_head);
+void kinoko_gc_finalize_collectable(int32_t object_ptr,
                                             int32_t object_type);
 void __fastcall function_48be70(int32_t object, void* unused);
 int32_t __fastcall function_48bf50(int32_t object, void* unused, int32_t flags);

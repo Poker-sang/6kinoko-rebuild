@@ -10,11 +10,11 @@ extern "C" {
 KinokoGraphics kinoko_graphics{};
 KinokoRenderer kinoko_renderer{};
 KinokoCriticalSection kinoko_graphics_lock{};
-void retdec_trace_i32(const char*,int32_t) {}
+void kinoko_trace_i32(const char*,int32_t) {}
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY]{};
 int32_t kinoko_texture_register(IDirect3DBaseTexture9*,uint32_t,uint32_t) { return 0; }
-void retdec_trace(const char*) {}
-void retdec_trace_hresult(const char*,long) {}
+void kinoko_trace(const char*) {}
+void kinoko_trace_hresult(const char*,long) {}
 HRESULT WINAPI D3DXCreateTexture(IDirect3DDevice9*,UINT,UINT,UINT,DWORD,D3DFORMAT,D3DPOOL,IDirect3DTexture9**) { return E_FAIL; }
 }
 static std::vector<int> calls;

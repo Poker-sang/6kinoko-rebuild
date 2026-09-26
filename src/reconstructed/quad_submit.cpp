@@ -6,7 +6,7 @@
 #include "kinoko/diagnostics.h"
 #include <d3d9.h>
 extern "C" {
-void retdec_trace_i32(const char *,int32_t);
+void kinoko_trace_i32(const char *,int32_t);
 }
 
 // 405800: IColor + borrowed texture + four transformed 28-byte vertices.
@@ -19,8 +19,8 @@ extern "C" int32_t kinoko_quad_submit(KinokoQuad *storage,float x,float y) {
     static volatile LONG traces;
     const bool trace=InterlockedIncrement(&traces)<=8;
     if (trace) {
-        retdec_trace_i32("draw:vertex-buffer",kinoko::legacy::address(storage));
-        retdec_trace_i32("draw:handle",quad.get(&QuadRecord::texture));
+        kinoko_trace_i32("draw:vertex-buffer",kinoko::legacy::address(storage));
+        kinoko_trace_i32("draw:handle",quad.get(&QuadRecord::texture));
     }
     for(size_t i=0;i<vertices.size();++i) {
         vertices[i].x=positions[i].x+x-0.5f;
@@ -30,14 +30,14 @@ extern "C" int32_t kinoko_quad_submit(KinokoQuad *storage,float x,float y) {
     }
     quad.set(&QuadRecord::vertices,vertices);
     const auto texture_result=kinoko_texture_bind_stage(0,quad.get(&QuadRecord::texture));
-    if (trace) retdec_trace_hresult("draw:set-texture-hr",texture_result);
+    if (trace) kinoko_trace_hresult("draw:set-texture-hr",texture_result);
     auto *device=kinoko_graphics.device;
     if (!device || !kinoko::legacy::load<const void *>(device)) return E_FAIL;
     const auto format_result=device->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-    if (trace) retdec_trace_hresult("draw:set-fvf-hr",format_result);
+    if (trace) kinoko_trace_hresult("draw:set-fvf-hr",format_result);
     // Both setup HRESULTs are ignored in the original; the draw supplies return.
     const auto result=device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,2,
         quad.bytes(&QuadRecord::vertices),sizeof(KinokoSpriteVertex));
-    if (trace) retdec_trace_hresult("draw:primitive-hr",result);
+    if (trace) kinoko_trace_hresult("draw:primitive-hr",result);
     return result;
 }

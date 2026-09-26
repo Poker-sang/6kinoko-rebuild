@@ -16,7 +16,7 @@ void * kinoko_sqplus_object_assign(void * out, const void * in) { calls.push_bac
 void*  kinoko_sqplus_object_destroy(void *) { calls.push_back(3);return (void*)(intptr_t)(0); }
 int32_t  kinoko_sqplus_object_set_instance(void * , void * ) { calls.push_back(4);return 0; }
 int32_t  kinoko_sqplus_object_raw_set_name(void * , const char *, const void * ) { calls.push_back(5);return 77; }
-void retdec_trace_i32(const char *,int32_t) {}
+void kinoko_trace_i32(const char *,int32_t) {}
 }
 #define CHECK(x) do { if (!(x)) { std::fprintf(stderr,"camera line %d\n",__LINE__);return 1; } } while(0)
 int main() {

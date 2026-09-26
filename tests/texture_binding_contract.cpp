@@ -12,7 +12,7 @@ static unsigned diagnostics;
 extern "C" {
 KinokoGraphics kinoko_graphics{};
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY]{};
-void retdec_trace_i32(const char*,int32_t) { ++diagnostics; }
+void kinoko_trace_i32(const char*,int32_t) { ++diagnostics; }
 }
 static HRESULT WINAPI bind(IDirect3DDevice9*,DWORD stage,IDirect3DBaseTexture9* texture) {
     calls.push_back({stage,texture}); return status;
