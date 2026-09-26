@@ -1,0 +1,93 @@
+{
+  "latest_source_commit": "c4d8bc507d78c594bd6687bd6dfe13e9196bf400",
+  "batches": [
+    {
+      "source_commit": "615a6b648264cec315a39d324cd802835514e1f9",
+      "build_tree": "build-runs/boundary-615a6b6",
+      "runtime_dir": "runtime-builds/boundary-615a6b6",
+      "full_build_succeeded": false,
+      "failure": "Compile failed: two old publication field names remained after schema reuse.",
+      "game_run": false,
+      "tests_run": false,
+      "configuration": "Win32 Release, KINOKO_RETDEC_DISABLE_TRACE=ON"
+    },
+    {
+      "source_commit": "e7966c0c3d11d5cd0c1d8688790c182074386c49",
+      "build_tree": "build-runs/boundary-fix",
+      "runtime_dir": "runtime-builds/boundary-fix",
+      "full_build_succeeded": false,
+      "failure": "Game and existing contracts built; new savedata contract failed to link unavailable uncompress entry.",
+      "game_run": false,
+      "tests_run": false,
+      "configuration": "Win32 Release, KINOKO_RETDEC_DISABLE_TRACE=ON",
+      "game": {
+        "path": "runtime-builds/boundary-fix/kinoko_retdec_rebuild.exe",
+        "size": 912384,
+        "sha256": "3B93A68CC995E1BF9E782C9F84C650B8450673232382792F1ECC1538AEF7E597"
+      },
+      "contracts_compiled": 63,
+      "dat": [
+        {
+          "path": "runtime-builds/boundary-fix/6kinoko_a.dat",
+          "size": 163424746,
+          "sha256": "DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64"
+        },
+        {
+          "path": "runtime-builds/boundary-fix/6kinoko_b.dat",
+          "size": 44681244,
+          "sha256": "4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2"
+        },
+        {
+          "path": "runtime-builds/boundary-fix/6kinoko_c.dat",
+          "size": 11796163,
+          "sha256": "80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E"
+        }
+      ],
+      "dat_staging_verified": true
+    },
+    {
+      "source_commit": "3ee17e1eef0b800902a3f709be704eeab253188c",
+      "build_tree": "build-runs/boundary-3ee17e1",
+      "runtime_dir": "runtime-builds/boundary-3ee17e1",
+      "full_build_succeeded": false,
+      "failure": "Configure failed: vendored zlib subset does not contain uncompr.c.",
+      "game_run": false,
+      "tests_run": false,
+      "configuration": "Win32 Release, KINOKO_RETDEC_DISABLE_TRACE=ON"
+    },
+    {
+      "source_commit": "c4d8bc507d78c594bd6687bd6dfe13e9196bf400",
+      "build_tree": "build-runs/boundary-final",
+      "runtime_dir": "runtime-builds/boundary-final",
+      "full_build_succeeded": true,
+      "failure": null,
+      "game_run": false,
+      "tests_run": false,
+      "configuration": "Win32 Release, KINOKO_RETDEC_DISABLE_TRACE=ON",
+      "game": {
+        "path": "runtime-builds/boundary-final/kinoko_retdec_rebuild.exe",
+        "size": 912384,
+        "sha256": "F08916258C1C6B6597CB171825BB6BB8A00FCBAE0D2C67B0239AECDA9D680DB9"
+      },
+      "contracts_compiled": 64,
+      "dat": [
+        {
+          "path": "runtime-builds/boundary-final/6kinoko_a.dat",
+          "size": 163424746,
+          "sha256": "DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64"
+        },
+        {
+          "path": "runtime-builds/boundary-final/6kinoko_b.dat",
+          "size": 44681244,
+          "sha256": "4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2"
+        },
+        {
+          "path": "runtime-builds/boundary-final/6kinoko_c.dat",
+          "size": 11796163,
+          "sha256": "80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E"
+        }
+      ],
+      "dat_staging_verified": true
+    }
+  ]
+}

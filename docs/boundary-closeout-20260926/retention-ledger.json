@@ -154,5 +154,7 @@
       "reason": "Missing path, invalid parent, short/oversized prefix, short payload and truncated table fail; temporary isolated files never touch user saves.",
       "validation": "not-executed"
     }
-  ]
+  ],
+  "built_source_commit": "c4d8bc507d78c594bd6687bd6dfe13e9196bf400",
+  "build_result": "Game and 64 contracts compiled; DAT staged and verified; no game/test execution"
 }

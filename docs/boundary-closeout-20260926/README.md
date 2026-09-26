@@ -26,4 +26,4 @@ E-imports：同目录 imports.json 保留导入明细，涉及窗口/文件/同�
 
 ## 验证状态
 
-遵守用户测试交接：代理不运行游戏、不执行 CTest/contract。新增源码与既有回归仅构建；运行结果仍待用户验证。构建 commit、EXE 与 DAT 校验将在 HANDOFF.md 记录。本批不覆盖旧构建目录或运行产物。
+遵守用户测试交接：代理不运行游戏、不执行 CTest/contract。新增源码与既有回归仅构建；运行结果仍待用户验证。最终源码 c4d8bc5 全量无日志构建成功，游戏与 64 个 contract EXE 已编译、DAT 已校验；详见 [HANDOFF.md](HANDOFF.md)。本批不覆盖旧构建目录或运行产物。

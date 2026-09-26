@@ -1,5 +1,7 @@
 # Texture pipeline continuation
 
+> Superseded status: see [2026-09-26 boundary closeout](../boundary-closeout-20260926/README.md) for restored startup/texture failure policy and new savedata file coverage. Historical batch limitations below are not the current checklist.
+
 Base: 938d2a1 (Base Utilities R2 handoff), PR #9 branch.
 Scope is the existing packaged CV2 -> bitmap -> D3D texture -> drawing chain.
 Three bounded batches proceed from the data/reader interface to upload and binding.
