@@ -179,11 +179,11 @@ struct ActorPoolMethods {
 };
 #else
 struct ActorPoolMethods {
-    int32_t (__fastcall *destroy)(int32_t manager, void *unused, unsigned char flags);
-    int32_t (__fastcall *top)(int32_t receiver, void* unused_edx, int32_t output);
-    int32_t (__fastcall *remove)(int32_t receiver, void* unused_edx, uint32_t handle);
-    int32_t (__fastcall *lookup)(int32_t manager, void *unused, uint32_t handle);
-    int32_t (__fastcall *count)(int32_t manager, void *unused);
+    KinokoActorPool* (__fastcall *destroy)(KinokoActorPool*, void*, unsigned char);
+    KinokoActor* (__fastcall *top)(KinokoActorPool*, void*, uint32_t*);
+    int32_t (__fastcall *remove)(KinokoActorPool*, void*, uint32_t);
+    KinokoActor* (__fastcall *lookup)(KinokoActorPool*, void*, uint32_t);
+    int32_t (__fastcall *count)(KinokoActorPool*, void*);
 };
 #endif
 
@@ -194,8 +194,8 @@ struct ActorOwnerMethods {
 };
 #else
 struct ActorOwnerMethods {
-    int32_t (__fastcall *destroy)(int32_t manager, void *unused, unsigned char flags);
-    int32_t (__fastcall *push)(int32_t receiver, void* unused_edx);
+    KinokoActorManager* (__fastcall *destroy)(KinokoActorManager*, void*, unsigned char);
+    KinokoActor* (__fastcall *push)(KinokoActorManager*, void*);
 };
 #endif
 
@@ -854,7 +854,7 @@ int32_t kinoko_host_find_map_layout_abi(int32_t name_ptr);
 
 int32_t kinoko_host_create_map_layer_abi(int32_t name_ptr);
 
-int32_t kinoko_compile_file_native(int32_t vm);
+int32_t kinoko_compile_file_native(struct SQVM* vm);
 
 int32_t kinoko_script_bind_root_value(int32_t *object, int32_t *value, char *name, int32_t flags);
 
@@ -874,7 +874,7 @@ extern int32_t (__fastcall *kinoko_color_methods_storage)(int32_t, void*, char);
 
 extern int32_t (__fastcall *kinoko_chip_quad_methods_storage)(int32_t, void*, char);
 
-extern int32_t (__fastcall *kinoko_actor_pool_base_methods_storage)(int32_t, void*, unsigned char);
+extern KinokoActorPool* (__fastcall *kinoko_actor_pool_base_methods_storage)(KinokoActorPool*, void*, unsigned char);
 
 #ifdef __cplusplus
 }

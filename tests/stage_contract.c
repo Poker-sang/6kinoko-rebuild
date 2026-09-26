@@ -5796,8 +5796,8 @@ static int test_actor_handle_lookup(void) {
     kinoko_actor_pool_retire((KinokoActorPool *)(intptr_t)(PTR(manager)), first);
     kinoko_actor_pool_retire((KinokoActorPool *)(intptr_t)(PTR(manager)), second);
     CHECK(pool_retire_calls==2);
-    CHECK(kinoko_method_lookup_actor(PTR(manager),NULL,first)==0);
-    CHECK(kinoko_method_lookup_actor(PTR(manager),NULL,second)==0);
+    CHECK(kinoko_method_lookup_actor((KinokoActorPool*)(uintptr_t)(PTR(manager)), NULL, first)==0);
+    CHECK(kinoko_method_lookup_actor((KinokoActorPool*)(uintptr_t)(PTR(manager)), NULL, second)==0);
     kinoko_actor_pool_retire((KinokoActorPool *)(intptr_t)(PTR(manager)), second);CHECK(pool_retire_calls==2);
     CHECK((int32_t)(intptr_t)(kinoko_actor_pool_request((KinokoActorPool *)(intptr_t)(PTR(manager)), (uint32_t *)(intptr_t)(PTR(&reused))))==b && reused==0x30001);
     CHECK((int32_t)(intptr_t)(kinoko_actor_pool_request((KinokoActorPool *)(intptr_t)(PTR(manager)), (uint32_t *)(intptr_t)(PTR(&reused))))==a && reused==0x40000);
@@ -6315,7 +6315,7 @@ int main(int argc, char **argv) {
         kinoko_collision_refresh_abi(PTR(g_514300_storage));
         {
             int32_t pool = *(int32_t *)(intptr_t)(manager + 4);
-            int32_t pool_count = kinoko_method_actor_pool_count(pool, NULL);
+            int32_t pool_count = kinoko_method_actor_pool_count((KinokoActorPool*)(uintptr_t)(pool), NULL);
             int32_t (*reused)[8] = (int32_t (*)[8])calloc(600, 32);
             CHECK(reused != NULL);
             for (int i = 0; i < 600; ++i)
@@ -6325,7 +6325,7 @@ int main(int argc, char **argv) {
             for (int round = 0; round < 4; ++round) {
                 CHECK(kinoko_map_create_actors((KinokoActorManager *)(intptr_t)manager, (KinokoActLayout *)layout, (const KinokoSquirrelObject *)environment) == 600);
                 CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 600);
-                CHECK(kinoko_method_actor_pool_count(pool, NULL) == pool_count);
+                CHECK(kinoko_method_actor_pool_count((KinokoActorPool*)(uintptr_t)(pool), NULL) == pool_count);
                 kinoko_native_weak_pair_lock((const void*)(uintptr_t)(g_514300_storage[13]), pair);
                 CHECK(pair[0] == 0 && pair[1] == 0);
                 kinoko_collision_refresh_abi(PTR(g_514300_storage));

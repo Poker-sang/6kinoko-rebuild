@@ -103,15 +103,15 @@ int32_t __fastcall kinoko_method_actor_move(struct KinokoActor* receiver, void* 
 // function_45eb00
 int32_t __fastcall kinoko_actor_reset_method(struct KinokoActor* receiver, void* unused_edx);
 // function_466490
-int32_t __fastcall kinoko_method_class_type(int32_t receiver, void* unused_edx);
+int32_t __fastcall kinoko_method_class_type(const void* receiver, void* unused_edx);
 // function_469620
 int32_t __fastcall kinoko_method_render_layer_update(void* receiver, void* unused_edx, struct KinokoCamera* argument);
 // function_46a6f0
 int32_t __fastcall kinoko_method_actor_manager_remove(struct KinokoActorPool* receiver, void* unused_edx, uint32_t handle);
 // retdec_actor_manager_vtable_push
-int32_t __fastcall kinoko_method_actor_manager_push(struct KinokoActorManager* receiver, void* unused_edx);
+struct KinokoActor* __fastcall kinoko_method_actor_manager_push(struct KinokoActorManager* receiver, void* unused_edx);
 // function_46ab10
-int32_t __fastcall kinoko_method_actor_manager_top(struct KinokoActorPool* receiver, void* unused_edx, uint32_t* output);
+struct KinokoActor* __fastcall kinoko_method_actor_manager_top(struct KinokoActorPool* receiver, void* unused_edx, uint32_t* output);
 
 #ifdef __cplusplus
 }

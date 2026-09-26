@@ -6,7 +6,7 @@ int32_t (__fastcall *kinoko_color_methods_storage)(int32_t, void*, char) = kinok
 
 int32_t (__fastcall *kinoko_chip_quad_methods_storage)(int32_t, void*, char) = kinoko_color_destroy;
 
-int32_t (__fastcall *kinoko_actor_pool_base_methods_storage)(int32_t, void*, unsigned char) = kinoko_method_actor_pool_base_delete;
+KinokoActorPool* (__fastcall *kinoko_actor_pool_base_methods_storage)(KinokoActorPool*, void*, unsigned char) = kinoko_method_actor_pool_base_delete;
 
 struct QuadColorMethods kinoko_layout_color_methods_storage = {
     kinoko_delete_layout_sprite,

@@ -365,20 +365,20 @@ int32_t kinoko_host_close_window(void) {
     return kinoko_script_close_window();
 }
 
-int32_t kinoko_compile_file_native(int32_t vm) {
+int32_t kinoko_compile_file_native(struct SQVM* vm) {
     int32_t path;
     int32_t result;
     HSQOBJECT environment = kinoko::script::borrowed_value(
         kinoko_compile_environment_type, kinoko_compile_environment_slot);
 
-    if (!kinoko_native_string_arg(kinoko_vm(vm), 2, &path))
+    if (!kinoko_native_string_arg(vm, 2, &path))
         return 0;
     
-    if (sq_gettop(kinoko_vm(vm)) > 3 &&
-        sq_getstackobj(kinoko_vm(vm), 3, &environment) < 0)
+    if (sq_gettop(vm) > 3 &&
+        sq_getstackobj(vm, 3, &environment) < 0)
         return -1;
-    result = kinoko_script_compile_file_argument((const char*)(uintptr_t)(path), (const void*)(uintptr_t)((int32_t)(uintptr_t)&kinoko_compile_environment_vtable), (struct SQVM*)(uintptr_t)(vm), static_cast<int32_t>(environment._type), kinoko::script::data_bits(environment), 0);
-    sq_pushbool(kinoko_vm(vm), ((result) != 0));
+    result = kinoko_script_compile_file_argument((const char*)(uintptr_t)(path), (const void*)(uintptr_t)((int32_t)(uintptr_t)&kinoko_compile_environment_vtable), vm, static_cast<int32_t>(environment._type), kinoko::script::data_bits(environment), 0);
+    sq_pushbool(vm, ((result) != 0));
     return 1;
 }
 

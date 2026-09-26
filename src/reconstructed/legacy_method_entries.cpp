@@ -97,12 +97,12 @@ extern "C" int32_t __fastcall kinoko_actor_reset_method(struct KinokoActor* rece
 }
 
 // function_466490
-extern "C" int32_t __fastcall kinoko_method_class_type(int32_t receiver, void* /* unused_edx */) {
+extern "C" int32_t __fastcall kinoko_method_class_type(const void* receiver, void* /* unused_edx */) {
     // SqPlus ClassType::GetType returns the word at original offset +8.
     // memcpy preserves the x86 load for unaligned recovered object views.
     int32_t result;
     const auto* object = reinterpret_cast<const unsigned char*>(
-        static_cast<uintptr_t>(static_cast<uint32_t>(receiver)));
+        receiver);
     std::memcpy(&result, object + 8, sizeof(result));
     return result;
 }
@@ -120,12 +120,12 @@ extern "C" int32_t __fastcall kinoko_method_actor_manager_remove(struct KinokoAc
 }
 
 // retdec_actor_manager_vtable_push
-extern "C" int32_t __fastcall kinoko_method_actor_manager_push(struct KinokoActorManager* receiver, void* /* unused_edx */) {
-    return (int32_t)(intptr_t)kinoko_actor_owner_list_acquire(reinterpret_cast<KinokoActorManager *>(receiver));
+extern "C" struct KinokoActor* __fastcall kinoko_method_actor_manager_push(struct KinokoActorManager* receiver, void* /* unused_edx */) {
+    return kinoko_actor_owner_list_acquire(reinterpret_cast<KinokoActorManager *>(receiver));
 }
 
 // function_46ab10
-extern "C" int32_t __fastcall kinoko_method_actor_manager_top(struct KinokoActorPool* receiver, void* /* unused_edx */,
+extern "C" struct KinokoActor* __fastcall kinoko_method_actor_manager_top(struct KinokoActorPool* receiver, void* /* unused_edx */,
     uint32_t* output) {
-    return (int32_t)(intptr_t)kinoko_actor_pool_request(reinterpret_cast<KinokoActorPool *>(receiver), reinterpret_cast<uint32_t *>(output));
+    return kinoko_actor_pool_request(reinterpret_cast<KinokoActorPool *>(receiver), reinterpret_cast<uint32_t *>(output));
 }

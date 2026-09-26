@@ -82,14 +82,14 @@ extern "C" KinokoActor *kinoko_actor_pool_acquire(KinokoActorPool *receiver, uin
 }
 
 
-// Integer slots survive only at the original virtual/fastcall entry points.
-extern "C" int32_t __fastcall kinoko_method_lookup_actor(int32_t manager, void*, uint32_t handle) {
-    auto* receiver = pointer<KinokoActorPool>(manager);
+// Virtual receivers and results retain their native pointer types.
+extern "C" KinokoActor* __fastcall kinoko_method_lookup_actor(KinokoActorPool* manager, void*, uint32_t handle) {
+    auto* receiver = manager;
     Lock lock(receiver);
     auto& state = pool(receiver);
     const uint32_t slot = handle & 0xffffu;
     if (slot >= state.generations.size() || state.generations[slot] != (handle >> 16)) return 0;
-    return address(state.actors.at(slot));
+    return state.actors.at(slot);
 }
 
 extern "C" int32_t kinoko_actor_pool_retire(KinokoActorPool *receiver, uint32_t handle) {
@@ -109,17 +109,17 @@ extern "C" int32_t kinoko_actor_pool_retire(KinokoActorPool *receiver, uint32_t 
 }
 
 
-extern "C" int32_t __fastcall kinoko_method_actor_pool_count(int32_t manager, void*) {
-    return static_cast<int32_t>(pool(pointer<KinokoActorPool>(manager)).actors.size());
+extern "C" int32_t __fastcall kinoko_method_actor_pool_count(KinokoActorPool* manager, void*) {
+    return static_cast<int32_t>(pool(manager).actors.size());
 }
-extern "C" int32_t __fastcall kinoko_method_actor_pool_base_delete(int32_t manager, void*, unsigned char flags) {
-    auto* receiver = pointer<KinokoActorPool>(manager);
+extern "C" KinokoActorPool* __fastcall kinoko_method_actor_pool_base_delete(KinokoActorPool* manager, void*, unsigned char flags) {
+    auto* receiver = manager;
     host(receiver).set(&PoolHost::methods,static_cast<const void *>(kinoko_actor_pool_base_methods()));
     if (flags & 1) std::free(receiver);
     return manager;
 }
-extern "C" int32_t __fastcall kinoko_method_actor_pool_delete(int32_t manager, void*, unsigned char flags) {
-    auto* receiver = pointer<KinokoActorPool>(manager);
+extern "C" KinokoActorPool* __fastcall kinoko_method_actor_pool_delete(KinokoActorPool* manager, void*, unsigned char flags) {
+    auto* receiver = manager;
     auto* state = host(receiver).get(&PoolHost::state);
     // 46A450 visits every allocated slot, including recycled ones, before
     // destroying the lock, free-list, generations, and actor-pointer vector.
