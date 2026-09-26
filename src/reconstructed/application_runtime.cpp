@@ -130,12 +130,7 @@ bool initialize(const Configuration& configuration) {
         kinoko_renderer_initialize();
         state.renderer_initialized = true;
     }
-    if (configuration.input) {
-        state.input_initialized = kinoko_input_initialize(configuration.window, configuration.instance) != 0;
-        // Preserve the existing reconstruction's missing-device degradation.
-        if (state.input_initialized) { kinoko_input_open_keyboard(); kinoko_input_open_controllers(); kinoko_input_open_mouse(); }
-    }
-    if (configuration.audio) kinoko_audio_initialize_device(configuration.window, configuration.audio_options);
+    if (!initialize_input_audio(configuration)) return false;
     if (configuration.ime) { kinoko_ime_initialize(); state.ime_initialized = true; }
     state.statistics_time = timeGetTime();
     if (configuration.manager) configuration.manager->methods->initialize(configuration.manager);
@@ -176,6 +171,21 @@ void message_loop() {
 LRESULT CALLBACK window_proc(HWND window, UINT message, WPARAM key, LPARAM parameter) {
     return dispatch_message(window, message, key, parameter);
 }
+}
+
+// 40D836..40D872: input service, keyboard and enumeration are required when
+// enabled. Mouse creation is attempted, but its return does not gate startup.
+bool initialize_input_audio(const Configuration& configuration) {
+    if (configuration.input) {
+        state.input_initialized = static_cast<uint8_t>(kinoko_input_initialize(
+            configuration.window, configuration.instance)) != 0;
+        if (!state.input_initialized) return false;
+        if (!static_cast<uint8_t>(kinoko_input_open_keyboard())) return false;
+        if (!static_cast<uint8_t>(kinoko_input_open_controllers())) return false;
+        kinoko_input_open_mouse();
+    }
+    return !configuration.audio || static_cast<uint8_t>(kinoko_audio_initialize_device(
+        configuration.window, configuration.audio_options)) != 0;
 }
 
 void update_frame() {

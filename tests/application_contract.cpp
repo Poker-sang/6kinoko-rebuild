@@ -11,6 +11,10 @@
 #include <cstdio>
 #include <vector>
 
+namespace {
+std::vector<int> device_calls;
+int input_result=1, keyboard_result=1, controllers_result=1, mouse_result=1, audio_result=1;
+}
 extern "C" {
 KinokoRenderer kinoko_renderer{};
 KinokoCriticalSection kinoko_graphics_lock{};
@@ -26,7 +30,7 @@ void kinoko_application_set_archive_mode(int32_t enabled) { g874 = enabled != 0;
 const char* kinoko_application_title() { return "fixture"; }
 const char* kinoko_application_error() { return "fixture"; }
 void kinoko_seed_random(uint32_t) {}
-int32_t kinoko_audio_initialize_device(HWND, int32_t) { return 0; }
+int32_t kinoko_audio_initialize_device(HWND, int32_t) { device_calls.push_back(5); return audio_result; }
 int32_t kinoko_audio_shutdown_device() { return 0; }
 int32_t kinoko_graphics_create(HWND, int32_t, int32_t) { return 0; }
 int32_t kinoko_graphics_release() { return 0; }
@@ -39,11 +43,11 @@ void kinoko_remove_device_listener(KinokoDeviceListener*) {}
 int32_t kinoko_ime_dispatch(int32_t, uint32_t, uint32_t, int32_t) { return 0; }
 unsigned long kinoko_run_game_math(unsigned long (__stdcall *)(void*), void*) noexcept(false) { return 0; }
 int32_t kinoko_process_initialize(HINSTANCE, HWND) { return 0; }
-int32_t kinoko_input_initialize(HWND, HINSTANCE) { return 0; }
+int32_t kinoko_input_initialize(HWND, HINSTANCE) { device_calls.push_back(1); return input_result; }
 int32_t kinoko_input_shutdown() { return 0; }
-int32_t kinoko_input_open_keyboard() { return 0; }
-int32_t kinoko_input_open_controllers() { return 0; }
-int32_t kinoko_input_open_mouse() { return 0; }
+int32_t kinoko_input_open_keyboard() { device_calls.push_back(2); return keyboard_result; }
+int32_t kinoko_input_open_controllers() { device_calls.push_back(3); return controllers_result; }
+int32_t kinoko_input_open_mouse() { device_calls.push_back(4); return mouse_result; }
 int32_t kinoko_input_poll() { return 0; }
 int32_t kinoko_ime_initialize() { return 0; }
 void kinoko_ime_release(HWND) {}
@@ -70,6 +74,24 @@ template<class T, class U> T method(U callback) { return reinterpret_cast<T>(cal
 int main() {
     using namespace kinoko::application;
     InitializeCriticalSection(&kinoko_graphics_lock.native);
+    Configuration devices;
+    for (int failure=1; failure<=5; ++failure) {
+        input_result=keyboard_result=controllers_result=mouse_result=audio_result=1;
+        int* results[]={&input_result,&keyboard_result,&controllers_result,&mouse_result,&audio_result};
+        *results[failure-1]=0; device_calls.clear(); state.input_initialized=false;
+        CHECK(initialize_input_audio(devices)==(failure==4));
+        const int last=failure==4 ? 5 : failure;
+        std::vector<int> expected;
+        for(int i=1;i<=last;++i) expected.push_back(i);
+        CHECK(device_calls==expected && state.input_initialized==(failure!=1));
+    }
+    input_result=0x100; device_calls.clear(); state.input_initialized=false;
+    CHECK(!initialize_input_audio(devices) && device_calls==std::vector<int>{1});
+    devices.input=devices.audio=0; device_calls.clear();
+    CHECK(initialize_input_audio(devices) && device_calls.empty());
+    devices.audio=1; audio_result=1;
+    CHECK(initialize_input_audio(devices) && device_calls==std::vector<int>{5});
+    state.input_initialized=false;
     ManagerMethods manager_methods{};
     manager_methods.update = method<decltype(manager_methods.update)>(manager_update);
     manager_methods.draw = method<decltype(manager_methods.draw)>(manager_draw);

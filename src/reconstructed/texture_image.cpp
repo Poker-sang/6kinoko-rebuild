@@ -150,13 +150,19 @@ extern "C" HRESULT kinoko_texture_load_image(const char* path, IDirect3DTexture9
         texture.detach(); // inherited invalid-interface boundary: Release is unavailable
         return E_FAIL;
     }
+    const HRESULT creation_result = result;
     D3DLOCKED_RECT locked{};
-    result=texture->LockRect(0,&locked,nullptr,0);
-    retdec_trace_hresult("texture:lock-hr",result);
+    const HRESULT lock_result = texture->LockRect(0,&locked,nullptr,0);
+    retdec_trace_hresult("texture:lock-hr",lock_result);
     retdec_trace_i32("texture:lock-object",diagnostic_address(texture.get()));
     retdec_trace_i32("texture:lock-bits",diagnostic_address(locked.pBits));
     retdec_trace_i32("texture:lock-pitch",locked.Pitch);
-    if (FAILED(result)) return result;
+    // 40E7E0 tests exactly zero. A failed or nonzero-success lock skips upload,
+    // but 40E705 still returns the creation status and hands off the texture.
+    if (lock_result != D3D_OK) {
+        *output = texture.detach();
+        return creation_result;
+    }
     if (!locked.pBits || locked.Pitch<=0) {
         retdec_trace("texture:lock-invalid-surface");
         texture->UnlockRect(0);
@@ -167,7 +173,7 @@ extern "C" HRESULT kinoko_texture_load_image(const char* path, IDirect3DTexture9
         return E_FAIL;
     }
     retdec_trace_i32("texture:unlock-object",diagnostic_address(texture.get()));
-    texture->UnlockRect(0); // existing contract returns LockRect status, not UnlockRect status
+    texture->UnlockRect(0); // 40E815 ignores this HRESULT.
     *output=texture.detach();
-    return result;
+    return creation_result;
 }

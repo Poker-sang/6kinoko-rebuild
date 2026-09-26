@@ -1,0 +1,958 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"addr\":\"0x40D790\",\"asm\":{\"name\":\"sub_40D790\",\"start_ea\":\"0x40d790\",\"segment\":\".text\",\"lines\":[{\"addr\":\"40d790\",\"instruction\":\"push ebp\",\"label\":\"sub_40D790\"},{\"addr\":\"40d791\",\"instruction\":\"mov ebp, esp\"},{\"addr\":\"40d793\",\"instruction\":\"and esp, 0FFFFFFF8h\"},{\"addr\":\"40d796\",\"instruction\":\"push ecx\"},{\"addr\":\"40d797\",\"instruction\":\"push ebx\"},{\"addr\":\"40d798\",\"instruction\":\"mov ebx, ecx\"},{\"addr\":\"40d79a\",\"instruction\":\"push esi\"},{\"addr\":\"40d79b\",\"instruction\":\"mov esi, [ebp+arg_0]\"},{\"addr\":\"40d79e\",\"instruction\":\"push edi\"},{\"addr\":\"40d79f\",\"instruction\":\"mov ecx, 0Ah\"},{\"addr\":\"40d7a4\",\"instruction\":\"lea edi, [ebx+8]\"},{\"addr\":\"40d7a7\",\"instruction\":\"rep movsd\"},{\"addr\":\"40d7a9\",\"instruction\":\"cmp byte ptr [ebx+2Fh], 0\"},{\"addr\":\"40d7ad\",\"instruction\":\"mov eax, [ebx+8]\"},{\"addr\":\"40d7b0\",\"instruction\":\"mov ecx, [ebx+0Ch]\"},{\"addr\":\"40d7b3\",\"instruction\":\"mov [ebx], eax\"},{\"addr\":\"40d7b5\",\"instruction\":\"mov [ebx+4], ecx\"},{\"addr\":\"40d7b8\",\"instruction\":\"setnz dl\"},{\"addr\":\"40d7bb\",\"instruction\":\"mov byte_51B7D0, dl\",\"refs\":[{\"addr\":\"0x51b7d0\",\"name\":\"byte_51B7D0\"}]},{\"addr\":\"40d7c1\",\"instruction\":\"mov eax, [ebx+1Ch]\"},{\"addr\":\"40d7c4\",\"instruction\":\"mov ecx, [ebx+24h]\"},{\"addr\":\"40d7c7\",\"instruction\":\"push 1; uPeriod\",\"comments\":[\"uPeriod\"]},{\"addr\":\"40d7c9\",\"instruction\":\"mov [ebx+74h], eax\"},{\"addr\":\"40d7cc\",\"instruction\":\"mov [ebx+78h], ecx\"},{\"addr\":\"40d7cf\",\"instruction\":\"call ds:timeBeginPeriod; WINMM\",\"refs\":[{\"addr\":\"0x4d5208\",\"name\":\"timeBeginPeriod\"}]},{\"addr\":\"40d7d5\",\"instruction\":\"call ds:__imp_timeGetTime; WINMM\",\"refs\":[{\"addr\":\"0x4d520c\",\"name\":\"__imp_timeGetTime\"}]},{\"addr\":\"40d7db\",\"instruction\":\"call sub_404230\",\"refs\":[{\"addr\":\"0x404230\",\"name\":\"sub_404230\"}]},{\"addr\":\"40d7e0\",\"instruction\":\"xor edi, edi\"},{\"addr\":\"40d7e2\",\"instruction\":\"push edi; pvReserved\",\"comments\":[\"pvReserved\"]},{\"addr\":\"40d7e3\",\"instruction\":\"call ds:CoInitialize; ole32\",\"refs\":[{\"addr\":\"0x4d523c\",\"name\":\"CoInitialize\"}]},{\"addr\":\"40d7e9\",\"instruction\":\"test eax, eax\"},{\"addr\":\"40d7eb\",\"instruction\":\"jns short loc_40D7F8\",\"refs\":[{\"addr\":\"0x40d7f8\",\"name\":\"loc_40D7F8\"}]},{\"addr\":\"40d7ed\",\"instruction\":\"xor al, al\",\"label\":\"loc_40D7ED\"},{\"addr\":\"40d7ef\",\"instruction\":\"pop edi\"},{\"addr\":\"40d7f0\",\"instruction\":\"pop esi\"},{\"addr\":\"40d7f1\",\"instruction\":\"pop ebx\"},{\"addr\":\"40d7f2\",\"instruction\":\"mov esp, ebp\"},{\"addr\":\"40d7f4\",\"instruction\":\"pop ebp\"},{\"addr\":\"40d7f5\",\"instruction\":\"retn 4\"},{\"addr\":\"40d7f8\",\"instruction\":\"mov edx, [ebx]\",\"label\":\"loc_40D7F8\"},{\"addr\":\"40d7fa\",\"instruction\":\"mov ecx, [ebx+4]\"},{\"addr\":\"40d7fd\",\"instruction\":\"push edx\"},{\"addr\":\"40d7fe\",\"instruction\":\"call sub_408650\",\"refs\":[{\"addr\":\"0x408650\",\"name\":\"sub_408650\"}]},{\"addr\":\"40d803\",\"instruction\":\"cmp byte ptr [ebx+2Ch], 0\"},{\"addr\":\"40d807\",\"instruction\":\"jnz short loc_40D810\",\"refs\":[{\"addr\":\"0x40d810\",\"name\":\"loc_40D810\"}]},{\"addr\":\"40d809\",\"instruction\":\"push edi; bShow\",\"comments\":[\"bShow\"]},{\"addr\":\"40d80a\",\"instruction\":\"call ds:ShowCursor; USER32\",\"refs\":[{\"addr\":\"0x4d51f8\",\"name\":\"ShowCursor\"}]},{\"addr\":\"40d810\",\"instruction\":\"cmp byte ptr [ebx+28h], 0\",\"label\":\"loc_40D810\"},{\"addr\":\"40d814\",\"instruction\":\"mov byte ptr [ebx+4Ch], 1\"},{\"addr\":\"40d818\",\"instruction\":\"jz short loc_40D832\",\"refs\":[{\"addr\":\"0x40d832\",\"name\":\"loc_40D832\"}]},{\"addr\":\"40d81a\",\"instruction\":\"mov eax, [ebx+14h]\"},{\"addr\":\"40d81d\",\"instruction\":\"mov ecx, [ebx+10h]\"},{\"addr\":\"40d820\",\"instruction\":\"mov esi, [ebx]\"},{\"addr\":\"40d822\",\"instruction\":\"push eax\"},{\"addr\":\"40d823\",\"instruction\":\"push ecx\"},{\"addr\":\"40d824\",\"instruction\":\"call sub_4011B0\",\"refs\":[{\"addr\":\"0x4011b0\",\"name\":\"sub_4011B0\"}]},{\"addr\":\"40d829\",\"instruction\":\"test al, al\"},{\"addr\":\"40d82b\",\"instruction\":\"jz short loc_40D7ED\",\"refs\":[{\"addr\":\"0x40d7ed\",\"name\":\"loc_40D7ED\"}]},{\"addr\":\"40d82d\",\"instruction\":\"call sub_401AE0\",\"refs\":[{\"addr\":\"0x401ae0\",\"name\":\"sub_401AE0\"}]},{\"addr\":\"40d832\",\"instruction\":\"cmp byte ptr [ebx+29h], 0\",\"label\":\"loc_40D832\"},{\"addr\":\"40d836\",\"instruction\":\"jz short loc_40D85F\",\"refs\":[{\"addr\":\"0x40d85f\",\"name\":\"loc_40D85F\"}]},{\"addr\":\"40d838\",\"instruction\":\"mov edx, [ebx+4]\"},{\"addr\":\"40d83b\",\"instruction\":\"mov eax, [ebx]\"},{\"addr\":\"40d83d\",\"instruction\":\"push edx\"},{\"addr\":\"40d83e\",\"instruction\":\"push eax\"},{\"addr\":\"40d83f\",\"instruction\":\"call sub_408930\",\"refs\":[{\"addr\":\"0x408930\",\"name\":\"sub_408930\"}]},{\"addr\":\"40d844\",\"instruction\":\"test al, al\"},{\"addr\":\"40d846\",\"instruction\":\"jz short loc_40D7ED\",\"refs\":[{\"addr\":\"0x40d7ed\",\"name\":\"loc_40D7ED\"}]},{\"addr\":\"40d848\",\"instruction\":\"call sub_408B30\",\"refs\":[{\"addr\":\"0x408b30\",\"name\":\"sub_408B30\"}]},{\"addr\":\"40d84d\",\"instruction\":\"test al, al\"},{\"addr\":\"40d84f\",\"instruction\":\"jz short loc_40D7ED\",\"refs\":[{\"addr\":\"0x40d7ed\",\"name\":\"loc_40D7ED\"}]},{\"addr\":\"40d851\",\"instruction\":\"call sub_408BF0\",\"refs\":[{\"addr\":\"0x408bf0\",\"name\":\"sub_408BF0\"}]},{\"addr\":\"40d856\",\"instruction\":\"test al, al\"},{\"addr\":\"40d858\",\"instruction\":\"jz short loc_40D7ED\",\"refs\":[{\"addr\":\"0x40d7ed\",\"name\":\"loc_40D7ED\"}]},{\"addr\":\"40d85a\",\"instruction\":\"call sub_408D00\",\"refs\":[{\"addr\":\"0x408d00\",\"name\":\"sub_408D00\"}]},{\"addr\":\"40d85f\",\"instruction\":\"cmp byte ptr [ebx+2Ah], 0\",\"label\":\"loc_40D85F\"},{\"addr\":\"40d863\",\"instruction\":\"jz short loc_40D878\",\"refs\":[{\"addr\":\"0x40d878\",\"name\":\"loc_40D878\"}]},{\"addr\":\"40d865\",\"instruction\":\"mov ecx, [ebx+18h]\"},{\"addr\":\"40d868\",\"instruction\":\"push ecx\"},{\"addr\":\"40d869\",\"instruction\":\"mov ecx, [ebx]\"},{\"addr\":\"40d86b\",\"instruction\":\"call sub_411D80\",\"refs\":[{\"addr\":\"0x411d80\",\"name\":\"sub_411D80\"}]},{\"addr\":\"40d870\",\"instruction\":\"test al, al\"},{\"addr\":\"40d872\",\"instruction\":\"jz loc_40D7ED\",\"refs\":[{\"addr\":\"0x40d7ed\",\"name\":\"loc_40D7ED\"}]},{\"addr\":\"40d878\",\"instruction\":\"cmp byte ptr [ebx+2Bh], 0\",\"label\":\"loc_40D878\"},{\"addr\":\"40d87c\",\"instruction\":\"jz short loc_40D883\",\"refs\":[{\"addr\":\"0x40d883\",\"name\":\"loc_40D883\"}]},{\"addr\":\"40d87e\",\"instruction\":\"call sub_412CA0\",\"refs\":[{\"addr\":\"0x412ca0\",\"name\":\"sub_412CA0\"}]},{\"addr\":\"40d883\",\"instruction\":\"call ds:__imp_timeGetTime; WINMM\",\"label\":\"loc_40D883\",\"refs\":[{\"addr\":\"0x4d520c\",\"name\":\"__imp_timeGetTime\"}]},{\"addr\":\"40d889\",\"instruction\":\"mov ecx, [ebx+74h]\"},{\"addr\":\"40d88c\",\"instruction\":\"mov [ebx+38h], eax\"},{\"addr\":\"40d88f\",\"instruction\":\"mov edx, [ecx]\"},{\"addr\":\"40d891\",\"instruction\":\"mov eax, [edx]\"},{\"addr\":\"40d893\",\"instruction\":\"call eax\"},{\"addr\":\"40d895\",\"instruction\":\"mov ecx, [ebx+78h]\"},{\"addr\":\"40d898\",\"instruction\":\"cmp ecx, edi\"},{\"addr\":\"40d89a\",\"instruction\":\"jz short loc_40D8A2\",\"refs\":[{\"addr\":\"0x40d8a2\",\"name\":\"loc_40D8A2\"}]},{\"addr\":\"40d89c\",\"instruction\":\"mov edx, [ecx]\"},{\"addr\":\"40d89e\",\"instruction\":\"mov eax, [edx]\"},{\"addr\":\"40d8a0\",\"instruction\":\"call eax\"},{\"addr\":\"40d8a2\",\"instruction\":\"mov eax, [ebx+20h]\",\"label\":\"loc_40D8A2\"},{\"addr\":\"40d8a5\",\"instruction\":\"mov ecx, [ebx+74h]\"},{\"addr\":\"40d8a8\",\"instruction\":\"mov [ebx+0B0h], eax\"},{\"addr\":\"40d8ae\",\"instruction\":\"mov [ebx+80h], edi\"},{\"addr\":\"40d8b4\",\"instruction\":\"mov [ebx+7Ch], edi\"},{\"addr\":\"40d8b7\",\"instruction\":\"mov dword ptr [ebx+0B4h], 0FFFFFFFFh\"},{\"addr\":\"40d8c1\",\"instruction\":\"mov edx, [ecx]\"},{\"addr\":\"40d8c3\",\"instruction\":\"push eax\"},{\"addr\":\"40d8c4\",\"instruction\":\"mov eax, [edx+10h]\"},{\"addr\":\"40d8c7\",\"instruction\":\"call eax\"},{\"addr\":\"40d8c9\",\"instruction\":\"lea esi, [ebx+6Ch]\"},{\"addr\":\"40d8cc\",\"instruction\":\"mov [ebx+80h], eax\"},{\"addr\":\"40d8d2\",\"instruction\":\"call sub_412610\",\"refs\":[{\"addr\":\"0x412610\",\"name\":\"sub_412610\"}]},{\"addr\":\"40d8d7\",\"instruction\":\"lea ecx, [esi+4]\"},{\"addr\":\"40d8da\",\"instruction\":\"push ecx; lpThreadId\",\"comments\":[\"lpThreadId\"]},{\"addr\":\"40d8db\",\"instruction\":\"push edi; dwCreationFlags\",\"comments\":[\"dwCreationFlags\"]},{\"addr\":\"40d8dc\",\"instruction\":\"push edi; lpParameter\",\"comments\":[\"lpParameter\"]},{\"addr\":\"40d8dd\",\"instruction\":\"push offset sub_40E320; lpStartAddress\",\"comments\":[\"lpStartAddress\"],\"refs\":[{\"addr\":\"0x40e320\",\"name\":\"sub_40E320\"}]},{\"addr\":\"40d8e2\",\"instruction\":\"push edi; dwStackSize\",\"comments\":[\"dwStackSize\"]},{\"addr\":\"40d8e3\",\"instruction\":\"push edi; lpThreadAttributes\",\"comments\":[\"lpThreadAttributes\"]},{\"addr\":\"40d8e4\",\"instruction\":\"mov edi, ds:CreateThread; KERNEL32\",\"refs\":[{\"addr\":\"0x4d50cc\",\"name\":\"CreateThread\"}]},{\"addr\":\"40d8ea\",\"instruction\":\"call edi ; CreateThread; KERNEL32\",\"refs\":[{\"addr\":\"0x4d50cc\",\"name\":\"CreateThread\"}]},{\"addr\":\"40d8ec\",\"instruction\":\"push 0FFFFFFF1h; nPriority\",\"comments\":[\"nPriority\"]},{\"addr\":\"40d8ee\",\"instruction\":\"push eax; hThread\",\"comments\":[\"hThread\"]},{\"addr\":\"40d8ef\",\"instruction\":\"mov [esi], eax\"},{\"addr\":\"40d8f1\",\"instruction\":\"call ds:SetThreadPriority; KERNEL32\",\"refs\":[{\"addr\":\"0x4d50c4\",\"name\":\"SetThreadPriority\"}]},{\"addr\":\"40d8f7\",\"instruction\":\"lea esi, [ebx+50h]\"},{\"addr\":\"40d8fa\",\"instruction\":\"call sub_412610\",\"refs\":[{\"addr\":\"0x412610\",\"name\":\"sub_412610\"}]},{\"addr\":\"40d8ff\",\"instruction\":\"lea eax, [esi+4]\"},{\"addr\":\"40d902\",\"instruction\":\"push eax; lpThreadId\",\"comments\":[\"lpThreadId\"]},{\"addr\":\"40d903\",\"instruction\":\"push 0; dwCreationFlags\",\"comments\":[\"dwCreationFlags\"]},{\"addr\":\"40d905\",\"instruction\":\"push 0; lpParameter\",\"comments\":[\"lpParameter\"]},{\"addr\":\"40d907\",\"instruction\":\"push offset sub_40E2B0; lpStartAddress\",\"comments\":[\"lpStartAddress\"],\"refs\":[{\"addr\":\"0x40e2b0\",\"name\":\"sub_40E2B0\"}]},{\"addr\":\"40d90c\",\"instruction\":\"push 0; dwStackSize\",\"comments\":[\"dwStackSize\"]},{\"addr\":\"40d90e\",\"instruction\":\"push 0; lpThreadAttributes\",\"comments\":[\"lpThreadAttributes\"]},{\"addr\":\"40d910\",\"instruction\":\"call edi ; CreateThread; KERNEL32\",\"refs\":[{\"addr\":\"0x4d50cc\",\"name\":\"CreateThread\"}]},{\"addr\":\"40d912\",\"instruction\":\"mov [esi], eax\"},{\"addr\":\"40d914\",\"instruction\":\"cmp byte ptr [ebx+28h], 0\"},{\"addr\":\"40d918\",\"instruction\":\"jz short loc_40D933\",\"refs\":[{\"addr\":\"0x40d933\",\"name\":\"loc_40D933\"}]},{\"addr\":\"40d91a\",\"instruction\":\"push offset sub_40E2D0; lpStartAddress\",\"comments\":[\"lpStartAddress\"],\"refs\":[{\"addr\":\"0x40e2d0\",\"name\":\"sub_40E2D0\"}]},{\"addr\":\"40d91f\",\"instruction\":\"lea eax, [ebx+58h]\"},{\"addr\":\"40d922\",\"instruction\":\"call sub_4125E0\",\"refs\":[{\"addr\":\"0x4125e0\",\"name\":\"sub_4125E0\"}]},{\"addr\":\"40d927\",\"instruction\":\"mov ecx, [ebx+58h]\"},{\"addr\":\"40d92a\",\"instruction\":\"push 0FFFFFFF1h; nPriority\",\"comments\":[\"nPriority\"]},{\"addr\":\"40d92c\",\"instruction\":\"push ecx; hThread\",\"comments\":[\"hThread\"]},{\"addr\":\"40d92d\",\"instruction\":\"call ds:SetThreadPriority; KERNEL32\",\"refs\":[{\"addr\":\"0x4d50c4\",\"name\":\"SetThreadPriority\"}]},{\"addr\":\"40d933\",\"instruction\":\"pop edi\",\"label\":\"loc_40D933\"},{\"addr\":\"40d934\",\"instruction\":\"pop esi\"},{\"addr\":\"40d935\",\"instruction\":\"mov al, 1\"},{\"addr\":\"40d937\",\"instruction\":\"pop ebx\"},{\"addr\":\"40d938\",\"instruction\":\"mov esp, ebp\"},{\"addr\":\"40d93a\",\"instruction\":\"pop ebp\"},{\"addr\":\"40d93b\",\"instruction\":\"retn 4\"}],\"stack_frame\":[{\"name\":\"__saved_registers\",\"offset\":\"0x10\",\"size\":\"0x4\",\"type\":\"_DWORD\"},{\"name\":\"__return_address\",\"offset\":\"0x14\",\"size\":\"0x4\",\"type\":\"_UNKNOWN *\"},{\"name\":\"arg_0\",\"offset\":\"0x18\",\"size\":\"0x4\",\"type\":\"_DWORD\"}]},\"instruction_count\":151,\"total_instructions\":null,\"cursor\":{\"done\":true}}"
+    }
+  ],
+  "structuredContent": {
+    "addr": "0x40D790",
+    "asm": {
+      "name": "sub_40D790",
+      "start_ea": "0x40d790",
+      "segment": ".text",
+      "lines": [
+        {
+          "addr": "40d790",
+          "instruction": "push ebp",
+          "label": "sub_40D790"
+        },
+        {
+          "addr": "40d791",
+          "instruction": "mov ebp, esp"
+        },
+        {
+          "addr": "40d793",
+          "instruction": "and esp, 0FFFFFFF8h"
+        },
+        {
+          "addr": "40d796",
+          "instruction": "push ecx"
+        },
+        {
+          "addr": "40d797",
+          "instruction": "push ebx"
+        },
+        {
+          "addr": "40d798",
+          "instruction": "mov ebx, ecx"
+        },
+        {
+          "addr": "40d79a",
+          "instruction": "push esi"
+        },
+        {
+          "addr": "40d79b",
+          "instruction": "mov esi, [ebp+arg_0]"
+        },
+        {
+          "addr": "40d79e",
+          "instruction": "push edi"
+        },
+        {
+          "addr": "40d79f",
+          "instruction": "mov ecx, 0Ah"
+        },
+        {
+          "addr": "40d7a4",
+          "instruction": "lea edi, [ebx+8]"
+        },
+        {
+          "addr": "40d7a7",
+          "instruction": "rep movsd"
+        },
+        {
+          "addr": "40d7a9",
+          "instruction": "cmp byte ptr [ebx+2Fh], 0"
+        },
+        {
+          "addr": "40d7ad",
+          "instruction": "mov eax, [ebx+8]"
+        },
+        {
+          "addr": "40d7b0",
+          "instruction": "mov ecx, [ebx+0Ch]"
+        },
+        {
+          "addr": "40d7b3",
+          "instruction": "mov [ebx], eax"
+        },
+        {
+          "addr": "40d7b5",
+          "instruction": "mov [ebx+4], ecx"
+        },
+        {
+          "addr": "40d7b8",
+          "instruction": "setnz dl"
+        },
+        {
+          "addr": "40d7bb",
+          "instruction": "mov byte_51B7D0, dl",
+          "refs": [
+            {
+              "addr": "0x51b7d0",
+              "name": "byte_51B7D0"
+            }
+          ]
+        },
+        {
+          "addr": "40d7c1",
+          "instruction": "mov eax, [ebx+1Ch]"
+        },
+        {
+          "addr": "40d7c4",
+          "instruction": "mov ecx, [ebx+24h]"
+        },
+        {
+          "addr": "40d7c7",
+          "instruction": "push 1; uPeriod",
+          "comments": [
+            "uPeriod"
+          ]
+        },
+        {
+          "addr": "40d7c9",
+          "instruction": "mov [ebx+74h], eax"
+        },
+        {
+          "addr": "40d7cc",
+          "instruction": "mov [ebx+78h], ecx"
+        },
+        {
+          "addr": "40d7cf",
+          "instruction": "call ds:timeBeginPeriod; WINMM",
+          "refs": [
+            {
+              "addr": "0x4d5208",
+              "name": "timeBeginPeriod"
+            }
+          ]
+        },
+        {
+          "addr": "40d7d5",
+          "instruction": "call ds:__imp_timeGetTime; WINMM",
+          "refs": [
+            {
+              "addr": "0x4d520c",
+              "name": "__imp_timeGetTime"
+            }
+          ]
+        },
+        {
+          "addr": "40d7db",
+          "instruction": "call sub_404230",
+          "refs": [
+            {
+              "addr": "0x404230",
+              "name": "sub_404230"
+            }
+          ]
+        },
+        {
+          "addr": "40d7e0",
+          "instruction": "xor edi, edi"
+        },
+        {
+          "addr": "40d7e2",
+          "instruction": "push edi; pvReserved",
+          "comments": [
+            "pvReserved"
+          ]
+        },
+        {
+          "addr": "40d7e3",
+          "instruction": "call ds:CoInitialize; ole32",
+          "refs": [
+            {
+              "addr": "0x4d523c",
+              "name": "CoInitialize"
+            }
+          ]
+        },
+        {
+          "addr": "40d7e9",
+          "instruction": "test eax, eax"
+        },
+        {
+          "addr": "40d7eb",
+          "instruction": "jns short loc_40D7F8",
+          "refs": [
+            {
+              "addr": "0x40d7f8",
+              "name": "loc_40D7F8"
+            }
+          ]
+        },
+        {
+          "addr": "40d7ed",
+          "instruction": "xor al, al",
+          "label": "loc_40D7ED"
+        },
+        {
+          "addr": "40d7ef",
+          "instruction": "pop edi"
+        },
+        {
+          "addr": "40d7f0",
+          "instruction": "pop esi"
+        },
+        {
+          "addr": "40d7f1",
+          "instruction": "pop ebx"
+        },
+        {
+          "addr": "40d7f2",
+          "instruction": "mov esp, ebp"
+        },
+        {
+          "addr": "40d7f4",
+          "instruction": "pop ebp"
+        },
+        {
+          "addr": "40d7f5",
+          "instruction": "retn 4"
+        },
+        {
+          "addr": "40d7f8",
+          "instruction": "mov edx, [ebx]",
+          "label": "loc_40D7F8"
+        },
+        {
+          "addr": "40d7fa",
+          "instruction": "mov ecx, [ebx+4]"
+        },
+        {
+          "addr": "40d7fd",
+          "instruction": "push edx"
+        },
+        {
+          "addr": "40d7fe",
+          "instruction": "call sub_408650",
+          "refs": [
+            {
+              "addr": "0x408650",
+              "name": "sub_408650"
+            }
+          ]
+        },
+        {
+          "addr": "40d803",
+          "instruction": "cmp byte ptr [ebx+2Ch], 0"
+        },
+        {
+          "addr": "40d807",
+          "instruction": "jnz short loc_40D810",
+          "refs": [
+            {
+              "addr": "0x40d810",
+              "name": "loc_40D810"
+            }
+          ]
+        },
+        {
+          "addr": "40d809",
+          "instruction": "push edi; bShow",
+          "comments": [
+            "bShow"
+          ]
+        },
+        {
+          "addr": "40d80a",
+          "instruction": "call ds:ShowCursor; USER32",
+          "refs": [
+            {
+              "addr": "0x4d51f8",
+              "name": "ShowCursor"
+            }
+          ]
+        },
+        {
+          "addr": "40d810",
+          "instruction": "cmp byte ptr [ebx+28h], 0",
+          "label": "loc_40D810"
+        },
+        {
+          "addr": "40d814",
+          "instruction": "mov byte ptr [ebx+4Ch], 1"
+        },
+        {
+          "addr": "40d818",
+          "instruction": "jz short loc_40D832",
+          "refs": [
+            {
+              "addr": "0x40d832",
+              "name": "loc_40D832"
+            }
+          ]
+        },
+        {
+          "addr": "40d81a",
+          "instruction": "mov eax, [ebx+14h]"
+        },
+        {
+          "addr": "40d81d",
+          "instruction": "mov ecx, [ebx+10h]"
+        },
+        {
+          "addr": "40d820",
+          "instruction": "mov esi, [ebx]"
+        },
+        {
+          "addr": "40d822",
+          "instruction": "push eax"
+        },
+        {
+          "addr": "40d823",
+          "instruction": "push ecx"
+        },
+        {
+          "addr": "40d824",
+          "instruction": "call sub_4011B0",
+          "refs": [
+            {
+              "addr": "0x4011b0",
+              "name": "sub_4011B0"
+            }
+          ]
+        },
+        {
+          "addr": "40d829",
+          "instruction": "test al, al"
+        },
+        {
+          "addr": "40d82b",
+          "instruction": "jz short loc_40D7ED",
+          "refs": [
+            {
+              "addr": "0x40d7ed",
+              "name": "loc_40D7ED"
+            }
+          ]
+        },
+        {
+          "addr": "40d82d",
+          "instruction": "call sub_401AE0",
+          "refs": [
+            {
+              "addr": "0x401ae0",
+              "name": "sub_401AE0"
+            }
+          ]
+        },
+        {
+          "addr": "40d832",
+          "instruction": "cmp byte ptr [ebx+29h], 0",
+          "label": "loc_40D832"
+        },
+        {
+          "addr": "40d836",
+          "instruction": "jz short loc_40D85F",
+          "refs": [
+            {
+              "addr": "0x40d85f",
+              "name": "loc_40D85F"
+            }
+          ]
+        },
+        {
+          "addr": "40d838",
+          "instruction": "mov edx, [ebx+4]"
+        },
+        {
+          "addr": "40d83b",
+          "instruction": "mov eax, [ebx]"
+        },
+        {
+          "addr": "40d83d",
+          "instruction": "push edx"
+        },
+        {
+          "addr": "40d83e",
+          "instruction": "push eax"
+        },
+        {
+          "addr": "40d83f",
+          "instruction": "call sub_408930",
+          "refs": [
+            {
+              "addr": "0x408930",
+              "name": "sub_408930"
+            }
+          ]
+        },
+        {
+          "addr": "40d844",
+          "instruction": "test al, al"
+        },
+        {
+          "addr": "40d846",
+          "instruction": "jz short loc_40D7ED",
+          "refs": [
+            {
+              "addr": "0x40d7ed",
+              "name": "loc_40D7ED"
+            }
+          ]
+        },
+        {
+          "addr": "40d848",
+          "instruction": "call sub_408B30",
+          "refs": [
+            {
+              "addr": "0x408b30",
+              "name": "sub_408B30"
+            }
+          ]
+        },
+        {
+          "addr": "40d84d",
+          "instruction": "test al, al"
+        },
+        {
+          "addr": "40d84f",
+          "instruction": "jz short loc_40D7ED",
+          "refs": [
+            {
+              "addr": "0x40d7ed",
+              "name": "loc_40D7ED"
+            }
+          ]
+        },
+        {
+          "addr": "40d851",
+          "instruction": "call sub_408BF0",
+          "refs": [
+            {
+              "addr": "0x408bf0",
+              "name": "sub_408BF0"
+            }
+          ]
+        },
+        {
+          "addr": "40d856",
+          "instruction": "test al, al"
+        },
+        {
+          "addr": "40d858",
+          "instruction": "jz short loc_40D7ED",
+          "refs": [
+            {
+              "addr": "0x40d7ed",
+              "name": "loc_40D7ED"
+            }
+          ]
+        },
+        {
+          "addr": "40d85a",
+          "instruction": "call sub_408D00",
+          "refs": [
+            {
+              "addr": "0x408d00",
+              "name": "sub_408D00"
+            }
+          ]
+        },
+        {
+          "addr": "40d85f",
+          "instruction": "cmp byte ptr [ebx+2Ah], 0",
+          "label": "loc_40D85F"
+        },
+        {
+          "addr": "40d863",
+          "instruction": "jz short loc_40D878",
+          "refs": [
+            {
+              "addr": "0x40d878",
+              "name": "loc_40D878"
+            }
+          ]
+        },
+        {
+          "addr": "40d865",
+          "instruction": "mov ecx, [ebx+18h]"
+        },
+        {
+          "addr": "40d868",
+          "instruction": "push ecx"
+        },
+        {
+          "addr": "40d869",
+          "instruction": "mov ecx, [ebx]"
+        },
+        {
+          "addr": "40d86b",
+          "instruction": "call sub_411D80",
+          "refs": [
+            {
+              "addr": "0x411d80",
+              "name": "sub_411D80"
+            }
+          ]
+        },
+        {
+          "addr": "40d870",
+          "instruction": "test al, al"
+        },
+        {
+          "addr": "40d872",
+          "instruction": "jz loc_40D7ED",
+          "refs": [
+            {
+              "addr": "0x40d7ed",
+              "name": "loc_40D7ED"
+            }
+          ]
+        },
+        {
+          "addr": "40d878",
+          "instruction": "cmp byte ptr [ebx+2Bh], 0",
+          "label": "loc_40D878"
+        },
+        {
+          "addr": "40d87c",
+          "instruction": "jz short loc_40D883",
+          "refs": [
+            {
+              "addr": "0x40d883",
+              "name": "loc_40D883"
+            }
+          ]
+        },
+        {
+          "addr": "40d87e",
+          "instruction": "call sub_412CA0",
+          "refs": [
+            {
+              "addr": "0x412ca0",
+              "name": "sub_412CA0"
+            }
+          ]
+        },
+        {
+          "addr": "40d883",
+          "instruction": "call ds:__imp_timeGetTime; WINMM",
+          "label": "loc_40D883",
+          "refs": [
+            {
+              "addr": "0x4d520c",
+              "name": "__imp_timeGetTime"
+            }
+          ]
+        },
+        {
+          "addr": "40d889",
+          "instruction": "mov ecx, [ebx+74h]"
+        },
+        {
+          "addr": "40d88c",
+          "instruction": "mov [ebx+38h], eax"
+        },
+        {
+          "addr": "40d88f",
+          "instruction": "mov edx, [ecx]"
+        },
+        {
+          "addr": "40d891",
+          "instruction": "mov eax, [edx]"
+        },
+        {
+          "addr": "40d893",
+          "instruction": "call eax"
+        },
+        {
+          "addr": "40d895",
+          "instruction": "mov ecx, [ebx+78h]"
+        },
+        {
+          "addr": "40d898",
+          "instruction": "cmp ecx, edi"
+        },
+        {
+          "addr": "40d89a",
+          "instruction": "jz short loc_40D8A2",
+          "refs": [
+            {
+              "addr": "0x40d8a2",
+              "name": "loc_40D8A2"
+            }
+          ]
+        },
+        {
+          "addr": "40d89c",
+          "instruction": "mov edx, [ecx]"
+        },
+        {
+          "addr": "40d89e",
+          "instruction": "mov eax, [edx]"
+        },
+        {
+          "addr": "40d8a0",
+          "instruction": "call eax"
+        },
+        {
+          "addr": "40d8a2",
+          "instruction": "mov eax, [ebx+20h]",
+          "label": "loc_40D8A2"
+        },
+        {
+          "addr": "40d8a5",
+          "instruction": "mov ecx, [ebx+74h]"
+        },
+        {
+          "addr": "40d8a8",
+          "instruction": "mov [ebx+0B0h], eax"
+        },
+        {
+          "addr": "40d8ae",
+          "instruction": "mov [ebx+80h], edi"
+        },
+        {
+          "addr": "40d8b4",
+          "instruction": "mov [ebx+7Ch], edi"
+        },
+        {
+          "addr": "40d8b7",
+          "instruction": "mov dword ptr [ebx+0B4h], 0FFFFFFFFh"
+        },
+        {
+          "addr": "40d8c1",
+          "instruction": "mov edx, [ecx]"
+        },
+        {
+          "addr": "40d8c3",
+          "instruction": "push eax"
+        },
+        {
+          "addr": "40d8c4",
+          "instruction": "mov eax, [edx+10h]"
+        },
+        {
+          "addr": "40d8c7",
+          "instruction": "call eax"
+        },
+        {
+          "addr": "40d8c9",
+          "instruction": "lea esi, [ebx+6Ch]"
+        },
+        {
+          "addr": "40d8cc",
+          "instruction": "mov [ebx+80h], eax"
+        },
+        {
+          "addr": "40d8d2",
+          "instruction": "call sub_412610",
+          "refs": [
+            {
+              "addr": "0x412610",
+              "name": "sub_412610"
+            }
+          ]
+        },
+        {
+          "addr": "40d8d7",
+          "instruction": "lea ecx, [esi+4]"
+        },
+        {
+          "addr": "40d8da",
+          "instruction": "push ecx; lpThreadId",
+          "comments": [
+            "lpThreadId"
+          ]
+        },
+        {
+          "addr": "40d8db",
+          "instruction": "push edi; dwCreationFlags",
+          "comments": [
+            "dwCreationFlags"
+          ]
+        },
+        {
+          "addr": "40d8dc",
+          "instruction": "push edi; lpParameter",
+          "comments": [
+            "lpParameter"
+          ]
+        },
+        {
+          "addr": "40d8dd",
+          "instruction": "push offset sub_40E320; lpStartAddress",
+          "comments": [
+            "lpStartAddress"
+          ],
+          "refs": [
+            {
+              "addr": "0x40e320",
+              "name": "sub_40E320"
+            }
+          ]
+        },
+        {
+          "addr": "40d8e2",
+          "instruction": "push edi; dwStackSize",
+          "comments": [
+            "dwStackSize"
+          ]
+        },
+        {
+          "addr": "40d8e3",
+          "instruction": "push edi; lpThreadAttributes",
+          "comments": [
+            "lpThreadAttributes"
+          ]
+        },
+        {
+          "addr": "40d8e4",
+          "instruction": "mov edi, ds:CreateThread; KERNEL32",
+          "refs": [
+            {
+              "addr": "0x4d50cc",
+              "name": "CreateThread"
+            }
+          ]
+        },
+        {
+          "addr": "40d8ea",
+          "instruction": "call edi ; CreateThread; KERNEL32",
+          "refs": [
+            {
+              "addr": "0x4d50cc",
+              "name": "CreateThread"
+            }
+          ]
+        },
+        {
+          "addr": "40d8ec",
+          "instruction": "push 0FFFFFFF1h; nPriority",
+          "comments": [
+            "nPriority"
+          ]
+        },
+        {
+          "addr": "40d8ee",
+          "instruction": "push eax; hThread",
+          "comments": [
+            "hThread"
+          ]
+        },
+        {
+          "addr": "40d8ef",
+          "instruction": "mov [esi], eax"
+        },
+        {
+          "addr": "40d8f1",
+          "instruction": "call ds:SetThreadPriority; KERNEL32",
+          "refs": [
+            {
+              "addr": "0x4d50c4",
+              "name": "SetThreadPriority"
+            }
+          ]
+        },
+        {
+          "addr": "40d8f7",
+          "instruction": "lea esi, [ebx+50h]"
+        },
+        {
+          "addr": "40d8fa",
+          "instruction": "call sub_412610",
+          "refs": [
+            {
+              "addr": "0x412610",
+              "name": "sub_412610"
+            }
+          ]
+        },
+        {
+          "addr": "40d8ff",
+          "instruction": "lea eax, [esi+4]"
+        },
+        {
+          "addr": "40d902",
+          "instruction": "push eax; lpThreadId",
+          "comments": [
+            "lpThreadId"
+          ]
+        },
+        {
+          "addr": "40d903",
+          "instruction": "push 0; dwCreationFlags",
+          "comments": [
+            "dwCreationFlags"
+          ]
+        },
+        {
+          "addr": "40d905",
+          "instruction": "push 0; lpParameter",
+          "comments": [
+            "lpParameter"
+          ]
+        },
+        {
+          "addr": "40d907",
+          "instruction": "push offset sub_40E2B0; lpStartAddress",
+          "comments": [
+            "lpStartAddress"
+          ],
+          "refs": [
+            {
+              "addr": "0x40e2b0",
+              "name": "sub_40E2B0"
+            }
+          ]
+        },
+        {
+          "addr": "40d90c",
+          "instruction": "push 0; dwStackSize",
+          "comments": [
+            "dwStackSize"
+          ]
+        },
+        {
+          "addr": "40d90e",
+          "instruction": "push 0; lpThreadAttributes",
+          "comments": [
+            "lpThreadAttributes"
+          ]
+        },
+        {
+          "addr": "40d910",
+          "instruction": "call edi ; CreateThread; KERNEL32",
+          "refs": [
+            {
+              "addr": "0x4d50cc",
+              "name": "CreateThread"
+            }
+          ]
+        },
+        {
+          "addr": "40d912",
+          "instruction": "mov [esi], eax"
+        },
+        {
+          "addr": "40d914",
+          "instruction": "cmp byte ptr [ebx+28h], 0"
+        },
+        {
+          "addr": "40d918",
+          "instruction": "jz short loc_40D933",
+          "refs": [
+            {
+              "addr": "0x40d933",
+              "name": "loc_40D933"
+            }
+          ]
+        },
+        {
+          "addr": "40d91a",
+          "instruction": "push offset sub_40E2D0; lpStartAddress",
+          "comments": [
+            "lpStartAddress"
+          ],
+          "refs": [
+            {
+              "addr": "0x40e2d0",
+              "name": "sub_40E2D0"
+            }
+          ]
+        },
+        {
+          "addr": "40d91f",
+          "instruction": "lea eax, [ebx+58h]"
+        },
+        {
+          "addr": "40d922",
+          "instruction": "call sub_4125E0",
+          "refs": [
+            {
+              "addr": "0x4125e0",
+              "name": "sub_4125E0"
+            }
+          ]
+        },
+        {
+          "addr": "40d927",
+          "instruction": "mov ecx, [ebx+58h]"
+        },
+        {
+          "addr": "40d92a",
+          "instruction": "push 0FFFFFFF1h; nPriority",
+          "comments": [
+            "nPriority"
+          ]
+        },
+        {
+          "addr": "40d92c",
+          "instruction": "push ecx; hThread",
+          "comments": [
+            "hThread"
+          ]
+        },
+        {
+          "addr": "40d92d",
+          "instruction": "call ds:SetThreadPriority; KERNEL32",
+          "refs": [
+            {
+              "addr": "0x4d50c4",
+              "name": "SetThreadPriority"
+            }
+          ]
+        },
+        {
+          "addr": "40d933",
+          "instruction": "pop edi",
+          "label": "loc_40D933"
+        },
+        {
+          "addr": "40d934",
+          "instruction": "pop esi"
+        },
+        {
+          "addr": "40d935",
+          "instruction": "mov al, 1"
+        },
+        {
+          "addr": "40d937",
+          "instruction": "pop ebx"
+        },
+        {
+          "addr": "40d938",
+          "instruction": "mov esp, ebp"
+        },
+        {
+          "addr": "40d93a",
+          "instruction": "pop ebp"
+        },
+        {
+          "addr": "40d93b",
+          "instruction": "retn 4"
+        }
+      ],
+      "stack_frame": [
+        {
+          "name": "__saved_registers",
+          "offset": "0x10",
+          "size": "0x4",
+          "type": "_DWORD"
+        },
+        {
+          "name": "__return_address",
+          "offset": "0x14",
+          "size": "0x4",
+          "type": "_UNKNOWN *"
+        },
+        {
+          "name": "arg_0",
+          "offset": "0x18",
+          "size": "0x4",
+          "type": "_DWORD"
+        }
+      ]
+    },
+    "instruction_count": 151,
+    "total_instructions": null,
+    "cursor": {
+      "done": true
+    }
+  },
+  "isError": false
+}

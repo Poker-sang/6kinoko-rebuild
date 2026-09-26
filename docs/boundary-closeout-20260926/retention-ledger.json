@@ -1,0 +1,158 @@
+{
+  "baseline": "f4c5be2",
+  "scope": "Selected boundary closeout, not a whole-project per-function semantic audit",
+  "items": [
+    {
+      "id": "T01",
+      "decision": "restored",
+      "source": "texture_image.cpp",
+      "evidence": "40E7B8/40E7E0/40E705",
+      "reason": "Return CreateTexture HRESULT, not LockRect HRESULT; nonzero LockRect skips upload and transfers created texture.",
+      "validation": "texture_image_contract"
+    },
+    {
+      "id": "T02",
+      "decision": "retained-original",
+      "source": "texture_image.cpp",
+      "evidence": "40E815",
+      "reason": "UnlockRect result is ignored by original; do not turn failure into a new load failure.",
+      "validation": "texture_image_contract"
+    },
+    {
+      "id": "T03",
+      "decision": "retained-guard",
+      "source": "texture_image.cpp",
+      "evidence": "pre-batch invalid-surface/copy_surface branches",
+      "reason": "Null COM vtable, impossible bits/pitch, malformed dimensions/RLE and missing palette still fail safely. These are reconstruction guards, not binary parity claims.",
+      "validation": "texture_image_contract"
+    },
+    {
+      "id": "A01",
+      "decision": "restored",
+      "source": "application_runtime.cpp",
+      "evidence": "40D836..40D872; input-timer/408b30,408bf0,408d00",
+      "reason": "Input service, keyboard, enumeration and enabled audio failure abort initialization; mouse failure does not. Check low return byte.",
+      "validation": "application_contract"
+    },
+    {
+      "id": "A02",
+      "decision": "retained-ownership",
+      "source": "application_runtime.cpp",
+      "evidence": "application-lifecycle/README.md and 40d940.json",
+      "reason": "Create wake events before workers; join workers before freeing resources. Native ownership prevents use-after-free; exact original thread timing is not claimed.",
+      "validation": "runtime-specialist-validation-pending"
+    },
+    {
+      "id": "A03",
+      "decision": "retained-ownership",
+      "source": "application_runtime.cpp",
+      "evidence": "State acquisition flags; application-lifecycle/README.md",
+      "reason": "Balance successful COM/timer acquisition and clean partial input/graphics startup; do not reintroduce unbalanced native releases.",
+      "validation": "compile-only"
+    },
+    {
+      "id": "A04",
+      "decision": "retained-guard",
+      "source": "application_runtime.cpp",
+      "evidence": "game_loop/display_worker/message_loop",
+      "reason": "Sleep fallback when timer/retry event allocation fails, worker/event creation checks and path bounds remain. No additional gameplay rule; exact exceptional timing not recovered.",
+      "validation": "runtime-specialist-validation-pending"
+    },
+    {
+      "id": "A05",
+      "decision": "outside-batch",
+      "source": "audio_runtime.cpp/direct_input.cpp",
+      "evidence": "existing device implementations; audio-scheduling/input-runtime records",
+      "reason": "Device-level compatibility fallbacks are distinct from application accepting a failed initializer. No backend rewrite in this batch.",
+      "validation": "not-claimed-closed"
+    },
+    {
+      "id": "P01",
+      "decision": "typed",
+      "source": "table_serialization.cpp",
+      "evidence": "472C90/472E50 path arguments",
+      "reason": "Named native file entries now take const char*. Only original C registration aliases convert 32-bit address slots.",
+      "validation": "savedata_file_contract"
+    },
+    {
+      "id": "P02",
+      "decision": "retained-abi",
+      "source": "table_serialization.cpp",
+      "evidence": "4722E0/472820/472C90/472E50",
+      "reason": "SqPlus type/data pair and transferred external reference remain 32-bit ABI records, not ordinary pointers. File layout tags and scalar widths stay unchanged.",
+      "validation": "savedata_file_contract"
+    },
+    {
+      "id": "P03",
+      "decision": "typed",
+      "source": "act_texture_io.cpp",
+      "evidence": "existing property schemas and act_resource_records_io.hpp",
+      "reason": "Shared property read/write receivers use borrowed void*/const void*, unsigned-char displacement and memcpy stores; no integer address arithmetic internally.",
+      "validation": "existing stage/resource contracts compile-only"
+    },
+    {
+      "id": "P04",
+      "decision": "named-layout",
+      "source": "act_texture_io.cpp",
+      "evidence": "TextureResourceRecord layout asserts; original 446A84",
+      "reason": "Nine texture descriptors derive offsets from named fields; auto_size writes use the authoritative record view.",
+      "validation": "existing stage/resource contracts compile-only"
+    },
+    {
+      "id": "P05",
+      "decision": "deduplicated-layout",
+      "source": "act_binding.cpp",
+      "evidence": "DocumentRecord layout asserts; original 450950/450F30",
+      "reason": "Reuse document schema, eliminating duplicate publication integer-pointer span fields; resource method pointer is const void*.",
+      "validation": "existing ACT contracts compile-only"
+    },
+    {
+      "id": "P06",
+      "decision": "named-layout",
+      "source": "act_binding.cpp",
+      "evidence": "LayerAssociationRecord/LayerStorageRecord; original 41E790",
+      "reason": "Layer identity, name, flags, position/previous/origin registrations use schema offsets, preserving aliases and component order.",
+      "validation": "existing native property/stage contracts compile-only"
+    },
+    {
+      "id": "P07",
+      "decision": "retained-protocol",
+      "source": "act_binding.cpp/act_texture_io.cpp",
+      "evidence": "original TypePropertyClass/TUserData registration",
+      "reason": "Runtime-selected property displacement, type tags, map key order, aliases, stream virtual offsets and thiscall ABI remain genuine protocols. Do not replace with guessed different fields.",
+      "validation": "existing contracts compile-only"
+    },
+    {
+      "id": "P08",
+      "decision": "remaining-outside-selected-scope",
+      "source": "act_binding.cpp/act_texture_io.cpp",
+      "evidence": "project-status-20260926/readability-523f138.json",
+      "reason": "Other VM integer slots, property pointer aliases, stream handles, map/timeline/container boundaries and diagnostic offsets remain; no claim of project-wide pointer elimination.",
+      "validation": "requires-separate-concrete-evidence"
+    },
+    {
+      "id": "S01",
+      "decision": "coverage-added",
+      "source": "savedata_file_contract.cpp",
+      "evidence": "4722E0/472820/472C90/472E50; existing original JSON",
+      "reason": "Real VM and compressed file roundtrip: nested table/array, bool/int/float/string/null omission, empty table, repeated calls, stack balance.",
+      "validation": "not-executed"
+    },
+    {
+      "id": "S02",
+      "decision": "coverage-added",
+      "source": "savedata_file_contract.cpp",
+      "evidence": "472820 wire writes and source squirrel.h tags",
+      "reason": "Independent little-endian scalar fixture plus independent zlib API verifies writer bytes; hand-built nested stream verifies reader without producer agreement.",
+      "validation": "not-executed"
+    },
+    {
+      "id": "S03",
+      "decision": "coverage-added",
+      "source": "savedata_file_contract.cpp",
+      "evidence": "existing TableStream/File bounded guards",
+      "reason": "Missing path, invalid parent, short/oversized prefix, short payload and truncated table fail; temporary isolated files never touch user saves.",
+      "validation": "not-executed"
+    }
+  ]
+}
