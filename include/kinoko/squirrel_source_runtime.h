@@ -8,7 +8,7 @@ extern "C" {
 
 /* Exchange only the legacy TLS receiver, returning its previous value.
  * This is an ABI adapter, not another VM or an alternate execution path. */
-typedef int32_t (*kinoko_sq_context_exchange)(int32_t vm);
+typedef struct SQVM* (*kinoko_sq_context_exchange)(struct SQVM* vm);
 void kinoko_sq_set_context_exchange(kinoko_sq_context_exchange exchange);
 struct SQVM;
 typedef struct KinokoVmStackSnapshot {

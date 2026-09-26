@@ -1,5 +1,6 @@
 #include "kinoko/act_resource_records_io.hpp"
 #include "kinoko/act_clone.h"
+#include "kinoko/legacy_memory.hpp"
 #include "kinoko/act_key_records.hpp"
 #include "kinoko/act_layout_records.hpp"
 #include "kinoko/texture_store.h"

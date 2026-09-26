@@ -34,8 +34,8 @@ SQInteger release_native(SQUserPointer value, SQInteger) {
 }
 SQInteger release_userdata(SQUserPointer, SQInteger) { ++releases; return 0; }
 HSQOBJECT empty() { HSQOBJECT value; sq_resetobject(&value); return value; }
-int32_t exchange_vm(int32_t value) {
-    const auto previous=address(kinoko_primary_vm); kinoko_primary_vm=pointer<SQVM>(value); receiver=value; return previous;
+SQVM* exchange_vm(SQVM* value) {
+    const auto previous=address(kinoko_primary_vm); kinoko_primary_vm=pointer<SQVM>((int32_t)(intptr_t)value); receiver=(int32_t)(intptr_t)value; return reinterpret_cast<SQVM*>(static_cast<uintptr_t>(previous));
 }
 void destroy(Pair& value) {
     auto old=value.get(); sq_release(value.vm,&old); value.write(empty());

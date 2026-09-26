@@ -26,13 +26,13 @@ std::atomic<int32_t> source_vm_vtable{0};
 class ReceiverScope final {
 public:
     explicit ReceiverScope(SQVM* vm) noexcept : exchange_(exchange_receiver),
-        previous_(exchange_ ? exchange_(address(vm)) : 0) {}
+        previous_(exchange_ ? exchange_(vm) : 0) {}
     ~ReceiverScope() { if (exchange_) exchange_(previous_); }
     ReceiverScope(const ReceiverScope&) = delete;
     ReceiverScope& operator=(const ReceiverScope&) = delete;
 private:
     kinoko_sq_context_exchange exchange_;
-    int32_t previous_;
+    SQVM* previous_;
 };
 
 void remember_vm(SQVM* vm) noexcept {

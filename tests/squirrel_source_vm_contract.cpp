@@ -19,10 +19,10 @@ HSQUIRRELVM machine_at(int32_t value) noexcept {
     return reinterpret_cast<HSQUIRRELVM>(static_cast<uintptr_t>(static_cast<uint32_t>(value)));
 }
 thread_local int32_t current_receiver = 0x12345678;
-int32_t exchange_receiver(int32_t vm) {
+SQVM* exchange_receiver(SQVM* vm) {
     const auto previous = current_receiver;
-    current_receiver = vm;
-    return previous;
+    current_receiver = (int32_t)(intptr_t)vm;
+    return reinterpret_cast<SQVM*>(static_cast<uintptr_t>(previous));
 }
 class ReceiverRegistration final {
 public:

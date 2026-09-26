@@ -29,10 +29,10 @@ namespace {
 void require(bool value, const char* message) {
     if (!value) throw std::runtime_error(message); // Runs in Release too.
 }
-int32_t exchange_vm(int32_t vm) {
+SQVM* exchange_vm(SQVM* vm) {
     const auto previous = address(kinoko_primary_vm);
-    kinoko_primary_vm = pointer<SQVM>(vm);
-    return previous;
+    kinoko_primary_vm = pointer<SQVM>((int32_t)(intptr_t)vm);
+    return reinterpret_cast<SQVM*>(static_cast<uintptr_t>(previous));
 }
 class Machine final {
 public:

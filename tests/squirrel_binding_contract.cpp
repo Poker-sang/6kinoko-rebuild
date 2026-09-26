@@ -41,8 +41,8 @@ int32_t* kinoko_native_binding_type(int32_t category) {
 }
 
 namespace {
-int32_t exchange_vm(int32_t vm) {
-    const auto old = address(kinoko_primary_vm); kinoko_primary_vm = pointer<SQVM>(vm); return old;
+SQVM* exchange_vm(SQVM* vm) {
+    const auto old = address(kinoko_primary_vm); kinoko_primary_vm = pointer<SQVM>((int32_t)(intptr_t)vm); return reinterpret_cast<SQVM*>(static_cast<uintptr_t>(old));
 }
 class Machine final {
 public:

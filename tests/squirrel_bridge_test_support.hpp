@@ -16,8 +16,8 @@ inline void require(bool condition, const char* message) {
     if (!condition) throw std::runtime_error(message); // Also executes in Release.
 }
 inline thread_local int32_t receiver = 0x12345678;
-inline int32_t exchange_receiver(int32_t vm) {
-    const auto old = receiver; receiver = vm; return old;
+inline SQVM* exchange_receiver(SQVM* vm) {
+    const auto old = receiver; receiver = (int32_t)(intptr_t)vm; return reinterpret_cast<SQVM*>(static_cast<uintptr_t>(old));
 }
 class Machine final {
 public:

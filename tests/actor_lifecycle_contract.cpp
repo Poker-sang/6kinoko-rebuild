@@ -39,8 +39,8 @@ int32_t kinoko_actor_clear_script(KinokoActor *receiver_actor) {
 }
 }
 namespace {
-int32_t exchange_vm(int32_t value) {
-    const auto previous = address(kinoko_primary_vm); kinoko_primary_vm = pointer<SQVM>(value); receiver = value; return previous;
+SQVM* exchange_vm(SQVM* value) {
+    const auto previous = address(kinoko_primary_vm); kinoko_primary_vm = pointer<SQVM>((int32_t)(intptr_t)value); receiver = (int32_t)(intptr_t)value; return reinterpret_cast<SQVM*>(static_cast<uintptr_t>(previous));
 }
 struct ControlFixture : boost::detail::sp_counted_base {
     ControlFixture(int strong, int weak) {

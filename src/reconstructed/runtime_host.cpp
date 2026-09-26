@@ -425,9 +425,9 @@ int32_t kinoko_script_bind_root_integer(int32_t *object, int32_t value, char *na
 static SQVM *kinoko_active_vm;
 static thread_local SQVM *kinoko_explicit_vm;
 
-static int32_t kinoko_exchange_source_receiver(int32_t vm) {
-    int32_t previous = (int32_t)(intptr_t)kinoko_explicit_vm;
-    kinoko_explicit_vm = reinterpret_cast<SQVM*>(static_cast<uintptr_t>(vm));
+static SQVM* kinoko_exchange_source_receiver(SQVM* vm) {
+    auto* previous = kinoko_explicit_vm;
+    kinoko_explicit_vm = vm;
     return previous;
 }
 
