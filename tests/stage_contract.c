@@ -4842,8 +4842,8 @@ static int test_map_serialization(void) {
     CHECK(source[60]==INT_MIN && source[61]==INT_MIN);
     CHECK(source[62]==0 && source[63]==0 && source[64]==0 && source[65]==0);
     kinoko_compile_act_output=saved;
-    kinoko_native_buffer_destroy(PTR(loaded)+264);
-    kinoko_native_buffer_destroy(PTR(source)+404); kinoko_native_buffer_destroy(PTR(source)+436);
+    kinoko_native_buffer_destroy((void*)(uintptr_t)(PTR(loaded)+264));
+    kinoko_native_buffer_destroy((void*)(uintptr_t)(PTR(source)+404)); kinoko_native_buffer_destroy((void*)(uintptr_t)(PTR(source)+436));
     puts("PASS: map wire format, signed XY order, sparse MCD cache, original bounds and appended records");
     return 0;
 }
@@ -4951,7 +4951,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         int32_t timeline_pairs[4];
         timeline_pairs[0]=3; timeline_pairs[1]=11;
         timeline_pairs[2]=29; timeline_pairs[3]=47;
-        kinoko_native_buffer_replace(event+12,timeline_pairs,sizeof(timeline_pairs));
+        kinoko_native_buffer_replace((void*)(uintptr_t)(event+12), timeline_pairs, sizeof(timeline_pairs));
         {
             int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
             struct script_io_stream stream={0}; stream.vtable=methods;
@@ -5131,7 +5131,7 @@ static int test_map_set_layer(void) {
     layer[25]=0;
     CHECK(kinoko_call_thiscall1_result(layout,(void*)kinoko_map_layout_methods_storage.associate,PTR(layer))==0);
     CHECK(layout[71]==layout[70] && layout[75]-layout[74]==24);
-    for (int i=0;i<4;++i) { const int slots[]={70,74,101,109}; kinoko_native_buffer_destroy(PTR(layout)+slots[i]*4); }
+    for (int i=0;i<4;++i) { const int slots[]={70,74,101,109}; kinoko_native_buffer_destroy((void*)(uintptr_t)(PTR(layout)+slots[i]*4)); }
     puts("PASS: map SetLayer one-shot suppression, type checks, sparse refs and original append behavior");
     return 0;
 }
@@ -5744,7 +5744,7 @@ static int test_map_virtual_clone(void) {
     for(i=0;i<10;++i) {
         unsigned char *data=(unsigned char*)malloc(widths[i]*2);CHECK(data);
         memset(data,0x31+i,widths[i]*2);
-        kinoko_native_buffer_replace(PTR(source)+offsets[i],data,widths[i]*2);
+        kinoko_native_buffer_replace((void*)(uintptr_t)(PTR(source)+offsets[i]), data, widths[i]*2);
         free(data);
     }
     clone=kinoko_call_thiscall0_result(source,(void*)kinoko_map_layout_methods_storage.clone);CHECK(clone);

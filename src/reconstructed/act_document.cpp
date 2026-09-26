@@ -160,7 +160,7 @@ void kinoko_act_free_map_records(int32_t layout)
 {
     if (layout) {
         kinoko::act::MapLayoutView record(pointer<void>(layout));
-        kinoko_native_buffer_destroy(address(record.bytes(&kinoko::act::MapLayoutRecord::records_begin)));
+        kinoko_native_buffer_destroy((void*)(uintptr_t)(address(record.bytes(&kinoko::act::MapLayoutRecord::records_begin))));
     }
 }
 
@@ -180,14 +180,14 @@ int32_t kinoko_act_read_map_records(int32_t layout,
         return 0;
     kinoko::act::MapLayoutView map(pointer<void>(layout));
     const auto records_slot = address(map.bytes(&kinoko::act::MapLayoutRecord::records_begin));
-    kinoko_native_buffer_destroy(records_slot);
+    kinoko_native_buffer_destroy((void*)(uintptr_t)(records_slot));
     if (count == 0)
         return 1;
 
     if (serialized_size > 0x20u ||
         count > UINT32_MAX / 0x20u)
         return 0;
-    if(!kinoko_native_buffer_resize(records_slot,count*sizeof(kinoko::act::MapCellRecord))) return 0;
+    if(!kinoko_native_buffer_resize((void*)(uintptr_t)(records_slot), count*sizeof(kinoko::act::MapCellRecord))) return 0;
     records=static_cast<unsigned char *>(map.get(&kinoko::act::MapLayoutRecord::records_begin) ?
         static_cast<void *>(map.get(&kinoko::act::MapLayoutRecord::records_begin)) : nullptr);
     read_size = serialized_size;
@@ -195,7 +195,7 @@ int32_t kinoko_act_read_map_records(int32_t layout,
         unsigned char *record = records + (size_t)index * 0x20u;
         if (read_size != 0 &&
             !kinoko_reader_read_exact(reader_ptr, record, read_size)) {
-            kinoko_native_buffer_destroy(records_slot);
+            kinoko_native_buffer_destroy((void*)(uintptr_t)(records_slot));
             return 0;
         }
         kinoko::act::MapCellView cell(record);
@@ -697,7 +697,7 @@ int32_t kinoko_c2dmaplayout_set_layer_impl(int32_t layout,
     /* 4341F0 exposes alpha/blend through CActLayer's pointer properties. */
     field<int32_t>(layer + 52) = layout + 320;
     field<int32_t>(layer + 56) = layout + 328;
-    kinoko_native_buffer_destroy(layout+332);
+    kinoko_native_buffer_destroy((void*)(uintptr_t)(layout+332));
     field<int32_t>(layout + 380) = 0;
     kinoko_trace_i32("map-layout:bind-layer", layer);
     kinoko_trace_i32("map-layout:bind-resource", resource);

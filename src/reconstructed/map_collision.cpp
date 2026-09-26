@@ -20,8 +20,7 @@ extern "C" int32_t kinoko_map_collision_append(KinokoCollisionState *state,
     if (required > INT32_MAX / sizeof(KinokoCollisionRecord)) return 0;
     auto hits = StateView(state).view(&StateRecord::hits);
     // The sole integer-pointer boundary is the existing native_buffer ABI.
-    if (!kinoko_native_buffer_ensure(kinoko::legacy::address(hits.data()),
-            required * sizeof(KinokoCollisionRecord))) return 0;
+    if (!kinoko_native_buffer_ensure((void*)(uintptr_t)(kinoko::legacy::address(hits.data())), required * sizeof(KinokoCollisionRecord))) return 0;
     auto *records = hits.get(&HitBuffer::begin);
     records[*count] = {chip, placement, index};
     ++*count;

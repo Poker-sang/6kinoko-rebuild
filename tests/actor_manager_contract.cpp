@@ -157,7 +157,7 @@ int main() {
     actors[5].world_bounds.left=74.01f;actors[5].active=0;
     CHECK(!kinoko_actor_activate(actor_at(5),reinterpret_cast<KinokoCamera *>(&camera),64));
     kinoko_priority_destroy((void *)(intptr_t)(address(&manager.actors)));
-    kinoko_native_buffer_destroy(address(&manager.iteration));
-    kinoko_native_buffer_destroy(address(&manager.callback_candidates));
+    kinoko_native_buffer_destroy((void*)(uintptr_t)(address(&manager.iteration)));
+    kinoko_native_buffer_destroy((void*)(uintptr_t)(address(&manager.callback_candidates)));
     std::puts("PASS: priority partitions, stable reinsertion, callback masks, deferred ownership and creation failure");
 }

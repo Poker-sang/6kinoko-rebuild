@@ -150,7 +150,7 @@ extern "C" int32_t kinoko_actor_manager_refresh(KinokoActorManager *manager) {
         // Both buffers grow together, based on the iteration buffer alone.
         for (auto member:{&ManagerPrefix::iteration,&ManagerPrefix::callback_candidates}) {
             const auto buffer=state.view(member);
-            if (tree.count>INT32_MAX/8 || !kinoko_native_buffer_resize(address(buffer.data()),tree.count*8u)) return 0;
+            if (tree.count>INT32_MAX/8 || !kinoko_native_buffer_resize((void*)(uintptr_t)(address(buffer.data())), tree.count*8u)) return 0;
         }
     }
     auto **actors=state.get(&ManagerPrefix::iteration).begin;

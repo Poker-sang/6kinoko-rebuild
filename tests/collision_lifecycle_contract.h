@@ -12,8 +12,8 @@ static int test_collision_lifecycle(void) {
     pair[0] = PTR(slot); pair[1] = control;
     kinoko_native_add_weak((void*)(uintptr_t)(control)); /* map owns one weak */
     kinoko_native_add_weak((void*)(uintptr_t)(control)); /* test witness survives expiry and reset */
-    kinoko_native_buffer_replace(PTR(state)+4, layouts, sizeof(layouts));
-    kinoko_native_buffer_replace(PTR(state)+52, pair, sizeof(pair));
+    kinoko_native_buffer_replace((void*)(uintptr_t)(PTR(state)+4), layouts, sizeof(layouts));
+    kinoko_native_buffer_replace((void*)(uintptr_t)(PTR(state)+52), pair, sizeof(pair));
     state[0] = PTR(manager);
     manager[25] = PTR(actors); manager[29] = 4;
     a[78] = 2; b[78] = 4;
@@ -53,8 +53,8 @@ static int test_collision_lifecycle(void) {
     CHECK(kinoko_collision_refresh_abi(PTR(state)) == 0 && state[21] == 0);
     CHECK(kinoko_collision_refresh_abi(0) == 0 && !kinoko_collision_reset_abi(0, PTR(manager)));
     kinoko_native_release_weak((void*)(uintptr_t)(control));
-    kinoko_native_buffer_destroy(PTR(state)+4);
-    kinoko_native_buffer_destroy(PTR(state)+52);
-    kinoko_native_buffer_destroy(PTR(state)+68);
+    kinoko_native_buffer_destroy((void*)(uintptr_t)(PTR(state)+4));
+    kinoko_native_buffer_destroy((void*)(uintptr_t)(PTR(state)+52));
+    kinoko_native_buffer_destroy((void*)(uintptr_t)(PTR(state)+68));
     return 0;
 }

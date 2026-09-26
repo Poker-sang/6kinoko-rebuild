@@ -56,9 +56,9 @@ extern "C" int32_t __fastcall kinoko_clone_map_layout(int32_t source,void*) {
     kinoko::map::LayoutView(output.get()).set(&kinoko::map::LayoutRecord::suppress_next_binding, uint8_t{1});
     try {
         for(size_t i=0;i<vectors.size();++i)
-            kinoko_native_buffer_replace(result+vectors[i].offset,buffers[i].data(),static_cast<uint32_t>(buffers[i].size()*4));
+            kinoko_native_buffer_replace((void*)(uintptr_t)(result+vectors[i].offset), buffers[i].data(), static_cast<uint32_t>(buffers[i].size()*4));
     } catch(...) {
-        for(auto spec:vectors) kinoko_native_buffer_destroy(result+spec.offset);
+        for(auto spec:vectors) kinoko_native_buffer_destroy((void*)(uintptr_t)(result+spec.offset));
         throw;
     }
     return address(output.release());
@@ -72,7 +72,7 @@ extern "C" void kinoko_clear_map_layout(int32_t layout) {
         // their texture handles are borrowed, so no texture retain/release.
         if(it->width==232 || it->width==288)
             for(int32_t p=view.begin;p!=view.end;p+=it->width) field<int32_t>(p)=kinoko::legacy::address(kinoko_act_host_symbols()->color_vtable);
-        kinoko_native_buffer_destroy(layout+it->offset);
+        kinoko_native_buffer_destroy((void*)(uintptr_t)(layout+it->offset));
     }
     field<int32_t>(layout+4)=kinoko::legacy::address(kinoko_act_host_symbols()->color_vtable);
 }

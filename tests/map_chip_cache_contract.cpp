@@ -101,7 +101,7 @@ int main() {
     CHECK(find_chip_sprite(layout,definition(chips[3]))->texture==2); // retry missing texture
     CHECK(set_chip_rectangle(layout,1,16,0,32,16));
     Placement placement{};placement.chip_id=1;placement.visible=1;placement.alpha=0.5f;placement.left=10;placement.top=20;
-    kinoko_native_buffer_replace(address(&map.placements),&placement,sizeof(placement));
+    kinoko_native_buffer_replace((void*)(uintptr_t)(address(&map.placements)), &placement, sizeof(placement));
     map.alpha=1;map.scale=2;map.max_chip_width=map.max_chip_height=32;
     CHECK(kinoko_map_update_visible(layout,0,0,100,100)==0 && map.render_count==1);
     CHECK(map.render_quads.begin[0].positions[0].x==26 && map.render_quads.begin[0].positions[0].y==48);

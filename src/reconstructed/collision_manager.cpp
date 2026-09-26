@@ -25,7 +25,7 @@ template<class T> int32_t buffer_count(const Buffer<T>& buffer) {
 }
 template<class T> bool reserve(kinoko::native::RecordView<Buffer<T>> buffer, uint32_t count) {
     return count <= INT32_MAX / sizeof(T) &&
-        kinoko_native_buffer_ensure(address(buffer.data()), count * sizeof(T));
+        kinoko_native_buffer_ensure((void*)(uintptr_t)(address(buffer.data())), count * sizeof(T));
 }
 
 
@@ -72,7 +72,7 @@ extern "C" void *kinoko_collision_refresh(KinokoCollisionState *state) {
     const auto candidates = collision.view(&StateRecord::actors);
     if (guarded_buffer_count(candidates.load()) < count) {
         if (count > INT32_MAX / sizeof(KinokoActor *) ||
-            !kinoko_native_buffer_resize(address(candidates.data()), count * sizeof(KinokoActor *)))
+            !kinoko_native_buffer_resize((void*)(uintptr_t)(address(candidates.data())), count * sizeof(KinokoActor *)))
             return manager;
     }
     auto *output = candidates.get(&Buffer<KinokoActor *>::begin);

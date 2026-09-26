@@ -22,7 +22,7 @@ template<class Span> uint32_t count(const Span &span) {
 }
 template<class Span> void replace(RecordView<Span> view,const void *data,size_t bytes) {
     if(bytes>INT32_MAX) throw std::bad_alloc();
-    kinoko_native_buffer_replace(address(view.data()),data,static_cast<uint32_t>(bytes));
+    kinoko_native_buffer_replace((void*)(uintptr_t)(address(view.data())), data, static_cast<uint32_t>(bytes));
 }
 }
 // 435B20 traverses the original ordered map, so cache indices are sorted by ID,
@@ -128,7 +128,7 @@ int32_t refresh_chip_sprite(KinokoActLayout *layout,const ChipDefinition *source
     if(size>static_cast<uint32_t>(map.get(&LayoutRecord::chip_sprite_count))) {
         if(size>INT32_MAX/sizeof(ChipSpriteCache)) return E_FAIL;
         const auto previous=count(sprites.load());
-        if(!kinoko_native_buffer_resize(address(sprites.data()),size*sizeof(ChipSpriteCache))) return E_FAIL;
+        if(!kinoko_native_buffer_resize((void*)(uintptr_t)(address(sprites.data())), size*sizeof(ChipSpriteCache))) return E_FAIL;
         auto *begin=sprites.get(&ChipSpriteBuffer::begin);
         for(uint32_t i=previous;i<size;++i) {
             begin[i].quad.vtable=static_cast<uint32_t>(reinterpret_cast<uintptr_t>(kinoko_act_host_symbols()->chip_quad_vtable));
@@ -183,7 +183,7 @@ bool set_chip_rectangle(KinokoActLayout *layout,int32_t id,int16_t x,int16_t y,i
     auto pending=map.view(&LayoutRecord::changed_chips);
     const auto size=count(pending.load());
     if(size>=INT32_MAX/sizeof(ChipDefinition *)) return false;
-    if(!kinoko_native_buffer_resize(address(pending.data()),(size+1)*sizeof(ChipDefinition *))) return false;
+    if(!kinoko_native_buffer_resize((void*)(uintptr_t)(address(pending.data())), (size+1)*sizeof(ChipDefinition *))) return false;
     pending.get(&ChangedChipBuffer::begin)[size]=reinterpret_cast<const ChipDefinition *>(record->bytes);
     return true;
 }
