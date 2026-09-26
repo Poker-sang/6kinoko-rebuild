@@ -1,6 +1,6 @@
 # Game and development tools
 
-Current status and build instructions: [repository README](../README.md).
+Current status and build instructions: [repository README](../.github/README.md).
 PR #13 is merged; the user confirmed `internal-types-59` runs normally.
 The 65 contract programs were compiled, not executed by the agent.
 

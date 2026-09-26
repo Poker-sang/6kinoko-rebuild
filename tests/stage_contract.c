@@ -2296,7 +2296,7 @@ static int test_gc_repeated_collection(int32_t vm, int32_t *root) {
             "gcTrashA.items <- [gcTrashA,gcTrashB];\n"
             "gcTrashB.callback <- function() { return 9; };\n"
             "delete ::gcTrashA;\ndelete ::gcTrashB;"));
-        CHECK((shared) && (vm) ? kinoko_sq_collect((SQSharedState*)(uintptr_t)((shared)), (SQVM*)(uintptr_t)((vm))) : 0 >= 0);
+        CHECK(((shared) && (vm) ? kinoko_sq_collect((SQSharedState*)(uintptr_t)((shared)), (SQVM*)(uintptr_t)((vm))) : 0) >= 0);
         CHECK(test_gc_chain_integrity(vm) == 0);
         CHECK(kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm)))) == top);
         CHECK(execute_source(vm, root + 2,
@@ -2305,7 +2305,7 @@ static int test_gc_repeated_collection(int32_t vm, int32_t *root) {
         CHECK(test_gc_chain_integrity(vm) == 0);
     }
     CHECK(execute_source(vm, root + 2, "delete ::gcKeep;"));
-    CHECK((shared) && (vm) ? kinoko_sq_collect((SQSharedState*)(uintptr_t)((shared)), (SQVM*)(uintptr_t)((vm))) : 0 >= 0);
+    CHECK(((shared) && (vm) ? kinoko_sq_collect((SQSharedState*)(uintptr_t)((shared)), (SQVM*)(uintptr_t)((vm))) : 0) >= 0);
     CHECK(test_gc_chain_integrity(vm) == 0);
     puts("PASS: repeated cyclic GC preserves root VM, live objects and doubly linked chain integrity");
     return 0;
@@ -4766,6 +4766,7 @@ struct script_io_stream {
 };
 static int32_t __fastcall script_io_transfer(struct script_io_stream* self, void* unused, void* data, uint32_t size) {
     (void)unused;
+    fprintf(stderr,"stream pos=%u size=%u reading=%d\n",self->position,size,self->reading);
     if (size > sizeof(self->bytes)-self->position || (self->reading && size > self->size-self->position)) return 0;
     if (size) {
         if (self->reading) memcpy(data,self->bytes+self->position,size);

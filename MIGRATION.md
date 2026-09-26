@@ -1,6 +1,6 @@
 # 现代运行时迁移现状
 
-当前合并基线为 PR #13 的 `76443ccbcb15b93112fcb677f57b1c00c3615ac8`。构建与运行入口见 [README](README.md)。
+当前合并基线为 PR #13 的 `76443ccbcb15b93112fcb677f57b1c00c3615ac8`。构建与运行入口见 [README](.github/README.md)。
 
 ## 已收尾
 
