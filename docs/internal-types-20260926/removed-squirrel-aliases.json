@@ -1,0 +1,412 @@
+{
+  "function_48a230": [
+    [
+      "a1",
+      "a2"
+    ],
+    "kinoko_sq_create_thread(a1, a2)"
+  ],
+  "function_48a400": [
+    [
+      "a1",
+      "a2"
+    ],
+    "kinoko_sq_add_object_reference(((SQVM*)(uintptr_t)(uint32_t)(a1)), ((HSQOBJECT*)(uintptr_t)(uint32_t)(a2)))"
+  ],
+  "function_48a430": [
+    [
+      "a1",
+      "a2"
+    ],
+    "kinoko_sq_release_object_reference(((SQVM*)(uintptr_t)(uint32_t)(a1)), ((HSQOBJECT*)(uintptr_t)(uint32_t)(a2)))"
+  ],
+  "function_48a480": [
+    [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "kinoko_sq_push_string(((SQVM*)(uintptr_t)(uint32_t)(a1)), ((const char*)(uintptr_t)(uint32_t)(a2)), a3)"
+  ],
+  "function_48a4f0": [
+    [
+      "a1",
+      "a2"
+    ],
+    "kinoko_sq_push_integer(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2)"
+  ],
+  "function_48a5c0": [
+    [
+      "a1",
+      "a2"
+    ],
+    "kinoko_sq_push_user_pointer(((SQVM*)(uintptr_t)(uint32_t)(a1)), ((void*)(uintptr_t)(uint32_t)(a2)))"
+  ],
+  "function_48a600": [
+    [
+      "a1"
+    ],
+    "kinoko_sq_push_new_table(((SQVM*)(uintptr_t)(uint32_t)(a1)))"
+  ],
+  "function_48a670": [
+    [
+      "a1"
+    ],
+    "kinoko_sq_push_root_table(((SQVM*)(uintptr_t)(uint32_t)(a1)))"
+  ],
+  "function_48a6f0": [
+    [
+      "a1",
+      "a2"
+    ],
+    "kinoko_sq_get_type(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2)"
+  ],
+  "function_48a7d0": [
+    [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "kinoko_sq_get_integer(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2, a3)"
+  ],
+  "function_48a9e0": [
+    [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "kinoko_sq_get_user_pointer(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2, ((void**)(a3)))"
+  ],
+  "function_48aa20": [
+    [
+      "a1"
+    ],
+    "kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)(a1)))"
+  ],
+  "function_48aa30": [
+    [
+      "a1",
+      "a2"
+    ],
+    "kinoko_sq_pop(a1, a2)"
+  ],
+  "function_48aa50": [
+    [
+      "a1"
+    ],
+    "kinoko_sq_pop(a1, 1)"
+  ],
+  "function_48ab40": [
+    [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "kinoko_sq_get_stack_object(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2, ((HSQOBJECT*)(a3)))"
+  ],
+  "function_48ab90": [
+    [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "kinoko_sq_push_raw_object(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2, a3)"
+  ],
+  "function_48abe0": [
+    [
+      "result"
+    ],
+    "kinoko_sq_reset_object(((HSQOBJECT*)(uintptr_t)(uint32_t)(result)))"
+  ],
+  "function_48ac00": [
+    [
+      "a1",
+      "a2"
+    ],
+    "kinoko_sq_throw_error(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2)"
+  ],
+  "function_48ac70": [
+    [
+      "a1"
+    ],
+    "kinoko_sq_reset_error(((SQVM*)(uintptr_t)(uint32_t)(a1)))"
+  ],
+  "function_48acc0": [
+    [
+      "a1"
+    ],
+    "kinoko_sq_get_last_error(((SQVM*)(uintptr_t)(uint32_t)(a1)))"
+  ],
+  "function_48ace0": [
+    [
+      "a1",
+      "a2",
+      "a3",
+      "a4"
+    ],
+    "kinoko_sq_call(a1, a2, a3, a4)"
+  ],
+  "function_48afa0": [
+    [
+      "result",
+      "a2"
+    ],
+    "kinoko_sq_set_compiler_error_handler(((SQVM*)(uintptr_t)(uint32_t)(result)), (SQCOMPILERERROR)(((void*)(uintptr_t)(uint32_t)(a2))))"
+  ],
+  "function_48afc0": [
+    [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "kinoko_sq_write_closure(((SQVM*)(uintptr_t)(uint32_t)(a1)), (SQWRITEFUNC)(((void*)(uintptr_t)(uint32_t)(a2))), ((void*)(uintptr_t)(uint32_t)(a3)))"
+  ],
+  "function_48b050": [
+    [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "kinoko_sq_read_closure(((SQVM*)(uintptr_t)(uint32_t)(a1)), (SQREADFUNC)(((void*)(uintptr_t)(uint32_t)(a2))), a3)"
+  ],
+  "function_48b180": [
+    [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "kinoko_sq_collect_garbage(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2, a3)"
+  ],
+  "function_48b490": [
+    [
+      "a1",
+      "a2"
+    ],
+    "kinoko_sq_create_instance(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2)"
+  ],
+  "function_48b870": [
+    [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "kinoko_sq_move_object(((SQVM*)(uintptr_t)(uint32_t)(a1)), ((SQVM*)(uintptr_t)(uint32_t)(a2)), a3)"
+  ],
+  "function_48b8b0": [
+    [
+      "result",
+      "a2"
+    ],
+    "kinoko_sq_set_print_function(((SQVM*)(uintptr_t)(uint32_t)(result)), (SQPRINTFUNCTION)(((void*)(uintptr_t)(uint32_t)(a2))))"
+  ],
+  "function_48b8d0": [
+    [
+      "a1"
+    ],
+    "kinoko_sq_get_print_function(((SQVM*)(uintptr_t)(uint32_t)(a1)))"
+  ],
+  "function_48c1f0": [
+    [
+      "vm",
+      "reader",
+      "context",
+      "name",
+      "raiseerror"
+    ],
+    "kinoko_sq_compile_lexed(((SQVM*)(uintptr_t)(uint32_t)(vm)), reader, context, name, raiseerror)"
+  ],
+  "function_48c350": [
+    [
+      "a1",
+      "a2"
+    ],
+    "kinoko_sq_new_class(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2)"
+  ],
+  "function_48c580": [
+    [
+      "vm",
+      "index",
+      "name"
+    ],
+    "kinoko_sq_set_closure_name(((SQVM*)(uintptr_t)(uint32_t)(vm)), index, ((const char*)(uintptr_t)(uint32_t)(name)))"
+  ],
+  "function_48c780": [
+    [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "kinoko_sq_set_type_tag(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2, ((void*)(uintptr_t)(uint32_t)(a3)))"
+  ],
+  "function_48c840": [
+    [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "kinoko_sq_set_instance_pointer(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2, ((void*)(uintptr_t)(uint32_t)(a3)))"
+  ],
+  "function_48c890": [
+    [
+      "a1",
+      "a2",
+      "a3",
+      "a4"
+    ],
+    "kinoko_sq_get_instance_pointer(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2, ((void**)(a3)), ((void*)(uintptr_t)(uint32_t)(a4)))"
+  ],
+  "function_48c910": [
+    [
+      "a1",
+      "a2"
+    ],
+    "kinoko_sq_set_stack_top(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2)"
+  ],
+  "function_48ce00": [
+    [
+      "a1",
+      "a2"
+    ],
+    "kinoko_sq_get_slot(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2)"
+  ],
+  "function_48ce70": [
+    [
+      "a1",
+      "a2"
+    ],
+    "kinoko_sq_raw_get_slot(((SQVM*)(uintptr_t)(uint32_t)(a1)), a2)"
+  ],
+  "function_48d0b0": [
+    [
+      "vm",
+      "text",
+      "length",
+      "name",
+      "raiseerror"
+    ],
+    "kinoko_sq_compile_buffer(((SQVM*)(uintptr_t)(uint32_t)(vm)), text, length, name, raiseerror)"
+  ],
+  "function_48d850": [
+    [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "kinoko_sq_new_closure(((SQVM*)(uintptr_t)(uint32_t)(a1)), (SQFUNCTION)(((void*)(uintptr_t)(uint32_t)(a2))), a3)"
+  ],
+  "function_48dd10": [
+    [
+      "vm",
+      "index",
+      "push_value"
+    ],
+    "kinoko_sq_array_pop(((SQVM*)(uintptr_t)(uint32_t)(vm)), index, push_value)"
+  ],
+  "function_48bec0": [
+    [
+      "shared_state",
+      "bytes"
+    ],
+    "addr(kinoko_sq_create_user_data(((SQSharedState*)(uintptr_t)(uint32_t)(shared_state)), bytes))"
+  ],
+  "function_4c7c90": [
+    [
+      "a1"
+    ],
+    "kinoko_sq_register_io_library(((SQVM*)(uintptr_t)(uint32_t)(a1)))"
+  ],
+  "function_4c73a0": [
+    [
+      "a1"
+    ],
+    "kinoko_sq_register_blob_library(((SQVM*)(uintptr_t)(uint32_t)(a1)))"
+  ],
+  "function_4c6c20": [
+    [
+      "a1"
+    ],
+    "kinoko_sq_register_math_library(((SQVM*)(uintptr_t)(uint32_t)(a1)))"
+  ],
+  "function_4c6670": [
+    [
+      "a1"
+    ],
+    "kinoko_sq_register_string_library(((SQVM*)(uintptr_t)(uint32_t)(a1)))"
+  ],
+  "function_4c5c80": [
+    [
+      "vm"
+    ],
+    "kinoko_sq_install_error_handlers(((SQVM*)(uintptr_t)(uint32_t)(vm)))"
+  ],
+  "function_48e520_this": [
+    [
+      "receiver",
+      "delegate"
+    ],
+    "kinoko_sq_set_object_delegate(((SQDelegable*)(uintptr_t)(uint32_t)(receiver)), ((SQTable*)(uintptr_t)(uint32_t)(delegate)))"
+  ],
+  "function_491880_this": [
+    [
+      "this_ptr",
+      "index"
+    ],
+    "kinoko_sq_get_up(this_ptr, index)"
+  ],
+  "function_489f30_this": [
+    [
+      "value"
+    ],
+    "kinoko_sq_destroy_object(((SQObjectPtr*)(uintptr_t)(uint32_t)(value)))"
+  ],
+  "function_489f50_this": [
+    [
+      "destination",
+      "source"
+    ],
+    "kinoko_sq_assign_object(((SQObjectPtr*)(uintptr_t)(uint32_t)(destination)), ((SQObjectPtr*)(uintptr_t)(uint32_t)(source)))"
+  ],
+  "function_48e0e0_this": [
+    [
+      "destination",
+      "value"
+    ],
+    "kinoko_sq_assign_integer(((SQObjectPtr*)(uintptr_t)(uint32_t)(destination)), value)"
+  ],
+  "function_48e120_this": [
+    [
+      "destination",
+      "value"
+    ],
+    "kinoko_sq_assign_float(((SQObjectPtr*)(uintptr_t)(uint32_t)(destination)), value)"
+  ],
+  "function_499b00": [
+    [
+      "machine",
+      "value"
+    ],
+    "kinoko_sq_raise_object_error(((SQVM*)(uintptr_t)(uint32_t)(machine)), ((SQObjectPtr*)(uintptr_t)(uint32_t)(value)))"
+  ],
+  "function_49a520_this": [
+    [
+      "shared_state",
+      "vm"
+    ],
+    "shared_state && vm ? kinoko_sq_collect(shared_state, vm) : 0"
+  ],
+  "function_48be70": [
+    [
+      "object",
+      "unused"
+    ],
+    "kinoko_sq_finalize_userdata_entry(object, unused)"
+  ],
+  "function_48bf50": [
+    [
+      "object",
+      "unused",
+      "flags"
+    ],
+    "kinoko_sq_destroy_userdata_entry(object, unused, flags)"
+  ]
+}

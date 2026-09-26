@@ -12,7 +12,7 @@ using namespace bridge_test;
 using kinoko::script::ObjectStorage;
 using kinoko::script::data_bits;
 using kinoko::script::borrowed_value;
-using Export = int32_t (*)(int32_t);
+using Export = SQFUNCTION;
 SQFUNCTION entry(Export fn) { return reinterpret_cast<SQFUNCTION>(fn); }
 int native_calls = 0, consumed = 0, released = 0, property_value = 0;
 HSQUIRRELVM active_vm = nullptr;
@@ -115,10 +115,10 @@ void methods(HSQUIRRELVM vm) {
     register_method(vm,"three",kinoko_input_assign_entry,address(reinterpret_cast<void*>(set_three)));
     register_method(vm,"truth",kinoko_input_wait_entry,address(reinterpret_cast<void*>(two)));
     register_method(vm,"number",kinoko_input_get_entry,address(reinterpret_cast<void*>(two)));
-    register_method(vm,"zero",function_4552e0,address(reinterpret_cast<void*>(zero_method)),true);
-    register_method(vm,"one",function_445730,address(reinterpret_cast<void*>(one_method)),true);
-    register_method(vm,"draw",function_4555a0,address(reinterpret_cast<void*>(draw_method)),true);
-    sq_pushstring(vm,"weakref",-1); sq_newclosure(vm,entry(function_431650),0); sq_newslot(vm,-3,SQFalse);
+    register_method(vm,"zero",kinoko_native_nullary_member_callback,address(reinterpret_cast<void*>(zero_method)),true);
+    register_method(vm,"one",kinoko_native_integer_member_callback,address(reinterpret_cast<void*>(one_method)),true);
+    register_method(vm,"draw",kinoko_native_draw_member_callback,address(reinterpret_cast<void*>(draw_method)),true);
+    sq_pushstring(vm,"weakref",-1); sq_newclosure(vm,entry(kinoko_native_class_weakref_callback),0); sq_newslot(vm,-3,SQFalse);
     require(SQ_SUCCEEDED(sq_newslot(vm,-3,SQFalse)),"publish class");
     sq_pushstring(vm,"host",-1);
     sq_pushstring(vm,"Host",-1); require(SQ_SUCCEEDED(sq_get(vm,-3)),"get Host");
@@ -146,22 +146,22 @@ void push_owned_userdata(HSQUIRRELVM vm) {
 void ownership(HSQUIRRELVM vm) {
     Top restore(vm);
     const auto saved_consumed=consumed, saved_released=released;
-    for (auto fn : {function_471d30,function_471f70,function_471e50}) {
+    for (auto fn : {kinoko_native_integer_pair_entry,kinoko_native_create_event_callback,kinoko_native_string_object_callback}) {
         const auto base=sq_gettop(vm);
-        auto callback = fn == function_471d30 ? reinterpret_cast<void*>(pair_id) :
-            fn == function_471f70 ? reinterpret_cast<void*>(pair_name) : reinterpret_cast<void*>(one_name);
+        auto callback = fn == kinoko_native_integer_pair_entry ? reinterpret_cast<void*>(pair_id) :
+            fn == kinoko_native_create_event_callback ? reinterpret_cast<void*>(pair_name) : reinterpret_cast<void*>(one_name);
         captured_closure(vm,fn,address(callback)); sq_pushroottable(vm);
-        if (fn == function_471d30) sq_pushinteger(vm,42);
-        else sq_pushstring(vm,fn == function_471e50 ? "one" : "pair",-1);
+        if (fn == kinoko_native_integer_pair_entry) sq_pushinteger(vm,42);
+        else sq_pushstring(vm,fn == kinoko_native_string_object_callback ? "one" : "pair",-1);
         push_owned_userdata(vm);
-        if (fn != function_471e50) push_owned_userdata(vm);
-        const auto arguments=fn == function_471e50 ? 3 : 4;
+        if (fn != kinoko_native_string_object_callback) push_owned_userdata(vm);
+        const auto arguments=fn == kinoko_native_string_object_callback ? 3 : 4;
         require(SQ_SUCCEEDED(kinoko_sq_call(address(vm),arguments,SQFalse,SQTrue)),"by-value real native callback");
         top(vm,base+1,"sq_call retains native closure"); sq_pop(vm,1);
     }
     require(consumed == saved_consumed+5 && released == saved_released+5,"exactly once external consumption and internal final release");
     // Missing string must not transfer any handles or call the target.
-    captured_closure(vm,function_471d30,address(reinterpret_cast<void*>(pair_id)));
+    captured_closure(vm,kinoko_native_integer_pair_entry,address(reinterpret_cast<void*>(pair_id)));
     sq_pushroottable(vm); sq_pushfloat(vm,42); push_owned_userdata(vm); push_owned_userdata(vm);
     require(SQ_FAILED(kinoko_sq_call(address(vm),4,SQFalse,SQFalse)),"wrong id rejected");
     sq_pop(vm,1);
@@ -185,7 +185,7 @@ void properties(HSQUIRRELVM vm) {
     for (int write=0;write<2;++write) {
         const auto base=sq_gettop(vm);
         property_table(vm,write ? write_property : read_property);
-        sq_newclosure(vm,entry(write ? function_41e2c0 : function_41e260),1);
+        sq_newclosure(vm,entry(write ? kinoko_native_property_get_callback : kinoko_native_property_set_callback),1);
         sq_pushroottable(vm); sq_pushstring(vm,"value",-1);
         if (write) sq_pushinteger(vm,779);
         require(SQ_SUCCEEDED(kinoko_sq_call(address(vm),write ? 3 : 2,SQTrue,SQFalse)),"property dispatch call");
@@ -193,14 +193,14 @@ void properties(HSQUIRRELVM vm) {
         sq_settop(vm,base);
     }
     require(property_value==779,"setter passed value");
-    property_table(vm,read_property); sq_newclosure(vm,entry(function_41e260),1);
+    property_table(vm,read_property); sq_newclosure(vm,entry(kinoko_native_property_set_callback),1);
     sq_pushroottable(vm); sq_pushstring(vm,"absent",-1);
     require(SQ_FAILED(kinoko_sq_call(address(vm),2,SQFalse,SQFalse)),"missing member throws"); sq_pop(vm,1);
     // Original native entry ignores inner sq_call failure. Assert that unusual
     // result/stack convention directly instead of silently 'fixing' behavior.
     const auto base=sq_gettop(vm);
     sq_pushroottable(vm); sq_pushstring(vm,"value",-1); property_table(vm,fail_property);
-    require(function_41e260(address(vm))==1,"legacy getter return despite inner failure");
+    require(kinoko_native_property_set_callback((struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))))==1,"legacy getter return despite inner failure");
     top(vm,base+4,"failed inner call retains closure without invented cleanup");
 }
 void migrated_adapters(HSQUIRRELVM vm) {
@@ -208,7 +208,7 @@ void migrated_adapters(HSQUIRRELVM vm) {
     const auto base = sq_gettop(vm);
     auto truth = [&](auto push, int expected) {
         sq_settop(vm, base); push();
-        require(function_470df0(address(vm), base + 1) == expected, "source truth conversion");
+        require(kinoko_native_truthy_entry((struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), base + 1) == expected, "source truth conversion");
     };
     truth([&]{ sq_pushnull(vm); }, 0);
     truth([&]{ sq_pushbool(vm, SQFalse); }, 0);
@@ -222,7 +222,7 @@ void migrated_adapters(HSQUIRRELVM vm) {
 
     sq_settop(vm, base); sq_pushstring(vm, "loaded", -1);
     const auto before = native_calls;
-    require(function_471330(address(reinterpret_cast<void*>(bool_name)), address(vm), base + 1) == 1,
+    require(kinoko_native_string_bool_entry((void*)(uintptr_t)((void*)(uintptr_t)(address(reinterpret_cast<void*>(bool_name)))), (struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), base + 1) == 1,
         "single string adapter return count");
     SQBool boolean = SQTrue; require(SQ_SUCCEEDED(sq_getbool(vm, -1, &boolean)) && boolean == SQFalse,
         "single string adapter preserves low-byte BOOL conversion");
@@ -230,29 +230,29 @@ void migrated_adapters(HSQUIRRELVM vm) {
 
     sq_settop(vm, base); sq_pushstring(vm, "table", -1); push_owned_userdata(vm);
     const auto consumed_before = consumed, released_before = released;
-    require(function_471160(address(reinterpret_cast<void*>(string_object)), address(vm), base + 1) == 1,
+    require(kinoko_native_string_object_entry((void*)(uintptr_t)((void*)(uintptr_t)(address(reinterpret_cast<void*>(string_object)))), (struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), base + 1) == 1,
         "string/object adapter return count");
     require(consumed == consumed_before + 1, "string/object callback consumes one external handle");
     sq_settop(vm, base); sq_collectgarbage(vm);
     require(released == released_before + 1, "string/object stack ownership releases exactly once");
 
     sq_pushstring(vm, "table", -1); push_owned_userdata(vm);
-    require(function_471160(0, address(vm), base + 1) == 0, "null string/object callback");
+    require(kinoko_native_string_object_entry((void*)(uintptr_t)((void*)(uintptr_t)(0)), (struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), base + 1) == 0, "null string/object callback");
     sq_settop(vm, base); sq_collectgarbage(vm);
     require(released == released_before + 2, "null callback balances temporary external handle");
 
     sq_pushstring(vm, "bgm", -1); sq_pushinteger(vm, 2); sq_pushinteger(vm, 3); sq_pushstring(vm, "truthy", -1);
-    require(function_471880(address(reinterpret_cast<void*>(play_four)), address(vm), base + 1) == 0,
+    require(kinoko_native_string_two_integer_truth_entry((void*)(uintptr_t)((void*)(uintptr_t)(address(reinterpret_cast<void*>(play_four)))), (struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), base + 1) == 0,
         "four argument source adapter");
     sq_settop(vm, base); sq_pushstring(vm, "se", -1); sq_pushinteger(vm, 4); sq_pushinteger(vm, 5);
     sq_pushinteger(vm, 6); sq_pushnull(vm);
-    require(function_471960(address(reinterpret_cast<void*>(play_five)), address(vm), base + 1) == 0,
+    require(kinoko_native_string_three_integer_truth_entry((void*)(uintptr_t)((void*)(uintptr_t)(address(reinterpret_cast<void*>(play_five)))), (struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), base + 1) == 0,
         "five argument source adapter");
 
-    sq_settop(vm, base); captured_closure(vm, function_471fd0, address(reinterpret_cast<void*>(integer_callback)));
+    sq_settop(vm, base); captured_closure(vm, kinoko_native_integer_entry, address(reinterpret_cast<void*>(integer_callback)));
     sq_pushroottable(vm); sq_pushinteger(vm, -44);
     require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 2, SQFalse, SQFalse)), "captured integer wrapper");
-    sq_settop(vm, base); captured_closure(vm, function_471eb0, address(reinterpret_cast<void*>(float_callback)));
+    sq_settop(vm, base); captured_closure(vm, kinoko_native_two_floats_entry, address(reinterpret_cast<void*>(float_callback)));
     sq_pushroottable(vm); sq_pushfloat(vm, 1.5f); sq_pushfloat(vm, -2.25f);
     require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 3, SQFalse, SQFalse)), "captured float wrapper");
     require(native_calls == before + 5, "all migrated callbacks invoked");
@@ -262,33 +262,33 @@ void invalid_and_optional(HSQUIRRELVM vm) {
     Top restore(vm);
     const auto base=sq_gettop(vm);
     for (int32_t index : {INT_MIN,-100,0,100,INT_MAX}) {
-        require(function_46b500(address(&native),0,address(vm),index)<0,"invalid index checked before API");
-        require(function_471a60(0,address(vm),index)<0,"two argument index arithmetic bounded");
-        require(function_471720(1,address(vm),index)<0,"pair argument index bounded");
+        require(kinoko_native_three_integer_callback_entry((void*)(uintptr_t)((void*)(uintptr_t)(address(&native))), (void*)(uintptr_t)((void*)(uintptr_t)(0)), (struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), index)<0,"invalid index checked before API");
+        require(kinoko_native_two_integer_callback_entry((void*)(uintptr_t)((void*)(uintptr_t)(0)), (struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), index)<0,"two argument index arithmetic bounded");
+        require(kinoko_native_string_pair_callback_entry((void*)(uintptr_t)((void*)(uintptr_t)(1)), (struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), index)<0,"pair argument index bounded");
     }
     const auto transfers_before = consumed;
     sq_pushstring(vm,"pair",-1); push_owned_userdata(vm); push_owned_userdata(vm);
-    require(function_471720(address(reinterpret_cast<void*>(pair_name)),address(vm),-3)<0,
+    require(kinoko_native_string_pair_callback_entry((void*)(uintptr_t)((void*)(uintptr_t)(address(reinterpret_cast<void*>(pair_name)))), (struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), -3)<0,
         "pair conversion preserves positive-index-only rule");
     require(consumed==transfers_before,"negative pair indices transfer no references");
     sq_settop(vm,base);
     for (int size=0;size<4;++size) {
         push_instance(vm); sq_newuserdata(vm,size); int32_t output[2]={-1,-1};
-        function_46c6b0_pair(address(vm),output);
+        kinoko_native_capture_receiver_pair((struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), (void**)((void**)((void**)(output))));
         require(output[0]==address(&native) && output[1]==0,"short capture rejected"); sq_settop(vm,base);
     }
     push_instance(vm); sq_newuserdata(vm,4); sq_settypetag(vm,-1,&native);
-    int32_t output[2]{}; function_46c6b0_pair(address(vm),output);
+    int32_t output[2]{}; kinoko_native_capture_receiver_pair((struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), (void**)((void**)((void**)(output))));
     require(output[1]==0,"cdecl captures must be untagged"); sq_settop(vm,base);
     sq_pushstring(vm,"optional",-1);
-    require(function_4716b0(0,address(vm),1)==0,"optional null string callback");
-    require(function_4716b0(address(reinterpret_cast<void*>(optional_name)),address(vm),1)==0,"optional string callback");
+    require(kinoko_native_string_only_callback_entry((void*)(uintptr_t)((void*)(uintptr_t)(0)), (struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), 1)==0,"optional null string callback");
+    require(kinoko_native_string_only_callback_entry((void*)(uintptr_t)((void*)(uintptr_t)(address(reinterpret_cast<void*>(optional_name)))), (struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), 1)==0,"optional string callback");
     sq_settop(vm,base); sq_pushinteger(vm,-5); sq_pushinteger(vm,13);
-    require(function_471a60(0,address(vm),1)==0,"optional null pair callback");
-    require(function_471a60(address(reinterpret_cast<void*>(optional_two)),address(vm),1)==0,"optional two integers callback");
+    require(kinoko_native_two_integer_callback_entry((void*)(uintptr_t)((void*)(uintptr_t)(0)), (struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), 1)==0,"optional null pair callback");
+    require(kinoko_native_two_integer_callback_entry((void*)(uintptr_t)((void*)(uintptr_t)(address(reinterpret_cast<void*>(optional_two)))), (struct SQVM*)(uintptr_t)((struct SQVM*)(uintptr_t)(address(vm))), 1)==0,"optional two integers callback");
     sq_settop(vm,base);
-    register_root(vm,"constant",function_472030,address(reinterpret_cast<void*>(constant)));
-    register_root(vm,"none",function_472030,0);
+    register_root(vm,"constant",kinoko_native_integer_result_entry,address(reinterpret_cast<void*>(constant)));
+    register_root(vm,"none",kinoko_native_integer_result_entry,0);
     evaluate(vm,"if (constant() != -971) throw \"constant\";\nif (none() != 0) throw \"null target\";\n");
 }
 }

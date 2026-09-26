@@ -8,45 +8,43 @@ namespace {
 using namespace kinoko::script;
 using namespace kinoko::script::binding;
 inline int32_t& primary_vm_slot = kinoko_act_vm_abi_slot;
-inline auto show_call_stack_entry = function_470ee0;
-inline auto register_root_table_entry = function_48a400;
-inline auto register_root_bindings_entry = function_48a430;
+inline auto show_call_stack_entry = kinoko_native_no_arguments_entry;
 template<class Function> int32_t entry(Function function) {
     return static_cast<int32_t>(reinterpret_cast<intptr_t>(function));
 }
 struct NativeMethod { const char* name; int32_t target; int32_t wrapper; };
 // Original 473010 order; targets retain their existing recovered ABI adapters.
 const NativeMethod methods[] = {
-    {"PostQuitMessage", entry(kinoko_host_close_window), entry(function_471bc0)},
-    {"ReadCSV", entry(kinoko_script_read_csv), entry(function_471c10)},
-    {"LoadTable", entry(function_472c90), entry(function_471c10)},
-    {"SaveTable", entry(function_472e50), entry(function_471c10)},
+    {"PostQuitMessage", entry(kinoko_host_close_window), entry(kinoko_native_void_entry)},
+    {"ReadCSV", entry(kinoko_script_read_csv), entry(kinoko_native_string_object_result_entry)},
+    {"LoadTable", entry(function_472c90), entry(kinoko_native_string_object_result_entry)},
+    {"SaveTable", entry(function_472e50), entry(kinoko_native_string_object_result_entry)},
     {"SetGlobalUpdateFunction", entry(kinoko_script_set_global_update), entry(kinoko_script_global_update_entry)},
-    {"SetInitFunctionByID", entry(kinoko_script_set_init), entry(function_471d30)},
-    {"LoadAnimationData", entry(kinoko_script_load_animation), entry(function_471d90)},
+    {"SetInitFunctionByID", entry(kinoko_script_set_init), entry(kinoko_native_integer_pair_entry)},
+    {"LoadAnimationData", entry(kinoko_script_load_animation), entry(kinoko_native_string_bool_result_entry)},
     {"CreateActor", entry(kinoko_script_create_actor), entry(kinoko_script_create_actor_entry)},
-    {"CreateActorFromMap", entry(kinoko_script_create_map_actors), entry(function_471e50)},
-    {"ClearActor", entry(kinoko_script_clear_actors), entry(function_471bc0)},
-    {"MoveActor", entry(kinoko_script_move_actors), entry(function_471eb0)},
-    {"ClearCollision", entry(kinoko_script_clear_collision), entry(function_471bc0)},
-    {"CreateCollision", entry(kinoko_script_create_collision), entry(function_471f10)},
+    {"CreateActorFromMap", entry(kinoko_script_create_map_actors), entry(kinoko_native_string_object_callback)},
+    {"ClearActor", entry(kinoko_script_clear_actors), entry(kinoko_native_void_entry)},
+    {"MoveActor", entry(kinoko_script_move_actors), entry(kinoko_native_two_floats_entry)},
+    {"ClearCollision", entry(kinoko_script_clear_collision), entry(kinoko_native_void_entry)},
+    {"CreateCollision", entry(kinoko_script_create_collision), entry(kinoko_native_string_entry)},
     {"CreateEvent", entry(kinoko_script_create_event), entry(kinoko_native_create_event_callback)},
-    {"ClearRenderLayer", entry(kinoko_script_clear_render_layers), entry(function_471bc0)},
-    {"CreateRenderLayer", entry(kinoko_script_create_render_layer), entry(function_471f10)},
-    {"LoadAct", entry(kinoko_script_load_act), entry(function_471d90)},
-    {"LoadMap", entry(kinoko_script_load_map), entry(function_471d90)},
-    {"LoadSE", entry(kinoko_audio_load_sound_table), entry(function_471f10)},
-    {"ReleaseMap", entry(kinoko_script_release_map), entry(function_471bc0)},
-    {"MessageBox", entry(kinoko_host_show_message_abi), entry(function_471f10)},
-    {"dprint", entry(kinoko_script_dprint_noop), entry(function_471f10)},
-    {"Sleep", entry(kinoko_host_sleep_abi), entry(function_471fd0)},
-    {"timeGetTime", entry(kinoko_host_milliseconds), entry(function_472030)},
-    {"PlaySE", entry(kinoko_audio_play_sound), entry(function_471fd0)},
-    {"PlayBgm", entry(kinoko_audio_play_bgm), entry(function_472080)},
-    {"PlayBgmMargin", entry(kinoko_audio_play_bgm_margin), entry(function_4720e0)},
-    {"FadeBgm", entry(kinoko_audio_fade_bgm), entry(function_472140)},
-    {"StopBgm", entry(kinoko_audio_stop_bgm), entry(function_471bc0)},
-    {"PauseBgm", entry(kinoko_audio_pause_bgm), entry(function_471bc0)},
+    {"ClearRenderLayer", entry(kinoko_script_clear_render_layers), entry(kinoko_native_void_entry)},
+    {"CreateRenderLayer", entry(kinoko_script_create_render_layer), entry(kinoko_native_string_entry)},
+    {"LoadAct", entry(kinoko_script_load_act), entry(kinoko_native_string_bool_result_entry)},
+    {"LoadMap", entry(kinoko_script_load_map), entry(kinoko_native_string_bool_result_entry)},
+    {"LoadSE", entry(kinoko_audio_load_sound_table), entry(kinoko_native_string_entry)},
+    {"ReleaseMap", entry(kinoko_script_release_map), entry(kinoko_native_void_entry)},
+    {"MessageBox", entry(kinoko_host_show_message_abi), entry(kinoko_native_string_entry)},
+    {"dprint", entry(kinoko_script_dprint_noop), entry(kinoko_native_string_entry)},
+    {"Sleep", entry(kinoko_host_sleep_abi), entry(kinoko_native_integer_entry)},
+    {"timeGetTime", entry(kinoko_host_milliseconds), entry(kinoko_native_integer_result_entry)},
+    {"PlaySE", entry(kinoko_audio_play_sound), entry(kinoko_native_integer_entry)},
+    {"PlayBgm", entry(kinoko_audio_play_bgm), entry(kinoko_native_string_two_integer_truth_callback)},
+    {"PlayBgmMargin", entry(kinoko_audio_play_bgm_margin), entry(kinoko_native_string_three_integer_truth_callback)},
+    {"FadeBgm", entry(kinoko_audio_fade_bgm), entry(kinoko_native_two_integer_entry)},
+    {"StopBgm", entry(kinoko_audio_stop_bgm), entry(kinoko_native_void_entry)},
+    {"PauseBgm", entry(kinoko_audio_pause_bgm), entry(kinoko_native_void_entry)},
 };
 struct Constant { const char* name; int32_t value; };
 constexpr Constant constants[] = {
@@ -119,7 +117,7 @@ int32_t kinoko_register_root_bindings() {
     root.vtable = kinoko_sqrat_root_vtable();
     sq_pushroottable(current_vm());
     sq_getstackobj(current_vm(), -1, &root.value);
-    register_root_table_entry(vm_address, address(&root.value));
+    sq_addref(root.vm, &root.value);
     sq_pop(current_vm(), 1);
     kinoko_register_global_methods(address(&root));
 
@@ -144,7 +142,7 @@ int32_t kinoko_register_root_bindings() {
     kinoko_register_map_binding();
     kinoko_script_load_file(const_cast<char *>("data/script/class_def.nut"),
                             kinoko_script_root());
-    return register_root_bindings_entry(vm_address, address(&root.value));
+    return sq_release(root.vm, &root.value);
 }
 } // namespace
 extern "C" int32_t kinoko_register_root_bindings_entry(void) { return kinoko_register_root_bindings(); }

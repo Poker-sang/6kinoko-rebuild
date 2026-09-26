@@ -11,7 +11,6 @@
 #include "sqstring.h"
 
 extern "C" {
-int32_t function_48a600(int32_t vm);
 extern struct SQVM *kinoko_primary_vm;
 extern char *kinoko_game_window_slot;
 extern char kinoko_packed_assets;
