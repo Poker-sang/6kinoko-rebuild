@@ -8,7 +8,7 @@
 #include <vector>
 
 static_assert(!noexcept(kinoko_script_load_file(nullptr, nullptr)), "SqPlus file load may throw across C linkage");
-static_assert(!noexcept(kinoko_script_compile_file_argument(0, 0, 0, 0, 0, 0)), "owning argument must unwind on file errors");
+static_assert(!noexcept(kinoko_script_compile_file_argument((const char*)(uintptr_t)(0), (const void*)(uintptr_t)(0), (struct SQVM*)(uintptr_t)(0), 0, 0, 0)), "owning argument must unwind on file errors");
 
 extern "C" {
 struct SQVM *kinoko_primary_vm = nullptr;

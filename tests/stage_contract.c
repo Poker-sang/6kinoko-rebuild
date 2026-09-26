@@ -2661,8 +2661,7 @@ static int test_act_resource_methods(void) {
     int32_t texture[25] = {0};
     texture[0] = PTR(kinoko_act_host_symbols()->texture_resource_vtable);
     texture[17] = 7;
-    CHECK(kinoko_act_bitblt_this(address, 3, 4, 32, 16,
-        PTR(texture), 0, 0, 0, 1.0f) == 0);
+    CHECK(kinoko_act_append_blit((KinokoActRuntime*)(uintptr_t)(address), 3, 4, 32, 16, (KinokoActResource*)(uintptr_t)(PTR(texture)), 0, 0, 0, 1.0f) == 0);
     kinoko_act_resize_sprites((KinokoActSpriteStorage*)(intptr_t)(address + 60), 2);
     KinokoDrawSpan commands_before = kinoko_act_command_span((KinokoActRuntime*)(intptr_t)(address));
     KinokoDrawSpan sprites_before = kinoko_act_sprite_span((KinokoActRuntime*)(intptr_t)(address));

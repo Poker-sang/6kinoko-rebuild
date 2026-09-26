@@ -198,10 +198,10 @@ int32_t kinoko_host_construct_layer_abi(int32_t storage) {
     return kinoko_construct_layer_global_vm((void *)(intptr_t)storage);
 }
 
-int32_t __fastcall kinoko_act_layer_associate_method(int32_t receiver, void* unused_edx) {
-    int32_t *methods = *(int32_t **)(intptr_t)receiver;
-    return kinoko_call_thiscall0_result((void *)(intptr_t)receiver,
-        (void *)(intptr_t)methods[6]);
+int32_t __fastcall kinoko_act_layer_associate_method(KinokoActLayer* receiver, void* unused_edx) {
+    using Associate = int32_t (__thiscall*)(KinokoActLayer*);
+    const auto* methods = kinoko::legacy::load<const unsigned char*>(receiver);
+    return kinoko::legacy::load<Associate>(methods + 6*sizeof(void*))(receiver);
 }
 
 int32_t *kinoko_c2d_layout_type(void) {
@@ -392,8 +392,7 @@ int32_t kinoko_compile_file_native(int32_t vm) {
     if (sq_gettop(kinoko_vm(vm)) > 3 &&
         sq_getstackobj(kinoko_vm(vm), 3, &environment) < 0)
         return -1;
-    result = kinoko_script_compile_file_argument(path, (int32_t)(uintptr_t)&kinoko_compile_environment_vtable, vm,
-                             static_cast<int32_t>(environment._type), kinoko::script::data_bits(environment), 0);
+    result = kinoko_script_compile_file_argument((const char*)(uintptr_t)(path), (const void*)(uintptr_t)((int32_t)(uintptr_t)&kinoko_compile_environment_vtable), (struct SQVM*)(uintptr_t)(vm), static_cast<int32_t>(environment._type), kinoko::script::data_bits(environment), 0);
     sq_pushbool(kinoko_vm(vm), ((result) != 0));
     return 1;
 }

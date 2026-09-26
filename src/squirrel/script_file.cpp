@@ -154,17 +154,17 @@ extern "C" int32_t kinoko_script_load_file(const char* path, const void* environ
     return 1; // Opened bytecode files report success even when load/run fails.
 }
 
-extern "C" int32_t kinoko_script_compile_file_argument(int32_t path, int32_t,
-    int32_t argument_vm, int32_t type, int32_t data, char owns_reference) noexcept(false) {
+extern "C" int32_t kinoko_script_compile_file_argument(const char* path, const void*,
+    struct SQVM* argument_vm, int32_t type, int32_t data, char owns_reference) noexcept(false) {
     const auto value = borrowed_value(type, data);
     // Destruction order: SqPlus temporary first, incoming Sqrat argument last.
     HSQOBJECT incoming;
     sq_resetobject(&incoming);
     if (owns_reference) incoming = value;
-    Reference argument(pointer<SQVM>(argument_vm), incoming);
+    Reference argument(argument_vm, incoming);
     Reference temporary(primary_vm(), value, true);
     ObjectStorage environment{kinoko_squirrel_object_vtable(), value};
-    return static_cast<unsigned char>(kinoko_script_load_file(pointer<const char>(path), &environment));
+    return static_cast<unsigned char>(kinoko_script_load_file(path, &environment));
 }
 
 extern "C" int32_t kinoko_script_show_call_stack() noexcept(false) {
