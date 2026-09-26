@@ -1,5 +1,7 @@
 # Squirrel savedata table chain, batch 52
 
+> Superseded status: see [2026-09-26 boundary closeout](../boundary-closeout-20260926/README.md) for restored startup/texture failure policy and new savedata file coverage. Historical batch limitations below are not the current checklist.
+
 Original evidence: IDA MCP session `779370e6`, original functions
 `4722E0` (recursive read), `472820` (recursive write), `472C90` (file load)
 and `472E50` (file save). The two recursive functions consume SqPlus

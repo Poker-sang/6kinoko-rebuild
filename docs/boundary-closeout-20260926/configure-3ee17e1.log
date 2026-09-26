@@ -1,0 +1,25 @@
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.44.35229.0
+-- The CXX compiler identification is MSVC 19.44.35229.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x86/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x86/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (2.8s)
+CMake Error at CMakeLists.txt:556 (add_executable):
+  Cannot find source file:
+
+    C:/Users/poker/.codex/worktrees/pr11-original-parity/6kinoko-rebuild/third_party/zlib-1.2.3/uncompr.c
+
+
+CMake Error at CMakeLists.txt:556 (add_executable):
+  No SOURCES given to target: kinoko_savedata_file_contract
+
+
+CMake Generate step failed.  Build files cannot be regenerated correctly.

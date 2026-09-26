@@ -1,5 +1,7 @@
 # Application loop and window lifetime — R1
 
+> Superseded status: see [2026-09-26 boundary closeout](../boundary-closeout-20260926/README.md) for restored startup/texture failure policy and new savedata file coverage. Historical batch limitations below are not the current checklist.
+
 ## Original evidence
 
 Original executable SHA256:
