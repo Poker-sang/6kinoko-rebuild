@@ -12,7 +12,7 @@ namespace kinoko::act {
 using BlitCommand = KinokoBlitCommand;
 using BlitSprite = KinokoBlitSprite;
 struct TextureResourcePrefix {
-    Address vtable;
+    const void* vtable;
     std::array<uint8_t, 64> unknown4;
     int32_t texture;
     int32_t width,height;

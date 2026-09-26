@@ -33,7 +33,7 @@ extern "C" KinokoActLayer* kinoko_act_layer_initialize(KinokoActLayer* layer, SQ
     record.set(&LayerStorageRecord::visibility_flags, uint16_t{1});
     *association.bytes(&LayerAssociationRecord::flags92) = 1;
     record.set(&LayerStorageRecord::position, std::array<uint32_t, 3>{});
-    record.set(&LayerStorageRecord::unknown156, std::array<uint8_t, 12>{});
+    record.set(&LayerStorageRecord::origin_bits, std::array<uint8_t, 12>{});
     record.set(&LayerStorageRecord::previous_position, std::array<uint32_t, 3>{});
     const auto keys = record.view(&LayerStorageRecord::keys);
     const auto timelines = record.view(&LayerStorageRecord::timelines);
@@ -72,7 +72,7 @@ extern "C" KinokoActLayer* kinoko_act_layer_initialize(KinokoActLayer* layer, SQ
         kinoko_destroy_cact_layer(address(layer));
         return nullptr;
     }
-    association.set(&LayerAssociationRecord::property_aliases, std::array<unsigned char, 68>{});
+    association.set(&LayerAssociationRecord::property_aliases, LayerPropertyAliases{});
     return layer;
 }
 

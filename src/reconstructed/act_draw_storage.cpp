@@ -49,8 +49,8 @@ extern "C" int32_t kinoko_act_append_blit(KinokoActRuntime* self, int32_t x, int
     const RecordView<TextureResourcePrefix> texture(texture_resource);
     const auto* symbols=kinoko_act_host_symbols();
     const auto type=texture.get(&TextureResourcePrefix::vtable);
-    if(type!=static_cast<Address>(address(symbols->texture_resource_vtable)) &&
-       type!=static_cast<Address>(address(symbols->render_target_vtable))) return E_FAIL;
+    if(type!=symbols->texture_resource_vtable &&
+       type!=symbols->render_target_vtable) return E_FAIL;
     const BlitCommand command{blend,alpha<0?0:alpha>1?1:alpha,
         static_cast<float>(x),static_cast<float>(y),sx,sy,width,height,
         texture.get(&TextureResourcePrefix::texture)};

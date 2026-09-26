@@ -174,7 +174,7 @@ int32_t kinoko_publish_cact_layer_members(
     constexpr auto layer_position = offsetof(kinoko::act::LayerStorageRecord, position);
     constexpr auto layer_previous = offsetof(kinoko::act::LayerStorageRecord, previous_position);
     // 41E790's ox/oy/oz fields; lifecycle preserves their raw float bit patterns.
-    constexpr auto layer_origin = offsetof(kinoko::act::LayerStorageRecord, unknown156);
+    constexpr auto layer_origin = offsetof(kinoko::act::LayerStorageRecord, origin_bits);
     static const int32_t direct_float_offsets[] = {
         layer_position, layer_position+4, layer_position+8,
         layer_position, layer_position+4, layer_position+8,
@@ -188,12 +188,25 @@ int32_t kinoko_publish_cact_layer_members(
         "alpha"
     };
     static const int32_t pointer_float_offsets[] = {
-        4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52
+        
+        offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, rotation_x),
+        offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, rotation_y),
+        offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, rotation_z),
+        offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, rotation_pivot_x),
+        offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, rotation_pivot_y),
+        offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, rotation_pivot_z),
+        offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, scale_x),
+        offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, scale_y),
+        offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, scale_z),
+        offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, scale_pivot_x),
+        offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, scale_pivot_y),
+        offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, scale_pivot_z),
+        offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, alpha)
     };
     static const char *const pointer_int_names[] = {
         "blend", "colorR", "colorG", "colorB"
     };
-    static const int32_t pointer_int_offsets[] = { 56, 60, 64, 68 };
+    static const int32_t pointer_int_offsets[] = { offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, blend), offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, red), offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, green), offsetof(kinoko::act::LayerAssociationRecord, property_aliases) + offsetof(kinoko::act::LayerPropertyAliases, blue) };
     static const char *const object_names[] = {
         "script", "layout", "resource"
     };
@@ -378,14 +391,12 @@ int32_t register_root_class(SQVM* machine, Publish publish) {
 // Original 42B6D0 is a cdecl VM-only registration entry. The root-table
 // registry used by the active binding owns the same class/property handles;
 // do not create another decompiled map of Sqrat objects for this old caller.
-static int32_t kinoko_register_c2dlayout_class(SQVM* machine) {
+extern "C" int32_t kinoko_register_c2dlayout_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
         return kinoko_publish_c2dlayout_class(vm, root);
     });
 }
-extern "C" int32_t function_42b6d0(int32_t vm) {
-    return kinoko_register_c2dlayout_class(pointer<SQVM>(vm));
-}
+
 
 int32_t kinoko_cact_associate_resource(int32_t vm)
 {
@@ -447,16 +458,14 @@ int32_t kinoko_publish_cact_resource2d_class(int32_t vm, int32_t root) {
     return ok;
 }
 
-static int32_t kinoko_register_texture_resource_class(SQVM* machine) {
+extern "C" int32_t kinoko_register_texture_resource_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
         return kinoko_publish_cact_resource2d_class(vm, root);
     });
 }
-extern "C" int32_t function_446520(int32_t vm) {
-    return kinoko_register_texture_resource_class(pointer<SQVM>(vm));
-}
 
-static int32_t kinoko_register_render_target_class(SQVM* machine) {
+
+extern "C" int32_t kinoko_register_render_target_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
         int32_t klass[2] = {static_cast<int32_t>(OT_NULL), 0};
         const auto ok = kinoko_publish_texture_resource_class(vm, root, "CActRenderTarget", klass);
@@ -464,9 +473,7 @@ static int32_t kinoko_register_render_target_class(SQVM* machine) {
         return ok;
     });
 }
-extern "C" int32_t function_4495a0(int32_t vm) {
-    return kinoko_register_render_target_class(pointer<SQVM>(vm));
-}
+
 
 extern "C" int32_t __fastcall kinoko_method_register_texture_resource(int32_t, void *, int32_t vm) {
     return kinoko_register_texture_resource_class(pointer<SQVM>(vm));
@@ -535,22 +542,30 @@ int32_t kinoko_publish_cact_layer_class(int32_t vm, int32_t root_object)
 
 // Original VM-only CActLayer class registration (41EFF0). Game instance
 // publication still lives in its register method; only the class setup is shared.
-static int32_t kinoko_register_cact_layer_class(SQVM* machine) {
+extern "C" int32_t kinoko_register_cact_layer_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
         return kinoko_publish_cact_layer_class(vm, root);
     });
 }
-extern "C" int32_t function_41eff0(int32_t vm) {
-    return kinoko_register_cact_layer_class(pointer<SQVM>(vm));
-}
+
 
 int32_t kinoko_publish_acting_player_properties(int32_t vm,
                                                         const int32_t class_pair[2]) {
     static const char *names[] = { "staging", "marginLeft", "marginRight",
         "marginTop", "marginBottom", "offsetX", "offsetY", "visible",
         "resolutionMs", "screenWidth", "screenHeight", "stName" };
-    static const int32_t offsets[] = { 8, 108, 112, 116, 120, 124, 128,
-        132, 136, 140, 144, 148 };
+    static const int32_t offsets[] = { offsetof(kinoko::act::RuntimeRecord, stage_active),
+        offsetof(kinoko::act::RuntimeRecord, stage_properties) + offsetof(kinoko::act::StagePropertyAliases, margin_left),
+        offsetof(kinoko::act::RuntimeRecord, stage_properties) + offsetof(kinoko::act::StagePropertyAliases, margin_right),
+        offsetof(kinoko::act::RuntimeRecord, stage_properties) + offsetof(kinoko::act::StagePropertyAliases, margin_top),
+        offsetof(kinoko::act::RuntimeRecord, stage_properties) + offsetof(kinoko::act::StagePropertyAliases, margin_bottom),
+        offsetof(kinoko::act::RuntimeRecord, stage_properties) + offsetof(kinoko::act::StagePropertyAliases, offset_x),
+        offsetof(kinoko::act::RuntimeRecord, stage_properties) + offsetof(kinoko::act::StagePropertyAliases, offset_y),
+        offsetof(kinoko::act::RuntimeRecord, stage_properties) + offsetof(kinoko::act::StagePropertyAliases, visible),
+        offsetof(kinoko::act::RuntimeRecord, stage_properties) + offsetof(kinoko::act::StagePropertyAliases, resolution_ms),
+        offsetof(kinoko::act::RuntimeRecord, stage_properties) + offsetof(kinoko::act::StagePropertyAliases, screen_width),
+        offsetof(kinoko::act::RuntimeRecord, stage_properties) + offsetof(kinoko::act::StagePropertyAliases, screen_height),
+        offsetof(kinoko::act::RuntimeRecord, stage_properties) + offsetof(kinoko::act::StagePropertyAliases, name) };
     int32_t get_table[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t set_table[2] = { static_cast<int32_t>(OT_NULL), 0 };
     const bool published = [&]() {
@@ -772,7 +787,8 @@ int32_t set_render_target_native(int32_t vm) {
     if (SQ_FAILED(sq_getinstanceup(machine, 1, &player, nullptr)) || !player)
         return sq_throwerror(machine, "invalid SetRenderTarget receiver");
     sq_getinstanceup(machine, 2, &target, nullptr);
-    field<int32_t>(address(player)+76) = address(target);
+    kinoko::native::RecordView<kinoko::act::RuntimeRecord>(player).set(
+        &kinoko::act::RuntimeRecord::render_target, static_cast<KinokoActResource*>(target));
     sq_pushbool(machine, SQTrue);
     return 1;
 }
@@ -1110,44 +1126,35 @@ extern "C" int32_t kinoko_register_act_script(int32_t script, int32_t object) {
 }
 
 int32_t kinoko_prepare_cact_layer_objects(int32_t vm, int32_t layer,
-                                                 int32_t script_pair[2])
-{
-    int32_t table_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    int32_t old_vm;
-
-    if (vm == 0 || layer == 0 || script_pair == nullptr)
-        return 0;
-
-    /* CActLayer::CActLayer initializes a Sqrat::Table at +0x134 and a
-       Sqrat::Instance at +0x148.  The parser allocates the native layer
-       directly, so establish those two wrappers before publishing it. */
-    old_vm = field<int32_t>(layer + 312);
-    if (field<uint8_t>(layer + 324) != 0 && old_vm != 0) {
-        kinoko_sqrat_release_pair(pointer<SQVM>(old_vm), pointer<int32_t>(layer + 316));
-    }
-    field<int32_t>(layer + 308) = address(kinoko_act_host_symbols()->layer_ref_vtable);
-    field<int32_t>(layer + 312) = vm;
-    field<uint8_t>(layer + 324) = 1;
-    sq_resetobject((HSQOBJECT*)kinoko_pointer(layer + 316));
-    if (!kinoko_sqrat_new_table(pointer<SQVM>(vm), table_pair))
-        return 0;
-    field<int32_t>(layer + 316) = table_pair[0];
-    field<int32_t>(layer + 320) = table_pair[1];
-    kinoko_sqrat_retain_pair(pointer<SQVM>(vm), pointer<const int32_t>(layer + 316));
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), table_pair);
-    script_pair[0] = field<int32_t>(layer + 316);
-    script_pair[1] = field<int32_t>(layer + 320);
-    if (!kinoko_publish_act_script_constants(vm, script_pair))
-        return 0;
-
-    old_vm = field<int32_t>(layer + 332);
-    if (field<uint8_t>(layer + 344) != 0 && old_vm != 0) {
-        kinoko_sqrat_release_pair(pointer<SQVM>(old_vm), pointer<int32_t>(layer + 336));
-    }
-    field<int32_t>(layer + 328) = address(kinoko_act_host_symbols()->layer_layout_vtable);
-    field<int32_t>(layer + 332) = vm;
-    field<uint8_t>(layer + 344) = 1;
-    sq_resetobject((HSQOBJECT*)kinoko_pointer(layer + 336));
+                                         int32_t script_pair[2]) {
+    using namespace kinoko::act;
+    if (!vm || !layer || !script_pair) return 0;
+    auto* machine = pointer<SQVM>(vm);
+    const LayerStorageView storage(pointer<void>(layer));
+    const auto script = storage.view(&LayerStorageRecord::script_object);
+    const auto layout = storage.view(&LayerStorageRecord::layout_object);
+    auto reset = [machine](LayerObjectView object, const void* methods) {
+        auto* old_vm = object.get(&LayerObjectRecord::vm);
+        auto* pair = reinterpret_cast<int32_t*>(object.bytes(&LayerObjectRecord::value));
+        if (object.get(&LayerObjectRecord::owns_reference) && old_vm)
+            kinoko_sqrat_release_pair(old_vm, pair);
+        object.set(&LayerObjectRecord::methods, methods);
+        object.set(&LayerObjectRecord::vm, machine);
+        object.set(&LayerObjectRecord::owns_reference, uint8_t{1});
+        HSQOBJECT empty;
+        sq_resetobject(&empty);
+        std::memcpy(pair, &empty, sizeof empty);
+    };
+    reset(script, kinoko_act_host_symbols()->layer_ref_vtable);
+    std::array<int32_t, 2> table{static_cast<int32_t>(OT_NULL), 0};
+    if (!kinoko_sqrat_new_table(machine, table.data())) return 0;
+    script.set(&LayerObjectRecord::value, table);
+    kinoko_sqrat_retain_pair(machine, reinterpret_cast<const int32_t*>(script.bytes(&LayerObjectRecord::value)));
+    kinoko_sqrat_release_pair(machine, table.data());
+    const auto value = script.get(&LayerObjectRecord::value);
+    std::memcpy(script_pair, value.data(), sizeof value);
+    if (!kinoko_publish_act_script_constants(vm, script_pair)) return 0;
+    reset(layout, kinoko_act_host_symbols()->layer_layout_vtable);
     return 1;
 }
 
@@ -1213,13 +1220,27 @@ int32_t kinoko_bind_original_layout(int32_t layout, bool map) {
     kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);
     kinoko_sqrat_object_release((void *)(root));
     if (!ok) return static_cast<int32_t>(E_FAIL);
+    using namespace kinoko::act;
+    const auto aliases = LayerStorageView(pointer<void>(layer)).view(&LayerStorageRecord::association)
+        .view(&LayerAssociationRecord::property_aliases);
     if (map) {
         const kinoko::map::LayoutView view(pointer<KinokoActLayout>(layout));
-        field<float*>(layer + 52) = reinterpret_cast<float*>(view.bytes(&kinoko::map::LayoutRecord::alpha));
-        field<int32_t*>(layer + 56) = reinterpret_cast<int32_t*>(view.bytes(&kinoko::map::LayoutRecord::blend));
+        aliases.set(&LayerPropertyAliases::alpha, reinterpret_cast<float*>(view.bytes(&kinoko::map::LayoutRecord::alpha)));
+        aliases.set(&LayerPropertyAliases::blend, reinterpret_cast<int32_t*>(view.bytes(&kinoko::map::LayoutRecord::blend)));
     } else {
-        for (int offset = 4; offset <= 68; offset += 4)
-            field<int32_t>(layer + offset) = layout + 232 + offset;
+        const kinoko::native::RecordView<Layout2DRecord> view(pointer<void>(layout));
+        const auto rotation = view.view(&Layout2DRecord::rotation);
+        const auto pivot = view.view(&Layout2DRecord::rotation_pivot);
+        const auto scale = view.view(&Layout2DRecord::scale);
+        const auto scale_pivot = view.view(&Layout2DRecord::scale_pivot);
+        const LayerPropertyAliases values{
+            reinterpret_cast<float*>(rotation.bytes(&Position3::x)), reinterpret_cast<float*>(rotation.bytes(&Position3::y)), reinterpret_cast<float*>(rotation.bytes(&Position3::z)),
+            reinterpret_cast<float*>(pivot.bytes(&Position3::x)), reinterpret_cast<float*>(pivot.bytes(&Position3::y)), reinterpret_cast<float*>(pivot.bytes(&Position3::z)),
+            reinterpret_cast<float*>(scale.bytes(&Position3::x)), reinterpret_cast<float*>(scale.bytes(&Position3::y)), reinterpret_cast<float*>(scale.bytes(&Position3::z)),
+            reinterpret_cast<float*>(scale_pivot.bytes(&Position3::x)), reinterpret_cast<float*>(scale_pivot.bytes(&Position3::y)), reinterpret_cast<float*>(scale_pivot.bytes(&Position3::z)),
+            reinterpret_cast<float*>(view.bytes(&Layout2DRecord::alpha)), reinterpret_cast<int32_t*>(view.bytes(&Layout2DRecord::blend)),
+            reinterpret_cast<int32_t*>(view.bytes(&Layout2DRecord::red)), reinterpret_cast<int32_t*>(view.bytes(&Layout2DRecord::green)), reinterpret_cast<int32_t*>(view.bytes(&Layout2DRecord::blue))};
+        kinoko::legacy::store(aliases.data(), values);
     }
     return 0;
 }
@@ -1505,7 +1526,7 @@ int32_t kinoko_publish_c2dmaplayout_class(int32_t vm, int32_t root,
 }
 
 // 433C90: cdecl, one VM argument, HRESULT result (IDA 4341ED: retn).
-static int32_t kinoko_register_map_layout_class(SQVM* machine) {
+extern "C" int32_t kinoko_register_map_layout_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
         int32_t klass[2] = {static_cast<int32_t>(OT_NULL), 0};
         const auto ok = kinoko_publish_c2dmaplayout_class(vm, root, klass);
@@ -1513,9 +1534,7 @@ static int32_t kinoko_register_map_layout_class(SQVM* machine) {
         return ok;
     });
 }
-extern "C" int32_t function_433c90(int32_t vm) {
-    return kinoko_register_map_layout_class(pointer<SQVM>(vm));
-}
+
 
 int32_t kinoko_resource_get_chip_info(int32_t vm) {
     int32_t resource = 0, id = 0;
@@ -1587,7 +1606,7 @@ int32_t kinoko_publish_chip_resource_class(int32_t vm, int32_t root, int32_t out
 
 // Reconstructed C callers use this cdecl port; the virtual slot has its own
 // ECX/stack-cleanup adapter matching original 42F350 (retn 4).
-static int32_t kinoko_register_chip_resource_class(SQVM* machine) {
+extern "C" int32_t kinoko_register_chip_resource_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
         int32_t klass[2] = {static_cast<int32_t>(OT_NULL), 0};
         const auto ok = kinoko_publish_chip_resource_class(vm, root, klass);
@@ -1595,9 +1614,7 @@ static int32_t kinoko_register_chip_resource_class(SQVM* machine) {
         return ok;
     });
 }
-extern "C" int32_t function_42f350(int32_t vm) {
-    return kinoko_register_chip_resource_class(pointer<SQVM>(vm));
-}
+
 
 extern "C" int32_t __fastcall kinoko_method_register_chip_resource(
     int32_t receiver, void *, int32_t vm) {
@@ -1799,20 +1816,21 @@ int32_t kinoko_bind_act_resource_object(int32_t resource_ptr)
     kinoko_trace_i32("450950:bind-new-link", link);
     kinoko_trace("450950:bind-link-stored");
     if (!new_holder) return 0; // new document remains runtime-owned on allocation failure
-    const int32_t act = address(runtime.get(&RuntimeRecord::active_document));
-
-    /* Exact field map from the original 44FF90(resource, act) call. */
-    field<int32_t>(resource_ptr + 108) = act + 72;
-    field<int32_t>(resource_ptr + 112) = act + 80;
-    field<int32_t>(resource_ptr + 116) = act + 76;
-    field<int32_t>(resource_ptr + 120) = act + 84;
-    field<int32_t>(resource_ptr + 124) = act + 88;
-    field<int32_t>(resource_ptr + 128) = act + 92;
-    field<int32_t>(resource_ptr + 132) = act + 96;
-    field<int32_t>(resource_ptr + 136) = act + 4;
-    field<int32_t>(resource_ptr + 140) = act + 8;
-    field<int32_t>(resource_ptr + 144) = act + 12;
-    field<int32_t>(resource_ptr + 148) = act + 16;
+    const DocumentView document(runtime.get(&RuntimeRecord::active_document));
+    // Original 44FF90: these are borrowed aliases into the owned clone.
+    const StagePropertyAliases aliases{
+        reinterpret_cast<int32_t*>(document.bytes(&DocumentRecord::margin_left)),
+        reinterpret_cast<int32_t*>(document.bytes(&DocumentRecord::margin_right)),
+        reinterpret_cast<int32_t*>(document.bytes(&DocumentRecord::margin_top)),
+        reinterpret_cast<int32_t*>(document.bytes(&DocumentRecord::margin_bottom)),
+        reinterpret_cast<float*>(document.bytes(&DocumentRecord::offset_x)),
+        reinterpret_cast<float*>(document.bytes(&DocumentRecord::offset_y)),
+        document.bytes(&DocumentRecord::visible),
+        reinterpret_cast<int32_t*>(document.bytes(&DocumentRecord::resolution_ms)),
+        reinterpret_cast<int32_t*>(document.bytes(&DocumentRecord::screen_width)),
+        reinterpret_cast<int32_t*>(document.bytes(&DocumentRecord::screen_height)),
+        reinterpret_cast<kinoko::legacy::StringRecord*>(document.bytes(&DocumentRecord::name))};
+    runtime.set(&RuntimeRecord::stage_properties, aliases);
     kinoko_trace("450950:bind-fields-stored");
     return 1;
 }
@@ -2274,8 +2292,15 @@ extern "C" int32_t __fastcall kinoko_method_register_string_layout(int32_t layou
     kinoko_sqrat_release_pair(pointer<SQVM>(vm), script);kinoko_sqrat_release_pair(pointer<SQVM>(vm), outer);
     kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);kinoko_sqrat_object_release((void *)(root));
     if(!ok) return E_FAIL;
-    field<int32_t>(layer+52)=layout+152;field<int32_t>(layer+56)=layout+156;
-    field<int32_t>(layer+60)=layout+96;field<int32_t>(layer+64)=layout+100;field<int32_t>(layer+68)=layout+104;
+    using namespace kinoko::act;
+    const auto aliases = LayerStorageView(pointer<void>(layer)).view(&LayerStorageRecord::association)
+        .view(&LayerAssociationRecord::property_aliases);
+    const kinoko::native::RecordView<StringLayoutRecord> text(pointer<void>(layout));
+    aliases.set(&LayerPropertyAliases::alpha, reinterpret_cast<float*>(text.bytes(&StringLayoutRecord::alpha)));
+    aliases.set(&LayerPropertyAliases::blend, reinterpret_cast<int32_t*>(text.bytes(&StringLayoutRecord::blend)));
+    aliases.set(&LayerPropertyAliases::red, reinterpret_cast<int32_t*>(text.bytes(&StringLayoutRecord::red)));
+    aliases.set(&LayerPropertyAliases::green, reinterpret_cast<int32_t*>(text.bytes(&StringLayoutRecord::green)));
+    aliases.set(&LayerPropertyAliases::blue, reinterpret_cast<int32_t*>(text.bytes(&StringLayoutRecord::blue)));
     return 0;
 }
 

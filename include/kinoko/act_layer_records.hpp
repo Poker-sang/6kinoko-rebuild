@@ -16,7 +16,7 @@ struct LayerKeys {
     legacy::StringRecord name;
     std::array<uint8_t, 8> unknown136;
     std::array<uint32_t, 3> position;
-    std::array<uint8_t, 12> unknown156;
+    std::array<uint8_t, 12> origin_bits;
     std::array<uint32_t, 3> previous_position;
     struct KeyNode *key_head;
     int32_t key_count;

@@ -130,16 +130,6 @@ CameraTarget camera_receiver(SQVM *vm) {
 
 } // namespace
 
-extern "C" int32_t function_466770(int32_t *output, int32_t vm,
-                                      int32_t name, int32_t parent) {
-    return create_class(reinterpret_cast<ObjectStorage *>(output), pointer<SQVM>(vm),
-        pointer<const char>(name), pointer<const char>(parent), kinoko_camera_binding_type());
-}
-extern "C" int32_t function_46f200(int32_t *output, int32_t vm,
-                                      int32_t name, int32_t parent) {
-    return create_class(reinterpret_cast<ObjectStorage *>(output), pointer<SQVM>(vm),
-        pointer<const char>(name), pointer<const char>(parent), kinoko_map_binding_type());
-}
 
 namespace {
 int32_t kinoko_call_camera_update(SQVM *vm) {
@@ -212,6 +202,4 @@ extern "C" int32_t kinoko_camera_update_entry(int32_t vm) {
     return kinoko_call_camera_update(pointer<SQVM>(vm));
 }
 extern "C" int32_t kinoko_register_camera_binding(void) { return register_camera_binding_impl(); }
-extern "C" int32_t function_4669d0(void) { return kinoko_register_camera_binding(); }
 extern "C" int32_t kinoko_register_map_binding(void) { return register_map_binding_impl(); }
-extern "C" int32_t function_46fac0(void) { return kinoko_register_map_binding(); }

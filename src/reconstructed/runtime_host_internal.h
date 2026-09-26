@@ -339,29 +339,29 @@ int32_t kinoko_host_register_act_script_abi(int32_t a1, int32_t a2);
 
 int32_t kinoko_host_construct_layer_abi(int32_t a1);
 
-int32_t function_41eff0(int32_t a1);
+int32_t kinoko_register_cact_layer_class(struct SQVM* a1);
 
 int32_t *kinoko_c2d_layout_type(void);
 
-int32_t function_42b6d0(int32_t a1);
+int32_t kinoko_register_c2dlayout_class(struct SQVM* a1);
 
 int32_t *kinoko_chip_resource_type(void);
 
-int32_t function_42f350(int32_t a1);
+int32_t kinoko_register_chip_resource_class(struct SQVM* a1);
 
 int32_t *kinoko_map_layout_type(void);
 
-int32_t function_433c90(int32_t a1);
+int32_t kinoko_register_map_layout_class(struct SQVM* a1);
 
 int32_t kinoko_script_dprint_noop(void);
 
 int32_t *kinoko_texture_resource_type(void);
 
-int32_t function_446520(int32_t a1);
+int32_t kinoko_register_texture_resource_class(struct SQVM* a1);
 
 int32_t *kinoko_render_target_type(void);
 
-int32_t function_4495a0(int32_t a1);
+int32_t kinoko_register_render_target_class(struct SQVM* a1);
 
 int32_t __fastcall kinoko_color_destroy(int32_t receiver, void* unused_edx, char flags);
 
@@ -373,7 +373,7 @@ int32_t kinoko_host_initialize_camera(void);
 
 int32_t kinoko_camera_class_copy_abi(int32_t a1, int32_t a2);
 
-int32_t function_4669d0(void);
+int32_t kinoko_register_camera_binding(void);
 
 int32_t kinoko_host_register_collision_map_abi(int32_t a1);
 
@@ -381,7 +381,7 @@ int32_t kinoko_host_append_render_item(int32_t * a1);
 
 int32_t kinoko_host_find_map_layout_abi(int32_t a1);
 
-int32_t function_46fac0(void);
+int32_t kinoko_register_map_binding(void);
 
 int32_t kinoko_host_create_map_layer_abi(int32_t a1);
 

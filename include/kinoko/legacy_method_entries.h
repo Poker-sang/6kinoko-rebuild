@@ -65,7 +65,7 @@ int32_t __fastcall kinoko_method_clone_chip_resource(int32_t receiver, void* unu
 int32_t __fastcall kinoko_method_clone_texture_resource(int32_t receiver, void* unused_edx);
 int32_t __fastcall kinoko_method_clone_render_target(int32_t receiver, void* unused_edx);
 
-// function_42f350
+// kinoko_register_chip_resource_class
 int32_t __fastcall kinoko_method_register_chip_resource(int32_t receiver, void* unused_edx, int32_t vm);
 
 // retdec_cact_destructor_bridge

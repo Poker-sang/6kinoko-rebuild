@@ -127,11 +127,4 @@ extern "C" KinokoStageNode *kinoko_stage_list_append(KinokoStageOwner *owner) {
     stage_list_count() = static_cast<int32_t>(stages()->size());
     return &*position;
 }
-static int32_t kinoko_clear_stage_nodes() {
-    if (auto* list = stages()) list->clear();
-    stage_list_count() = 0;
-    return stage_list_word();
-}
-extern "C" int32_t function_4d47f0() {
-    return kinoko_clear_stage_nodes();
-}
+

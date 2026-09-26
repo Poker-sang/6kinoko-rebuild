@@ -95,7 +95,7 @@ extern "C" int32_t __fastcall kinoko_method_clone_act_layer(int32_t source, void
         if (output.length()!=input.length()) return 0;
         destination.set(&LayerStorageRecord::visibility_flags, original.get(&LayerStorageRecord::visibility_flags));
         destination.set(&LayerStorageRecord::position, original.get(&LayerStorageRecord::position));
-        destination.set(&LayerStorageRecord::unknown156, original.get(&LayerStorageRecord::unknown156));
+        destination.set(&LayerStorageRecord::origin_bits, original.get(&LayerStorageRecord::origin_bits));
         destination.set(&LayerStorageRecord::previous_position, original.get(&LayerStorageRecord::previous_position));
         const ScriptTextView target_script(destination.bytes(&LayerStorageRecord::script));
         const ScriptTextView source_script(original.bytes(&LayerStorageRecord::script));

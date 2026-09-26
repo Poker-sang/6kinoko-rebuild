@@ -1512,10 +1512,10 @@ static int test_delegate_lifetime(int32_t vm, int32_t *root) {
         CHECK(userdata && kinoko_sq_set_object_delegate(((SQDelegable*)(uintptr_t)(uint32_t)((userdata))), ((SQTable*)(uintptr_t)(uint32_t)((first[1])))));
         *(int32_t *)(intptr_t)(userdata+8)=PTR(weak);
         CHECK(*(int32_t *)(intptr_t)(first[1]+4) == first_refs+1);
-        kinoko_call_thiscall0_result((void *)(intptr_t)userdata, function_48be70);
+        kinoko_sq_finalize_userdata_entry((SQUserData*)(uintptr_t)userdata, NULL);
         CHECK(*(int32_t *)(intptr_t)(userdata+24)==0 && weak[4]==userdata);
         CHECK(kinoko_sq_set_object_delegate(((SQDelegable*)(uintptr_t)(uint32_t)((userdata))), ((SQTable*)(uintptr_t)(uint32_t)((first[1])))));
-        kinoko_call_thiscall1_result((void *)(intptr_t)userdata, function_48bf50, 0);
+        kinoko_sq_destroy_userdata_entry((SQUserData*)(uintptr_t)userdata, NULL, 0);
         CHECK(weak[3]==kinoko_null_object_type && weak[4]==0);
         CHECK(*(int32_t *)(intptr_t)(first[1]+4)==first_refs);
         free((void *)(intptr_t)userdata);
@@ -2041,8 +2041,8 @@ static int test_map_transition(int32_t vm, int32_t *root) {
     kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(kinoko_script_root_storage)));
     kinoko_sqplus_object_assign((void *)(intptr_t)(PTR(kinoko_script_root_storage)), (const void *)(intptr_t)(PTR(root+1)));
     CHECK(kinoko_map_manager_construct((KinokoMapManager *)(intptr_t)map_state));
-    function_46fac0();
-    function_4669d0();
+    kinoko_register_map_binding();
+    kinoko_register_camera_binding();
     {
         int32_t class_environment[3];
         CHECK(execute_source(vm,root+2,"classFixture <- {Actor={},Camera=Camera};"));
@@ -3739,7 +3739,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(kinoko_script_root_storage)));
     kinoko_sqplus_object_assign((void *)(intptr_t)(PTR(kinoko_script_root_storage)), (const void *)(intptr_t)(PTR(root+1)));
     CHECK(kinoko_map_manager_construct((KinokoMapManager *)(intptr_t)map_state));
-    function_46fac0();
+    kinoko_register_map_binding();
     CHECK((int32_t)(intptr_t)(kinoko_sqplus_object_new_instance((void *)(intptr_t)(PTR(map_object)), (const void *)(intptr_t)(PTR(kinoko_map_class_storage)))));
     kinoko_sqplus_object_assign((void *)(intptr_t)(map_state), (const void *)(intptr_t)(PTR(map_object)));
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(map_object))));
@@ -3835,7 +3835,7 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(kinoko_script_root_storage)));
         kinoko_sqplus_object_assign((void *)(intptr_t)(PTR(kinoko_script_root_storage)), (const void *)(intptr_t)(PTR(root+1)));
         CHECK(kinoko_map_manager_construct((KinokoMapManager *)(intptr_t)map_state));
-        function_46fac0();
+        kinoko_register_map_binding();
         CHECK((int32_t)(intptr_t)(kinoko_sqplus_object_new_instance((void *)(intptr_t)(PTR(map_object)), (const void *)(intptr_t)(PTR(kinoko_map_class_storage)))));
         kinoko_sqplus_object_assign((void *)(intptr_t)(map_state), (const void *)(intptr_t)(PTR(map_object)));
         (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(map_object))));
@@ -4703,7 +4703,7 @@ static int test_table_serialization(int32_t vm, int32_t *root) {
 static int test_camera_map_bindings(int32_t vm, int32_t *root) {
     const int top=sq_gettop(kinoko_vm(vm));
     int32_t camera[128]={0}, map[32]={0};
-    function_4669d0(); function_46fac0();
+    kinoko_register_camera_binding(); kinoko_register_map_binding();
     const char *names[]={"Camera","Map"}, *slots[]={"moduleCamera","moduleMap"};
     int32_t pointers[]={PTR(camera),PTR(map)};
     for(int i=0;i<2;++i) {
@@ -4729,9 +4729,9 @@ static int test_camera_map_bindings(int32_t vm, int32_t *root) {
 static int test_map_registration(int32_t vm, int32_t *root) {
     const int top = sq_gettop(kinoko_vm(vm));
     int32_t layout[84] = {0}, chips[16] = {0};
-    CHECK(function_433c90(0) == (int32_t)E_INVALIDARG);
-    CHECK(function_433c90(vm) == 0);
-    CHECK(function_433c90(vm) == 0);
+    CHECK(kinoko_register_map_layout_class((struct SQVM*)(uintptr_t)(0)) == (int32_t)E_INVALIDARG);
+    CHECK(kinoko_register_map_layout_class((struct SQVM*)(uintptr_t)(vm)) == 0);
+    CHECK(kinoko_register_map_layout_class((struct SQVM*)(uintptr_t)(vm)) == 0);
     const char *classes[] = {"C2DMapLayout", "ChipLayout"};
     const char *slots[] = {"testMapLayout", "testChipLayout"};
     void *objects[] = {layout, chips};
@@ -5570,9 +5570,9 @@ static int test_chip_resource_registration(int32_t vm, int32_t *root) {
     chip.chip_id = 7;
     data.chip_count = 1; data.chips = &chip;
     resource[16] = PTR(&data);
-    CHECK(function_42f350(0) == (int32_t)E_INVALIDARG);
+    CHECK(kinoko_register_chip_resource_class((struct SQVM*)(uintptr_t)(0)) == (int32_t)E_INVALIDARG);
     CHECK(kinoko_call_thiscall1_result(resource, (void*)kinoko_chip_resource_methods_storage.register_class, vm) == 0);
-    CHECK(function_42f350(vm) == 0);
+    CHECK(kinoko_register_chip_resource_class((struct SQVM*)(uintptr_t)(vm)) == 0);
     sq_pushroottable(kinoko_vm(vm));
     sq_pushstring(kinoko_vm(vm), "testChipResource", -1);
     sq_pushstring(kinoko_vm(vm), "CActResourceChip", -1);
@@ -5602,11 +5602,11 @@ static int test_texture_resource_registration(int32_t vm, int32_t *root) {
     texture_vtable.Release = count_texture_release;
     texture[0] = PTR(&texture_vtable);
     resource[0] = PTR(&kinoko_texture_resource_methods_storage); resource[7] = 15; resource[15] = 15;
-    CHECK(function_446520(0) == (int32_t)E_INVALIDARG);
-    CHECK(function_4495a0(0) == (int32_t)E_INVALIDARG);
+    CHECK(kinoko_register_texture_resource_class((struct SQVM*)(uintptr_t)(0)) == (int32_t)E_INVALIDARG);
+    CHECK(kinoko_register_render_target_class((struct SQVM*)(uintptr_t)(0)) == (int32_t)E_INVALIDARG);
     CHECK(kinoko_call_thiscall1_result(resource, (void*)kinoko_texture_resource_methods_storage.register_class, vm) == 0);
     CHECK(kinoko_call_thiscall1_result(resource, (void*)kinoko_render_target_methods_storage.register_class, vm) == 0);
-    CHECK(function_446520(vm) == 0 && function_4495a0(vm) == 0);
+    CHECK(kinoko_register_texture_resource_class((struct SQVM*)(uintptr_t)(vm)) == 0 && kinoko_register_render_target_class((struct SQVM*)(uintptr_t)(vm)) == 0);
     const char *slots[] = {"textureResourceA", "textureResourceB"};
     for (int i = 0; i < 2; ++i) {
         sq_pushroottable(kinoko_vm(vm));
@@ -5948,11 +5948,11 @@ int main(int argc, char **argv) {
     CHECK(test_map_lazy_binding(vm, root) == 0);
     {
         int32_t before = kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm))));
-        CHECK(function_41eff0(0) == (int32_t)E_INVALIDARG);
-        CHECK(function_41eff0(vm) == 0);
-        CHECK(function_41eff0(vm) == 0);
-        CHECK(function_42b6d0(0) == (int32_t)E_INVALIDARG);
-        CHECK(function_42b6d0(vm) == 0);
+        CHECK(kinoko_register_cact_layer_class((struct SQVM*)(uintptr_t)(0)) == (int32_t)E_INVALIDARG);
+        CHECK(kinoko_register_cact_layer_class((struct SQVM*)(uintptr_t)(vm)) == 0);
+        CHECK(kinoko_register_cact_layer_class((struct SQVM*)(uintptr_t)(vm)) == 0);
+        CHECK(kinoko_register_c2dlayout_class((struct SQVM*)(uintptr_t)(0)) == (int32_t)E_INVALIDARG);
+        CHECK(kinoko_register_c2dlayout_class((struct SQVM*)(uintptr_t)(vm)) == 0);
         /* Drop the script root and collect before replacing the native cached
            class: source Sqrat references must keep the old class/tables alive. */
         sq_pushroottable(kinoko_vm(vm));
@@ -5960,8 +5960,8 @@ int main(int argc, char **argv) {
         CHECK(SQ_SUCCEEDED(sq_deleteslot(kinoko_vm(vm), -2, SQFalse)));
         sq_pop(kinoko_vm(vm), 1);
         sq_collectgarbage(kinoko_vm(vm));
-        CHECK(function_42b6d0(vm) == 0);
-        CHECK(function_42b6d0(vm) == 0);
+        CHECK(kinoko_register_c2dlayout_class((struct SQVM*)(uintptr_t)(vm)) == 0);
+        CHECK(kinoko_register_c2dlayout_class((struct SQVM*)(uintptr_t)(vm)) == 0);
         CHECK(kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm)))) == before);
         sq_pushroottable(kinoko_vm(vm));
         sq_pushstring(kinoko_vm(vm), "C2DLayout", -1);
