@@ -14,7 +14,7 @@ static int32_t __fastcall act_file_delete_probe(int32_t self, void *unused, unsi
     ++act_file_deletes;
     if (exclusive == INVALID_HANDLE_VALUE) act_file_close_error = 1;
     else CloseHandle(exclusive);
-    return kinoko_method_destroy_act(self, unused, flags);
+    return (int32_t)(intptr_t)kinoko_method_destroy_act((KinokoActDocument*)(uintptr_t)(self), unused, flags);
 }
 static int act_file_write(const char *path, const void *bytes, DWORD size) {
     DWORD written = 0;
@@ -54,7 +54,7 @@ static int test_act_document_file_lifetime(void) {
     *(int32_t *)(intptr_t)key = PTR(kinoko_act_host_symbols()->key_vtable);
     *(int32_t *)(intptr_t)(key + 4) = layout;
     *(int32_t *)(intptr_t)(key + 28) = 15;
-    CHECK(kinoko_act_append_list(layer + 180, key));
+    CHECK(kinoko_act_append_list((void*)(uintptr_t)(layer + 180), (void*)(uintptr_t)(key)));
     ++*(int32_t *)(intptr_t)(layer + 184);
     kinoko_string_assign_cstr((int32_t *)(intptr_t)(layer + 112),
         "heap-owned layer from generated ACT");
@@ -64,7 +64,7 @@ static int test_act_document_file_lifetime(void) {
     memcpy(encoded + 19, stream.bytes, stream.size);
     const DWORD total = 19 + stream.size;
     CHECK(act_file_write(valid_path, encoded, total));
-    kinoko_destroy_cact_with_flags(PTR(source), 1);
+    (int32_t)(intptr_t)kinoko_destroy_cact_with_flags((KinokoActDocument*)(uintptr_t)(PTR(source)), 1);
 
     /* Observe the real virtual deleting destructor, forwarding to its normal
        implementation. An exclusive file open proves the reader closed first. */

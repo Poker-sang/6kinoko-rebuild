@@ -75,7 +75,7 @@ std::unordered_set<KinokoActResource*> cloned_texture_owners;
 KinokoActResource* clone_resource(KinokoActResource* source, const void* vtable, bool chip) {
     if (!source) return 0;
     auto destroy=[](unsigned char* value) {
-        if (value) kinoko_destroy_cact_resource(legacy_address(value));
+        if (value) kinoko_destroy_cact_resource((KinokoActResource*)(uintptr_t)(legacy_address(value)));
     };
     std::unique_ptr<unsigned char,decltype(destroy)> owned(
         static_cast<unsigned char*>(std::calloc(1,100)),destroy);

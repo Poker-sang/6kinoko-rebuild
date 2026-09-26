@@ -64,7 +64,7 @@ static int test_act_virtual_clone(void) {
         key[0] = PTR(&kinoko_act_key_methods_storage); key[7] = 15;
         key[1] = PTR(calloc(1, 316)); CHECK(key[1]);
         CHECK((int32_t)(intptr_t)kinoko_construct_c2dlayout((KinokoActLayout*)(uintptr_t)(key[1])));
-        CHECK(kinoko_act_append_list(layer + 180, PTR(key)));
+        CHECK(kinoko_act_append_list((void*)(uintptr_t)(layer + 180), (void*)(uintptr_t)(PTR(key))));
         *(int32_t *)(intptr_t)(layer + 184) = 1;
         kinoko_act_array_append((void*)(uintptr_t)(PTR(source) + 224), (void*)(uintptr_t)(0));
         kinoko_act_array_append((void*)(uintptr_t)(PTR(source) + 224), (void*)(uintptr_t)(PTR(resource)));
@@ -111,9 +111,9 @@ static int test_act_virtual_clone(void) {
         CHECK(*(uint8_t *)(intptr_t)(copied_resource + 36) == 1);
         CHECK(*(uint8_t *)(intptr_t)(copied_layer + 305) == 1);
         CHECK(strcmp(*(const char **)(intptr_t)(copied_layer + 296), compiled_text) == 0);
-        kinoko_destroy_cact_with_flags(PTR(copy), 1);
+        (int32_t)(intptr_t)kinoko_destroy_cact_with_flags((KinokoActDocument*)(uintptr_t)(PTR(copy)), 1);
         CHECK(strcmp((const char *)(intptr_t)source[48], text) == 0);
-        kinoko_destroy_cact_object(PTR(source));
+        kinoko_destroy_cact_object((KinokoActDocument*)(uintptr_t)(PTR(source)));
     }
     puts("PASS: original document constructor, resource/layer/key/layout virtual order, one early layout bind, compact null slots and script text semantics");
     return 0;

@@ -34,7 +34,7 @@ struct kinoko_native_view_property {
 extern "C" {
 #endif
 
-int32_t kinoko_act_append_list(int32_t list_slot, int32_t value);
+int32_t kinoko_act_append_list(void* list_slot, void* value);
 int32_t __fastcall kinoko_delete_layout_sprite(int32_t sprite, void *unused, int32_t flags);
 void kinoko_act_free_map_records(int32_t layout);
 int32_t kinoko_act_load(int32_t this_ptr, KinokoArchiveReader* reader_ptr,
@@ -53,10 +53,9 @@ const void* kinoko_act_timeline_vtable(void);
 KinokoActTimeline* kinoko_act_new_timeline(void);
 int32_t kinoko_act_load_timeline(KinokoActTimeline* timeline, KinokoArchiveReader*  reader, int32_t version);
 KinokoActLayer* kinoko_act_make_layer(void);
-int32_t kinoko_construct_cact_layer(int32_t layer, int32_t vm);
 KinokoActLayout* kinoko_construct_c2dlayout(KinokoActLayout* layout);
 KinokoActLayout* kinoko_act_make_layout(KinokoArchiveReader* reader_ptr);
-int32_t kinoko_act_make_list(int32_t *list_slot);
+int32_t kinoko_act_make_list(void* list_slot);
 KinokoActLayout* kinoko_act_make_map_layout(KinokoArchiveReader* reader_ptr);
 KinokoActResource* kinoko_act_make_resource(KinokoArchiveReader* reader_ptr, uint32_t type);
 int32_t kinoko_act_prepare_vector(int32_t object_ptr,
@@ -84,15 +83,14 @@ int32_t kinoko_c2dmaplayout_set_layer_impl(int32_t layout,
                                                    int32_t layer);
 int32_t kinoko_cact_associate_resource(struct SQVM* vm);
 void* kinoko_construct_cact_script(void* this_ptr);
-void kinoko_destroy_cact_layer(int32_t layer);
-void kinoko_destroy_cact_key(int32_t key);
-void kinoko_destroy_cact_list(int32_t *list_slot);
-void kinoko_destroy_cact_object(int32_t object_ptr);
-void kinoko_destroy_cact_resource(int32_t resource);
+void kinoko_destroy_cact_key(void* key);
+void kinoko_destroy_cact_list(void* list_slot);
+void kinoko_destroy_cact_object(KinokoActDocument* object_ptr);
+void kinoko_destroy_cact_resource(KinokoActResource* resource);
 int32_t kinoko_register_act_script(int32_t script, int32_t object);
-void kinoko_forget_act_script(int32_t script);
-void kinoko_destroy_cact_script(int32_t script_ptr);
-int32_t kinoko_destroy_cact_with_flags(int32_t object_ptr,
+void kinoko_forget_act_script(void* script);
+void kinoko_destroy_cact_script(void* script_ptr);
+void* kinoko_destroy_cact_with_flags(KinokoActDocument* object_ptr,
                                                unsigned char flags);
 int32_t kinoko_execute_act_callback(int32_t script_ptr,
                                             int32_t offset,

@@ -39,12 +39,12 @@ void* kinoko_construct_cact_script(void* this_ptr)
     return this_ptr;
 }
 
-void kinoko_destroy_cact_script(int32_t script_ptr)
+void kinoko_destroy_cact_script(void* script_ptr)
 {
     using namespace kinoko::act;
     if (!script_ptr) return;
-    kinoko_forget_act_script(script_ptr);
-    const ScriptStorageView script(pointer<void>(script_ptr));
+    kinoko_forget_act_script((void*)(uintptr_t)(script_ptr));
+    const ScriptStorageView script(script_ptr);
     script.set(&ScriptStorageRecord::methods, kinoko_act_host_symbols()->script_vtable);
     // Reverse callback release, then payload and filename: keep the order.
     for (const auto member : {&ScriptStorageRecord::release, &ScriptStorageRecord::update,

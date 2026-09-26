@@ -64,7 +64,7 @@ extern "C" int kinoko_test_act_ownership_chain() {
         kinoko_act_document_initialize(reinterpret_cast<KinokoActDocument *>(documents+i));
         kinoko_act_array_append((void*)(uintptr_t)(address(&documents[i].layers)), (void*)(uintptr_t)(address(i?&last:&first)));
     }
-    kinoko_destroy_cact_with_flags(address(documents),3);
+    (int32_t)(intptr_t)kinoko_destroy_cact_with_flags((KinokoActDocument*)(uintptr_t)(address(documents)), 3);
     REQUIRE((events==std::vector<int>{1,2,4,3}));
 
     // Key owns a layout whose slot 4 is deliberately absent (not a CAct dtor).
@@ -81,8 +81,8 @@ extern "C" int kinoko_test_act_ownership_chain() {
     observed_layer=storage;
     storage->script.bytes=std::malloc(8);storage->script.size=8;
     Payload key_payload{payload_methods,6},timeline{payload_methods,7};
-    REQUIRE(kinoko_act_append_list(address(&storage->keys.head),address(&key_payload)));
-    REQUIRE(kinoko_act_append_list(address(&storage->timelines.head),address(&timeline)));
+    REQUIRE(kinoko_act_append_list((void*)(uintptr_t)(address(&storage->keys.head)), (void*)(uintptr_t)(address(&key_payload))));
+    REQUIRE(kinoko_act_append_list((void*)(uintptr_t)(address(&storage->timelines.head)), (void*)(uintptr_t)(address(&timeline))));
     dispose_owned(reinterpret_cast<KinokoActLayer *>(storage));
     observed_layer=nullptr;
     REQUIRE((events==std::vector<int>{1,2,4,3,5,6,7}));

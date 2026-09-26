@@ -1,4 +1,6 @@
 #include "kinoko/act_ownership.hpp"
+#include "kinoko/act_layer_lifecycle.h"
+#include "kinoko/act_layout_records.hpp"
 #include "kinoko/act_resource_records_io.hpp"
 #include "kinoko/render_target.h"
 #include "kinoko/legacy_string.h"
@@ -56,63 +58,64 @@ using kinoko::legacy::address;
 using kinoko::legacy::field;
 
 
-extern "C" int32_t __fastcall kinoko_method_delete_act_script(int32_t script, void *) {
+extern "C" int32_t __fastcall kinoko_method_delete_act_script(void* script, void *) {
     if (script) {
-        kinoko_destroy_cact_script(script);
-        std::free(pointer<void>(script));
+        kinoko_destroy_cact_script((void*)(uintptr_t)(script));
+        std::free(script);
     }
     return 0;
 }
 
 namespace {
-void clear_layout(int32_t layout) {
+void clear_layout(KinokoActLayout* layout) {
     if (!layout) return;
-    if (field<int32_t>(layout)==address(kinoko_string_layout_methods())) { kinoko_clear_string_layout((KinokoStringLayout*)(uintptr_t)(layout));return; }
-    if (field<int32_t>(layout)==address(kinoko_act_host_symbols()->map_layout_vtable)) {
-        kinoko_clear_map_layout(layout);
-    }
+    const auto methods = kinoko::legacy::load<const void*>(layout);
+    if (methods == kinoko_string_layout_methods()) { kinoko_clear_string_layout(reinterpret_cast<KinokoStringLayout*>(layout)); return; }
+    if (methods == kinoko_act_host_symbols()->map_layout_vtable) kinoko_clear_map_layout(address(layout));
 }
-void clear_key(int32_t value) {
+void clear_key(KinokoActKey* value) {
     if (!value) return;
-    field<int32_t>(value)=address(kinoko_act_host_symbols()->key_vtable);
-    const auto layout=field<int32_t>(value+4);
-    kinoko::act::dispose_owned(pointer<KinokoActLayout>(layout));
-    field<int32_t>(value+4)=0;
-    kinoko_string_destroy(kinoko::act::KeyView(pointer<void>(value)).bytes(&kinoko::act::KeyRecord::script_name));
-    field<uint8_t>(value+8)=0;
-    field<uint32_t>(value+24)=0;
-    field<uint32_t>(value+28)=15;
+    using namespace kinoko::act;
+    const KeyView key(value);
+    key.set(&KeyRecord::methods, kinoko_act_host_symbols()->key_vtable);
+    dispose_owned(key.get(&KeyRecord::layout));
+    key.set(&KeyRecord::layout, static_cast<KinokoActLayout*>(nullptr));
+    auto name = key.view(&KeyRecord::script_name);
+    kinoko_string_destroy(name.data());
+    *name.bytes(&kinoko::legacy::StringRecord::characters) = 0;
+    name.set(&kinoko::legacy::StringRecord::length, uint32_t{0});
+    name.set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
 }
 }
-void kinoko_destroy_cact_key(int32_t value) {
+void kinoko_destroy_cact_key(void* value) {
     if (!value) return;
     // The layer's second list owns CActTimeLine, not a key with a layout.
-    if (field<int32_t>(value)==address(kinoko_act_timeline_vtable()))
-        kinoko_native_buffer_destroy((void*)(uintptr_t)(value+12));
-    else clear_key(value);
-    std::free(pointer<void>(value));
+    if (kinoko::legacy::load<const void*>(value)==kinoko_act_timeline_vtable())
+        kinoko_native_buffer_destroy(kinoko::native::RecordView<kinoko::act::TimelineRecord>(value).bytes(&kinoko::act::TimelineRecord::pairs));
+    else clear_key(static_cast<KinokoActKey*>(value));
+    std::free(value);
 }
-extern "C" int32_t __fastcall kinoko_method_destroy_layout(int32_t layout,void*) {
+extern "C" void* __fastcall kinoko_method_destroy_layout(KinokoActLayout* layout,void*) {
     clear_layout(layout);
-    std::free(pointer<void>(layout));
+    std::free(layout);
     return layout;
 }
 
-void kinoko_destroy_cact_list(int32_t *list_slot)
-{
-    if (!list_slot || !*list_slot) return;
-    kinoko_act_list_dispose_payloads(*list_slot);
-    kinoko_act_list_drop_storage(*list_slot);
-    *list_slot = 0;
+void kinoko_destroy_cact_list(void* list_slot) {
+    if (!list_slot) return;
+    auto* head = kinoko::legacy::load<void*>(list_slot);
+    if (!head) return;
+    kinoko_act_list_dispose_payloads(head);
+    kinoko_act_list_drop_storage(head);
+    kinoko::legacy::store(list_slot, static_cast<void*>(nullptr));
 }
 
-
-static void clear_resource(int32_t resource)
+static void clear_resource(KinokoActResource* resource)
 {
     if (resource == 0)
         return;
-    if(field<const void*>(resource)==kinoko::mesh::resource_methods()) {
-        kinoko::mesh::clear_resource(pointer<kinoko::mesh::Resource>(resource));return;
+    if(kinoko::legacy::load<const void*>(resource)==kinoko::mesh::resource_methods()) {
+        kinoko::mesh::clear_resource(reinterpret_cast<kinoko::mesh::Resource*>(resource));return;
     }
     using namespace kinoko::act;
     auto clear_string = [](void *storage) {
@@ -122,8 +125,8 @@ static void clear_resource(int32_t resource)
         text.set(&kinoko::legacy::StringRecord::length, uint32_t{0});
         text.set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
     };
-    if (field<const void *>(resource) == kinoko_act_host_symbols()->chip_resource_vtable) {
-        const ChipResourceFields chip(pointer<void>(resource));
+    if (kinoko::legacy::load<const void*>(resource) == kinoko_act_host_symbols()->chip_resource_vtable) {
+        const ChipResourceFields chip(resource);
         // 42F1B0: loaded path, shared MCD, source name, then base name.
         clear_string(chip.bytes(&ChipResourceRecord::loaded_path));
         if (kinoko_act_release_chip_data((KinokoActResource*)(uintptr_t)(resource)))
@@ -132,11 +135,11 @@ static void clear_resource(int32_t resource)
         clear_string(chip.bytes(&ChipResourceRecord::source_name));
         clear_string(chip.bytes(&ChipResourceRecord::name));
     } else {
-        const TextureResourceFields texture(pointer<void>(resource));
+        const TextureResourceFields texture(resource);
         const auto handle = texture.get(&TextureResourceRecord::texture);
         const bool borrowed = texture.get(&TextureResourceRecord::borrows_texture) != 0;
         // 449360 resets the device target before releasing an owned target.
-        if (!borrowed && handle && field<const void *>(resource) == kinoko_act_host_symbols()->render_target_vtable)
+        if (!borrowed && handle && kinoko::legacy::load<const void*>(resource) == kinoko_act_host_symbols()->render_target_vtable)
             kinoko_set_render_target(0);
         // Native clones retain a store reference separately from the original
         // borrowed bit. A borrowed handle without that reference is not ours.
@@ -148,15 +151,15 @@ static void clear_resource(int32_t resource)
     }
 }
 
-void kinoko_destroy_cact_resource(int32_t resource) {
+void kinoko_destroy_cact_resource(KinokoActResource* resource) {
     clear_resource(resource);
-    std::free(pointer<void>(resource));
+    std::free(resource);
 }
 
-void kinoko_destroy_cact_object(int32_t object_ptr)
+void kinoko_destroy_cact_object(KinokoActDocument* object_ptr)
 {
     if (!object_ptr) return;
-    const kinoko::act::DocumentView document(pointer<void>(object_ptr));
+    const kinoko::act::DocumentView document(object_ptr);
     document.set(&kinoko::act::DocumentRecord::vtable,
         kinoko_act_host_symbols()->act_vtable);
 
@@ -176,7 +179,7 @@ void kinoko_destroy_cact_object(int32_t object_ptr)
     kinoko_act_array_destroy((void*)(uintptr_t)(address(document.bytes(&DocumentRecord::resources))));
     kinoko_act_array_destroy((void*)(uintptr_t)(address(document.bytes(&DocumentRecord::layers))));
 
-    kinoko_destroy_cact_script(address(document.bytes(&kinoko::act::DocumentRecord::script)));
+    kinoko_destroy_cact_script((void*)(uintptr_t)(address(document.bytes(&kinoko::act::DocumentRecord::script))));
     auto clear_string = [](unsigned char* storage) {
         kinoko_string_destroy(storage);
         const kinoko::native::RecordView<kinoko::legacy::StringRecord> record(storage);
@@ -188,51 +191,37 @@ void kinoko_destroy_cact_object(int32_t object_ptr)
     clear_string(document.bytes(&kinoko::act::DocumentRecord::name));
 }
 
-int32_t kinoko_destroy_cact_with_flags(int32_t object_ptr,
-                                               unsigned char flags)
-{
-    if (object_ptr == 0)
-        return 0;
-    if ((flags & 2) != 0) {
-        uint32_t count = field<uint32_t>(object_ptr - 4);
-        for (uint32_t index = count; index > 0; --index)
-            kinoko_destroy_cact_object(object_ptr + (index - 1) * sizeof(kinoko::act::DocumentRecord));
-        if ((flags & 1) != 0)
-            std::free(pointer<void>(object_ptr - 4));
-        return object_ptr - 4;
-    }
-    kinoko_destroy_cact_object(object_ptr);
-    if ((flags & 1) != 0)
-        std::free(pointer<void>(object_ptr));
-    return object_ptr;
-}
-
 namespace {
-template<void (*Clear)(int32_t)>
-int32_t delete_with_flags(int32_t object,uint32_t size,unsigned char flags) {
-    if (!object) return 0;
-    if (flags&2) {
-        const auto count=field<uint32_t>(object-4);
-        for (auto i=count;i>0;--i) Clear(object+(i-1)*size);
-        if (flags&1) std::free(pointer<void>(object-4));
-        return object-4;
+template<class T, void (*Clear)(T*)>
+void* delete_with_flags(T* object, size_t size, unsigned char flags) {
+    if (!object) return nullptr;
+    auto* bytes = reinterpret_cast<unsigned char*>(object);
+    if (flags & 2) {
+        auto* allocation = bytes - sizeof(uint32_t);
+        const auto count = kinoko::legacy::load<uint32_t>(allocation);
+        for (auto i = count; i > 0; --i) Clear(reinterpret_cast<T*>(bytes + (i - 1) * size));
+        if (flags & 1) std::free(allocation);
+        return allocation;
     }
     Clear(object);
-    if (flags&1) std::free(pointer<void>(object));
+    if (flags & 1) std::free(object);
     return object;
 }
+}
+void* kinoko_destroy_cact_with_flags(KinokoActDocument* object, unsigned char flags) {
+    return delete_with_flags<KinokoActDocument, kinoko_destroy_cact_object>(object, sizeof(kinoko::act::DocumentRecord), flags);
 }
 // Original deleting-destructor sizes: 420830=36, 4209B0=348,
 // 429720/429780/429840=100. Bit two destroys arrays in reverse order;
 // bit one releases the allocation, including its four-byte array cookie.
-extern "C" int32_t __fastcall kinoko_method_delete_act_key(int32_t object,void*,unsigned char flags) {
-    return delete_with_flags<clear_key>(object,36,flags);
+extern "C" void* __fastcall kinoko_method_delete_act_key(KinokoActKey* object,void*,unsigned char flags) {
+    return delete_with_flags<KinokoActKey, clear_key>(object,36,flags);
 }
-extern "C" int32_t __fastcall kinoko_method_delete_act_layer(int32_t object,void*,unsigned char flags) {
-    return delete_with_flags<kinoko_destroy_cact_layer>(object,sizeof(kinoko::act::LayerStorageRecord),flags);
+extern "C" void* __fastcall kinoko_method_delete_act_layer(KinokoActLayer* object,void*,unsigned char flags) {
+    return delete_with_flags<KinokoActLayer, kinoko_act_layer_clear>(object,sizeof(kinoko::act::LayerStorageRecord),flags);
 }
-extern "C" int32_t __fastcall kinoko_method_delete_act_resource(int32_t object,void*,unsigned char flags) {
-    return delete_with_flags<clear_resource>(object,100,flags);
+extern "C" void* __fastcall kinoko_method_delete_act_resource(KinokoActResource* object,void*,unsigned char flags) {
+    return delete_with_flags<KinokoActResource, clear_resource>(object,100,flags);
 }
 
 

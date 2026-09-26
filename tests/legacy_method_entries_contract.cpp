@@ -38,7 +38,7 @@ bool check(int entry, int32_t result, std::initializer_list<uint32_t> expected) 
 // Stub only the original C bodies. Calls below execute the real C++ entry
 // adapters via legacy_abi.cpp's __thiscall invocations (no inline assembly).
 
-extern "C" int32_t kinoko_destroy_cact_with_flags(int32_t receiver, unsigned char flags) {
+extern "C" void* kinoko_destroy_cact_with_flags(KinokoActDocument* receiver, unsigned char flags) {
     return record(1, {bits(receiver), bits(flags)});
 }
 

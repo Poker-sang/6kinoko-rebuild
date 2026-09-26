@@ -1,3 +1,4 @@
+#include "kinoko/act_layer_lifecycle.h"
 #include "kinoko/act_ownership.hpp"
 #include "kinoko/act_document.h"
 #include "kinoko/act_layer_access.h"
@@ -565,7 +566,7 @@ int32_t kinoko_publish_acting_player_properties(SQVM* vm,
 namespace {
 struct DynamicLayerDelete {
     void operator()(unsigned char* layer) const noexcept {
-        kinoko_destroy_cact_layer(address(layer));
+        kinoko_act_layer_clear((KinokoActLayer*)(uintptr_t)(address(layer)));
         std::free(layer);
     }
 };
@@ -735,7 +736,7 @@ template<bool string_layout> int32_t create_layer(int32_t player, const char* na
     if (!key) return 0;
     key.get()[0] = address(kinoko_act_host_symbols()->key_vtable);
     key.get()[7] = 15;
-    if (!kinoko_act_append_list(layer+180, address(key.get()))) return 0;
+    if (!kinoko_act_append_list((void*)(uintptr_t)(layer+180), (void*)(uintptr_t)(address(key.get())))) return 0;
     key.get()[1] = address(layout.release());
     const auto native_layout = key.get()[1];
     key.release();
@@ -996,8 +997,8 @@ int32_t kinoko_execute_act_callback(int32_t script_ptr,
 namespace {
 // 51B924 maps the script environment's object pointer to CActScript. Original
 // insert is unique; re-registering an environment does not replace its owner.
-std::map<int32_t, int32_t> act_script_owners;
-void refresh_act_script_callbacks(SQVM* vm, int32_t script, const int32_t *environment) {
+std::map<int32_t, void*> act_script_owners;
+void refresh_act_script_callbacks(SQVM* vm, void* script, const int32_t *environment) {
     kinoko::act::LayerObjectRecord wrapper{kinoko_sqrat_object_vtable(), vm, {environment[0], environment[1]}, 0, {}};
     kinoko_copy_act_callback((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(script), 4, (void*)(uintptr_t)(address(&wrapper)), "Init");
     kinoko_copy_act_callback((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(script), 24, (void*)(uintptr_t)(address(&wrapper)), "Update");
@@ -1005,7 +1006,7 @@ void refresh_act_script_callbacks(SQVM* vm, int32_t script, const int32_t *envir
 }
 }
 
-extern "C" void kinoko_forget_act_script(int32_t script) {
+extern "C" void kinoko_forget_act_script(void* script) {
     for (auto entry = act_script_owners.begin(); entry != act_script_owners.end();) {
         if (entry->second == script) entry = act_script_owners.erase(entry);
         else ++entry;
@@ -1043,7 +1044,7 @@ int32_t kinoko_compile_act_file(SQVM* vm, const char *path, const int32_t *envir
             : kinoko_sq_compile_act_source((SQVM*)(uintptr_t)(vm), reinterpret_cast<const char*>(buffer.data()), static_cast<int32_t>(strnlen(reinterpret_cast<const char*>(buffer.data()), size)), environment);
         if (!ok) return 0;
         const auto owner = act_script_owners.find(environment[1]);
-        if (owner != act_script_owners.end()) refresh_act_script_callbacks((struct SQVM*)(uintptr_t)(vm), owner->second, environment);
+        if (owner != act_script_owners.end()) refresh_act_script_callbacks((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(owner->second), environment);
         return 1;
     } catch (...) {
         if (reader) kinoko_reader_close(reader);
@@ -1098,8 +1099,8 @@ extern "C" int32_t kinoko_register_act_script(int32_t script, int32_t object) {
                           : kinoko_execute_act_source_script((struct SQVM*)(uintptr_t)(vm), script, environment) != 0;
     }
     if (!ok) return static_cast<int32_t>(E_FAIL);
-    refresh_act_script_callbacks((struct SQVM*)(uintptr_t)(vm), script, environment);
-    act_script_owners.emplace(environment[1], script);
+    refresh_act_script_callbacks((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(script), environment);
+    act_script_owners.emplace(environment[1], pointer<void>(script));
     return 0;
 }
 

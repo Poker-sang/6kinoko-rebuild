@@ -273,7 +273,7 @@ int32_t kinoko_act_load_key(int32_t key, KinokoArchiveReader* reader_ptr,
 
 KinokoActKey* kinoko_act_make_key(KinokoArchiveReader* reader_ptr, int32_t version)
 {
-    auto destroy = [](KinokoActKey *key) { kinoko_destroy_cact_key(address(key)); };
+    auto destroy = [](KinokoActKey *key) { kinoko_destroy_cact_key((void*)(uintptr_t)(address(key))); };
     std::unique_ptr<KinokoActKey, decltype(destroy)> key(
         static_cast<KinokoActKey *>(std::calloc(1u, sizeof(kinoko::act::KeyRecord))), destroy);
     if (!key) return 0;
@@ -312,8 +312,8 @@ int32_t kinoko_act_load_layer(int32_t layer, KinokoArchiveReader* reader_ptr,
             return 0;
         }
         auto *key = pointer<KinokoActKey>((int32_t)(intptr_t)kinoko_act_make_key((KinokoArchiveReader*)(uintptr_t)(reader_ptr), version));
-        if (!key || !kinoko_act_append_list(layer + 0xb4, address(key))) {
-            kinoko_destroy_cact_key(address(key));
+        if (!key || !kinoko_act_append_list((void*)(uintptr_t)(layer + 0xb4), (void*)(uintptr_t)(address(key)))) {
+            kinoko_destroy_cact_key((void*)(uintptr_t)(address(key)));
             kinoko_trace("act:layer-key-load-failed");
             return 0;
         }
@@ -351,9 +351,8 @@ int32_t kinoko_act_load_layer(int32_t layer, KinokoArchiveReader* reader_ptr,
         }
         const auto timeline = (int32_t)(intptr_t)kinoko_act_new_timeline();
         if (!timeline || !kinoko_act_load_timeline((KinokoActTimeline*)(uintptr_t)(timeline), (KinokoArchiveReader*)(uintptr_t)(reader_ptr), version) ||
-            !kinoko_act_append_list(
-                address(layer_record.bytes(&kinoko::act::LayerKeys::timeline_head)), timeline)) {
-            kinoko_destroy_cact_key(timeline);
+            !kinoko_act_append_list((void*)(uintptr_t)(address(layer_record.bytes(&kinoko::act::LayerKeys::timeline_head))), (void*)(uintptr_t)(timeline))) {
+            kinoko_destroy_cact_key((void*)(uintptr_t)(timeline));
             return 0;
         }
         layer_record.set(&kinoko::act::LayerKeys::extra_count,
@@ -544,7 +543,7 @@ extern "C" int32_t __fastcall kinoko_method_load_chip_resource(
         if (!base.empty() && base.back() != '/' && base.back() != '\\') base += '/';
         const std::string path = base + name;
         auto destroy = [](KinokoActResource *value) {
-            kinoko_destroy_cact_resource(address(value));
+            kinoko_destroy_cact_resource((KinokoActResource*)(uintptr_t)(address(value)));
         };
         std::unique_ptr<KinokoActResource, decltype(destroy)> temporary(
             static_cast<KinokoActResource *>(std::calloc(1, sizeof(kinoko::act::ChipResourceRecord))),
@@ -635,7 +634,7 @@ KinokoActResource* kinoko_act_make_resource(KinokoArchiveReader* reader_ptr, uin
         return 0;
     }
     auto destroy = [](KinokoActResource *value) {
-        kinoko_destroy_cact_resource(address(value));
+        kinoko_destroy_cact_resource((KinokoActResource*)(uintptr_t)(address(value)));
     };
     std::unique_ptr<KinokoActResource, decltype(destroy)> resource(
         static_cast<KinokoActResource *>(std::calloc(1, sizeof(kinoko::act::TextureResourceRecord))),

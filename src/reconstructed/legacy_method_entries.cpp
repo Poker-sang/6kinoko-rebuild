@@ -14,7 +14,7 @@ static_assert(sizeof(void*) == sizeof(int32_t), "Original Win32 object addresses
 // Only the ABI is adapted here. Recovered game/loading bodies remain the
 // single source of truth; the adapters do not add ordering or fallback logic.
 extern "C" {
-int32_t kinoko_destroy_cact_with_flags(int32_t receiver, unsigned char flags);
+void* kinoko_destroy_cact_with_flags(KinokoActDocument* receiver, unsigned char flags);
 int32_t kinoko_c2dlayout_set_layer_impl(int32_t receiver, int32_t layer);
 int32_t kinoko_c2dlayout_update_faithful_impl(int32_t receiver);
 int32_t kinoko_c2dlayout_draw_impl(int32_t receiver, float x, float y);
@@ -32,9 +32,9 @@ int32_t kinoko_update_mesh_children(void* receiver, int32_t argument);
 }
 
 // retdec_cact_destructor_bridge
-extern "C" int32_t __fastcall kinoko_method_destroy_act(int32_t receiver, void* /* unused_edx */,
+extern "C" void* __fastcall kinoko_method_destroy_act(KinokoActDocument* receiver, void* /* unused_edx */,
     unsigned char flags) {
-    return kinoko_destroy_cact_with_flags(receiver, flags);
+    return kinoko_destroy_cact_with_flags((KinokoActDocument*)(uintptr_t)(receiver), flags);
 }
 
 // function_42bcc0

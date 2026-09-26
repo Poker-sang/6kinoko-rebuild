@@ -34,7 +34,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
     map[0] = PTR(&kinoko_map_layout_methods_storage); map[1] = PTR(&kinoko_map_color_methods_storage); map[113] = -1;
     kinoko_native_buffer_replace((void*)(uintptr_t)(PTR(map)+264), records, sizeof(records));
     key[0] = PTR(&kinoko_act_key_methods_storage); key[1] = PTR(map); key[7] = 15;
-    CHECK(kinoko_act_append_list(layer+180,PTR(key)));
+    CHECK(kinoko_act_append_list((void*)(uintptr_t)(layer+180), (void*)(uintptr_t)(PTR(key))));
     *(int32_t*)(intptr_t)(layer+184) = 1;
     kinoko_act_array_append((void*)(uintptr_t)(PTR(source)+224), (void*)(uintptr_t)(PTR(resource)));
     kinoko_act_array_append((void*)(uintptr_t)(PTR(source)+208), (void*)(uintptr_t)(layer));
@@ -196,9 +196,9 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             *(int32_t*)(intptr_t)(cloned_layer+100) = cloned_resource;
         }
         CHECK(map[79] == 0); /* No mutation of the source layout's cache. */
-        kinoko_destroy_cact_with_flags(PTR(copy),1);
+        (int32_t)(intptr_t)kinoko_destroy_cact_with_flags((KinokoActDocument*)(uintptr_t)(PTR(copy)), 1);
     }
-    kinoko_destroy_cact_object(PTR(source));
+    kinoko_destroy_cact_object((KinokoActDocument*)(uintptr_t)(PTR(source)));
     kinoko_act_vm_abi_slot = previous_default_vm;
     puts("PASS: virtual ACT clone lazy map binding and publication property aliases");
     return 0;

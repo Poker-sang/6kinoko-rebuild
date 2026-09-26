@@ -1,3 +1,4 @@
+#include "kinoko/act_layer_lifecycle.h"
 // Windows x86 runtime host. Original evidence: src/decompiled/6kinoko.exe.c.
 #include "runtime_host_internal.h"
 #include "kinoko/actor_records.hpp"
@@ -191,7 +192,7 @@ int32_t kinoko_host_register_act_script_abi(int32_t script, int32_t environment)
 }
 
 static int32_t kinoko_construct_layer_global_vm(void* storage) {
-    return kinoko_construct_cact_layer((int32_t)(intptr_t)storage, kinoko_act_vm_abi_slot);
+    return (int32_t)(intptr_t)kinoko_act_layer_initialize((KinokoActLayer*)(uintptr_t)((int32_t)(intptr_t)storage), (struct SQVM*)(uintptr_t)(kinoko_act_vm_abi_slot));
 }
 
 int32_t kinoko_host_construct_layer_abi(int32_t storage) {
