@@ -641,11 +641,9 @@ int32_t kinoko_script_bind_root_integer(int32_t * a1, int32_t a2, char * a3);
 
 
 
-int32_t kinoko_host_open_vm_abi(int32_t a1);
 
-extern int32_t kinoko_host_get_delegate_abi(int32_t source_ptr, int32_t *target_ptr);
 
-int32_t kinoko_host_create_native_instance_abi(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
+int32_t kinoko_host_create_native_instance(struct SQVM* a1, const char* a2, void* a3, SQRELEASEHOOK a4);
 
 int32_t kinoko_host_destroy_global_callback(void);
 
@@ -868,12 +866,11 @@ int32_t kinoko_script_bind_root_integer(int32_t *object, int32_t value, char *na
 
 __declspec(noinline) int32_t kinoko_stack_vm(void);
 
-int32_t kinoko_host_get_delegate_abi(int32_t source_ptr, int32_t *target_ptr);
 
 int32_t kinoko_native_void_type(void);
 
-int32_t kinoko_host_create_native_instance_abi(int32_t vm, int32_t class_name,
-                        int32_t native_pointer, int32_t release_hook);
+int32_t kinoko_host_create_native_instance(struct SQVM* vm, const char* class_name,
+                        void* native_pointer, SQRELEASEHOOK release_hook);
 
 int32_t kinoko_csv_load_bytes(const char *path, char **bytes);
 

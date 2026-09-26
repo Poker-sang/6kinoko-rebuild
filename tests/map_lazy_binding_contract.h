@@ -92,7 +92,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
         } else if (query == 1) {
             int32_t klass[2] = {kinoko_null_object_type,kinoko_null_object_value}, instance[2] = {kinoko_null_object_type,kinoko_null_object_value};
             *(uint8_t*)(intptr_t)(cloned_layer+140) = 0;
-            CHECK(kinoko_publish_c2dmaplayout_class((struct SQVM*)(uintptr_t)(vm), PTR(root), klass));
+            CHECK(kinoko_publish_c2dmaplayout_class((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(root)), klass));
             CHECK(kinoko_create_bound_instance((struct SQVM*)(uintptr_t)(vm), root+2, "LazyMapProbe", klass, (void*)(uintptr_t)(PTR(layout)), instance));
             CHECK(execute_source(vm,root+2,
                 "if (LazyMapProbe.GetChipByPosition(8,9) != 0) throw \"unbound event map\";\n"
@@ -112,7 +112,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             int32_t runtime[48] = {0}, parent[2] = {kinoko_null_object_type,kinoko_null_object_value}, active = 0;
             CHECK(*(int32_t*)(intptr_t)(cloned_layer+52) == 0);
             CHECK(*(int32_t*)(intptr_t)(cloned_layer+56) == 0);
-            CHECK(kinoko_publish_cact_layer_class((struct SQVM*)(uintptr_t)(vm), PTR(root)));
+            CHECK(kinoko_publish_cact_layer_class((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(root))));
             CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
             CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, "RegistrationProbe", parent));
             CHECK(execute_source(vm,parent,"resource <- {}; global <- {};"));

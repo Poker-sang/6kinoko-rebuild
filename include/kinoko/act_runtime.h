@@ -135,24 +135,24 @@ int32_t kinoko_publish_acting_player(struct SQVM* vm,
                                              int32_t player_ptr,
                                              int32_t out_pair[2]);
 int32_t kinoko_publish_acting_player_class(struct SQVM* vm,
-                                                   int32_t root_object);
+                                                   void* root_object);
 int32_t kinoko_publish_acting_player_properties(struct SQVM* vm,
                                                         const int32_t class_pair[2]);
-int32_t kinoko_publish_c2dlayout_class(struct SQVM* vm, int32_t root_object);
+int32_t kinoko_publish_c2dlayout_class(struct SQVM* vm, void* root_object);
 int32_t kinoko_publish_c2dlayout_properties(
     struct SQVM* vm, const int32_t class_pair[2]);
 
-int32_t kinoko_publish_c2dmaplayout_class(struct SQVM* vm, int32_t root,
+int32_t kinoko_publish_c2dmaplayout_class(struct SQVM* vm, void* root,
                                                 int32_t out[2]);
-int32_t kinoko_publish_cact_layer_class(struct SQVM* vm, int32_t root_object);
+int32_t kinoko_publish_cact_layer_class(struct SQVM* vm, void* root_object);
 int32_t kinoko_publish_cact_layer_members(
     struct SQVM* vm, const int32_t *class_pair);
 int32_t kinoko_publish_cact_layer_property(
     struct SQVM* vm, const char *name, int32_t offset,
     int32_t getter, int32_t setter);
 int32_t kinoko_publish_cact_resource2d_class(struct SQVM* vm,
-                                                     int32_t root_object);
-int32_t kinoko_publish_map_view_class(struct SQVM* vm, int32_t root,
+                                                     void* root_object);
+int32_t kinoko_publish_map_view_class(struct SQVM* vm, void* root,
     const char *name, const struct kinoko_native_view_property *properties,
     int32_t property_count, int32_t is_map, int32_t out[2]);
 int32_t kinoko_register_runtime_act_script(struct SQVM* vm, KinokoActRuntime* resource_ptr,

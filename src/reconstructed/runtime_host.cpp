@@ -50,7 +50,6 @@ int32_t kinoko_is_release_watch_data(int32_t data) {
     return 0;
 }
 
-int32_t kinoko_host_get_delegate_abi(int32_t source_ptr, int32_t *target_ptr);
 
 const char * kinoko_application_error_text = "\x8f\x89\x8a\xfa\x89\xbb\x8e\xb8\x94s";
 
@@ -520,10 +519,10 @@ __declspec(noinline) void kinoko_trace_i32(const char *label,
     kinoko_trace(message);
 }
 
-static int32_t kinoko_open_primary_script_vm(int32_t stack_size) {
+static SQVM* kinoko_open_primary_script_vm(int32_t stack_size) {
     kinoko_sq_set_context_exchange(kinoko_exchange_source_receiver);
-    int32_t vm = ((int32_t)(uintptr_t)kinoko_sq_open(stack_size));
-    kinoko_active_vm = reinterpret_cast<SQVM*>(static_cast<uintptr_t>(vm));
+    auto* vm = kinoko_sq_open(stack_size);
+    kinoko_active_vm = vm;
     kinoko_primary_shared_state = ((int32_t)(uintptr_t)kinoko_sq_shared_state(vm));
     return vm;
 }
@@ -534,11 +533,9 @@ const KinokoSqplusVmSlots *kinoko_sqplus_vm_slots(void) {
 }
 
 struct SQVM *kinoko_script_open_primary_vm(int32_t stack_size) {
-    return (struct SQVM *)(intptr_t)kinoko_open_primary_script_vm(stack_size);
+    return kinoko_open_primary_script_vm(stack_size);
 }
 
-int32_t kinoko_host_open_vm_abi(int32_t a1) {
-    return (int32_t)(intptr_t)kinoko_script_open_primary_vm(a1);
 }
 
 const void* kinoko_sqrat_object_vtable(void) { return &kinoko_sqrat_object_methods_storage; }
@@ -553,9 +550,6 @@ const void* kinoko_squirrel_object_vtable(void) {
     return &kinoko_squirrel_object_methods_storage;
 }
 
-int32_t kinoko_host_get_delegate_abi(int32_t source_ptr, int32_t *target_ptr) {
-    return (int32_t)(intptr_t)kinoko_sqplus_object_get_delegate(
-        (void *)(intptr_t)source_ptr, target_ptr);
 }
 
 int32_t *kinoko_native_binding_type(int32_t category) {
@@ -567,8 +561,8 @@ int32_t kinoko_native_void_type(void) {
     return (int32_t)(intptr_t)kinoko_sqplus_scalar_type(-1);
 }
 
-int32_t kinoko_host_create_native_instance_abi(int32_t vm, int32_t class_name,
-                        int32_t native_pointer, int32_t release_hook) {
+int32_t kinoko_host_create_native_instance(struct SQVM* vm, const char* class_name,
+                        void* native_pointer, SQRELEASEHOOK release_hook) {
     kinoko_sqplus_select_vm((struct SQVM *)(intptr_t)(vm));
     return kinoko_native_instance_create(vm, (const char*)(uintptr_t)(class_name), (void*)(uintptr_t)(native_pointer), (SQRELEASEHOOK)(uintptr_t)(release_hook));
 }

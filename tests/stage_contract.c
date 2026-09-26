@@ -1086,7 +1086,7 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
         if (strcmp(kinoko_string_data((const void*)(intptr_t)(layer + 112)), "hidden") == 0) hidden = layer;
     }
     CHECK(hidden);
-    CHECK(kinoko_publish_cact_layer_class((struct SQVM*)(uintptr_t)(vm), PTR(root)));
+    CHECK(kinoko_publish_cact_layer_class((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(root))));
     CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
     CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root + 2, kinoko_string_data((const void*)(intptr_t)(PTR(act) + 16)), parent));
     CHECK(execute_source(vm, parent, "resource <- {}; global <- {};"));
@@ -2830,14 +2830,14 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
         CHECK(kinoko_sq_set_type_tag(((SQVM*)(uintptr_t)(uint32_t)((vm))), (-1), ((void*)(uintptr_t)(uint32_t)((100+i)))) == 0);
         ((int32_t)(uintptr_t)kinoko_sq_set_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm))), (top)));
     }
-    CHECK(kinoko_host_create_native_instance_abi(vm, PTR("MissingNativeClass"), pointer, 0) == 0);
+    CHECK(kinoko_host_create_native_instance((struct SQVM*)(uintptr_t)(vm), (const char*)(uintptr_t)(PTR("MissingNativeClass")), (void*)(uintptr_t)(pointer), (SQRELEASEHOOK)(uintptr_t)(0)) == 0);
     CHECK(kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm)))) == top);
     ((int32_t)(uintptr_t)kinoko_sq_reset_error_and_return_vm(((SQVM*)(uintptr_t)(uint32_t)((vm)))));
-    CHECK(kinoko_host_create_native_instance_abi(vm, PTR("nativeConstructorCalls"), pointer, 0) == 0);
+    CHECK(kinoko_host_create_native_instance((struct SQVM*)(uintptr_t)(vm), (const char*)(uintptr_t)(PTR("nativeConstructorCalls")), (void*)(uintptr_t)(pointer), (SQRELEASEHOOK)(uintptr_t)(0)) == 0);
     CHECK(kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm)))) == top);
     ((int32_t)(uintptr_t)kinoko_sq_reset_error_and_return_vm(((SQVM*)(uintptr_t)(uint32_t)((vm)))));
     native_instance_releases = 0;
-    CHECK(kinoko_host_create_native_instance_abi(vm, PTR("NativeProbe"), pointer, PTR(native_instance_release)) == 1);
+    CHECK(kinoko_host_create_native_instance((struct SQVM*)(uintptr_t)(vm), (const char*)(uintptr_t)(PTR("NativeProbe")), (void*)(uintptr_t)(pointer), (SQRELEASEHOOK)(uintptr_t)(PTR(native_instance_release))) == 1);
     CHECK(kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm)))) == top+1);
     int32_t *slot=(int32_t *)(intptr_t)((int32_t)(uintptr_t)kinoko_sq_get_up((SQVM*)(uintptr_t)((vm)), (-1)));
     CHECK(slot[0] == 0x0a008000);
@@ -2864,7 +2864,7 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
     CHECK(execute_source(vm, root+2, "if(nativeConstructorCalls!=0) throw 130;\n"));
     const char *short_names[] = {"NativeEmpty", "NativeSingle"};
     for(int i=0; i<2; ++i) {
-        CHECK(kinoko_host_create_native_instance_abi(vm, PTR(short_names[i]), pointer, 0) == 1);
+        CHECK(kinoko_host_create_native_instance((struct SQVM*)(uintptr_t)(vm), (const char*)(uintptr_t)(PTR(short_names[i])), (void*)(uintptr_t)(pointer), (SQRELEASEHOOK)(uintptr_t)(0)) == 1);
         kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(instance)));
         kinoko_sqplus_object_capture((void *)(intptr_t)(PTR(instance)), -1);
         kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(instance)), (void *)(intptr_t)(PTR(types)), "__ot");
@@ -2913,8 +2913,7 @@ static int test_global_callback_destructor(int32_t vm) {
     kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(g612 + 4)));
     native_instance_releases = 0;
     for(int member=0; member<2; ++member) {
-        CHECK(kinoko_host_create_native_instance_abi(vm, PTR("NativeEmpty"), 21+member,
-                             PTR(native_instance_release)) == 1);
+        CHECK(kinoko_host_create_native_instance((struct SQVM*)(uintptr_t)(vm), (const char*)(uintptr_t)(PTR("NativeEmpty")), (void*)(uintptr_t)(21+member), (SQRELEASEHOOK)(uintptr_t)(PTR(native_instance_release))) == 1);
         kinoko_sqplus_object_capture((void *)(intptr_t)(PTR(g612+1+3*member)), -1);
         ((int32_t)(uintptr_t)kinoko_sq_set_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm))), (top)));
     }
@@ -3757,7 +3756,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     ((int32_t)(uintptr_t)kinoko_sq_pop((SQVM*)(uintptr_t)((vm)), 1));
     /* Publish the real CActLayer descriptors and invoke its captured callback. */
     int32_t resource[48]={0}, parent[2], active=0;
-    CHECK(kinoko_publish_cact_layer_class((struct SQVM*)(uintptr_t)(vm), PTR(root)));
+    CHECK(kinoko_publish_cact_layer_class((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(root))));
     CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
     CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, kinoko_string_data((const void*)(intptr_t)(PTR(act)+16)), parent));
     CHECK(execute_source(vm,parent,"resource <- {}; global <- {};"));
@@ -4300,7 +4299,7 @@ static int test_script_registrations(int32_t vm, int32_t *root) {
     CHECK(sq_gettop(kinoko_vm(vm)) == top);
     sq_pushroottable(kinoko_vm(vm));
     sq_pushstring(kinoko_vm(vm), "registrationInput", -1);
-    CHECK(kinoko_host_create_native_instance_abi(vm, PTR("Input"), PTR(input), 0));
+    CHECK(kinoko_host_create_native_instance((struct SQVM*)(uintptr_t)(vm), (const char*)(uintptr_t)(PTR("Input")), (void*)(uintptr_t)(PTR(input)), (SQRELEASEHOOK)(uintptr_t)(0)));
     CHECK(SQ_SUCCEEDED(sq_newslot(kinoko_vm(vm), -3, SQFalse)));
     sq_settop(kinoko_vm(vm), top);
     CHECK(execute_source(vm, root + 2,
@@ -4506,7 +4505,7 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
     CHECK((int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(object)))==PTR(object));
     CHECK((int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(PTR(copy)))==PTR(copy));
     int32_t top=kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm))));
-    CHECK(kinoko_publish_string_layout_class((struct SQVM*)(uintptr_t)(vm), PTR(root), klass));
+    CHECK(kinoko_publish_string_layout_class((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(root)), klass));
     CHECK(kinoko_create_bound_instance((struct SQVM*)(uintptr_t)(vm), root+2, "StringProbe", klass, (void*)(uintptr_t)(PTR(object)), instance));
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), instance);
     CHECK(execute_source(vm,root+2,
@@ -4710,7 +4709,7 @@ static int test_camera_map_bindings(int32_t vm, int32_t *root) {
     int32_t pointers[]={PTR(camera),PTR(map)};
     for(int i=0;i<2;++i) {
         sq_pushroottable(kinoko_vm(vm)); sq_pushstring(kinoko_vm(vm),slots[i],-1);
-        CHECK(kinoko_host_create_native_instance_abi(vm,PTR(names[i]),pointers[i],0));
+        CHECK(kinoko_host_create_native_instance((struct SQVM*)(uintptr_t)(vm), (const char*)(uintptr_t)(PTR(names[i])), (void*)(uintptr_t)(pointers[i]), (SQRELEASEHOOK)(uintptr_t)(0)));
         CHECK(SQ_SUCCEEDED(sq_newslot(kinoko_vm(vm),-3,SQFalse)));
         sq_settop(kinoko_vm(vm),top);
     }
@@ -4857,7 +4856,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
     kinoko_string_assign_cstr(player+41,"dynamicHost");
     InitializeCriticalSection((CRITICAL_SECTION*)(player+5));
     CHECK(execute_source(vm,root+2,"dynamicHost <- {};"));
-    CHECK(kinoko_publish_acting_player_class((struct SQVM*)(uintptr_t)(vm), PTR(root)));
+    CHECK(kinoko_publish_acting_player_class((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(root))));
     CHECK(kinoko_publish_acting_player((struct SQVM*)(uintptr_t)(vm), root+2, "dynamicPlayer", PTR(player), player_pair));
     /* The original accepts a borrowed instance pointer and null to clear it.
        Check the actual state change, not only the wrapper's return type. */
@@ -5856,7 +5855,7 @@ int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--collision-lifecycle") == 0)
         return test_collision_lifecycle();
     if (argc == 2 && strcmp(argv[1], "--map-lazy-binding") == 0) {
-        int32_t vm = kinoko_host_open_vm_abi(1024), root[5];
+        int32_t vm = (int32_t)(intptr_t)kinoko_script_open_primary_vm(1024), root[5];
         CHECK(vm);
         kinoko_primary_vm = (struct SQVM *)(intptr_t)vm;
         CHECK((int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(intptr_t)(PTR(root)), (struct SQVM *)(intptr_t)(vm))));
@@ -5897,7 +5896,7 @@ int main(int argc, char **argv) {
     CHECK(kinoko_test_bgm_pause() == 0);
     CHECK(test_owned_states(0) == 0);
     CHECK(test_gc_mark_link() == 0);
-    int32_t vm = kinoko_host_open_vm_abi(1024);
+    int32_t vm = (int32_t)(intptr_t)kinoko_script_open_primary_vm(1024);
     int32_t root[5], environment[3], closure[3];
     int32_t target = PTR(kinoko_script_set_init);
     int32_t manager = PTR(g_kinoko_actor_manager_state);
@@ -6588,7 +6587,7 @@ int main(int argc, char **argv) {
         CHECK(kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm)))) == top);
         {
             int32_t player_pair[2] = {kinoko_null_object_type, kinoko_null_object_value};
-            CHECK(kinoko_publish_acting_player_class((struct SQVM*)(uintptr_t)(vm), PTR(root)));
+            CHECK(kinoko_publish_acting_player_class((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(root))));
             act_resource[33] = PTR(act + 24);
             act[24] = 1;
             CHECK(kinoko_publish_acting_player((struct SQVM*)(uintptr_t)(vm), root + 2, "nativeStagePlayer", PTR(act_resource), player_pair));
