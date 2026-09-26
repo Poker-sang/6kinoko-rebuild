@@ -5481,9 +5481,9 @@ static int test_script_serialization(int32_t vm, int32_t* root) {
     CHECK(strcmp(kinoko_string_data((const void*)(intptr_t)(PTR(loaded)+64)),path)==0);
     CHECK(memcmp((void*)(intptr_t)loaded[23],source,sizeof(source))==0);
     CHECK(loaded[23]!=script[23] && ((unsigned char*)loaded)[100]==1);
-    CHECK(kinoko_method_read_act_script(PTR(loaded), NULL, (KinokoArchiveReader**)(uintptr_t)(PTR(&holder)), 2)==0);
+    CHECK(kinoko_method_read_act_script((void*)(uintptr_t)(PTR(loaded)), NULL, (KinokoArchiveReader**)(uintptr_t)(PTR(&holder)), 2)==0);
     stream.reading=0; stream.position=stream.size=0; kinoko_compile_act_output=1;
-    CHECK(kinoko_method_write_act_script(PTR(script), NULL, (KinokoArchiveReader*)(uintptr_t)(PTR(&stream)))==1);
+    CHECK(kinoko_method_write_act_script((void*)(uintptr_t)(PTR(script)), NULL, (KinokoArchiveReader*)(uintptr_t)(PTR(&stream)))==1);
     CHECK(stream.bytes[0]==0 && stream.bytes[1]==1 && ((unsigned char*)script)[101]==0);
     {
         uint32_t prefix=1+1+4+(uint32_t)strlen(path);

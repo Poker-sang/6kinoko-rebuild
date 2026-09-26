@@ -524,7 +524,7 @@ static int32_t kinoko_open_primary_script_vm(int32_t stack_size) {
     kinoko_sq_set_context_exchange(kinoko_exchange_source_receiver);
     int32_t vm = ((int32_t)(uintptr_t)kinoko_sq_open(stack_size));
     kinoko_active_vm = reinterpret_cast<SQVM*>(static_cast<uintptr_t>(vm));
-    kinoko_primary_shared_state = ((int32_t)(uintptr_t)kinoko_sq_shared_state((SQVM*)(uintptr_t)(vm)));
+    kinoko_primary_shared_state = ((int32_t)(uintptr_t)kinoko_sq_shared_state(vm));
     return vm;
 }
 
@@ -570,7 +570,7 @@ int32_t kinoko_native_void_type(void) {
 int32_t kinoko_host_create_native_instance_abi(int32_t vm, int32_t class_name,
                         int32_t native_pointer, int32_t release_hook) {
     kinoko_sqplus_select_vm((struct SQVM *)(intptr_t)(vm));
-    return kinoko_native_instance_create((SQVM*)(uintptr_t)(vm), (const char*)(uintptr_t)(class_name), (void*)(uintptr_t)(native_pointer), (SQRELEASEHOOK)(uintptr_t)(release_hook));
+    return kinoko_native_instance_create(vm, (const char*)(uintptr_t)(class_name), (void*)(uintptr_t)(native_pointer), (SQRELEASEHOOK)(uintptr_t)(release_hook));
 }
 
 void kinoko_host_free_allocation(int32_t * a1) {

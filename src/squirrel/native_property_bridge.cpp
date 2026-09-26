@@ -134,7 +134,7 @@ extern "C" int32_t kinoko_cact_layer_get_string(SQVM* id) {
     sq_pushstring(field.vm(), value ? value : "", -1);
     // Preserve the legacy signed stack-slot-address comparison, not an assumed
     // SQRESULT (sq_pushstring is void). Its unusual return ABI is not changed.
-    return ((int32_t)(uintptr_t)kinoko_sq_get_up((SQVM*)(uintptr_t)(id), -1)) >= 0;
+    return ((int32_t)(uintptr_t)kinoko_sq_get_up(id, -1)) >= 0;
 }
 extern "C" int32_t kinoko_cact_layer_set_string(SQVM* id) {
     NativeField field(id, true, false, true);
@@ -155,7 +155,7 @@ extern "C" void* kinoko_acting_player_property(SQVM* id, int32_t* offset) {
 }
 extern "C" int32_t kinoko_acting_player_get_property(SQVM* id) {
     int32_t offset = 0;
-    auto storage = kinoko_acting_player_property((struct SQVM*)(uintptr_t)(id), &offset);
+    auto storage = kinoko_acting_player_property(id, &offset);
     if (!storage) return 0;
     auto vm = id;
     if (offset == 8 || offset == 132) sq_pushbool(vm, read<uint8_t>(storage) != 0);
@@ -167,7 +167,7 @@ extern "C" int32_t kinoko_acting_player_get_property(SQVM* id) {
 extern "C" int32_t kinoko_acting_player_set_property(SQVM* id) {
     if (!id || sq_gettop(id) < 3) return 0;
     int32_t offset = 0;
-    auto storage = kinoko_acting_player_property((struct SQVM*)(uintptr_t)(id), &offset);
+    auto storage = kinoko_acting_player_property(id, &offset);
     if (!storage) return 0;
     auto vm = id;
     if (offset == 8 || offset == 132) {

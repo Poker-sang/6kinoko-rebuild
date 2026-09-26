@@ -92,7 +92,7 @@ extern "C" int32_t kinoko_sq_thread_status(SQVM* vm) {
 extern "C" int32_t kinoko_sq_newthread(SQVM* vm) {
     auto *v = vm;
     const auto size = (_funcproto(_closure(stack_get(v, 2))->_function)->_stacksize << 1) + 2;
-    auto *child = machine(((int32_t)(uintptr_t)kinoko_sq_create_thread((SQVM*)(uintptr_t)(vm), size > 12 ? size : 12)));
+    auto *child = machine(((int32_t)(uintptr_t)kinoko_sq_create_thread(vm, size > 12 ? size : 12)));
     if (!child) return SQ_ERROR;
     sq_move(child, v, -2);
     return 1;

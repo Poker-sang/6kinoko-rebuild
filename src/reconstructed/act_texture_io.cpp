@@ -582,10 +582,10 @@ extern "C" int32_t kinoko_act_read_map_properties_typed(KinokoActLayout *layout,
     catch (...) { return 0; }
 }
 extern "C" int32_t __fastcall kinoko_method_read_act_layer(int32_t layer,void*,KinokoArchiveReader** holder,int32_t version) {
-    return layer && holder && version==1 ? kinoko_act_load_layer(layer, (KinokoArchiveReader*)(uintptr_t)(address(*holder)), version) : 0;
+    return layer && holder && version==1 ? kinoko_act_load_layer(layer, (KinokoArchiveReader*)(*holder), version) : 0;
 }
 extern "C" int32_t __fastcall kinoko_method_read_act_key(int32_t key,void*,KinokoArchiveReader** holder,int32_t version) {
-    return key && holder && version==1 ? kinoko_act_load_key(key, (KinokoArchiveReader*)(uintptr_t)(address(*holder)), version) : 0;
+    return key && holder && version==1 ? kinoko_act_load_key(key, (KinokoArchiveReader*)(*holder), version) : 0;
 }
 extern "C" int32_t __fastcall kinoko_method_write_act_key(int32_t key,void*,KinokoArchiveReader* writer) {
     if (!key || !writer) return 0;
@@ -634,7 +634,7 @@ extern "C" int32_t kinoko_act_read_document_properties_typed(KinokoActDocument *
     catch (...) { return 0; }
 }
 extern "C" int32_t __fastcall kinoko_method_read_act(int32_t act,void*,KinokoArchiveReader** holder,int32_t version) {
-    return act && holder && version==1 ? kinoko_act_load(act, (KinokoArchiveReader*)(uintptr_t)(address(*holder)), version) : 0;
+    return act && holder && version==1 ? kinoko_act_load((KinokoActDocument*)(uintptr_t)(act), (KinokoArchiveReader*)(*holder), version) : 0;
 }
 namespace {
 std::vector<int32_t> object_vector(int32_t slot) {

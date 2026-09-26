@@ -13,7 +13,7 @@ static int32_t __fastcall probe_clone_resource(int32_t self, void *unused) {
 }
 static int32_t __fastcall probe_clone_layer(int32_t self, void *unused) {
     act_clone_event('L');
-    return kinoko_method_clone_act_layer(self, unused);
+    return (int32_t)(intptr_t)kinoko_method_clone_act_layer((KinokoActLayer*)(uintptr_t)(self), unused);
 }
 static int32_t __fastcall probe_clone_key(int32_t self, void *unused) {
     act_clone_event('K');

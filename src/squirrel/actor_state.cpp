@@ -19,11 +19,11 @@ extern "C" int32_t kinoko_actor_reset(KinokoActor *actor) {
     const auto parent=view.get(&ActorRecord::step_control);
     view.set(&ActorRecord::step,static_cast<KinokoActor **>(nullptr));
     view.set(&ActorRecord::step_control,static_cast<ControlRecord *>(nullptr));
-    kinoko_native_release_weak((void*)(uintptr_t)(address(parent)));
+    kinoko_native_release_weak((void*)(parent));
     const auto owner=view.get(&ActorRecord::owner_control);
     view.set(&ActorRecord::owner,static_cast<KinokoActor **>(nullptr));
     view.set(&ActorRecord::owner_control,static_cast<ControlRecord *>(nullptr));
-    kinoko_native_release_strong((void*)(uintptr_t)(address(owner)));
+    kinoko_native_release_strong((void*)(owner));
     kinoko_actor_clear_script(actor);
     // Init now owns its argument-before-callback copies, also on exceptions.
     // Borrow these fields only until that entry has retained both references.
@@ -40,17 +40,17 @@ extern "C" KinokoActor *kinoko_actor_assign(KinokoActor *destination,KinokoActor
     COPY(registration_flag20); COPY(visible); COPY(release_pending);
     auto *incoming=in.get(&ActorRecord::owner_control);
     auto **slot=in.get(&ActorRecord::owner);
-    kinoko_native_add_strong((void*)(uintptr_t)(address(incoming)));
+    kinoko_native_add_strong((void*)(incoming));
     out.set(&ActorRecord::owner,slot);
     auto *previous=out.get(&ActorRecord::owner_control);
     out.set(&ActorRecord::owner_control,incoming);
-    kinoko_native_release_strong((void*)(uintptr_t)(address(previous)));
+    kinoko_native_release_strong((void*)(previous));
     COPY(step);
     incoming=in.get(&ActorRecord::step_control);
     previous=out.get(&ActorRecord::step_control);
     if (incoming!=previous) {
-        kinoko_native_add_weak((void*)(uintptr_t)(address(incoming)));
-        kinoko_native_release_weak((void*)(uintptr_t)(address(previous)));
+        kinoko_native_add_weak((void*)(incoming));
+        kinoko_native_release_weak((void*)(previous));
         out.set(&ActorRecord::step_control,incoming);
     }
     COPY(active);

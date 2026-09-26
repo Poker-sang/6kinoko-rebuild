@@ -129,7 +129,7 @@ static void clear_resource(KinokoActResource* resource)
         const ChipResourceFields chip(resource);
         // 42F1B0: loaded path, shared MCD, source name, then base name.
         clear_string(chip.bytes(&ChipResourceRecord::loaded_path));
-        if (kinoko_act_release_chip_data((KinokoActResource*)(uintptr_t)(resource)))
+        if (kinoko_act_release_chip_data(resource))
             kinoko_mcd_free(chip.get(&ChipResourceRecord::data));
         chip.set(&ChipResourceRecord::data, static_cast<kinoko_mcd_data *>(nullptr));
         clear_string(chip.bytes(&ChipResourceRecord::source_name));
@@ -143,7 +143,7 @@ static void clear_resource(KinokoActResource* resource)
             kinoko_set_render_target(0);
         // Native clones retain a store reference separately from the original
         // borrowed bit. A borrowed handle without that reference is not ours.
-        if (!kinoko_act_release_cloned_texture((KinokoActResource*)(uintptr_t)(resource)) && !borrowed && handle)
+        if (!kinoko_act_release_cloned_texture(resource) && !borrowed && handle)
             kinoko_texture_release(handle);
         texture.set(&TextureResourceRecord::texture, int32_t{0});
         clear_string(texture.bytes(&TextureResourceRecord::texture_name));
@@ -176,10 +176,10 @@ void kinoko_destroy_cact_object(KinokoActDocument* object_ptr)
         dispose_owned(kinoko::legacy::load<KinokoActResource *>(resource));
         ++resource;
     }
-    kinoko_act_array_destroy((void*)(uintptr_t)(address(document.bytes(&DocumentRecord::resources))));
-    kinoko_act_array_destroy((void*)(uintptr_t)(address(document.bytes(&DocumentRecord::layers))));
+    kinoko_act_array_destroy((void*)(document.bytes(&DocumentRecord::resources)));
+    kinoko_act_array_destroy((void*)(document.bytes(&DocumentRecord::layers)));
 
-    kinoko_destroy_cact_script((void*)(uintptr_t)(address(document.bytes(&kinoko::act::DocumentRecord::script))));
+    kinoko_destroy_cact_script((void*)(document.bytes(&kinoko::act::DocumentRecord::script)));
     auto clear_string = [](unsigned char* storage) {
         kinoko_string_destroy(storage);
         const kinoko::native::RecordView<kinoko::legacy::StringRecord> record(storage);

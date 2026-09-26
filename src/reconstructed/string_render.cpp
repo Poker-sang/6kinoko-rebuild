@@ -23,7 +23,7 @@ using GlyphRecord=kinoko::act::StringGlyphRecord;
 using AtlasRecord=kinoko::text::AtlasLifecycle;
 using kinoko::native::RecordView;
 void* new_page(KinokoStringLayout* layout) {
-    auto* page=kinoko_string_append_atlas((KinokoStringLayout*)(uintptr_t)(layout));
+    auto* page=kinoko_string_append_atlas(layout);
     const RecordView<AtlasRecord> atlas(page);
     atlas.set(&AtlasRecord::cursor_x,0);
     atlas.set(&AtlasRecord::cursor_y,0);
@@ -83,8 +83,8 @@ extern "C" int32_t kinoko_string_add_character(KinokoStringLayout* layout,const 
         return 1;
     }
     for(;;) {
-        if(kinoko_string_atlas_size((KinokoStringLayout*)(uintptr_t)(layout))==0) new_page(layout);
-        auto* page=kinoko_string_atlas_at((KinokoStringLayout*)(uintptr_t)(layout), kinoko_string_atlas_size((KinokoStringLayout*)(uintptr_t)(layout))-1);
+        if(kinoko_string_atlas_size(layout)==0) new_page(layout);
+        auto* page=kinoko_string_atlas_at(layout, kinoko_string_atlas_size(layout)-1);
         const RecordView<AtlasRecord> atlas(page);
         kinoko_string_font_configure(atlas.bytes(&AtlasRecord::renderer), layout);
         int32_t width=0,height=0;

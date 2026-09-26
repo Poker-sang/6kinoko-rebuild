@@ -44,7 +44,7 @@ void DocumentLoadAssociations::bind_loaded_parents(KinokoActDocument *document, 
         child.set(&LayerAssociationRecord::parent_id, int32_t{-1});
         if (parent) {
             const LayerView parent_view(parent);
-            kinoko_act_array_append((void*)(uintptr_t)(address(parent_view.bytes(&LayerAssociationRecord::children))), (void*)(uintptr_t)(address(layer)));
+            kinoko_act_array_append((void*)(parent_view.bytes(&LayerAssociationRecord::children)), (void*)(layer));
             child.set(&LayerAssociationRecord::parent_id, parent_view.get(&LayerAssociationRecord::layer_id));
         }
         child.set(&LayerAssociationRecord::parent, parent);

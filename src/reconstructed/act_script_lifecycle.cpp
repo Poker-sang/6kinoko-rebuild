@@ -49,7 +49,7 @@ void kinoko_destroy_cact_script(void* script_ptr)
     // Reverse callback release, then payload and filename: keep the order.
     for (const auto member : {&ScriptStorageRecord::release, &ScriptStorageRecord::update,
                               &ScriptStorageRecord::initialize})
-        kinoko_release_act_callback((void*)(uintptr_t)(address(script.bytes(member))));
+        kinoko_release_act_callback((void*)(script.bytes(member)));
     std::free(script.get(&ScriptStorageRecord::bytes));
     script.set(&ScriptStorageRecord::bytes, static_cast<void*>(nullptr));
     script.set(&ScriptStorageRecord::size, uint32_t{0});

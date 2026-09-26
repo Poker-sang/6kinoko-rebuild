@@ -1,4 +1,5 @@
 #include "kinoko/act_runtime.h"
+#include "kinoko/act_layer_storage.hpp"
 #include "kinoko/file_io_layout.h"
 #include "kinoko/act_host.h"
 #include "kinoko/act_script_payload.hpp"
@@ -46,7 +47,7 @@ SQInteger write_bytecode(SQUserPointer context, SQUserPointer bytes, SQInteger s
 void quiet_print(HSQUIRRELVM, const SQChar*, ...) {}
 }
 
-extern "C" int32_t kinoko_act_read_script_properties(int32_t script, KinokoArchiveReader* reader) {
+extern "C" int32_t kinoko_act_read_script_properties(void* script, KinokoArchiveReader* reader) {
     if (!script || !reader) return 0;
     try {
         uint8_t has_schema = 1;
@@ -68,11 +69,11 @@ extern "C" int32_t kinoko_act_read_script_properties(int32_t script, KinokoArchi
                 std::string text;
                 if (!read_string(reader, text, 0x100000)) return 0;
                 if (entry.first == "filePath")
-                    kinoko::legacy::StringView(pointer<void>(script + 64)).assign(text.data(), static_cast<uint32_t>(text.size()));
+                    kinoko::legacy::StringView(kinoko::act::ScriptStorageView(script).bytes(&kinoko::act::ScriptStorageRecord::file_name)).assign(text.data(), static_cast<uint32_t>(text.size()));
             } else if (entry.second == 2) {
                 uint8_t value;
                 if (!transfer(reader, value)) return 0;
-                if (entry.first == "compiled") field<uint8_t>(script + 101) = value;
+                if (entry.first == "compiled") kinoko::act::ScriptPayloadView(script).set(&kinoko::act::ScriptPayloadRecord::compiled, value);
             } else {
                 uint32_t ignored;
                 if (!transfer(reader, ignored)) return 0;
@@ -82,16 +83,15 @@ extern "C" int32_t kinoko_act_read_script_properties(int32_t script, KinokoArchi
     } catch (...) { return 0; }
 }
 
-extern "C" int32_t __fastcall kinoko_method_read_act_script(
-    int32_t script, void*, KinokoArchiveReader** holder, int32_t version) {
+extern "C" int32_t __fastcall kinoko_method_read_act_script(void* script, void*, KinokoArchiveReader** holder, int32_t version) {
     if (!script || !holder || version != 1) return 0;
     const auto reader = *holder;
-    if (!kinoko_act_read_script_properties(script, (KinokoArchiveReader*)(uintptr_t)(reader))) return 0;
+    if (!kinoko_act_read_script_properties((void*)(uintptr_t)(script), reader)) return 0;
     uint32_t size = 0;
     if (!transfer(reader, size) || size > 0x1000000) return 0;
     void* bytes = std::calloc(1, size ? size : 1);
     if (!bytes) return 0;
-    kinoko::act::ScriptPayloadView payload(pointer<void>(script));
+    kinoko::act::ScriptPayloadView payload(script);
     std::free(payload.get(&kinoko::act::ScriptPayloadRecord::bytes));
     payload.set(&kinoko::act::ScriptPayloadRecord::bytes, bytes);
     payload.set(&kinoko::act::ScriptPayloadRecord::size, size);
@@ -100,9 +100,9 @@ extern "C" int32_t __fastcall kinoko_method_read_act_script(
     return 1;
 }
 
-extern "C" int32_t __fastcall kinoko_method_write_act_script(int32_t script, void*, KinokoArchiveReader* writer) {
+extern "C" int32_t __fastcall kinoko_method_write_act_script(void* script, void*, KinokoArchiveReader* writer) {
     if (!script || !writer) return 0;
-    kinoko::act::ScriptPayloadView payload(pointer<void>(script));
+    kinoko::act::ScriptPayloadView payload(script);
     const auto was_compiled = payload.get(&kinoko::act::ScriptPayloadRecord::compiled);
     payload.set(&kinoko::act::ScriptPayloadRecord::compiled, static_cast<uint8_t>(kinoko_act_script_output_compiled()));
     uint8_t has_schema = !kinoko_act_script_output_compiled();
@@ -112,7 +112,7 @@ extern "C" int32_t __fastcall kinoko_method_write_act_script(int32_t script, voi
         if (!transfer(writer, count) || !write_string(writer,"compiled",8) || !transfer(writer,boolean_type) ||
             !write_string(writer,"filePath",8) || !transfer(writer,string_type)) return 0;
     }
-    auto path = kinoko::legacy::StringView(pointer<void>(script + 64));
+    auto path = kinoko::legacy::StringView(kinoko::act::ScriptStorageView(script).bytes(&kinoko::act::ScriptStorageRecord::file_name));
     auto compiled_flag = payload.get(&kinoko::act::ScriptPayloadRecord::compiled);
     if (!transfer(writer, compiled_flag) || !write_string(writer, path.data(), path.length())) return 0;
     const auto bytes = payload.get(&kinoko::act::ScriptPayloadRecord::bytes);

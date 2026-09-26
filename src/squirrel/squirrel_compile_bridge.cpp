@@ -104,5 +104,5 @@ extern "C" int32_t kinoko_sq_compilestring(SQVM* vm) {
     const SQChar *source = nullptr, *name = _SC("unnamedbuffer");
     sq_getstring(v, 2, &source);
     if (sq_gettop(v) > 2) sq_getstring(v, 3, &name);
-    return SQ_SUCCEEDED(kinoko_sq_compile_buffer((SQVM*)(uintptr_t)(vm), source, sq_getsize(v, 2), name, SQFalse)) ? 1 : SQ_ERROR;
+    return SQ_SUCCEEDED(kinoko_sq_compile_buffer(vm, source, sq_getsize(v, 2), name, SQFalse)) ? 1 : SQ_ERROR;
 }

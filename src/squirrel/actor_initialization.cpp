@@ -90,7 +90,7 @@ extern "C" int32_t kinoko_actor_initialize(KinokoActor *actor,KinokoActorManager
     const auto old_control=view.get(&ActorRecord::owner_control);
     view.set(&ActorRecord::owner,slot);
     view.set(&ActorRecord::owner_control,control);
-    kinoko_native_release_strong((void*)(uintptr_t)(address(old_control)));
+    kinoko_native_release_strong((void*)(old_control));
     kinoko_native_release_strong((void*)(uintptr_t)(control));
     *view.get(&ActorRecord::owner)=actor;
 

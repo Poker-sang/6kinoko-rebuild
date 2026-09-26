@@ -41,7 +41,7 @@ extern "C" KinokoActDocument *kinoko_act_document_initialize(KinokoActDocument *
         string.set(&StringRecord::length, uint32_t{0});
         *string.bytes(&StringRecord::characters) = 0;
     }
-    (int32_t)(intptr_t)kinoko_construct_cact_script((void*)(uintptr_t)(address(view.bytes(&DocumentRecord::script))));
+    (int32_t)(intptr_t)kinoko_construct_cact_script((void*)(view.bytes(&DocumentRecord::script)));
     view.set(&DocumentRecord::layers, kinoko::act::DocumentPointerSpan<KinokoActLayer>{});
     view.set(&DocumentRecord::resources, kinoko::act::DocumentPointerSpan<kinoko::act::ResourceRecord>{});
     view.set(&DocumentRecord::resolution_ms, int32_t{16});

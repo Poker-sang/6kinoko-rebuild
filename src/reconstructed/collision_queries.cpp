@@ -19,7 +19,7 @@ class PointHits final {
 public:
     KinokoCollisionState *state() { return reinterpret_cast<KinokoCollisionState *>(storage_.data()); }
     auto hits() { return StateView(state()).view(&StateRecord::hits); }
-    ~PointHits() { kinoko_native_buffer_destroy((void*)(uintptr_t)(address(hits().data()))); }
+    ~PointHits() { kinoko_native_buffer_destroy((void*)(hits().data())); }
 };
 }
 

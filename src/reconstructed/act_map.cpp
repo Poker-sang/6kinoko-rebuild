@@ -61,7 +61,7 @@ extern "C" int32_t kinoko_map_update_visible(KinokoActLayout *layout,
     if (visible.empty()) return 0;
     if (visible.size() > INT32_MAX/sizeof(QuadRecord)) return E_FAIL;
     auto buffer=map.view(&LayoutRecord::render_quads);
-    if (!kinoko_native_buffer_resize((void*)(uintptr_t)(address(buffer.data())), static_cast<uint32_t>(visible.size()*sizeof(QuadRecord)))) return E_FAIL;
+    if (!kinoko_native_buffer_resize((void*)(buffer.data()), static_cast<uint32_t>(visible.size()*sizeof(QuadRecord)))) return E_FAIL;
     const auto origin=world_position(layer);
     const float scale=map.get(&LayoutRecord::scale);
     auto *output=buffer.get(&QuadBuffer::begin);

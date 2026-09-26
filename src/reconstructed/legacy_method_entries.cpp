@@ -34,7 +34,7 @@ int32_t kinoko_update_mesh_children(void* receiver, int32_t argument);
 // retdec_cact_destructor_bridge
 extern "C" void* __fastcall kinoko_method_destroy_act(KinokoActDocument* receiver, void* /* unused_edx */,
     unsigned char flags) {
-    return kinoko_destroy_cact_with_flags((KinokoActDocument*)(uintptr_t)(receiver), flags);
+    return kinoko_destroy_cact_with_flags(receiver, flags);
 }
 
 // function_42bcc0
@@ -69,7 +69,7 @@ extern "C" int32_t __fastcall kinoko_method_begin_stage(int32_t receiver, void* 
 // function_450e30
 extern "C" int32_t __fastcall kinoko_method_root_table_construct(int32_t receiver,
     void* /* unused_edx */, int32_t vm, int32_t output) {
-    return kinoko_root_table_construct_this(receiver, (struct SQVM*)(uintptr_t)(vm), output);
+    return kinoko_root_table_construct_this(receiver, vm, output);
 }
 
 // function_4514a0

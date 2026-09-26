@@ -82,7 +82,7 @@ extern "C" int32_t kinoko_string_clear(KinokoStringLayout* object) {
     layout.set(&Layout::cursor_y,0);
     layout.set(&Layout::maximum_width,0);
     layout.set(&Layout::line_height,layout.get(&Layout::font_height));
-    return kinoko_string_mark_rebuild((KinokoStringLayout*)(uintptr_t)(object));
+    return kinoko_string_mark_rebuild(object);
 }
 extern "C" int32_t kinoko_string_character_bytes(const char* text) {
     return text && *text?static_cast<int32_t>(CharNextA(text)-text):0;

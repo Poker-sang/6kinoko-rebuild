@@ -140,10 +140,10 @@ extern "C" int32_t kinoko_sqplus_object_is_null(void * object) {
     return ObjectView(object).value()._type == OT_NULL;
 }
 extern "C" int32_t kinoko_sqplus_object_size(void * object) {
-    return kinoko_squirrel_object_size((void*)(uintptr_t)(address(object)), (SQVM*)(uintptr_t)(address(current_vm())));
+    return kinoko_squirrel_object_size((void*)(object), (SQVM*)(current_vm()));
 }
 extern "C" int32_t kinoko_sqplus_object_reverse(void * object) {
-    return kinoko_squirrel_object_reverse((void*)(uintptr_t)(address(object)), (SQVM*)(uintptr_t)(address(current_vm())));
+    return kinoko_squirrel_object_reverse((void*)(object), (SQVM*)(current_vm()));
 }
 extern "C" int32_t kinoko_sqplus_object_set_index_string(void * object, int32_t key, const char * text) {
     kinoko_trace("4a9730:begin");
