@@ -45,7 +45,7 @@ HSQOBJECT sqplus_create_instance(HSQUIRRELVM,HSQOBJECT type) {
 }
 }
 extern "C" {
-int32_t kinoko_squirrel_object_vtable() { return 1; }
+const void* kinoko_squirrel_object_vtable() { return reinterpret_cast<const void*>(1); }
 SQVM *kinoko_actor_default_vm() { return reinterpret_cast<SQVM *>(1); }
 void *kinoko_actor_class_object() { return &klass; }
 void *kinoko_sqplus_object_initialize(void *p) { write(p,{1,OT_NULL,0}); return p; }

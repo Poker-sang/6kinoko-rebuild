@@ -25,7 +25,7 @@ void require(bool ok, const char* message) {
 // vendored Squirrel 2.2.2 implementation, not a simulated VM.
 extern "C" {
 struct SQVM *kinoko_primary_vm = nullptr;
-int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
+const void* kinoko_squirrel_object_vtable(void) { return reinterpret_cast<const void*>(0x12345678); }
 int32_t kinoko_native_void_type(void) { return 0x13572468; }
 void kinoko_trace(const char*) {}
 void kinoko_trace_i32(const char*, int32_t) {}
@@ -357,7 +357,7 @@ int32_t __fastcall four_float(void* object, void*, int32_t a, int32_t b, int32_t
 }
 int32_t __fastcall consume_object(void* object, void*, int32_t vtable, int32_t type, int32_t data) {
     auto& native = *static_cast<Native*>(object); ++native.calls;
-    require(vtable == kinoko_squirrel_object_vtable() && type == OT_USERDATA, "by-value object ABI");
+    require(vtable == address(kinoko_squirrel_object_vtable()) && type == OT_USERDATA, "by-value object ABI");
     int32_t value[3] = {vtable, type, data}; (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(value))); return 0;
 }
 void methods_contract(HSQUIRRELVM vm) {

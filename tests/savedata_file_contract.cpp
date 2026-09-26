@@ -16,7 +16,7 @@
 // Only unrelated game host/diagnostic ports are supplied by this fixture.
 extern "C" {
 struct SQVM *kinoko_primary_vm = nullptr;
-int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
+const void* kinoko_squirrel_object_vtable(void) { return reinterpret_cast<const void*>(0x12345678); }
 int32_t kinoko_native_void_type(void) { return 0x13572468; }
 void kinoko_trace(const char*) {}
 void kinoko_trace_i32(const char*, int32_t) {}
@@ -69,10 +69,8 @@ bool file_call(HSQUIRRELVM vm, const std::string& path, const char* table, bool 
     // The original by-value SqPlus argument transfers this external reference.
     sq_addref(vm,&value); sq_settop(vm,top);
     const auto result=save
-        ? kinoko_savedata_save_file_entry(path.c_str(),kinoko_squirrel_object_vtable(),
-            value._type,kinoko::script::data_bits(value))
-        : kinoko_savedata_load_file_entry(path.c_str(),kinoko_squirrel_object_vtable(),
-            value._type,kinoko::script::data_bits(value));
+        ? kinoko_savedata_save_file_entry(path.c_str(), (const void*)(uintptr_t)(kinoko_squirrel_object_vtable()), value._type, kinoko::script::data_bits(value))
+        : kinoko_savedata_load_file_entry(path.c_str(), (const void*)(uintptr_t)(kinoko_squirrel_object_vtable()), value._type, kinoko::script::data_bits(value));
     require(sq_gettop(vm)==top,"file call stack balance");
     return result!=0;
 }

@@ -12,7 +12,7 @@ namespace kinoko::script {
 // The game's SqPlus wrapper owns an EXTERNAL reference. SQObjectPtr instead
 // owns an internal reference; it must never be overlaid on this 12-byte record.
 struct ObjectStorage {
-    std::uint32_t vtable;
+    const void* vtable;
     HSQOBJECT value;
 };
 static_assert(sizeof(void*) == 4 && sizeof(HSQOBJECT) == 8);
@@ -49,10 +49,10 @@ public:
     void write(const HSQOBJECT& value) const noexcept {
         record_.set(&ObjectStorage::value, value);
     }
-    void set_vtable(int32_t vtable) const noexcept {
-        record_.set(&ObjectStorage::vtable, static_cast<std::uint32_t>(vtable));
+    void set_vtable(const void* vtable) const noexcept {
+        record_.set(&ObjectStorage::vtable, vtable);
     }
-    void initialize(int32_t vtable) const noexcept {
+    void initialize(const void* vtable) const noexcept {
         set_vtable(vtable);
         reset();
     }

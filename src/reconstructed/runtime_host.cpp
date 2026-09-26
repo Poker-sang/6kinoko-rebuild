@@ -551,8 +551,8 @@ int32_t kinoko_actor_vtable(void) { return (int32_t)(intptr_t)&kinoko_actor_meth
 
 int32_t kinoko_actor_step_key(void) { return (int32_t)(intptr_t)&kinoko_actor_step_key_storage; }
 
-int32_t kinoko_squirrel_object_vtable(void) {
-    return (int32_t)(intptr_t)&kinoko_squirrel_object_methods_storage;
+const void* kinoko_squirrel_object_vtable(void) {
+    return &kinoko_squirrel_object_methods_storage;
 }
 
 int32_t kinoko_host_get_delegate_abi(int32_t source_ptr, int32_t *target_ptr) {
@@ -572,8 +572,7 @@ int32_t kinoko_native_void_type(void) {
 int32_t kinoko_host_create_native_instance_abi(int32_t vm, int32_t class_name,
                         int32_t native_pointer, int32_t release_hook) {
     kinoko_sqplus_select_vm((struct SQVM *)(intptr_t)(vm));
-    return kinoko_native_instance_create(vm, class_name, native_pointer,
-        release_hook, (int32_t)(intptr_t)&kinoko_squirrel_object_methods_storage);
+    return kinoko_native_instance_create((SQVM*)(uintptr_t)(vm), (const char*)(uintptr_t)(class_name), (void*)(uintptr_t)(native_pointer), (SQRELEASEHOOK)(uintptr_t)(release_hook));
 }
 
 void kinoko_host_free_allocation(int32_t * a1) {

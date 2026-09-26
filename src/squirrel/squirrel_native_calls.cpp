@@ -72,7 +72,7 @@ void* target(HSQUIRRELVM vm) { return word(capture(vm, true)); }
 // CONSUMES their external handles, so they must not have an RAII destructor.
 ObjectStorage transfer(HSQUIRRELVM vm, HSQOBJECT value) {
     sq_addref(vm, &value);
-    return {static_cast<uint32_t>(kinoko_squirrel_object_vtable()), value};
+    return {kinoko_squirrel_object_vtable(), value};
 }
 template<class First>
 int32_t call_pair(HSQUIRRELVM vm, void* callback, First first,

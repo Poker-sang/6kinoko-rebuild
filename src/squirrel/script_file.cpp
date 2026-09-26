@@ -20,7 +20,7 @@ void kinoko_trace(const char*);
 void kinoko_trace_i32(const char*, int32_t);
 void kinoko_trace_squirrel_name(const char*, int32_t);
 void* kinoko_sqplus_object_assign(void*, const void*);
-int32_t kinoko_squirrel_object_vtable(void);
+const void* kinoko_squirrel_object_vtable(void);
 }
 
 namespace {
@@ -163,7 +163,7 @@ extern "C" int32_t kinoko_script_compile_file_argument(int32_t path, int32_t,
     if (owns_reference) incoming = value;
     Reference argument(pointer<SQVM>(argument_vm), incoming);
     Reference temporary(primary_vm(), value, true);
-    ObjectStorage environment{static_cast<uint32_t>(kinoko_squirrel_object_vtable()), value};
+    ObjectStorage environment{kinoko_squirrel_object_vtable(), value};
     return static_cast<unsigned char>(kinoko_script_load_file(pointer<const char>(path), &environment));
 }
 

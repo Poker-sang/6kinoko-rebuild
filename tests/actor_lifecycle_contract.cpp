@@ -19,7 +19,7 @@ using InPlace = int32_t(__thiscall*)(int32_t);
 extern "C" {
 struct SQVM *kinoko_primary_vm = nullptr;
 char kinoko_sqrat_trace_enabled = 0;
-int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
+const void* kinoko_squirrel_object_vtable(void) { return reinterpret_cast<const void*>(0x12345678); }
 int32_t kinoko_actor_vtable(void) { return 0x14141414; }
 int32_t kinoko_actor_step_key(void) { return address(&step_key); }
 void kinoko_trace(const char*) {}

@@ -11,7 +11,7 @@ extern "C" {
 /* Trivial externally owned SqPlus argument: the callee consumes its reference.
    Never replace this with SQObjectPtr or a nontrivial by-value C++ class. */
 typedef struct KinokoOwnedObjectWords {
-    int32_t vtable;
+    const void* vtable;
     int32_t type;
     int32_t value;
 } KinokoOwnedObjectWords;

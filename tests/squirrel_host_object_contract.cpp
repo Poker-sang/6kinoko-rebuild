@@ -17,7 +17,7 @@ using namespace kinoko::script;
 // object/VM operation below executes the actual vendored 2.2.2 implementation.
 extern "C" {
 struct SQVM *kinoko_primary_vm = nullptr;
-int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
+const void* kinoko_squirrel_object_vtable(void) { return reinterpret_cast<const void*>(0x12345678); }
 int32_t kinoko_native_void_type(void) { return 0x13572468; }
 void kinoko_trace(const char*) {}
 void kinoko_trace_i32(const char*, int32_t) {}
@@ -83,7 +83,7 @@ void ownership(HSQUIRRELVM vm) {
     const int released = userdata_releases;
     HostObject first, copy, replacement;
     require(kinoko_sqplus_object_is_null((void *)(intptr_t)(first.id())) == 1, "default null object");
-    require(first.words[0] == kinoko_squirrel_object_vtable(), "original vtable identity");
+    require(first.words[0] == address(kinoko_squirrel_object_vtable()), "original vtable identity");
     push_owned_userdata(vm);
     require(kinoko_sqplus_object_capture((void *)(intptr_t)(first.id()), -1) == OT_USERDATA, "capture returns type");
     sq_pop(vm, 1);
@@ -376,8 +376,7 @@ void native_instances(HSQUIRRELVM vm) {
     require(SQ_SUCCEEDED(sq_newslot(vm, -3, SQFalse)), "register class");
     sq_pop(vm, 1);
     const int before_release = instance_releases, before_constructor = constructor_calls;
-    require(kinoko_native_instance_create(address(vm), address("HostNative"), address(&native_data),
-        address(reinterpret_cast<const void*>(&release_instance)), kinoko_squirrel_object_vtable()) == 1, "create native instance");
+    require(kinoko_native_instance_create((SQVM*)(uintptr_t)(address(vm)), (const char*)(uintptr_t)(address("HostNative")), (void*)(uintptr_t)(address(&native_data)), (SQRELEASEHOOK)(uintptr_t)(address(reinterpret_cast<const void*>(&release_instance)))) == 1, "create native instance");
     require_top(vm, top + 1, "native creation leaves exactly the instance");
     require(constructor_calls == before_constructor, "native creation must NOT call script constructor");
     SQUserPointer actual = nullptr;
@@ -396,8 +395,7 @@ void native_instances(HSQUIRRELVM vm) {
     require(instance_releases == before_release, "stack still owns native instance");
     sq_pop(vm, 1);
     require(instance_releases == before_release + 1, "native release hook executes exactly once");
-    require(kinoko_native_instance_create(address(vm), address("MissingNative"), address(&native_data), 0,
-        kinoko_squirrel_object_vtable()) == 0, "missing native class fails");
+    require(kinoko_native_instance_create((SQVM*)(uintptr_t)(address(vm)), (const char*)(uintptr_t)(address("MissingNative")), (void*)(uintptr_t)(address(&native_data)), (SQRELEASEHOOK)(uintptr_t)(0)) == 0, "missing native class fails");
     require_top(vm, top, "native failure restores incoming stack");
 }
 }

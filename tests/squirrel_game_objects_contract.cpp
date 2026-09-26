@@ -13,7 +13,7 @@ static_assert(!noexcept(kinoko_script_compile_file_argument(0, 0, 0, 0, 0, 0)), 
 extern "C" {
 struct SQVM *kinoko_primary_vm = nullptr;
 char kinoko_sqrat_trace_enabled = 0;
-int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
+const void* kinoko_squirrel_object_vtable(void) { return reinterpret_cast<const void*>(0x12345678); }
 const void* kinoko_sqrat_object_vtable(void) { return reinterpret_cast<const void*>(0x12121212); }
 const void* kinoko_sqrat_root_vtable(void) { return reinterpret_cast<const void*>(0x34343434); }
 int32_t kinoko_native_void_type(void) { return 0x13572468; }

@@ -140,10 +140,10 @@ extern "C" int32_t kinoko_sqplus_object_is_null(void * object) {
     return ObjectView(object).value()._type == OT_NULL;
 }
 extern "C" int32_t kinoko_sqplus_object_size(void * object) {
-    return kinoko_squirrel_object_size(address(object), address(current_vm()));
+    return kinoko_squirrel_object_size((void*)(uintptr_t)(address(object)), (SQVM*)(uintptr_t)(address(current_vm())));
 }
 extern "C" int32_t kinoko_sqplus_object_reverse(void * object) {
-    return kinoko_squirrel_object_reverse(address(object), address(current_vm()));
+    return kinoko_squirrel_object_reverse((void*)(uintptr_t)(address(object)), (SQVM*)(uintptr_t)(address(current_vm())));
 }
 extern "C" int32_t kinoko_sqplus_object_set_index_string(void * object, int32_t key, const char * text) {
     kinoko_trace("4a9730:begin");
@@ -252,7 +252,7 @@ extern "C" int32_t kinoko_sqplus_object_typetag(void * object, int32_t* tag) {
     return result;
 }
 extern "C" void* kinoko_sqplus_object_destroy(void * object) {
-    return (void*)(intptr_t)(kinoko_squirrel_object_destroy(address(object), address(current_vm()), kinoko_squirrel_object_vtable()));
+    return kinoko_squirrel_object_destroy(object, current_vm(), kinoko_squirrel_object_vtable());
 }
 extern "C" void * kinoko_sqplus_object_assign_thread(void * object, struct SQVM * thread_address) {
     kinoko_trace("4a9e30:begin");

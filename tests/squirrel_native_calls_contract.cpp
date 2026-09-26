@@ -4,7 +4,7 @@
 
 extern "C" {
 char kinoko_sqrat_trace_enabled = 0;
-int32_t kinoko_squirrel_object_vtable(void) { return 0x13572468; }
+const void* kinoko_squirrel_object_vtable(void) { return reinterpret_cast<const void*>(0x13572468); }
 void kinoko_trace_i32(const char*, int32_t) {}
 }
 namespace {
@@ -45,7 +45,7 @@ int32_t __fastcall draw_method(Native* self, void*, int32_t x, int32_t y,
 }
 SQInteger release_userdata(SQUserPointer, SQInteger) { ++released; return 0; }
 void consume(ObjectStorage object) {
-    require(object.vtable == static_cast<uint32_t>(kinoko_squirrel_object_vtable()), "by-value vtable");
+    require(object.vtable == kinoko_squirrel_object_vtable(), "by-value vtable");
     require(object.value._type == OT_USERDATA, "by-value object tag");
     // A single external handle was transferred to this native callee. No caller
     // destructor may consume it a second time; stack ownership is independent.
@@ -72,7 +72,7 @@ int32_t __cdecl bool_name(int32_t text) {
 int32_t __cdecl string_object(int32_t text, int32_t vtable, int32_t type, int32_t data) {
     require(std::string(pointer<char>(text)) == "table", "string/object callback value");
     ObjectStorage object{static_cast<uint32_t>(vtable), borrowed_value(type, data)};
-    require(object.vtable == static_cast<uint32_t>(kinoko_squirrel_object_vtable()), "string/object wrapper vtable");
+    require(object.vtable == kinoko_squirrel_object_vtable(), "string/object wrapper vtable");
     require(sq_release(active_vm, &object.value) == SQTrue, "string/object callee consumes external handle");
     ++consumed; return 1;
 }

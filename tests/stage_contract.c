@@ -2846,7 +2846,7 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
     kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(instance)));
     kinoko_sqplus_object_capture((void *)(intptr_t)(PTR(instance)), -1);
     kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(instance)), (void *)(intptr_t)(PTR(types)), "__ot");
-    CHECK(kinoko_squirrel_object_size(PTR(types), vm) == 3);
+    CHECK(kinoko_squirrel_object_size((void*)(uintptr_t)(PTR(types)), (SQVM*)(uintptr_t)(vm)) == 3);
     int32_t keys[] = {kinoko_native_void_type(), 100, 101};
     for(int i=0; i<3; ++i) {
         ((int32_t)(uintptr_t)kinoko_sq_push_raw_object(((SQVM*)(uintptr_t)(uint32_t)((vm))), (types[1]), (types[2])));
@@ -2867,7 +2867,7 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
         kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(instance)));
         kinoko_sqplus_object_capture((void *)(intptr_t)(PTR(instance)), -1);
         kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(instance)), (void *)(intptr_t)(PTR(types)), "__ot");
-        CHECK(kinoko_squirrel_object_size(PTR(types), vm) == 1);
+        CHECK(kinoko_squirrel_object_size((void*)(uintptr_t)(PTR(types)), (SQVM*)(uintptr_t)(vm)) == 1);
         (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(types))));
         (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(instance))));
         ((int32_t)(uintptr_t)kinoko_sq_set_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm))), (top)));
@@ -4686,10 +4686,10 @@ static int test_table_serialization(int32_t vm, int32_t *root) {
     int32_t source[3], target[3], owned[3];
     kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(source)), "serializationSource");
     CHECK(kinoko_squirrel_object_copy(owned,source));
-    CHECK(kinoko_savedata_save_file_entry(path,owned[0],owned[1],owned[2]));
+    CHECK(kinoko_savedata_save_file_entry(path, (const void*)(uintptr_t)(owned[0]), owned[1], owned[2]));
     kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(target)), "serializationTarget");
     CHECK(kinoko_squirrel_object_copy(owned,target));
-    CHECK(kinoko_savedata_load_file_entry(path,owned[0],owned[1],owned[2]));
+    CHECK(kinoko_savedata_load_file_entry(path, (const void*)(uintptr_t)(owned[0]), owned[1], owned[2]));
     CHECK(execute_source(vm,root+2,
         "if(serializationTarget.n!=123 || serializationTarget.f!=1.25 || !serializationTarget.b || "
         "serializationTarget.s!=\"abc\" || serializationTarget.nested.value!=-9 || "

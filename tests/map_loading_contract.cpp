@@ -30,7 +30,7 @@ extern "C" {
 void kinoko_trace(const char *) {}
 void kinoko_trace_i32(const char *,int32_t) {}
 void kinoko_trace_squirrel_name(const char *,int32_t) {}
-int32_t kinoko_squirrel_object_vtable() {return 0;}
+const void* kinoko_squirrel_object_vtable() {return reinterpret_cast<const void*>(0);}
 void sq_resetobject(HSQOBJECT *o) {o->_type=OT_NULL;o->_unVal.pUserPointer=nullptr;}
 void sq_pushstring(HSQUIRRELVM,const SQChar *,SQInteger) {}
 void sq_pop(HSQUIRRELVM,SQInteger) {}

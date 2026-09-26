@@ -69,7 +69,7 @@ struct TableStream {
 struct Object {
     std::array<int32_t, 3> words{};
     Object() = default;
-    Object(int32_t vtable, int32_t type, int32_t data) : words{vtable, type, data} {}
+    Object(const void* vtable, int32_t type, int32_t data) : words{static_cast<int32_t>(reinterpret_cast<uintptr_t>(vtable)), type, data} {}
     int32_t *raw() noexcept { return words.data(); }
     int32_t type() const noexcept { return words[1]; }
     int32_t data() const noexcept { return words[2]; }
@@ -291,25 +291,23 @@ int32_t save_file(const char *path, Object input) {
 
 // Registration uses the named path entry; by-value object ownership is preserved.
 // All recursion, byte transfer and ownership live in named C++ routines above.
-int32_t kinoko_savedata_read_table_entry(int32_t *stream, int32_t vtable,
+int32_t kinoko_savedata_read_table_entry(int32_t *stream, const void* vtable,
                                       int32_t type, int32_t data) {
     kinoko::savedata::TableStream view(stream);
     const auto result = kinoko::savedata::read_table(view, {vtable, type, data});
     view.publish(stream);
     return result;
 }
-int32_t kinoko_savedata_write_table_entry(int32_t *stream, int32_t vtable,
+int32_t kinoko_savedata_write_table_entry(int32_t *stream, const void* vtable,
                                       int32_t type, int32_t data) {
     kinoko::savedata::TableStream view(stream);
     const auto result = kinoko::savedata::write_table(view, {vtable, type, data});
     view.publish(stream);
     return result;
 }
-int32_t kinoko_savedata_load_file_entry(const char* path, int32_t vtable,
-                                      int32_t type, int32_t data) {
+int32_t kinoko_savedata_load_file_entry(const char* path, (const void*)(uintptr_t)(const void* vtable), int32_t type, int32_t data) {
     return kinoko::savedata::load_file(path, {vtable, type, data});
 }
-int32_t kinoko_savedata_save_file_entry(const char* path, int32_t vtable,
-                                      int32_t type, int32_t data) {
+int32_t kinoko_savedata_save_file_entry(const char* path, (const void*)(uintptr_t)(const void* vtable), int32_t type, int32_t data) {
     return kinoko::savedata::save_file(path, {vtable, type, data});
 }

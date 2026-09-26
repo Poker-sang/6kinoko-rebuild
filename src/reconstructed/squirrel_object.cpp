@@ -15,28 +15,28 @@ using namespace kinoko::script;
 
 // Original 4A96D0 deliberately accepts only array/table/string, not every
 // type for which sq_getsize has a meaning. Operate on the existing game VM.
-extern "C" int32_t kinoko_squirrel_object_size(int32_t object, int32_t vm_address) {
+extern "C" int32_t kinoko_squirrel_object_size(void* object, SQVM* vm_address) {
     if (!object || !vm_address) return 0;
-    return upstream::sqplus_length(pointer<SQVM>(vm_address), ObjectView(object).value());
+    return upstream::sqplus_length(vm_address, ObjectView(object).value());
 }
 
-extern "C" int32_t kinoko_squirrel_object_reverse(int32_t object, int32_t vm_address) {
-    return upstream::sqplus_reverse(pointer<SQVM>(vm_address), ObjectView(object).value());
+extern "C" int32_t kinoko_squirrel_object_reverse(void* object, SQVM* vm_address) {
+    return upstream::sqplus_reverse(vm_address, ObjectView(object).value());
 }
 
-extern "C" int32_t kinoko_squirrel_object_destroy(int32_t object, int32_t vm_address, int32_t vtable) {
+extern "C" void* kinoko_squirrel_object_destroy(void* object, SQVM* vm_address, const void* vtable) {
     if (!object) return 0;
     ObjectView destination(object);
     const auto value = destination.value();
     kinoko_trace("4a9d70:begin");
-    kinoko_trace_i32("4a9d70:this", object);
+    kinoko_trace_i32("4a9d70:this", address(object));
     kinoko_trace_i32("4a9d70:caller", address(_ReturnAddress()));
     kinoko_trace_i32("4a9d70:type", value._type);
     kinoko_trace_i32("4a9d70:data", data_bits(value));
     destination.set_vtable(vtable);
     if (vm_address) {
-        destination.release(pointer<SQVM>(vm_address));
-        kinoko_trace_i32("4a9d70:gvm-after-release", vm_address);
+        destination.release(vm_address);
+        kinoko_trace_i32("4a9d70:gvm-after-release", address(vm_address));
         destination.reset();
         kinoko_trace("4a9d70:after-release");
     } else {
@@ -45,11 +45,11 @@ extern "C" int32_t kinoko_squirrel_object_destroy(int32_t object, int32_t vm_add
         destination.reset();
         kinoko_trace("4a9d70:after-clear");
     }
-    return destination.payload_address();
+    return reinterpret_cast<void*>(static_cast<uintptr_t>(destination.payload_address()));
 }
 
-extern "C" int32_t __fastcall kinoko_squirrel_object_delete(int32_t object, void*, int32_t flags) {
+extern "C" void* __fastcall kinoko_squirrel_object_delete(void* object, void*, int32_t flags) {
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(object)));
-    if (flags & 1) kinoko_host_free_allocation(pointer<int32_t>(object));
+    if (flags & 1) kinoko_host_free_allocation(static_cast<int32_t*>(object));
     return object;
 }
