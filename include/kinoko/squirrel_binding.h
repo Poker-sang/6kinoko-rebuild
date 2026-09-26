@@ -11,7 +11,7 @@ extern "C" {
    recovered metadata representation at the Variable record boundary. */
 /* Stable identities of constructed upstream ClassType objects. */
 int32_t* kinoko_sqplus_scalar_type(int32_t category);
-int32_t* kinoko_sqplus_game_type(int32_t kind, int32_t (*copy)(int32_t, int32_t));
+int32_t* kinoko_sqplus_game_type(int32_t kind, void (*copy)(void*, void*));
 int32_t* kinoko_native_binding_type(int32_t category);
 
 void * kinoko_sqplus_new_string(void * result, const char * a2);

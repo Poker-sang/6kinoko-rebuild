@@ -1,3 +1,4 @@
+#include "kinoko/legacy_memory.hpp"
 #include "kinoko/act_layer_lifecycle.h"
 // Windows x86 runtime host. Original evidence: src/decompiled/6kinoko.exe.c.
 #include "runtime_host_internal.h"
@@ -182,22 +183,6 @@ int32_t kinoko_layout_submit_impl(int32_t vertex_buffer,
     return kinoko_quad_submit((KinokoQuad *)(intptr_t)vertex_buffer,x,y);
 }
 
-static int32_t kinoko_register_act_script_objects(void* script, void* environment) {
-    return kinoko_register_act_script((void*)(uintptr_t)((int32_t)(intptr_t)script), (void*)(uintptr_t)((int32_t)(intptr_t)environment));
-}
-
-int32_t kinoko_host_register_act_script_abi(int32_t script, int32_t environment) {
-    return kinoko_register_act_script_objects((void *)(intptr_t)script, (void *)(intptr_t)environment);
-}
-
-static int32_t kinoko_construct_layer_global_vm(void* storage) {
-    return (int32_t)(intptr_t)kinoko_act_layer_initialize((KinokoActLayer*)(uintptr_t)((int32_t)(intptr_t)storage), (struct SQVM*)(uintptr_t)(kinoko_act_vm_abi_slot));
-}
-
-int32_t kinoko_host_construct_layer_abi(int32_t storage) {
-    return kinoko_construct_layer_global_vm((void *)(intptr_t)storage);
-}
-
 int32_t __fastcall kinoko_act_layer_associate_method(KinokoActLayer* receiver, void* unused_edx) {
     using Associate = int32_t (__thiscall*)(KinokoActLayer*);
     const auto* methods = kinoko::legacy::load<const unsigned char*>(receiver);
@@ -264,9 +249,9 @@ int32_t kinoko_host_initialize_camera(void) {
     return kinoko_camera_initialize(reinterpret_cast<KinokoCamera*>(&camera_state.record));
 }
 
-int32_t kinoko_camera_class_copy_abi(int32_t a1, int32_t a2) {
+void kinoko_camera_class_copy(void* a1, void* a2) {
 
-    return (int32_t)(intptr_t)kinoko_camera_copy(
+    kinoko_camera_copy(
         (KinokoCamera *)(intptr_t)a1, (KinokoCamera *)(intptr_t)a2);
 }
 
@@ -626,8 +611,8 @@ const struct KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
     return &symbols;
 }
 
-static int32_t kinoko_input_copy_abi(int32_t destination, int32_t source) {
-    return (int32_t)(intptr_t)kinoko_input_manager_assign((KinokoInputManager*)(intptr_t)destination,
+static void kinoko_input_copy(void* destination, void* source) {
+    kinoko_input_manager_assign((KinokoInputManager*)(intptr_t)destination,
         (const KinokoInputManager*)(intptr_t)source);
 }
 
@@ -651,20 +636,20 @@ const KinokoInputScriptSymbols *kinoko_input_script_symbols(void) {
 }
 
 int32_t *kinoko_input_binding_type(void) {
-    return kinoko_sqplus_game_type(2, kinoko_input_copy_abi);
+    return kinoko_sqplus_game_type(2, kinoko_input_copy);
 }
 
 int32_t *kinoko_camera_binding_type(void) {
-    return kinoko_sqplus_game_type(1, kinoko_camera_class_copy_abi);
+    return kinoko_sqplus_game_type(1, kinoko_camera_class_copy);
 }
 
-static int32_t kinoko_map_copy_abi(int32_t destination, int32_t source) {
-    return (int32_t)(intptr_t)kinoko_map_manager_assign(
+static void kinoko_map_copy(void* destination, void* source) {
+    kinoko_map_manager_assign(
         (KinokoMapManager*)(intptr_t)destination, (KinokoMapManager*)(intptr_t)source);
 }
 
 int32_t *kinoko_map_binding_type(void) {
-    return kinoko_sqplus_game_type(3, kinoko_map_copy_abi);
+    return kinoko_sqplus_game_type(3, kinoko_map_copy);
 }
 
 const void *kinoko_actor_owner_methods(void) { return &kinoko_actor_owner_methods_storage; }

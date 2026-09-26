@@ -77,6 +77,6 @@ extern "C" KinokoActor *kinoko_actor_assign(KinokoActor *destination,KinokoActor
 #undef COPY
     return destination;
 }
-extern "C" int32_t kinoko_actor_assign_instance(int32_t destination,int32_t source) {
-    return address(kinoko_actor_assign(kinoko::legacy::pointer<KinokoActor>(destination),kinoko::legacy::pointer<KinokoActor>(source)));
+extern "C" void kinoko_actor_assign_instance(void* destination,void* source) {
+    kinoko_actor_assign(static_cast<KinokoActor*>(destination),static_cast<KinokoActor*>(source));
 }

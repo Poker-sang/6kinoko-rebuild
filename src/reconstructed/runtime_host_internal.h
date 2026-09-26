@@ -575,9 +575,7 @@ struct SpriteMethods {
 
 void kinoko_host_free_allocation(int32_t * a1);
 
-int32_t kinoko_host_register_act_script_abi(int32_t a1, int32_t a2);
 
-int32_t kinoko_host_construct_layer_abi(int32_t a1);
 
 int32_t kinoko_register_cact_layer_class(struct SQVM* a1);
 
@@ -611,7 +609,7 @@ int32_t kinoko_host_clear_stages(void);
 
 int32_t kinoko_host_initialize_camera(void);
 
-int32_t kinoko_camera_class_copy_abi(int32_t a1, int32_t a2);
+void kinoko_camera_class_copy(void* a1, void* a2);
 
 int32_t kinoko_register_camera_binding(void);
 
@@ -844,9 +842,7 @@ extern struct RenderTargetMethods kinoko_render_target_methods_storage;
 
 extern struct SpriteMethods kinoko_sprite_methods_storage;
 
-int32_t kinoko_host_register_act_script_abi(int32_t script, int32_t environment);
 
-int32_t kinoko_host_construct_layer_abi(int32_t storage);
 
 int32_t kinoko_collision_refresh_abi(int32_t this_ptr);
 

@@ -80,9 +80,6 @@ extern "C" void kinoko_animation_list_destroy(void* list) {
     delete view(list).get(&ListStorage::owner);
     view(list).set(&ListStorage::owner,static_cast<Animations *>(nullptr));view(list).set(&ListStorage::count,uint32_t{0});
 }
-extern "C" int32_t kinoko_animation_create(uint32_t frames) { return address(kinoko_animation_allocate(frames)); }
-extern "C" void kinoko_animation_discard(int32_t animation) { kinoko_animation_release(pointer<KinokoAnimation>(animation)); }
-extern "C" void kinoko_animation_adopt(int32_t list,int32_t animation) { adopt(view(pointer<void>(list)),pointer<Animation>(animation)); }
 extern "C" int32_t kinoko_clear_animation_list(void* list) {
     if (list) {
         if (auto *owner=view(list).get(&ListStorage::owner)) owner->clear();

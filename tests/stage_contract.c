@@ -2357,16 +2357,16 @@ static int test_shutdown_tree_cleanup(void) {
     int32_t manager[40] = {0};
     int32_t textures[2] = {7, 13}, iteration[3] = {0};
     kinoko_animation_list_construct((void*)(uintptr_t)(PTR(manager)+52));
-    int32_t animation=kinoko_animation_create(2);
-    kinoko_animation_adopt(PTR(manager)+52,animation);
-    unsigned char *frames=*(unsigned char**)(intptr_t)(animation+8);
+    KinokoAnimation* animation=kinoko_animation_allocate(2);
+    kinoko_animation_manager_adopt((KinokoActorManager*)manager,animation);
+    unsigned char *frames=*(unsigned char**)(intptr_t)(PTR(animation)+8);
     CHECK(animation && frames);
     *(int32_t *)(frames + 244) = PTR(malloc(12));
     *(int32_t *)(frames + 248 + 244) = PTR(malloc(20));
     CHECK(*(int32_t *)(frames + 244) && *(int32_t *)(frames + 492));
     /* No live Actor in this fixture; the priority node is still reclaimed. */
     manager[10]=(int32_t)(intptr_t)kinoko_integer_map_create();
-    kinoko_integer_map_put((KinokoIntegerMap*)(intptr_t)(manager[10]), 42, animation);manager[11]=1;
+    kinoko_integer_map_put((KinokoIntegerMap*)(intptr_t)(manager[10]), 42, PTR(animation));manager[11]=1;
     kinoko_integer_vector_construct((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68));
     for(int i=0;i<2;++i) kinoko_integer_vector_append((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68), textures[i]);
     kinoko_priority_construct((void *)(intptr_t)(PTR(manager)+84));
@@ -3028,7 +3028,7 @@ static int test_act_script_source_registration(int32_t vm, int32_t *root) {
     const char *initial = "counter <- 0;\n function Init() { counter += 1; }\n";
     script[23] = PTR(_strdup(initial)); script[24] = (int32_t)strlen(initial);
     ((unsigned char*)script)[100] = 1;
-    CHECK(kinoko_host_register_act_script_abi(PTR(script), PTR(wrapper)) == 0);
+    CHECK(kinoko_register_act_script(script, wrapper) == 0);
     kinoko_archive_count = 0;
     char actual[MAX_PATH], requested[MAX_PATH], command[512];
     sprintf_s(actual,sizeof(actual),"act-source-%lu.cv4",GetCurrentProcessId());
@@ -4048,7 +4048,7 @@ static int test_water_alpha(int32_t manager, const char *directory) {
     for (int take=9700; take<=9730; take+=10) {
         int32_t animation=pat_lookup(manager,take);
         CHECK(animation);
-        for (int32_t frame=*(int32_t *)(intptr_t)(animation+8);
+        for (int32_t frame=*(int32_t *)(intptr_t)(PTR(animation)+8);
              frame<*(int32_t *)(intptr_t)(animation+12); frame+=248) {
             int32_t actor[200]={0};
             int32_t extra=*(int32_t *)(intptr_t)(frame+244);
@@ -5501,7 +5501,7 @@ static int test_original_layer_constructor(int32_t vm) {
     int32_t *layer = malloc(348);
     CHECK(layer); memset(layer, 0xcd, 348);
     const int32_t previous = kinoko_act_vm_abi_slot; kinoko_act_vm_abi_slot = vm;
-    CHECK(kinoko_host_construct_layer_abi(PTR(layer)) == PTR(layer)); kinoko_act_vm_abi_slot = previous;
+    CHECK(kinoko_act_layer_initialize((KinokoActLayer*)layer, (struct SQVM*)(intptr_t)kinoko_act_vm_abi_slot) == (KinokoActLayer*)layer); kinoko_act_vm_abi_slot = previous;
     CHECK(layer[24] == -1 && layer[26] == -1 && layer[27] == -1);
     CHECK(strcmp(kinoko_string_data((const void*)(intptr_t)(PTR(layer)+112)), "Layer_") == 0);
     CHECK(layer[78] == vm && layer[79] == OT_TABLE && layer[83] == vm && layer[84] == OT_NULL);
