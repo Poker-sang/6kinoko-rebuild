@@ -1,4 +1,5 @@
 #include "sqpcheader.h"
+#include "sqtable.h"
 #include "sqclass.h"
 #include "kinoko/act_resource_records_io.hpp"
 #include "kinoko/act_key_records.hpp"

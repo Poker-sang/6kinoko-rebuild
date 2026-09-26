@@ -17,7 +17,7 @@
 extern "C" {
 struct SQVM *kinoko_primary_vm = nullptr;
 const void* kinoko_squirrel_object_vtable(void) { return reinterpret_cast<const void*>(0x12345678); }
-int32_t kinoko_native_void_type(void) { return 0x13572468; }
+void* kinoko_native_void_type(void) { return reinterpret_cast<void*>(0x13572468); }
 void kinoko_trace(const char*) {}
 void kinoko_trace_i32(const char*, int32_t) {}
 void kinoko_trace_squirrel_name(const char*, int32_t) {}

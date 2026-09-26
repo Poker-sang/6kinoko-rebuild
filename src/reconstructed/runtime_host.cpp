@@ -494,8 +494,8 @@ int32_t *kinoko_native_binding_type(int32_t category) {
                           : kinoko_sqplus_scalar_type(category);
 }
 
-int32_t kinoko_native_void_type(void) {
-    return (int32_t)(intptr_t)kinoko_sqplus_scalar_type(-1);
+void* kinoko_native_void_type(void) {
+    return kinoko_sqplus_scalar_type(-1);
 }
 
 int32_t kinoko_host_create_native_instance(struct SQVM* vm, const char* class_name,

@@ -854,7 +854,7 @@ int32_t kinoko_script_bind_root_integer(int32_t *object, int32_t value, char *na
 __declspec(noinline) struct SQVM* kinoko_stack_vm(void);
 
 
-int32_t kinoko_native_void_type(void);
+void* kinoko_native_void_type(void);
 
 int32_t kinoko_host_create_native_instance(struct SQVM* vm, const char* class_name,
                         void* native_pointer, SQRELEASEHOOK release_hook);

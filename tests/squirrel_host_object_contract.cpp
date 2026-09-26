@@ -18,7 +18,7 @@ using namespace kinoko::script;
 extern "C" {
 struct SQVM *kinoko_primary_vm = nullptr;
 const void* kinoko_squirrel_object_vtable(void) { return reinterpret_cast<const void*>(0x12345678); }
-int32_t kinoko_native_void_type(void) { return 0x13572468; }
+void* kinoko_native_void_type(void) { return reinterpret_cast<void*>(0x13572468); }
 void kinoko_trace(const char*) {}
 void kinoko_trace_i32(const char*, int32_t) {}
 void kinoko_trace_squirrel_name(const char*, int32_t) {}
@@ -383,7 +383,7 @@ void native_instances(HSQUIRRELVM vm) {
     require(SQ_SUCCEEDED(sq_getinstanceup(vm, -1, &actual, &type_tag)) && actual == &native_data, "native pointer/type association");
     sq_pushstring(vm, "__ot", -1);
     require(SQ_SUCCEEDED(sq_get(vm, -2)), "native map present");
-    for (int32_t key : {kinoko_native_void_type(), address(&base_tag)}) {
+    for (int32_t key : {(int32_t)(intptr_t)kinoko_native_void_type(), address(&base_tag)}) {
         sq_pushinteger(vm, key);
         require(SQ_SUCCEEDED(sq_rawget(vm, -2)), "base/void mapping present");
         require(SQ_SUCCEEDED(sq_getuserpointer(vm, -1, &actual)) && actual == &native_data, "base/void pointer value");

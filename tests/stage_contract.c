@@ -2844,7 +2844,7 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
     kinoko_sqplus_object_capture((void *)(intptr_t)(PTR(instance)), -1);
     kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(instance)), (void *)(intptr_t)(PTR(types)), "__ot");
     CHECK(kinoko_squirrel_object_size((void*)(uintptr_t)(PTR(types)), (SQVM*)(uintptr_t)(vm)) == 3);
-    int32_t keys[] = {kinoko_native_void_type(), 100, 101};
+    int32_t keys[] = {(int32_t)(intptr_t)kinoko_native_void_type(), 100, 101};
     for(int i=0; i<3; ++i) {
         ((int32_t)(uintptr_t)kinoko_sq_push_raw_object(((SQVM*)(uintptr_t)(uint32_t)((vm))), (types[1]), (types[2])));
         ((int32_t)(uintptr_t)kinoko_sq_push_integer(((SQVM*)(uintptr_t)(uint32_t)((vm))), (keys[i])));
