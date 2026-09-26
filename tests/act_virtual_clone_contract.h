@@ -55,7 +55,7 @@ static int test_act_virtual_clone(void) {
         int32_t *resource = (int32_t *)calloc(1, 100); CHECK(resource);
         resource[0] = PTR(&kinoko_texture_resource_methods_storage); resource[1] = 42; resource[7] = resource[15] = 15;
         kinoko_string_assign_cstr(resource + 2, "cloned resource");
-        int32_t layer = kinoko_act_make_layer(); CHECK(layer);
+        int32_t layer = (int32_t)(intptr_t)kinoko_act_make_layer(); CHECK(layer);
         *(int32_t *)(intptr_t)(layer + 96) = 42;
         *(int32_t *)(intptr_t)(layer + 100) = PTR(resource);
         *(int32_t *)(intptr_t)(layer + 104) = 9;
@@ -63,7 +63,7 @@ static int test_act_virtual_clone(void) {
         int32_t *key = (int32_t *)calloc(1, 36); CHECK(key);
         key[0] = PTR(&kinoko_act_key_methods_storage); key[7] = 15;
         key[1] = PTR(calloc(1, 316)); CHECK(key[1]);
-        CHECK(kinoko_construct_c2dlayout(key[1]));
+        CHECK((int32_t)(intptr_t)kinoko_construct_c2dlayout((KinokoActLayout*)(uintptr_t)(key[1])));
         CHECK(kinoko_act_append_list(layer + 180, PTR(key)));
         *(int32_t *)(intptr_t)(layer + 184) = 1;
         kinoko_act_array_append((void*)(uintptr_t)(PTR(source) + 224), (void*)(uintptr_t)(0));

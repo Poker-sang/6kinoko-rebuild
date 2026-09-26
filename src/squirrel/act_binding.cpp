@@ -730,7 +730,7 @@ template<bool string_layout> int32_t create_layer(int32_t player, const char* na
     auto* layout_storage=static_cast<unsigned char*>(std::calloc(1,string_layout?260:316));
     if(!layout_storage) return 0;
     if constexpr(string_layout) (int32_t)(intptr_t)kinoko_construct_string_layout((KinokoStringLayout*)(uintptr_t)(address(layout_storage)));
-    else kinoko_construct_c2dlayout(address(layout_storage));
+    else (int32_t)(intptr_t)kinoko_construct_c2dlayout((KinokoActLayout*)(uintptr_t)(address(layout_storage)));
     std::unique_ptr<unsigned char,decltype(clear_layout)> layout(layout_storage,clear_layout);
     if (!key) return 0;
     key.get()[0] = address(kinoko_act_host_symbols()->key_vtable);

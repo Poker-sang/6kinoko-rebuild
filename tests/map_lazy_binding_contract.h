@@ -8,7 +8,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
     int32_t source[60] = {0};
     int32_t *resource = (int32_t*)calloc(1,100);
     struct kinoko_mcd_data *data = (struct kinoko_mcd_data*)calloc(1,sizeof(*data));
-    int32_t layer = kinoko_act_make_layer();
+    int32_t layer = (int32_t)(intptr_t)kinoko_act_make_layer();
     int32_t *key = (int32_t*)calloc(1,36);
     int32_t *map = (int32_t*)calloc(1,464);
     int32_t records[1][8] = {{4,7,8,0,0,0,1,0}};

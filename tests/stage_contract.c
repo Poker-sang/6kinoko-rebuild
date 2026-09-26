@@ -5020,7 +5020,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
             CHECK(WriteFile(file,stream.bytes,stream.size,&written,NULL) && written==stream.size);
             CHECK(SetFilePointer(file,0,NULL,FILE_BEGIN)==0);
             int32_t reader[7]={PTR(&kinoko_file_reader_methods),PTR(file)}, holder=PTR(reader);
-            const int32_t loaded=kinoko_act_make_layer(); CHECK(loaded);
+            const int32_t loaded=(int32_t)(intptr_t)kinoko_act_make_layer(); CHECK(loaded);
             CHECK(kinoko_call_thiscall2_result((void*)(intptr_t)loaded,(void*)kinoko_act_layer_methods_storage.read,PTR(&holder),1));
             CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
             CHECK(strcmp(kinoko_string_data((const void*)(intptr_t)(loaded+112)),kinoko_string_data((const void*)(intptr_t)(source+112)))==0);
@@ -5191,7 +5191,7 @@ static int test_serializable_lifetime(void) {
         for(int i=0;i<count;++i) {
             int32_t* key=(int32_t*)(allocation+4+36*i); key[0]=PTR(&kinoko_act_key_methods_storage); key[7]=15;
             kinoko_string_assign_cstr(key+2,"heap callback released by native destructor");
-            key[1]=PTR(calloc(1,316)); CHECK(kinoko_construct_c2dlayout(key[1]));
+            key[1]=PTR(calloc(1,316)); CHECK((int32_t)(intptr_t)kinoko_construct_c2dlayout((KinokoActLayout*)(uintptr_t)(key[1])));
         }
         CHECK(kinoko_call_thiscall1_result(allocation+4,(void*)kinoko_act_key_methods_storage.delete_object,2)==PTR(allocation));
         for(int i=0;i<count;++i) {
@@ -5212,7 +5212,7 @@ static int test_serializable_lifetime(void) {
         CHECK(resource[6]==0 && resource[7]==15);
         CHECK(kind==1 ? resource[13]==0 && resource[14]==15 : resource[14]==0 && resource[15]==15);
     }
-    const int32_t layer=kinoko_act_make_layer(); CHECK(layer);
+    const int32_t layer=(int32_t)(intptr_t)kinoko_act_make_layer(); CHECK(layer);
     CHECK(kinoko_call_thiscall1_result((void*)(intptr_t)layer,(void*)kinoko_act_layer_methods_storage.delete_object,0)==layer);
     CHECK(!*(int32_t*)(intptr_t)(layer+180) && !*(int32_t*)(intptr_t)(layer+192));
     free((void*)(intptr_t)layer);
@@ -5234,7 +5234,7 @@ static int test_act_serialization(void) {
     struct script_io_stream stream={0}; stream.vtable=methods;
     int32_t source[60]={0},loaded[60]={0};
     source[0]=loaded[0]=PTR(&kinoko_act_document_methods_storage); source[9]=source[16]=loaded[9]=loaded[16]=15;
-    CHECK(kinoko_construct_cact_script(PTR(source+25)) && kinoko_construct_cact_script(PTR(loaded+25)));
+    CHECK((int32_t)(intptr_t)kinoko_construct_cact_script((void*)(uintptr_t)(PTR(source+25))) && (int32_t)(intptr_t)kinoko_construct_cact_script((void*)(uintptr_t)(PTR(loaded+25))));
     source[1]=16; source[2]=640; source[3]=480;
     source[18]=11; source[19]=22; source[20]=33; source[21]=44; ((uint8_t*)source)[96]=1;
     const unsigned char saved=kinoko_compile_act_output; const int32_t archives=kinoko_archive_count; kinoko_compile_act_output=0; kinoko_archive_count=0;
@@ -5303,7 +5303,7 @@ static int test_key_string_writers(void) {
     CHECK(stream.size==10+size && stream.bytes[5]==1);
     CHECK(memcmp(stream.bytes+10,expected,size)==0);
     int32_t flat[79]={0};
-    CHECK(kinoko_construct_c2dlayout(PTR(flat)));
+    CHECK((int32_t)(intptr_t)kinoko_construct_c2dlayout((KinokoActLayout*)(uintptr_t)(PTR(flat))));
     ((float*)flat)[59]=0.625f; ((float*)flat)[71]=0.75f;
     key[1]=PTR(flat);
     kinoko_string_assign_cstr(key+2,"independently owned callback name");
@@ -5423,7 +5423,7 @@ static int test_texture_serialization(int render_target) {
             const char name[]=".?AVCActRenderTarget@@";
             const uint32_t type=(uint32_t)kinoko_boost_hash_range(PTR(name),PTR(name+sizeof(name)-1));
             stream.position=0;
-            int32_t *factory=(int32_t*)(intptr_t)kinoko_act_make_resource((KinokoArchiveReader*)(uintptr_t)(PTR(&stream)), type);
+            int32_t *factory=(int32_t*)(intptr_t)(int32_t)(intptr_t)kinoko_act_make_resource((KinokoArchiveReader*)(uintptr_t)(PTR(&stream)), type);
             CHECK(factory && factory[0]==PTR(&kinoko_render_target_methods_storage));
             CHECK(stream.position==stream.size && factory[1]==15);
             CHECK(factory[18]==512 && factory[19]==512 && factory[17]==0);
@@ -5465,7 +5465,7 @@ static int test_script_serialization(int32_t vm, int32_t* root) {
     int32_t script[26]={0}, loaded[26]={0}, holder=PTR(&stream);
     const char source[]="ioCompiledValue <- 42;\n";
     const char path[]="a-long-script-path-for-serialization.cv4";
-    CHECK(kinoko_construct_cact_script(PTR(script)) && kinoko_construct_cact_script(PTR(loaded)));
+    CHECK((int32_t)(intptr_t)kinoko_construct_cact_script((void*)(uintptr_t)(PTR(script))) && (int32_t)(intptr_t)kinoko_construct_cact_script((void*)(uintptr_t)(PTR(loaded))));
     free((void*)(intptr_t)script[23]); script[23]=PTR(malloc(sizeof(source))); CHECK(script[23]);
     memcpy((void*)(intptr_t)script[23],source,sizeof(source)); script[24]=sizeof(source); script[25]=1;
     kinoko_string_assign_cstr(script+16,path);
@@ -5531,7 +5531,7 @@ static int test_original_layer_constructor(int32_t vm) {
     }
     kinoko_destroy_cact_layer(PTR(layer)); free(layer);
     int32_t *script = calloc(26, sizeof(int32_t));
-    CHECK(script && kinoko_construct_cact_script(PTR(script)));
+    CHECK(script && (int32_t)(intptr_t)kinoko_construct_cact_script((void*)(uintptr_t)(PTR(script))));
     CHECK(kinoko_call_thiscall0_result(script, (void*)kinoko_act_script_methods_storage.destroy) == 0);
     puts("PASS: original layer constructor source Table, empty Instance, default name and script deleting ABI");
     return 0;

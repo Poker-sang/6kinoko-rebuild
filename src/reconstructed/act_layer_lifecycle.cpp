@@ -51,7 +51,7 @@ extern "C" KinokoActLayer* kinoko_act_layer_initialize(KinokoActLayer* layer, SQ
         return nullptr;
     }
     const auto script = record.view(&LayerStorageRecord::script);
-    kinoko_construct_cact_script(address(script.data()));
+    (int32_t)(intptr_t)kinoko_construct_cact_script((void*)(uintptr_t)(address(script.data())));
     for (const auto member : {&ScriptStorageRecord::initialize, &ScriptStorageRecord::update,
                               &ScriptStorageRecord::release})
         script.view(member).set(&ActCallbackRecord::vm, vm);
@@ -80,7 +80,7 @@ int32_t kinoko_construct_cact_layer(int32_t layer, int32_t vm) {
     return address(kinoko_act_layer_initialize(pointer<KinokoActLayer>(layer), pointer<SQVM>(vm)));
 }
 
-int32_t kinoko_act_make_layer(void) {
+KinokoActLayer* kinoko_act_make_layer(void) {
     // Parent document owns the allocation; containers and script references
     // are initialized by the same constructor used by cloning/publication.
     auto layer = std::unique_ptr<KinokoActLayer, decltype(&std::free)>(
@@ -88,7 +88,7 @@ int32_t kinoko_act_make_layer(void) {
     // Archive parsing precedes VM creation. Publication creates the script
     // table later; original native callers supply g664 at construction.
     if (!layer || !kinoko_act_layer_initialize(layer.get(), nullptr)) return 0;
-    return address(layer.release());
+    return layer.release();
 }
 
 extern "C" void kinoko_act_layer_clear(KinokoActLayer* layer)

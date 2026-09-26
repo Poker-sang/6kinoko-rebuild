@@ -33,7 +33,7 @@ extern "C" KinokoActLayout* __fastcall kinoko_method_clone_c2d_layout(KinokoActL
     if (!source) return nullptr;
     auto* result=static_cast<unsigned char*>(std::calloc(1,sizeof(Layout2DRecord)));
     if (!result) return nullptr;
-    kinoko_construct_c2dlayout(legacy_address(result));
+    (int32_t)(intptr_t)kinoko_construct_c2dlayout((KinokoActLayout*)(uintptr_t)(legacy_address(result)));
     constexpr auto begin=offsetof(Layout2DRecord,quad)+sizeof(void*);
     constexpr auto end=offsetof(Layout2DRecord,pivots_initialized)+sizeof(uint8_t);
     std::memcpy(result+begin,reinterpret_cast<const unsigned char*>(source)+begin,end-begin);

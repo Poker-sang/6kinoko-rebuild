@@ -48,17 +48,17 @@ int32_t kinoko_act_load_layer(int32_t layer, KinokoArchiveReader* reader_ptr,
 int32_t kinoko_act_load_mcd(int32_t resource,
                                    const char *file_name);
 int32_t kinoko_act_load_script(int32_t object_ptr, KinokoArchiveReader* reader_ptr);
-int32_t kinoko_act_make_key(KinokoArchiveReader* reader_ptr, int32_t version);
+KinokoActKey* kinoko_act_make_key(KinokoArchiveReader* reader_ptr, int32_t version);
 const void* kinoko_act_timeline_vtable(void);
 KinokoActTimeline* kinoko_act_new_timeline(void);
 int32_t kinoko_act_load_timeline(KinokoActTimeline* timeline, KinokoArchiveReader*  reader, int32_t version);
-int32_t kinoko_act_make_layer(void);
+KinokoActLayer* kinoko_act_make_layer(void);
 int32_t kinoko_construct_cact_layer(int32_t layer, int32_t vm);
-int32_t kinoko_construct_c2dlayout(int32_t layout);
-int32_t kinoko_act_make_layout(KinokoArchiveReader* reader_ptr);
+KinokoActLayout* kinoko_construct_c2dlayout(KinokoActLayout* layout);
+KinokoActLayout* kinoko_act_make_layout(KinokoArchiveReader* reader_ptr);
 int32_t kinoko_act_make_list(int32_t *list_slot);
-int32_t kinoko_act_make_map_layout(KinokoArchiveReader* reader_ptr);
-int32_t kinoko_act_make_resource(KinokoArchiveReader* reader_ptr, uint32_t type);
+KinokoActLayout* kinoko_act_make_map_layout(KinokoArchiveReader* reader_ptr);
+KinokoActResource* kinoko_act_make_resource(KinokoArchiveReader* reader_ptr, uint32_t type);
 int32_t kinoko_act_prepare_vector(int32_t object_ptr,
                                          uint32_t begin_offset,
                                          uint32_t end_offset,
@@ -83,7 +83,7 @@ void kinoko_c2dlayout_world_position(int32_t layer,
 int32_t kinoko_c2dmaplayout_set_layer_impl(int32_t layout,
                                                    int32_t layer);
 int32_t kinoko_cact_associate_resource(struct SQVM* vm);
-int32_t kinoko_construct_cact_script(int32_t this_ptr);
+void* kinoko_construct_cact_script(void* this_ptr);
 void kinoko_destroy_cact_layer(int32_t layer);
 void kinoko_destroy_cact_key(int32_t key);
 void kinoko_destroy_cact_list(int32_t *list_slot);

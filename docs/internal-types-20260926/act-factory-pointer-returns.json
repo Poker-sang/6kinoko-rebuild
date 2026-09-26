@@ -1,0 +1,9 @@
+{
+  "kinoko_act_make_layout": "KinokoActLayout*",
+  "kinoko_act_make_map_layout": "KinokoActLayout*",
+  "kinoko_act_make_key": "KinokoActKey*",
+  "kinoko_act_make_resource": "KinokoActResource*",
+  "kinoko_act_make_layer": "KinokoActLayer*",
+  "kinoko_construct_c2dlayout": "KinokoActLayout*",
+  "kinoko_construct_cact_script": "void*"
+}

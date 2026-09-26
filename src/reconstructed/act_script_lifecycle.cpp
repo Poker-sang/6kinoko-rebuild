@@ -9,11 +9,11 @@
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 
-int32_t kinoko_construct_cact_script(int32_t this_ptr)
+void* kinoko_construct_cact_script(void* this_ptr)
 {
     using namespace kinoko::act;
     if (!this_ptr) return 0;
-    const ScriptStorageView script(pointer<void>(this_ptr));
+    const ScriptStorageView script(this_ptr);
     script.set(&ScriptStorageRecord::methods, kinoko_act_host_symbols()->script_vtable);
     HSQOBJECT empty;
     sq_resetobject(&empty);

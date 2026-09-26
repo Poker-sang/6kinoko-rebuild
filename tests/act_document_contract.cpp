@@ -154,7 +154,7 @@ void payload_results() {
 }
 }
 extern "C" const KinokoActHostSymbols *kinoko_act_host_symbols() { return &host; }
-extern "C" int32_t kinoko_construct_cact_script(int32_t script) {
+extern "C" void* kinoko_construct_cact_script(void* script) {
     ++script_constructions; last_script = pointer<void>(script);
     std::memset(last_script, 0x39, 104); return script;
 }
