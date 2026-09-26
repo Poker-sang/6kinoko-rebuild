@@ -26,4 +26,10 @@
 
 ## 远端验证
 
-推送后记录 GitHub Actions 的实际结论，不以本地构建代替远端结果。
+源码与工作流提交 `aa8475a8ca24c88a944018d5c0607e46cc71c871` 的实际远端结果：
+
+- [Windows x86 / 36247640417](https://github.com/Poker-sang/6kinoko-rebuild/actions/runs/36247640417)：成功，构建及无资源 contract 检查通过。
+- [Migration preflight / 36247640388](https://github.com/Poker-sang/6kinoko-rebuild/actions/runs/36247640388)：Ubuntu 24.04 与 Windows 2022 两项成功；Python 清单测试实际执行，提取规则原生程序仅编译。
+- [Source snapshot / 36247640406](https://github.com/Poker-sang/6kinoko-rebuild/actions/runs/36247640406)：成功。
+
+ACT 生命周期用例实际执行 1,350 个截断前缀，验证 reader 先关闭、文档随后释放、阶段发布与调用方所有权。英文和中文 README 的章节数、命令块及本地链接已核对。此处记录的是上述准确提交的结果，后续仅记录文档的提交不冒充同一运行。

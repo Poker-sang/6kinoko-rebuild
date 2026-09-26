@@ -1,3 +1,5 @@
+> 后续工作流修复与自动测试结果见 [workflow-repair-20260926](../workflow-repair-20260926/README.md)。原内部类型批次的用户运行反馈与当时未执行自动测试的记录仍保持不变。
+
 # internal-types-59 交接
 
 - 构建源码：`8047e62c1c75a1aabc611a6bff812c5148ec3433`。
