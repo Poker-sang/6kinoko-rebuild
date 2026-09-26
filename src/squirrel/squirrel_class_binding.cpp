@@ -134,7 +134,7 @@ extern "C" void * kinoko_sqplus_construct_class_binding(void * output, const cha
     for (auto view : {klass, members, methods}) view.initialize(kinoko_squirrel_object_vtable());
     new_table(vm, members); new_table(vm, methods);
     Object temporary(vm);
-    kinoko_sqplus_create_actor_class(pointer<int32_t>(temporary.location()), vm, name, parent);
+    kinoko_sqplus_create_actor_class(static_cast<int32_t*>(temporary.data()), vm, name, parent);
     klass.assign(vm, temporary.view().value());
     return output;
 }

@@ -44,7 +44,7 @@ extern "C" int32_t kinoko_call_thiscall4_result(void *object, void *method,
 }
 
 extern "C" int32_t kinoko_call_draw_method(void *object, void *method,
-    int32_t x, int32_t y, int32_t width, int32_t height, int32_t resource,
+    int32_t x, int32_t y, int32_t width, int32_t height, struct KinokoActResource* resource,
     int32_t source_x, int32_t source_y, int32_t blend, float alpha) {
     return call_method<int32_t>(object, method,
         x, y, width, height, resource, source_x, source_y, blend, alpha);

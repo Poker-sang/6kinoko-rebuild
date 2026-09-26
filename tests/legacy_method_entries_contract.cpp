@@ -156,9 +156,7 @@ int main() {
             bits(-14)})) {
             std::fprintf(stderr, "Entry contract failed: function_450e30\n"); return 1;
         }
-        if (!check(8, kinoko_call_draw_method(receiver,
-            reinterpret_cast<void*>(&kinoko_method_act_bitblt), (-31), (-14), (3), (20), (37), (54),
-            (71), (88), (7.75f)), {receiver_bits, bits(-31), bits(-14), bits(3), bits(20), bits(37),
+        if (!check(8, kinoko_call_draw_method(receiver, reinterpret_cast<void*>(&kinoko_method_act_bitblt), (-31), (-14), (3), (20), (KinokoActResource*)(uintptr_t)((37)), (54), (71), (88), (7.75f)), {receiver_bits, bits(-31), bits(-14), bits(3), bits(20), bits(37),
             bits(54), bits(71), bits(88), bits(7.75f)})) {
             std::fprintf(stderr, "Entry contract failed: function_4514a0\n"); return 1;
         }

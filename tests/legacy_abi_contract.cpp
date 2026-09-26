@@ -37,8 +37,7 @@ int main() {
             kinoko_call_thiscall2_result(&object, methods[4], -3, 5) != 24 ||
             kinoko_call_thiscall3_result(&object, methods[5], -3, 5, 7) != 45 ||
             kinoko_call_thiscall4_result(&object, methods[6], -3, 5, 7, 11) != 89 ||
-            kinoko_call_draw_method(&object, methods[7], 1, 2, 3, 4, 5, 6, 7, 8,
-                0.75f) != 233 || object.calls != i + 1)
+            kinoko_call_draw_method(&object, methods[7], 1, 2, 3, 4, (KinokoActResource*)(uintptr_t)(5), 6, 7, 8, 0.75f) != 233 || object.calls != i + 1)
             return 1;
     }
     std::puts("PASS: x86 virtual receiver, argument order, results and stack cleanup");

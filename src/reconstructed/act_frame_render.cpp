@@ -33,8 +33,8 @@ struct DrawLayoutPrefix {
 };
 static_assert(offsetof(DrawLayoutPrefix, texture) == 308);
 int32_t float_bits(float value) { return load<int32_t>(&value); }
-void* method(int32_t object, unsigned index) {
-    const auto table = load<const unsigned char*>(pointer(object));
+void* method(const void* object, unsigned index) {
+    const auto table = load<const unsigned char*>(object);
     return table ? load<void*>(table + index * sizeof(void*)) : nullptr;
 }
 class DrawTarget final {
@@ -145,10 +145,10 @@ extern "C" int32_t kinoko_act_prepare_draw(KinokoActRuntime* self) {
     int32_t result = 0;
     const auto layers = document.get(&DocumentRecord::layers);
     for (int32_t i = layer_distance(layers) - 1; i >= 0; --i) {
-        const auto layout = address(kinoko_act_layer_layout(self, i));
+        const auto layout = kinoko_act_layer_layout(self, i);
         if (layout) {
             const auto update = method(layout, 7);
-            if (update && kinoko_call_thiscall0_result(pointer(layout), update) < 0) result = E_FAIL;
+            if (update && kinoko_call_thiscall0_result(layout, update) < 0) result = E_FAIL;
         }
     }
     const auto commands = kinoko_act_command_span((KinokoActRuntime*)(intptr_t)(self));
@@ -185,16 +185,16 @@ extern "C" int32_t kinoko_act_draw(KinokoActRuntime* self, float x, float y) {
     DrawStates states(device);
     int32_t result = 0;
     for (int32_t i = layer_distance(layers) - 1; i >= 0; --i) {
-        const auto layout = address(kinoko_act_layer_layout(self, i));
+        const auto layout = kinoko_act_layer_layout(self, i);
         if (!layout) continue;
         const auto draw = method(layout, 8);
         if (!draw) { result = E_FAIL; continue; }
-        const auto status = kinoko_call_thiscall2_result(pointer(layout), draw, float_bits(draw_x), float_bits(draw_y));
+        const auto status = kinoko_call_thiscall2_result(layout, draw, float_bits(draw_x), float_bits(draw_y));
         if (trace_index <= 8) {
             kinoko_trace_i32("4525d0:live-x", float_bits(draw_x));
             kinoko_trace_i32("4525d0:live-y", float_bits(draw_y));
-            kinoko_trace_i32("4525d0:live-layout", layout);
-            kinoko_trace_i32("4525d0:live-texture", load<const void*>(pointer(layout))==kinoko_string_layout_methods()?0:RecordView<DrawLayoutPrefix>(pointer(layout)).get(&DrawLayoutPrefix::texture));
+            kinoko_trace_i32("4525d0:live-layout", address(layout));
+            kinoko_trace_i32("4525d0:live-texture", load<const void*>(layout)==kinoko_string_layout_methods()?0:RecordView<DrawLayoutPrefix>(layout).get(&DrawLayoutPrefix::texture));
             kinoko_trace_i32("4525d0:live-draw-result", status);
         }
         if (status < 0) result = status;
@@ -206,10 +206,10 @@ extern "C" int32_t kinoko_act_draw(KinokoActRuntime* self, float x, float y) {
                  item != kinoko_act_sprite_span((KinokoActRuntime*)(intptr_t)(self)).end; item += sizeof(BlitSprite)) {
                 const RecordView<BlitSprite> entry(item);
                 const auto command = entry.get(&BlitSprite::command);
-                const auto sprite = address(entry.bytes(&BlitSprite::sprite));
+                const auto sprite = entry.bytes(&BlitSprite::sprite);
                 set_blend(blit_device, command.blend);
                 const auto draw = method(sprite, 7);
-                if (draw && kinoko_call_thiscall2_result(pointer(sprite), draw,
+                if (draw && kinoko_call_thiscall2_result(sprite, draw,
                     float_bits(draw_x + command.x), float_bits(draw_y + command.y)) < 0) result = E_FAIL;
             }
             kinoko_texture_bind_stage(0, 0);

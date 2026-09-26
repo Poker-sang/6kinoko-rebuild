@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+struct KinokoActResource;
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,7 +19,7 @@ int32_t kinoko_call_thiscall3_result(void *object, void *method,
 int32_t kinoko_call_thiscall4_result(void *object, void *method,
     int32_t argument1, int32_t argument2, int32_t argument3, int32_t argument4);
 int32_t kinoko_call_draw_method(void *object, void *method,
-    int32_t x, int32_t y, int32_t width, int32_t height, int32_t resource,
+    int32_t x, int32_t y, int32_t width, int32_t height, struct KinokoActResource* resource,
     int32_t source_x, int32_t source_y, int32_t blend, float alpha);
 
 #ifdef __cplusplus
