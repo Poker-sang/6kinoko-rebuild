@@ -1,7 +1,7 @@
 #include "kinoko/camera_records.hpp"
 #include "kinoko/legacy_memory.hpp"
 extern "C" {
-extern int32_t g611[3],g722[3];
+extern int32_t kinoko_camera_class_storage[3],kinoko_script_root_storage[3];
 void* kinoko_sqplus_object_new_instance(void*, const void*);
 void * kinoko_sqplus_object_assign(void * , const void * );
 void*  kinoko_sqplus_object_destroy(void *);
@@ -12,8 +12,8 @@ void retdec_trace_i32(const char *,int32_t);
 namespace {
 using namespace kinoko::camera;
 using kinoko::legacy::address;
-inline auto camera_instance_class = g611;
-inline auto camera_root_object = g722;
+inline auto camera_instance_class = kinoko_camera_class_storage;
+inline auto camera_root_object = kinoko_script_root_storage;
 }
 extern "C" int32_t kinoko_camera_initialize(KinokoCamera *camera) {
     if (!camera) return 0;

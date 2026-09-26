@@ -58,7 +58,7 @@ extern "C" void * kinoko_sqplus_bind_function(void * output, void * native, cons
     return output;
 }
 
-extern "C" void * kinoko_sqplus_bind_object_function(int32_t* output, void * object, void * native, char* name, char* mask) {
+extern "C" void * kinoko_sqplus_bind_object_function(int32_t* output, void * object, void * native, const char* name, const char* mask) {
     auto* vm = current_vm();
     ObjectView(object).push(vm);
     auto* result = kinoko_sqplus_bind_function(output, native, name, mask);

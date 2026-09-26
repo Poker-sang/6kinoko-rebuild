@@ -7,7 +7,7 @@
 #include <algorithm>
 
 extern "C" {
-extern char* g644;
+extern struct SQVM *kinoko_primary_vm;
 void retdec_trace_i32(const char*, int32_t);
 }
 

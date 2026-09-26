@@ -10,10 +10,10 @@ extern "C" {
 int32_t kinoko_script_dprint_noop(void);
 int32_t kinoko_actor_register_script_class(void);
 int32_t kinoko_register_input_class(void);
-int32_t function_470f60(int32_t a1);
-int32_t function_470f80(int32_t dwMilliseconds);
-int32_t function_470f90(void);
-int32_t function_471080(void);
+int32_t kinoko_host_show_message_abi(int32_t a1);
+int32_t kinoko_host_sleep_abi(int32_t dwMilliseconds);
+int32_t kinoko_host_milliseconds(void);
+int32_t kinoko_host_close_window(void);
 int32_t function_471bc0(int32_t a1);
 int32_t function_471c10(int32_t a1);
 int32_t function_471d90(int32_t a1);
@@ -32,5 +32,5 @@ int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,
 int32_t retdec_compile_file_native(int32_t vm);
 void retdec_trace(const char*);
 void retdec_trace_i32(const char*, int32_t);
-extern int32_t g629[3], g664;
+extern int32_t kinoko_input_class_storage[3], g664;
 }

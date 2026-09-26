@@ -28,7 +28,7 @@ std::vector<int32_t> cleanup_order;
 void require(bool condition) { if (!condition) std::abort(); }
 }
 extern "C" {
-int32_t g23 = 0x12345678;
+int32_t kinoko_color_methods_storage = 0x12345678;
 static KinokoGameObjects objects{};
 const KinokoGameObjects* kinoko_game_objects() { return &objects; }
 KinokoCollisionState* kinoko_game_collision_state() { return nullptr; }

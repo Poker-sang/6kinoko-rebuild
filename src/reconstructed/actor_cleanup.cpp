@@ -12,7 +12,7 @@
 
 extern "C" {
 
-extern int32_t g23;
+extern int32_t kinoko_color_methods_storage;
 }
 
 namespace {

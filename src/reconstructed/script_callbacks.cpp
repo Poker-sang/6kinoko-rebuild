@@ -4,14 +4,14 @@
 #include "kinoko/squirrel_source_runtime.h"
 #include <windows.h>
 extern "C" {
-extern int32_t g600[3], g601[3], g602[3];
+extern int32_t kinoko_actor_user_key_storage[3], kinoko_actor_step_key_storage[3], kinoko_actor_class_storage[3];
 void retdec_trace(const char *);
 void retdec_trace_i32(const char *, int32_t);
 }
 namespace {
-inline auto class_update_method = g602;
-inline auto class_update_name = g601;
-inline auto class_collision_name = g600;
+inline auto class_update_method = kinoko_actor_class_storage;
+inline auto class_update_name = kinoko_actor_step_key_storage;
+inline auto class_collision_name = kinoko_actor_user_key_storage;
 using namespace kinoko::script;
 using namespace kinoko::script::binding;
 using CallbackView = kinoko::native::RecordView<KinokoScriptCallback>;

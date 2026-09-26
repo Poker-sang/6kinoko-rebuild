@@ -17,7 +17,7 @@ template<class Function> int32_t entry(Function function) {
 struct NativeMethod { const char* name; int32_t target; int32_t wrapper; };
 // Original 473010 order; targets retain their existing recovered ABI adapters.
 const NativeMethod methods[] = {
-    {"PostQuitMessage", entry(function_471080), entry(function_471bc0)},
+    {"PostQuitMessage", entry(kinoko_host_close_window), entry(function_471bc0)},
     {"ReadCSV", entry(kinoko_script_read_csv), entry(function_471c10)},
     {"LoadTable", entry(function_472c90), entry(function_471c10)},
     {"SaveTable", entry(function_472e50), entry(function_471c10)},
@@ -37,10 +37,10 @@ const NativeMethod methods[] = {
     {"LoadMap", entry(kinoko_script_load_map), entry(function_471d90)},
     {"LoadSE", entry(kinoko_audio_load_sound_table), entry(function_471f10)},
     {"ReleaseMap", entry(kinoko_script_release_map), entry(function_471bc0)},
-    {"MessageBox", entry(function_470f60), entry(function_471f10)},
+    {"MessageBox", entry(kinoko_host_show_message_abi), entry(function_471f10)},
     {"dprint", entry(kinoko_script_dprint_noop), entry(function_471f10)},
-    {"Sleep", entry(function_470f80), entry(function_471fd0)},
-    {"timeGetTime", entry(function_470f90), entry(function_472030)},
+    {"Sleep", entry(kinoko_host_sleep_abi), entry(function_471fd0)},
+    {"timeGetTime", entry(kinoko_host_milliseconds), entry(function_472030)},
     {"PlaySE", entry(kinoko_audio_play_sound), entry(function_471fd0)},
     {"PlayBgm", entry(kinoko_audio_play_bgm), entry(function_472080)},
     {"PlayBgmMargin", entry(kinoko_audio_play_bgm_margin), entry(function_4720e0)},

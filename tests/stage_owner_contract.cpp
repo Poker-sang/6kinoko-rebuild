@@ -73,7 +73,7 @@ void operator delete(void *p, std::size_t) noexcept { std::free(p); }
 extern "C" {
 int32_t g603 = 0, g604 = 0, g639 = 0;
 KinokoIntegerMap* g638 = nullptr;
-char *g644 = nullptr;
+struct SQVM *kinoko_primary_vm = nullptr;
 KinokoActDocument *kinoko_act_document_create() {
     if (state.fail_document) return nullptr;
     auto *document = static_cast<KinokoActDocument *>(std::calloc(1, sizeof(DocumentRecord)));

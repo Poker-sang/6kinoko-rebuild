@@ -2,10 +2,10 @@
 #include "kinoko/squirrel_host_object.hpp"
 #include "kinoko/squirrel_host_compat.h"
 
-extern "C" char* g644;
+extern "C" struct SQVM *kinoko_primary_vm;
 namespace {
 using namespace kinoko::script;
-inline char*& current_vm_storage = g644;
+inline SQVM*& current_vm_storage = kinoko_primary_vm;
 HSQUIRRELVM current_vm() { return reinterpret_cast<HSQUIRRELVM>(current_vm_storage); }
 void initialize(int32_t* object) { ObjectView(object).initialize(kinoko_squirrel_object_vtable()); }
 }

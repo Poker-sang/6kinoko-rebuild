@@ -1,5 +1,27 @@
 // Windows x86 runtime host. Original evidence: src/decompiled/6kinoko.exe.c.
 #include "runtime_host_internal.h"
+#include "kinoko/actor_records.hpp"
+#include "kinoko/map_manager_records.hpp"
+#include "kinoko/collision_records.hpp"
+#include "kinoko/input_manager.h"
+#include <array>
+#include <cstddef>
+
+namespace {
+template<class Record, size_t Extent> struct alignas(8) HostStorage {
+    Record record;
+    std::array<unsigned char, Extent - sizeof(Record)> reserved;
+};
+HostStorage<kinoko::actor::ManagerPrefix, 0x200> actor_state{};
+HostStorage<kinoko::map::ManagerRecord, 0x200> map_state{};
+HostStorage<kinoko::camera::Record, 0x200> camera_state{};
+HostStorage<KinokoInputManager, 0x600> input_state{};
+HostStorage<kinoko::collision::StateRecord, 120> collision_state{};
+KinokoScriptCallback global_callback{};
+static_assert(sizeof(actor_state) == 0x200 && sizeof(map_state) == 0x200);
+static_assert(sizeof(camera_state) == 0x200 && sizeof(input_state) == 0x600);
+static_assert(sizeof(collision_state) == 120 && sizeof(global_callback) == 28);
+}
 
 #pragma comment(linker, "/alternatename:_D3DXCreateTexture@32=_D3DXCreateTexture")
 
@@ -34,46 +56,47 @@ void retdec_trace(const char *message);
 
 
 
-int32_t function_4aa210(int32_t source_ptr, int32_t *target_ptr);
+int32_t kinoko_host_get_delegate_abi(int32_t source_ptr, int32_t *target_ptr);
 
-static int32_t (*resolve_root_binding)(int32_t, int32_t *) = function_4aa210;
+static int32_t (*resolve_root_binding)(int32_t, int32_t *) = kinoko_host_get_delegate_abi;
 
-int32_t (__fastcall *g23)(int32_t, void*, char) = kinoko_color_destroy;
+int32_t (__fastcall *kinoko_color_methods_storage)(int32_t, void*, char) = kinoko_color_destroy;
 
-int32_t g25 = 0x44fd30;
+// Original 44FD30 installs IColor methods, optionally frees, returns receiver.
+int32_t (__fastcall *kinoko_chip_quad_methods_storage)(int32_t, void*, char) = kinoko_color_destroy;
 
-int32_t g28 = (int32_t)(intptr_t)&kinoko_method_actor_pool_base_delete;
+int32_t (__fastcall *kinoko_actor_pool_base_methods_storage)(int32_t, void*, unsigned char) = kinoko_method_actor_pool_base_delete;
 
-const char * g42 = "\x8f\x89\x8a\xfa\x89\xbb\x8e\xb8\x94s";
+const char * kinoko_application_error_text = "\x8f\x89\x8a\xfa\x89\xbb\x8e\xb8\x94s";
 
-const char * g43 = "\x96\x82\x97\x9d\x8d\xb9\x82\xc6\x82U\x82\xc2\x82\xcc\x83L\x83m\x83R";
+const char * kinoko_application_title_text = "\x96\x82\x97\x9d\x8d\xb9\x82\xc6\x82U\x82\xc2\x82\xcc\x83L\x83m\x83R";
 
-const char * g209 = "DirectSound\x83I\x83u\x83W\x83\x46\x83N\x83g\x82\xcc\x8d\xec\x90\xac\x82\xc9\x8e\xb8\x94s";
+const char * kinoko_audio_error_text = "DirectSound\x83I\x83u\x83W\x83\x46\x83N\x83g\x82\xcc\x8d\xec\x90\xac\x82\xc9\x8e\xb8\x94s";
 
-struct vtable_4ec7cc_type g300 = {
+struct MapColorMethods kinoko_layout_color_methods_storage = {
     kinoko_delete_layout_sprite,
     kinoko_quad_set_color,
     kinoko_quad_set_vertex_colors,
     kinoko_quad_modulate_color
 };
 
-int32_t g350[11] = { 
-    (int32_t)kinoko_method_write_string_layout,
-    (int32_t)kinoko_method_read_string_layout,
-    (int32_t)kinoko_method_query_serializable,
-    (int32_t)kinoko_method_destroy_string_layout,
-    (int32_t)kinoko_method_string_layout_type,
-    (int32_t)kinoko_method_clone_string_layout,
-    (int32_t)kinoko_method_set_string_layer,
-    (int32_t)kinoko_method_update_string_layout,
-    (int32_t)kinoko_method_draw_string_layout,
-    (int32_t)kinoko_method_register_string_layout,
-    (int32_t)kinoko_method_delete_string_layout
+struct StringLayoutMethods kinoko_string_layout_methods_storage = {
+    kinoko_method_write_string_layout,
+    kinoko_method_read_string_layout,
+    kinoko_method_query_serializable,
+    kinoko_method_destroy_string_layout,
+    kinoko_method_string_layout_type,
+    kinoko_method_clone_string_layout,
+    kinoko_method_set_string_layer,
+    kinoko_method_update_string_layout,
+    kinoko_method_draw_string_layout,
+    kinoko_method_register_string_layout,
+    kinoko_method_delete_string_layout
 };
 
-int32_t g483 = 0x01000001;
+int32_t kinoko_null_object_type = 0x01000001;
 
-int32_t g484 = 0;
+int32_t kinoko_null_object_value = 0;
 
 int32_t g534 = 0;
 
@@ -95,33 +118,33 @@ int32_t kinoko_act_script_extension[7] = {0, 0, 0, 0, 0, 15, 0};
 
 char g560 = 1;
 
-int32_t g600[3] = { 0, 0, 0 };
+int32_t kinoko_actor_user_key_storage[3] = { 0, 0, 0 };
 
-int32_t g601[3] = { 0, 0, 0 };
+int32_t kinoko_actor_step_key_storage[3] = { 0, 0, 0 };
 
-int32_t g602[3] = { 0, 0, 0 };
+int32_t kinoko_actor_class_storage[3] = { 0, 0, 0 };
 
 int32_t g603 = 0;
 
 int32_t g604 = 0;
 
-int32_t g611[3] = { 0, 0, 0 };
+int32_t kinoko_camera_class_storage[3] = { 0, 0, 0 };
 
-int32_t retdec_game_callback_storage[7] = { 0 };
 
-int32_t g_514300_storage[30] = { 0 };
 
-__declspec(align(8)) unsigned char g_retdec_actor_manager_state[0x200] = { 0 };
 
-__declspec(align(8)) unsigned char g_retdec_map_manager_state[0x200] = { 0 };
 
-__declspec(align(8)) unsigned char g_retdec_camera_state[0x200] = { 0 };
 
-int32_t g617 = 0;
 
-int32_t g629[3] = { 0, 0, 0 };
 
-int32_t g636[3] = { 0, 0, 0 };
+
+
+
+int32_t kinoko_render_layer_owner_slot = 0;
+
+int32_t kinoko_input_class_storage[3] = { 0, 0, 0 };
+
+int32_t kinoko_map_class_storage[3] = { 0, 0, 0 };
 
 int32_t g637 = 0;
 
@@ -134,7 +157,7 @@ char g642 = 0;
 int32_t g643 = 0;
 
 #pragma data_seg(".g644")
-__declspec(align(4096)) char * g644 = NULL;
+__declspec(align(4096)) struct SQVM *kinoko_primary_vm = NULL;
 #pragma data_seg()
 
 int32_t g645 = 0;
@@ -143,7 +166,7 @@ int32_t unk_5149EC[3] = { 0, 0, 0 };
 
 int32_t g664 = 0;
 
-char g673 = 0;
+char kinoko_compile_act_output = 0;
 
 KinokoRenderer kinoko_renderer = {0};
 
@@ -151,13 +174,13 @@ KinokoGraphics kinoko_graphics = {0};
 
 KinokoCriticalSection kinoko_graphics_lock = { 0 };
 
-int32_t g722[3] = { 0, 0, 0 };
+int32_t kinoko_script_root_storage[3] = { 0, 0, 0 };
 
 char * g767;
 
 unsigned char g_retdec_keyboard_state[256];
 
-char g874 = 0;
+char kinoko_packed_assets = 0;
 
 int32_t g876 = 0;
 
@@ -165,17 +188,17 @@ char * g877;
 
 int32_t g878 = 0;
 
-int32_t g910 = 0;
+int32_t kinoko_layout_type_identity = 0;
 
-int32_t g914 = 0;
+int32_t kinoko_chip_type_identity = 0;
 
-int32_t g918 = 0;
+int32_t kinoko_map_type_identity = 0;
 
 int32_t g926 = 0;
 
-int32_t g930 = 0;
+int32_t kinoko_texture_type_identity = 0;
 
-int32_t g934 = 0;
+int32_t kinoko_render_target_type_identity = 0;
 
 int32_t kinoko_mesh_manager_slot = 0;
 
@@ -197,185 +220,185 @@ int32_t kinoko_layer_get_pair[2] = {0, 0};
 
 int32_t g1224;
 
-struct vtable_4d54a4_type g16 = {
-    (int32_t (*)(char))kinoko_squirrel_object_delete
+struct SquirrelObjectMethods kinoko_squirrel_object_methods_storage = {
+    kinoko_squirrel_object_delete
 };
 
-struct vtable_4d54ac_type g17 = {
-    (int32_t (*)(char))kinoko_actor_delete_method
+struct ActorMethods kinoko_actor_methods_storage = {
+    kinoko_actor_delete_method
 };
 
-struct vtable_4d59bc_type g27 = {
-    (int32_t (*)(int32_t))kinoko_method_render_layer_update
+struct ActorRenderLayerMethods kinoko_actor_render_layer_methods_storage = {
+    kinoko_method_render_layer_update
 };
 
-struct vtable_4d5a04_type g29 = {
+struct ActorPoolMethods kinoko_actor_pool_methods_storage = {
     kinoko_method_actor_pool_delete,
-    (int32_t (*)(int32_t))kinoko_method_actor_manager_top,
-    (int32_t (*)(uint32_t))kinoko_method_actor_manager_remove,
+    kinoko_method_actor_manager_top,
+    kinoko_method_actor_manager_remove,
     kinoko_method_lookup_actor,
     kinoko_method_actor_pool_count
 };
 
-struct vtable_4d5a5c_type g31 = {
+struct ActorOwnerMethods kinoko_actor_owner_methods_storage = {
     kinoko_method_actor_owner_delete,
-    (int32_t (*)(void))kinoko_method_actor_manager_push
+    kinoko_method_actor_manager_push
 };
 
-struct vtable_4d5ba0_type g37 = {
+struct MapRenderLayerMethods kinoko_map_render_layer_methods_storage = {
     kinoko_map_render_layer_entry
 };
 
-struct vtable_4d5c68_type g39 = {
+struct SqratObjectMethods kinoko_sqrat_object_methods_storage = {
     kinoko_sqrat_delete_object,
     kinoko_sqrat_object_reference,
     kinoko_sqrat_copy_object
 };
 
-struct vtable_4d5c80_type g40 = {
+struct SqratRootMethods kinoko_sqrat_root_methods_storage = {
     kinoko_sqrat_delete_object,
     kinoko_sqrat_object_reference,
     kinoko_sqrat_copy_object
 };
 
-struct vtable_4eb20c_type g184 = {
+struct RendererMethods kinoko_renderer_methods_storage = {
     kinoko_renderer_before_reset,
     kinoko_renderer_after_reset
 };
 
-struct vtable_4ebacc_type g231 = {
-    (int32_t (*)(int32_t))kinoko_method_write_act_script,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_read_act_script,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
-    (int32_t (*)(void))kinoko_method_delete_act_script
+struct ActScriptMethods kinoko_act_script_methods_storage = {
+    kinoko_method_write_act_script,
+    kinoko_method_read_act_script,
+    kinoko_method_query_serializable,
+    kinoko_method_delete_act_script
 };
 
-struct vtable_4ebe58_type g251 = {
+struct ActLayerReferenceMethods kinoko_act_layer_reference_methods_storage = {
     kinoko_sqrat_delete_object,
     kinoko_sqrat_object_reference,
     kinoko_sqrat_copy_object
 };
 
-struct vtable_4ebe68_type g252 = {
-    (int32_t (*)(int32_t))kinoko_method_write_act_layer,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_read_act_layer,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
-    (int32_t (*)(void))kinoko_method_destroy_serializable,
-    (int32_t (*)(unsigned char))kinoko_method_delete_act_layer,
-    (int32_t (*)(void))kinoko_method_clone_act_layer,
-    (int32_t (*)(int32_t))kinoko_act_layer_set_resource,
-    (int32_t (*)(int32_t, int32_t, int32_t))kinoko_act_layer_world_position,
-    (int32_t (*)(int32_t))kinoko_method_register_act_layer
+struct ActLayerMethods kinoko_act_layer_methods_storage = {
+    kinoko_method_write_act_layer,
+    kinoko_method_read_act_layer,
+    kinoko_method_query_serializable,
+    kinoko_method_destroy_serializable,
+    kinoko_method_delete_act_layer,
+    kinoko_method_clone_act_layer,
+    kinoko_act_layer_set_resource,
+    kinoko_act_layer_world_position,
+    kinoko_method_register_act_layer
 };
 
-struct vtable_4ebe90_type g253 = {
+struct ActLayerLayoutMethods kinoko_act_layer_layout_methods_storage = {
     kinoko_sqrat_delete_object,
     kinoko_sqrat_object_reference,
     kinoko_sqrat_copy_object
 };
 
-struct vtable_4ec0b0_type g277 = {
-    (int32_t (*)(int32_t))kinoko_method_write_act_key,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_read_act_key,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
-    (int32_t (*)(void))kinoko_method_destroy_serializable,
-    (int32_t (*)(char))kinoko_method_delete_act_key,
-    (int32_t (*)(void))kinoko_method_clone_act_key
+struct ActKeyMethods kinoko_act_key_methods_storage = {
+    kinoko_method_write_act_key,
+    kinoko_method_read_act_key,
+    kinoko_method_query_serializable,
+    kinoko_method_destroy_serializable,
+    kinoko_method_delete_act_key,
+    kinoko_method_clone_act_key
 };
 
-struct vtable_4ec1d4_type g285 = {
-    (int32_t (*)(int32_t))kinoko_method_write_act,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_read_act,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
-    (int32_t (*)(void))kinoko_method_destroy_serializable,
-    (int32_t (*)(unsigned char))kinoko_method_destroy_act,
+struct ActDocumentMethods kinoko_act_document_methods_storage = {
+    kinoko_method_write_act,
+    kinoko_method_read_act,
+    kinoko_method_query_serializable,
+    kinoko_method_destroy_serializable,
+    kinoko_method_destroy_act,
     kinoko_act_clone,
-    (int32_t (*)(int32_t))kinoko_method_load_act_resources,
-    (int32_t (*)(void))kinoko_method_suspend_act_resources,
-    (int32_t (*)(void))kinoko_method_resume_act_resources
+    kinoko_method_load_act_resources,
+    kinoko_method_suspend_act_resources,
+    kinoko_method_resume_act_resources
 };
 
-struct vtable_4ec358_type g299 = {
-    (int32_t (*)(int32_t))kinoko_method_write_layout_properties,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_read_layout_properties,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
-    (int32_t (*)(void))kinoko_method_destroy_layout,
-    (int32_t (*)(void))kinoko_c2d_layout_type,
-    (int32_t (*)(void))kinoko_method_clone_c2d_layout,
-    (int32_t (*)(int32_t))kinoko_method_layout_set_layer,
-    (int32_t (*)(void))kinoko_method_layout_update,
-    (int32_t (*)(float, float))kinoko_method_layout_draw,
-    (int32_t (*)(void))kinoko_method_register_layout
+struct ActLayoutMethods kinoko_act_layout_methods_storage = {
+    kinoko_method_write_layout_properties,
+    kinoko_method_read_layout_properties,
+    kinoko_method_query_serializable,
+    kinoko_method_destroy_layout,
+    kinoko_c2d_layout_type,
+    kinoko_method_clone_c2d_layout,
+    kinoko_method_layout_set_layer,
+    kinoko_method_layout_update,
+    kinoko_method_layout_draw,
+    kinoko_method_register_layout
 };
 
-struct vtable_4ec548_type g313 = {
-    (int32_t (*)(int32_t))kinoko_method_write_chip_resource,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_read_chip_resource,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
-    (int32_t (*)(void))kinoko_method_destroy_serializable,
-    (int32_t (*)(unsigned char))kinoko_method_delete_act_resource,
-    (int32_t (*)(void))kinoko_chip_resource_type,
-    (int32_t (*)(int32_t))kinoko_method_register_chip_resource,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_resource_42f800,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_resource_42f6c0,
-    (int32_t (*)(void))kinoko_method_clone_chip_resource,
-    (int32_t (*)(int32_t))kinoko_method_load_chip_resource
+struct ChipResourceMethods kinoko_chip_resource_methods_storage = {
+    kinoko_method_write_chip_resource,
+    kinoko_method_read_chip_resource,
+    kinoko_method_query_serializable,
+    kinoko_method_destroy_serializable,
+    kinoko_method_delete_act_resource,
+    kinoko_chip_resource_type,
+    kinoko_method_register_chip_resource,
+    kinoko_method_resource_42f800,
+    kinoko_method_resource_42f6c0,
+    kinoko_method_clone_chip_resource,
+    kinoko_method_load_chip_resource
 };
 
-struct vtable_4ec79c_type g327 = {
-    (int32_t (*)(int32_t))kinoko_method_write_map_layout,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_read_map_layout,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
-    (int32_t (*)(void))kinoko_method_destroy_layout,
-    (int32_t (*)(void))kinoko_map_layout_type,
+struct MapLayoutMethods kinoko_map_layout_methods_storage = {
+    kinoko_method_write_map_layout,
+    kinoko_method_read_map_layout,
+    kinoko_method_query_serializable,
+    kinoko_method_destroy_layout,
+    kinoko_map_layout_type,
     kinoko_clone_map_layout,
-    (int32_t (*)(int32_t))kinoko_method_map_set_layer,
+    kinoko_method_map_set_layer,
     kinoko_map_update_all_entry,
     kinoko_map_draw_entry,
-    (int32_t (*)(void))kinoko_method_register_map_layout,
+    kinoko_method_register_map_layout,
     kinoko_map_update_visible_entry
 };
 
-struct vtable_4ec7cc_type g328 = {
+struct MapColorMethods kinoko_map_color_methods_storage = {
     kinoko_delete_map_sprite,
     kinoko_quad_set_color,
     kinoko_quad_set_vertex_colors,
     kinoko_quad_modulate_color
 };
 
-struct vtable_4eccfc_type g365 = {
-    (int32_t (*)(int32_t))kinoko_method_write_texture_resource,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_read_texture_resource,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
-    (int32_t (*)(void))kinoko_method_destroy_serializable,
-    (int32_t (*)(unsigned char))kinoko_method_delete_act_resource,
-    (int32_t (*)(void))kinoko_texture_resource_type,
-    (int32_t (*)(int32_t))kinoko_method_register_texture_resource,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_resource_446920,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_resource_4467e0,
-    (int32_t (*)(void))kinoko_method_clone_texture_resource,
-    (int32_t (*)(int32_t))kinoko_method_load_resource_texture,
-    (int32_t (*)(void))kinoko_method_unload_resource_texture
+struct TextureResourceMethods kinoko_texture_resource_methods_storage = {
+    kinoko_method_write_texture_resource,
+    kinoko_method_read_texture_resource,
+    kinoko_method_query_serializable,
+    kinoko_method_destroy_serializable,
+    kinoko_method_delete_act_resource,
+    kinoko_texture_resource_type,
+    kinoko_method_register_texture_resource,
+    kinoko_method_resource_446920,
+    kinoko_method_resource_4467e0,
+    kinoko_method_clone_texture_resource,
+    kinoko_method_load_resource_texture,
+    kinoko_method_unload_resource_texture
 };
 
-struct vtable_4ece50_type g379 = {
-    (int32_t (*)(int32_t))kinoko_method_write_render_target,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_read_render_target,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
-    (int32_t (*)(void))kinoko_method_destroy_serializable,
-    (int32_t (*)(unsigned char))kinoko_method_delete_act_resource,
-    (int32_t (*)(void))kinoko_render_target_type,
-    (int32_t (*)(int32_t))kinoko_method_register_render_target,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_resource_4499a0,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_resource_449860,
-    (int32_t (*)(void))kinoko_method_clone_render_target,
-    (int32_t (*)(int32_t))kinoko_method_load_resource_texture,
-    (int32_t (*)(void))kinoko_method_unload_resource_texture,
-    (int32_t (*)(int32_t, int32_t))kinoko_method_create_render_target
+struct RenderTargetMethods kinoko_render_target_methods_storage = {
+    kinoko_method_write_render_target,
+    kinoko_method_read_render_target,
+    kinoko_method_query_serializable,
+    kinoko_method_destroy_serializable,
+    kinoko_method_delete_act_resource,
+    kinoko_render_target_type,
+    kinoko_method_register_render_target,
+    kinoko_method_resource_4499a0,
+    kinoko_method_resource_449860,
+    kinoko_method_clone_render_target,
+    kinoko_method_load_resource_texture,
+    kinoko_method_unload_resource_texture,
+    kinoko_method_create_render_target
 };
 
-struct vtable_4ed2cc_type g407 = {
-    (int32_t (*)(char))kinoko_color_destroy,
+struct SpriteMethods kinoko_sprite_methods_storage = {
+    kinoko_color_destroy,
     kinoko_quad_set_color,
     kinoko_quad_set_vertex_colors,
     kinoko_quad_modulate_color,
@@ -397,7 +420,7 @@ static int32_t kinoko_register_act_script_objects(void* script, void* environmen
     return retdec_register_act_script((int32_t)(intptr_t)script, (int32_t)(intptr_t)environment);
 }
 
-int32_t function_415fd0(int32_t script, int32_t environment) {
+int32_t kinoko_host_register_act_script_abi(int32_t script, int32_t environment) {
     return kinoko_register_act_script_objects((void *)(intptr_t)script, (void *)(intptr_t)environment);
 }
 
@@ -405,7 +428,7 @@ static int32_t kinoko_construct_layer_global_vm(void* storage) {
     return retdec_construct_cact_layer((int32_t)(intptr_t)storage, g664);
 }
 
-int32_t function_41e390(int32_t storage) {
+int32_t kinoko_host_construct_layer_abi(int32_t storage) {
     return kinoko_construct_layer_global_vm((void *)(intptr_t)storage);
 }
 
@@ -416,29 +439,29 @@ int32_t __fastcall kinoko_act_layer_associate_method(int32_t receiver, void* unu
 }
 
 int32_t *kinoko_c2d_layout_type(void) {
-    return &g910;
+    return &kinoko_layout_type_identity;
 }
 
 int32_t *kinoko_chip_resource_type(void) {
-    return &g914;
+    return &kinoko_chip_type_identity;
 }
 
 int32_t *kinoko_map_layout_type(void) {
-    return &g918;
+    return &kinoko_map_type_identity;
 }
 
 int32_t kinoko_script_dprint_noop(void) { return 0; }
 
 int32_t *kinoko_texture_resource_type(void) {
-    return &g930;
+    return &kinoko_texture_type_identity;
 }
 
 int32_t *kinoko_render_target_type(void) {
-    return &g934;
+    return &kinoko_render_target_type_identity;
 }
 
 int32_t __fastcall kinoko_color_destroy(int32_t receiver, void* unused_edx, char flags) {
-    *(int32_t *)(intptr_t)receiver = (int32_t)(intptr_t)&g23;
+    *(int32_t *)(intptr_t)receiver = (int32_t)(intptr_t)&kinoko_color_methods_storage;
     if (flags & 1) _3f__3f_3_40_YAXPAX_40_Z((int32_t *)(intptr_t)receiver);
     return receiver;
 }
@@ -465,34 +488,34 @@ int32_t kinoko_actor_render_submit(KinokoAnimationFrame *frame) {
     return kinoko_quad_submit((KinokoQuad *)frame,0.0f,0.0f);
 }
 
-const void *kinoko_pat_frame_methods(void) { return &g407; }
+const void *kinoko_pat_frame_methods(void) { return &kinoko_sprite_methods_storage; }
 
-int32_t function_465f70(void) {
+int32_t kinoko_host_clear_stages(void) {
     return kinoko_clear_global_stages();
 }
 
-int32_t function_466270(void) {
-    return kinoko_camera_initialize((KinokoCamera *)g_retdec_camera_state);
+int32_t kinoko_host_initialize_camera(void) {
+    return kinoko_camera_initialize(reinterpret_cast<KinokoCamera*>(&camera_state.record));
 }
 
-int32_t function_466540(int32_t a1, int32_t a2) {
+int32_t kinoko_camera_class_copy_abi(int32_t a1, int32_t a2) {
 
     return (int32_t)(intptr_t)kinoko_camera_copy(
         (KinokoCamera *)(intptr_t)a1, (KinokoCamera *)(intptr_t)a2);
 }
 
-int32_t function_468620_this(int32_t this_ptr) {
+int32_t kinoko_collision_refresh_abi(int32_t this_ptr) {
     return (int32_t)(intptr_t)kinoko_collision_refresh((KinokoCollisionState *)(intptr_t)this_ptr);
 }
 
-int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr) {
+int32_t kinoko_collision_reset_abi(int32_t this_ptr, int32_t actor_ptr) {
     return kinoko_collision_reset((KinokoCollisionState *)(intptr_t)this_ptr,
         (KinokoActorManager *)(intptr_t)actor_ptr);
 }
 
-int32_t function_4693a0(int32_t layout) {
+int32_t kinoko_host_register_collision_map_abi(int32_t layout) {
     return (int32_t)(intptr_t)kinoko_collision_register_map(
-        (KinokoCollisionState *)g_514300_storage, (KinokoActLayout *)(intptr_t)layout);
+        reinterpret_cast<KinokoCollisionState*>(&collision_state.record), (KinokoActLayout *)(intptr_t)layout);
 }
 
 static int32_t kinoko_append_render_item(int32_t *item) {
@@ -506,23 +529,23 @@ static int32_t kinoko_append_render_item(int32_t *item) {
     return item ? kinoko_append_render_queue(*item) : 0;
 }
 
-int32_t function_46a210(int32_t * a1) {
+int32_t kinoko_host_append_render_item(int32_t * a1) {
     return kinoko_append_render_item(a1);
 }
 
-int32_t function_46f140(int32_t name_ptr) {
-    return kinoko_map_find_layout((int32_t)(intptr_t)g_retdec_map_manager_state,
+int32_t kinoko_host_find_map_layout_abi(int32_t name_ptr) {
+    return kinoko_map_find_layout((int32_t)(intptr_t)&map_state.record,
                                   (const char *)(intptr_t)name_ptr);
 }
 
-int32_t function_470030(int32_t name_ptr)
+int32_t kinoko_host_create_map_layer_abi(int32_t name_ptr)
 {
     return kinoko_map_create_render_layer(
-        (int32_t)(intptr_t)g_retdec_map_manager_state,
+        (int32_t)(intptr_t)&map_state.record,
         (const char *)(intptr_t)name_ptr);
 }
 
-int32_t function_470890(void) {
+int32_t kinoko_host_clear_sound(void) {
     return kinoko_clear_global_sound();
 }
 
@@ -565,7 +588,7 @@ static int32_t kinoko_script_show_message(const char* text) {
     return MessageBoxA((HWND)g767, text, "Message", 0);
 }
 
-int32_t function_470f60(int32_t a1) {
+int32_t kinoko_host_show_message_abi(int32_t a1) {
     return kinoko_script_show_message((const char *)(intptr_t)a1);
 }
 
@@ -574,7 +597,7 @@ static int32_t kinoko_script_sleep(DWORD milliseconds) {
     return (int32_t)(intptr_t)&g1224;
 }
 
-int32_t function_470f80(int32_t dwMilliseconds) {
+int32_t kinoko_host_sleep_abi(int32_t dwMilliseconds) {
     return kinoko_script_sleep((DWORD)dwMilliseconds);
 }
 
@@ -582,7 +605,7 @@ static int32_t kinoko_script_milliseconds(void) {
     return (int32_t)timeGetTime();
 }
 
-int32_t function_470f90(void) {
+int32_t kinoko_host_milliseconds(void) {
     return kinoko_script_milliseconds();
 }
 
@@ -590,7 +613,7 @@ static int32_t kinoko_script_close_window(void) {
     return (int32_t)SendMessageA((HWND)g767, WM_CLOSE, 0, 0);
 }
 
-int32_t function_471080(void) {
+int32_t kinoko_host_close_window(void) {
     return kinoko_script_close_window();
 }
 
@@ -646,8 +669,8 @@ __declspec(noinline) int32_t retdec_stack_vm(void) {
         return retdec_explicit_vm;
     static int32_t null_stack_trace_count;
     
-    if (g644 != NULL) {
-        int32_t vm = (int32_t)(intptr_t)g644;
+    if (kinoko_primary_vm != NULL) {
+        int32_t vm = (int32_t)(intptr_t)kinoko_primary_vm;
         uint32_t stack_block =
             (uint32_t)*(int32_t *)(intptr_t)(vm + 24);
         if ((stack_block == 0 || stack_block < 0x02000000u ||
@@ -708,7 +731,7 @@ static __declspec(noinline) void retdec_watch_g644(void) {
     if (retdec_g644_watch_busy != 0)
         return;
     retdec_g644_watch_busy = 1;
-    current = (int32_t)(intptr_t)g644;
+    current = (int32_t)(intptr_t)kinoko_primary_vm;
     if (retdec_g644_watch_initialized == 0 ||
         current != retdec_g644_watch_value) {
         wsprintfA(message,
@@ -741,7 +764,7 @@ static int32_t kinoko_open_primary_script_vm(int32_t stack_size) {
 }
 
 const KinokoSqplusVmSlots *kinoko_sqplus_vm_slots(void) {
-    static KinokoSqplusVmSlots slots = { &g642, &g643, &g644, &g645, unk_5149EC };
+    static KinokoSqplusVmSlots slots = { &g642, &g643, &kinoko_primary_vm, &g645, unk_5149EC };
     return &slots;
 }
 
@@ -749,23 +772,23 @@ struct SQVM *kinoko_script_open_primary_vm(int32_t stack_size) {
     return (struct SQVM *)(intptr_t)kinoko_open_primary_script_vm(stack_size);
 }
 
-int32_t function_48a170(int32_t a1) {
+int32_t kinoko_host_open_vm_abi(int32_t a1) {
     return (int32_t)(intptr_t)kinoko_script_open_primary_vm(a1);
 }
 
-int32_t kinoko_sqrat_object_vtable(void) { return (int32_t)(intptr_t)&g39; }
+int32_t kinoko_sqrat_object_vtable(void) { return (int32_t)(intptr_t)&kinoko_sqrat_object_methods_storage; }
 
-int32_t kinoko_sqrat_root_vtable(void) { return (int32_t)(intptr_t)&g40; }
+int32_t kinoko_sqrat_root_vtable(void) { return (int32_t)(intptr_t)&kinoko_sqrat_root_methods_storage; }
 
-int32_t kinoko_actor_vtable(void) { return (int32_t)(intptr_t)&g17; }
+int32_t kinoko_actor_vtable(void) { return (int32_t)(intptr_t)&kinoko_actor_methods_storage; }
 
-int32_t kinoko_actor_step_key(void) { return (int32_t)(intptr_t)&g601; }
+int32_t kinoko_actor_step_key(void) { return (int32_t)(intptr_t)&kinoko_actor_step_key_storage; }
 
 int32_t kinoko_squirrel_object_vtable(void) {
-    return (int32_t)(intptr_t)&g16;
+    return (int32_t)(intptr_t)&kinoko_squirrel_object_methods_storage;
 }
 
-int32_t function_4aa210(int32_t source_ptr, int32_t *target_ptr) {
+int32_t kinoko_host_get_delegate_abi(int32_t source_ptr, int32_t *target_ptr) {
     return (int32_t)(intptr_t)(int32_t*)(intptr_t)(kinoko_sqplus_object_get_delegate((void *)(intptr_t)(source_ptr), (void *)(intptr_t)((int32_t)(intptr_t)target_ptr)));
 }
 
@@ -778,11 +801,11 @@ int32_t kinoko_native_void_type(void) {
     return (int32_t)(intptr_t)kinoko_sqplus_scalar_type(-1);
 }
 
-int32_t function_4ab170(int32_t vm, int32_t class_name,
+int32_t kinoko_host_create_native_instance_abi(int32_t vm, int32_t class_name,
                         int32_t native_pointer, int32_t release_hook) {
     kinoko_sqplus_select_vm((struct SQVM *)(intptr_t)(vm));
     return kinoko_native_instance_create(vm, class_name, native_pointer,
-        release_hook, (int32_t)(intptr_t)&g16);
+        release_hook, (int32_t)(intptr_t)&kinoko_squirrel_object_methods_storage);
 }
 
 void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1) {
@@ -790,7 +813,7 @@ void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1) {
 }
 
 int32_t function_4d4860(void) {
-    return kinoko_destroy_script_callback((KinokoScriptCallback *)(intptr_t)((int32_t)(intptr_t)g612));
+    return kinoko_destroy_script_callback(&global_callback);
 }
 
 int32_t kinoko_csv_load_bytes(const char *path, char **bytes) {
@@ -815,29 +838,29 @@ int32_t kinoko_csv_load_bytes(const char *path, char **bytes) {
     return 1;
 }
 
-int32_t kinoko_act_script_output_compiled(void) { return g673 != 0; }
+int32_t kinoko_act_script_output_compiled(void) { return kinoko_compile_act_output != 0; }
 
 const struct KinokoActHostSymbols* kinoko_act_host_symbols(void)
 {
     static const struct KinokoActHostSymbols symbols = {
-        &g231, 
-        &g251, 
-        &g252, 
-        &g253, 
-        &g277, 
-        &g285, 
-        &g299, 
-        &g300, 
-        &g313, 
-        &g327, 
-        &g328, 
-        &g365, 
-        &g39, 
-        &g40, 
-        &g407, 
-        &g23, 
-        &g379, 
-        &g25, 
+        &kinoko_act_script_methods_storage, 
+        &kinoko_act_layer_reference_methods_storage, 
+        &kinoko_act_layer_methods_storage, 
+        &kinoko_act_layer_layout_methods_storage, 
+        &kinoko_act_key_methods_storage, 
+        &kinoko_act_document_methods_storage, 
+        &kinoko_act_layout_methods_storage, 
+        &kinoko_layout_color_methods_storage, 
+        &kinoko_chip_resource_methods_storage, 
+        &kinoko_map_layout_methods_storage, 
+        &kinoko_map_color_methods_storage, 
+        &kinoko_texture_resource_methods_storage, 
+        &kinoko_sqrat_object_methods_storage, 
+        &kinoko_sqrat_root_methods_storage, 
+        &kinoko_sprite_methods_storage, 
+        &kinoko_color_methods_storage, 
+        &kinoko_render_target_methods_storage, 
+        &kinoko_chip_quad_methods_storage, 
     };
     return &symbols;
 }
@@ -845,7 +868,7 @@ const struct KinokoActHostSymbols* kinoko_act_host_symbols(void)
 const struct KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
     static struct KinokoAudioHostSymbols symbols;
     symbols.critical_section_vtable = &kinoko_critical_section_methods;
-    symbols.device_error_message = g209;
+    symbols.device_error_message = kinoko_audio_error_text;
     return &symbols;
 }
 
@@ -856,20 +879,20 @@ static int32_t kinoko_input_copy_abi(int32_t destination, int32_t source) {
 
 const KinokoCameraMapScriptSymbols *kinoko_camera_map_script_symbols(void) {
     static KinokoCameraMapScriptSymbols symbols;
-    symbols.camera_class = g611;
-    symbols.map_class = g636;
+    symbols.camera_class = kinoko_camera_class_storage;
+    symbols.map_class = kinoko_map_class_storage;
     return &symbols;
 }
 
 const KinokoInputScriptSymbols *kinoko_input_script_symbols(void) {
     static KinokoInputScriptSymbols symbols;
-    symbols.object_vtable = &g16;
-    symbols.null_type = g483;
-    symbols.null_data = g484;
-    symbols.input_class = g629;
-    symbols.root = g722;
-    symbols.vm = g644;
-    symbols.manager_storage_bytes = sizeof(g_retdec_input_manager_state);
+    symbols.object_vtable = &kinoko_squirrel_object_methods_storage;
+    symbols.null_type = kinoko_null_object_type;
+    symbols.null_data = kinoko_null_object_value;
+    symbols.input_class = kinoko_input_class_storage;
+    symbols.root = kinoko_script_root_storage;
+    symbols.vm = kinoko_primary_vm;
+    symbols.manager_storage_bytes = sizeof(input_state);
     return &symbols;
 }
 
@@ -878,7 +901,7 @@ int32_t *kinoko_input_binding_type(void) {
 }
 
 int32_t *kinoko_camera_binding_type(void) {
-    return kinoko_sqplus_game_type(1, function_466540);
+    return kinoko_sqplus_game_type(1, kinoko_camera_class_copy_abi);
 }
 
 static int32_t kinoko_map_copy_abi(int32_t destination, int32_t source) {
@@ -890,15 +913,15 @@ int32_t *kinoko_map_binding_type(void) {
     return kinoko_sqplus_game_type(3, kinoko_map_copy_abi);
 }
 
-const void *kinoko_actor_owner_methods(void) { return &g31; }
+const void *kinoko_actor_owner_methods(void) { return &kinoko_actor_owner_methods_storage; }
 
-const void *kinoko_actor_render_layer_methods(void) { return &g27; }
+const void *kinoko_actor_render_layer_methods(void) { return &kinoko_actor_render_layer_methods_storage; }
 
-void *kinoko_actor_class_object(void) { return g602; }
+void *kinoko_actor_class_object(void) { return kinoko_actor_class_storage; }
 
-void *kinoko_actor_user_key(void) { return g600; }
+void *kinoko_actor_user_key(void) { return kinoko_actor_user_key_storage; }
 
-struct SQVM *kinoko_actor_default_vm(void) { return (struct SQVM *)g644; }
+struct SQVM *kinoko_actor_default_vm(void) { return (struct SQVM *)kinoko_primary_vm; }
 
 void kinoko_actor_motion_host(KinokoActor *actor) { kinoko_actor_update_motion(kinoko_game_collision_state(), actor); }
 
@@ -910,10 +933,10 @@ void kinoko_actor_manager_refresh_collision(void) { kinoko_script_refresh_collis
 
 const KinokoRuntimeBootSymbols *kinoko_runtime_boot_symbols(void) {
     static KinokoRuntimeBootSymbols symbols;
-    symbols.map = (KinokoMapManager *)g_retdec_map_manager_state;
-    symbols.actors = (KinokoActorManager *)g_retdec_actor_manager_state;
-    symbols.renderer_methods = &g184;
-    symbols.render_layer_owner_slot = &g617;
+    symbols.map = reinterpret_cast<KinokoMapManager*>(&map_state.record);
+    symbols.actors = reinterpret_cast<KinokoActorManager*>(&actor_state.record);
+    symbols.renderer_methods = &kinoko_renderer_methods_storage;
+    symbols.render_layer_owner_slot = &kinoko_render_layer_owner_slot;
     return &symbols;
 }
 
@@ -921,11 +944,11 @@ void kinoko_application_initialize_host(void) {
     kinoko_runtime_initialize_objects(kinoko_runtime_boot_symbols());
 }
 
-const char *kinoko_application_title(void) { return g43; }
+const char *kinoko_application_title(void) { return kinoko_application_title_text; }
 
-const char *kinoko_application_error(void) { return g42; }
+const char *kinoko_application_error(void) { return kinoko_application_error_text; }
 
-void kinoko_application_set_archive_mode(int32_t enabled) { g874 = enabled != 0; }
+void kinoko_application_set_archive_mode(int32_t enabled) { kinoko_packed_assets = enabled != 0; }
 
 void kinoko_application_open_archives(void) {
     kinoko_archive_mount("6kinoko_a.dat");
@@ -936,10 +959,10 @@ void kinoko_application_open_archives(void) {
 
 const KinokoGameObjects *kinoko_game_objects(void) {
     static const KinokoGameObjects objects = {
-        (KinokoInputManager *)g_retdec_input_manager_state,
-        (KinokoActorManager *)g_retdec_actor_manager_state,
-        (KinokoCamera *)g_retdec_camera_state,
-        (KinokoMapManager *)g_retdec_map_manager_state
+        reinterpret_cast<KinokoInputManager*>(&input_state.record),
+        reinterpret_cast<KinokoActorManager*>(&actor_state.record),
+        reinterpret_cast<KinokoCamera*>(&camera_state.record),
+        reinterpret_cast<KinokoMapManager*>(&map_state.record)
     };
     return &objects;
 }
@@ -947,8 +970,8 @@ const KinokoGameObjects *kinoko_game_objects(void) {
 static struct SQVM *game_startup_vm;
 
 void kinoko_game_prepare_scripts(void) {
-    if (!game_startup_vm) game_startup_vm = (struct SQVM *)g644;
-    retdec_trace_i32("469640:vm-before", (int32_t)(intptr_t)g644);
+    if (!game_startup_vm) game_startup_vm = (struct SQVM *)kinoko_primary_vm;
+    retdec_trace_i32("469640:vm-before", (int32_t)(intptr_t)kinoko_primary_vm);
 }
 
 void kinoko_game_register_scripts(void) {
@@ -956,9 +979,9 @@ void kinoko_game_register_scripts(void) {
     retdec_trace("469640:before-473010");
     function_473010();
     retdec_trace("469640:after-473010");
-    if (g644) game_startup_vm = (struct SQVM *)g644;
-    else if (game_startup_vm) g644 = (char *)game_startup_vm;
-    retdec_trace_i32("469640:vm-after-sqrat", (int32_t)(intptr_t)g644);
+    if (kinoko_primary_vm) game_startup_vm = (struct SQVM *)kinoko_primary_vm;
+    else if (game_startup_vm) kinoko_primary_vm = (struct SQVM *)game_startup_vm;
+    retdec_trace_i32("469640:vm-after-sqrat", (int32_t)(intptr_t)kinoko_primary_vm);
     retdec_trace("469640:sqrat-done");
 }
 
@@ -973,19 +996,19 @@ int32_t kinoko_game_update_input(KinokoInputManager *input) {
 int32_t kinoko_game_load_boot_script(void) { return kinoko_script_load_file("data/script/boot.nut", 0); }
 
 void kinoko_game_update_callback(int32_t trace_index) {
-    if (kinoko_sqplus_object_type(retdec_game_callback_storage + 4) ==
+    if (kinoko_sqplus_object_type(&global_callback.closure) ==
         0x08000100) {
 
         retdec_trace("stagevm:global-callback");
         if (trace_index <= 16) {
-            retdec_trace_i32("stagevm:global-state-vm", retdec_game_callback_storage[0]);
-            retdec_trace_i32("stagevm:global-env-type", retdec_game_callback_storage[2]);
-            retdec_trace_i32("stagevm:global-env-data", retdec_game_callback_storage[3]);
-            retdec_trace_i32("stagevm:global-func-type", retdec_game_callback_storage[5]);
-            retdec_trace_i32("stagevm:global-func-data", retdec_game_callback_storage[6]);
+            retdec_trace_i32("stagevm:global-state-vm", (int32_t)(intptr_t)global_callback.vm);
+            retdec_trace_i32("stagevm:global-env-type", global_callback.environment.type);
+            retdec_trace_i32("stagevm:global-env-data", global_callback.environment.value);
+            retdec_trace_i32("stagevm:global-func-type", global_callback.closure.type);
+            retdec_trace_i32("stagevm:global-func-data", global_callback.closure.value);
         }
-        if (kinoko_script_callback_invoke((KinokoScriptCallback *)(intptr_t)((int32_t)(intptr_t)retdec_game_callback_storage)) < 0)
-            kinoko_script_callback_clear((KinokoScriptCallback *)(intptr_t)((int32_t)(intptr_t)retdec_game_callback_storage));
+        if (kinoko_script_callback_invoke(&global_callback) < 0)
+            kinoko_script_callback_clear(&global_callback);
     }
 }
 
@@ -1006,35 +1029,41 @@ void kinoko_game_clear_actors(KinokoActorManager *actors) {
 }
 
 void kinoko_game_trace_map(KinokoMapManager *map, int32_t drawing) {
-    const int32_t *legacy = (const int32_t *)map;
-    if (drawing) retdec_trace_i32("render:map-layer", legacy[3]);
+    const auto state = kinoko::map::ManagerView(map).load();
+    if (drawing) retdec_trace_i32("render:map-layer", (int32_t)(intptr_t)state.source_act);
     else {
-        retdec_trace_i32("469900:map-act", legacy[3]);
-        retdec_trace_i32("469900:map-resource", legacy[5]);
+        retdec_trace_i32("469900:map-act", (int32_t)(intptr_t)state.source_act);
+        retdec_trace_i32("469900:map-resource", (int32_t)(intptr_t)state.player);
     }
 }
 
 void kinoko_game_release_script_reference(uint32_t index) {
-    int32_t *references[] = { g602, g629, g611, g636 };
-    if (index < 4) (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(intptr_t)((int32_t)(intptr_t)references[index])));
+    int32_t *references[] = { kinoko_actor_class_storage, kinoko_input_class_storage, kinoko_camera_class_storage, kinoko_map_class_storage };
+    if (index < 4) kinoko_sqplus_object_reset(references[index]);
 }
 
 int32_t kinoko_game_close_vm(void) { return kinoko_script_close_vm(); }
 
-KinokoScriptCallback *kinoko_game_global_callback(void) { return (KinokoScriptCallback *)g612; }
+KinokoScriptCallback *kinoko_game_global_callback(void) { return &global_callback; }
 
-KinokoCollisionState *kinoko_game_collision_state(void) { return (KinokoCollisionState *)g_514300_storage; }
+KinokoCollisionState *kinoko_game_collision_state(void) { return reinterpret_cast<KinokoCollisionState*>(&collision_state.record); }
 
 void kinoko_game_initialize_callback(KinokoScriptCallback *callback) {
-    kinoko_script_callback_construct((KinokoScriptCallback *)(intptr_t)((int32_t)(intptr_t)callback), (const char *)(intptr_t)(0));
+    kinoko_script_callback_construct(callback, nullptr);
 }
 
-int32_t kinoko_game_load_map_file(const char *path) { return kinoko_map_manager_load((KinokoMapManager *)g_retdec_map_manager_state, path, (struct SQVM *)g644, g636, &g722); }
+int32_t kinoko_game_load_map_file(const char *path) { return kinoko_map_manager_load(reinterpret_cast<KinokoMapManager*>(&map_state.record), path, (struct SQVM *)kinoko_primary_vm, kinoko_map_class_storage, &kinoko_script_root_storage); }
 
-int32_t kinoko_game_release_map_state(void) { kinoko_map_manager_clear((KinokoMapManager *)g_retdec_map_manager_state); return 0; }
+int32_t kinoko_game_release_map_state(void) { kinoko_map_manager_clear(reinterpret_cast<KinokoMapManager*>(&map_state.record)); return 0; }
 
 void kinoko_game_split_path(const char *path, char *directory) {
     kinoko_path_split(path, directory, NULL);
 }
 
-alignas(8) unsigned char g_retdec_input_manager_state[0x600] = {};
+
+
+int32_t kinoko_host_explicit_vm(void) { return retdec_explicit_vm; }
+
+const void *kinoko_string_layout_methods(void) { return &kinoko_string_layout_methods_storage; }
+const void *kinoko_actor_pool_methods(void) { return &kinoko_actor_pool_methods_storage; }
+const void *kinoko_actor_pool_base_methods(void) { return &kinoko_actor_pool_base_methods_storage; }

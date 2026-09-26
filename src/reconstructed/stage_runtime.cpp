@@ -13,7 +13,7 @@
 #include "kinoko/legacy_memory.hpp"
 
 extern "C" {
-extern char *g644;
+extern struct SQVM *kinoko_primary_vm;
 }
 
 namespace {
@@ -153,10 +153,10 @@ extern "C" KinokoStageOwner *kinoko_stage_load(const char *file_name) {
     retdec_trace_i32("466100:holder", address(holder));
     retdec_trace_i32("466100:resource", address(resource));
 
-    if (resource && g644) {
+    if (resource && kinoko_primary_vm) {
         // 466208 has a known callee and receiver. Call the existing explicit
         // host implementation directly, instead of casting a function to void*.
-        const auto result = retdec_root_table_construct_this(address(resource), address(g644), 0);
+        const auto result = retdec_root_table_construct_this(address(resource), address(kinoko_primary_vm), 0);
         retdec_trace_i32("466100:450e30-result", result);
     }
     if (stage_list_identity()) {

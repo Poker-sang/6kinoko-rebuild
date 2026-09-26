@@ -5,9 +5,9 @@
 #include <list>
 #include <stdexcept>
 
-extern "C" { extern int32_t g31; }
+extern "C" { extern int32_t kinoko_actor_owner_methods_storage; }
 namespace {
-inline auto actor_manager_vtable = &g31;
+inline auto actor_manager_vtable = &kinoko_actor_owner_methods_storage;
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;

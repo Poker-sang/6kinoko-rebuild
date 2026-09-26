@@ -7,7 +7,7 @@
 #include <cstdio>
 
 extern "C" {
-extern char* g644;
+extern struct SQVM *kinoko_primary_vm;
 void retdec_trace(const char* message);
 void retdec_trace_i32(const char* message, int32_t value);
 void retdec_trace_squirrel_name(const char* message, int32_t name);
@@ -15,7 +15,7 @@ void retdec_trace_squirrel_name(const char* message, int32_t name);
 
 namespace {
 using namespace kinoko::script;
-inline char*& current_vm_storage = g644;
+inline SQVM*& current_vm_storage = kinoko_primary_vm;
 HSQUIRRELVM current_vm() noexcept { return reinterpret_cast<HSQUIRRELVM>(current_vm_storage); }
 int32_t pop(HSQUIRRELVM vm, SQInteger count = 1) {
     // Keep the embedding's existing underflow guard; ownership is source Pop.

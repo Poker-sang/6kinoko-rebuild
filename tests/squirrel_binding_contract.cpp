@@ -24,7 +24,7 @@ void require(bool ok, const char* message) {
 // objects, classes, bytecode, errors, references and callbacks use the real
 // vendored Squirrel 2.2.2 implementation, not a simulated VM.
 extern "C" {
-char* g644 = nullptr;
+struct SQVM *kinoko_primary_vm = nullptr;
 int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
 int32_t kinoko_native_void_type(void) { return 0x13572468; }
 void retdec_trace(const char*) {}
@@ -32,7 +32,7 @@ void retdec_trace_i32(const char*, int32_t) {}
 void retdec_trace_squirrel_name(const char*, int32_t) {}
 void _3f__3f_3_40_YAXPAX_40_Z(int32_t* p) { std::free(p); }
 void * kinoko_sqplus_root_object(void) { return (void *)(intptr_t)(address(&root_storage)); }
-int32_t  kinoko_sqplus_select_vm(struct SQVM * vm) { g644 = reinterpret_cast<char *>(vm); return 1; }
+int32_t  kinoko_sqplus_select_vm(struct SQVM * vm) { kinoko_primary_vm = reinterpret_cast<char *>(vm); return 1; }
 int32_t* kinoko_native_binding_type(int32_t category) {
     return category == -1 ? kinoko_sqplus_game_type(0,
         [](int32_t, int32_t source) -> int32_t { return source; }) :
@@ -42,13 +42,13 @@ int32_t* kinoko_native_binding_type(int32_t category) {
 
 namespace {
 int32_t exchange_vm(int32_t vm) {
-    const auto old = address(g644); g644 = pointer<char>(vm); return old;
+    const auto old = address(kinoko_primary_vm); kinoko_primary_vm = pointer<SQVM>(vm); return old;
 }
 class Machine final {
 public:
     Machine() : vm_(pointer<SQVM>(kinoko_sq_open(64))) {
         require(vm_ != nullptr, "open source VM");
-        g644 = reinterpret_cast<char*>(vm_);
+        kinoko_primary_vm = reinterpret_cast<SQVM*>(vm_);
         kinoko_sq_set_context_exchange(exchange_vm);
         ObjectView(&root_storage).initialize(kinoko_squirrel_object_vtable());
         sq_pushroottable(vm_);
@@ -57,7 +57,7 @@ public:
     ~Machine() {
         ObjectView(&root_storage).release(vm_);
         ObjectView(&root_storage).reset();
-        kinoko_sq_set_context_exchange(nullptr); sq_close(vm_); g644 = nullptr;
+        kinoko_sq_set_context_exchange(nullptr); sq_close(vm_); kinoko_primary_vm = nullptr;
     }
     HSQUIRRELVM get() { return vm_; }
 private:

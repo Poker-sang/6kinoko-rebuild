@@ -15,7 +15,7 @@
 // Real source VM, SqPlus references, serializer, Windows file I/O and codec.
 // Only unrelated game host/diagnostic ports are supplied by this fixture.
 extern "C" {
-char* g644 = nullptr;
+struct SQVM *kinoko_primary_vm = nullptr;
 int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
 int32_t kinoko_native_void_type(void) { return 0x13572468; }
 void retdec_trace(const char*) {}
@@ -31,8 +31,8 @@ void require(bool ok, const char* message) {
 class Machine {
 public:
     HSQUIRRELVM vm = sq_open(128);
-    Machine() { require(vm != nullptr, "open VM"); g644 = reinterpret_cast<char*>(vm); }
-    ~Machine() { sq_close(vm); g644 = nullptr; }
+    Machine() { require(vm != nullptr, "open VM"); kinoko_primary_vm = reinterpret_cast<SQVM*>(vm); }
+    ~Machine() { sq_close(vm); kinoko_primary_vm = nullptr; }
 };
 // Never touch the original game's marisa[A-C].dat. Each run gets its own directory.
 class Files {

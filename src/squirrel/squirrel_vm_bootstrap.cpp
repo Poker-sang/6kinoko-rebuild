@@ -103,7 +103,7 @@ extern "C" int32_t kinoko_sqplus_select_vm(struct SQVM * requested_vm) {
         kinoko_sq_pop(address(current), 1);
     }
     *host_slots().skip_owner_reset = 0;
-    *host_slots().current_vm = reinterpret_cast<char*>(current);
+    *host_slots().current_vm = current;
     const int32_t owner_result = (int32_t)(intptr_t)(kinoko_sqplus_object_assign_thread(host_slots().thread_wrapper, current));
     return (owner_result & -256) | 1;
 }

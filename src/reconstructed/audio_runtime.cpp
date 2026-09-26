@@ -126,7 +126,7 @@ int g_retdec_se_entry_count = 0;
 BgmTrack g_retdec_bgm_track;
 std::list<BgmTrack> fading_tracks;
 inline int32_t& active_bgm_slot = g637;
-inline char& packed_assets_slot = g874;
+inline char& packed_assets_slot = kinoko_packed_assets;
 inline int32_t& primary_device_slot = g876;
 inline char*& dsound_device_slot = g877;
 inline int32_t& listener_slot = g878;

@@ -17,7 +17,7 @@ using Destroy = int32_t(__thiscall*)(int32_t, unsigned char);
 using InPlace = int32_t(__thiscall*)(int32_t);
 }
 extern "C" {
-char* g644 = nullptr;
+struct SQVM *kinoko_primary_vm = nullptr;
 char g560 = 0;
 int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
 int32_t kinoko_actor_vtable(void) { return 0x14141414; }
@@ -40,7 +40,7 @@ int32_t kinoko_actor_clear_script(KinokoActor *receiver_actor) {
 }
 namespace {
 int32_t exchange_vm(int32_t value) {
-    const auto previous = address(g644); g644 = pointer<char>(value); receiver = value; return previous;
+    const auto previous = address(kinoko_primary_vm); kinoko_primary_vm = pointer<SQVM>(value); receiver = value; return previous;
 }
 struct ControlFixture : boost::detail::sp_counted_base {
     ControlFixture(int strong, int weak) {
@@ -109,7 +109,7 @@ void initialize_table(HSQUIRRELVM vm, int32_t actor) {
     ObjectView(actor + 44).capture(vm, -1); sq_pop(vm, 1);
 }
 SQInteger script_step(HSQUIRRELVM vm) {
-    require(g644 == reinterpret_cast<char*>(vm), "native callback receives child VM context");
+    require(kinoko_primary_vm == reinterpret_cast<SQVM*>(vm), "native callback receives child VM context");
     HSQOBJECT argument; sq_getstackobj(vm, 2, &argument);
     invoke(vm, active_actor, argument);
     return 0;
@@ -173,7 +173,7 @@ void lifecycle(HSQUIRRELVM vm) {
     active_actor = actor;
     sq_newthread(vm, 64); HSQUIRRELVM child = nullptr; sq_getthread(vm, -1, &child);
     evaluate(child, "stepFixtureCall(stepFixtureValue);\nstepFixtureCall(null);\n");
-    require(g644 == reinterpret_cast<char*>(vm) && control[2] == 3, "child callback restores parent and ownership");
+    require(kinoko_primary_vm == reinterpret_cast<SQVM*>(vm) && control[2] == 3, "child callback restores parent and ownership");
     sq_pop(vm, 1); erase_slot(vm, "stepFixtureCall"); erase_slot(vm, "stepFixtureValue");
     invoke(vm, actor, instance.get());
     store(pointer(actor),int32_t{0x77777777});
@@ -204,11 +204,11 @@ int main() {
     try {
         for (int pass = 0; pass < 8; ++pass) {
             Machine machine; auto* vm = machine.get();
-            g644 = reinterpret_cast<char*>(vm); receiver = address(vm);
+            kinoko_primary_vm = reinterpret_cast<SQVM*>(vm); receiver = address(vm);
             kinoko_sq_set_context_exchange(exchange_vm);
             initialize_key(vm); controls(); lifecycle(vm);
             ObjectView(&step_key).release(vm); ObjectView(&step_key).reset();
-            top(vm, 0, "root stack balanced"); g644 = nullptr;
+            top(vm, 0, "root stack balanced"); kinoko_primary_vm = nullptr;
             std::printf("actor pass %d: 10000 thiscalls, real VM/child, ownership, controls and canaries OK\n", pass + 1);
         }
         return 0;

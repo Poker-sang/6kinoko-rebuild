@@ -11,13 +11,13 @@
 #include <type_traits>
 
 extern "C" {
-extern char* g644;
+extern struct SQVM *kinoko_primary_vm;
 void _3f__3f_3_40_YAXPAX_40_Z(int32_t* allocation);
 }
 
 namespace {
 using namespace kinoko::script;
-inline char*& current_vm_storage = g644;
+inline SQVM*& current_vm_storage = kinoko_primary_vm;
 static_assert(sizeof(KinokoOwnedObjectWords) == sizeof(ObjectStorage));
 static_assert(std::is_trivially_copyable_v<KinokoOwnedObjectWords>);
 static_assert(std::is_trivially_destructible_v<KinokoOwnedObjectWords>);

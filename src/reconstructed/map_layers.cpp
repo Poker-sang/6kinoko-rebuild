@@ -11,7 +11,7 @@
 #include <cstring>
 
 extern "C" {
-extern unsigned char g327, g37;
+extern unsigned char kinoko_map_layout_methods_storage, kinoko_map_render_layer_methods_storage;
 }
 
 using namespace kinoko::map;
@@ -30,7 +30,7 @@ extern "C" KinokoActLayout *kinoko_map_lookup_layout(KinokoMapManager *storage, 
         if (!borrowed_layout) continue;
         const LayoutView layout(borrowed_layout);
         auto *layer = layout.get(&LayoutRecord::owning_layer);
-        if (layout.get(&LayoutRecord::methods) != &g327 || !layer) continue;
+        if (layout.get(&LayoutRecord::methods) != &kinoko_map_layout_methods_storage || !layer) continue;
         const kinoko::legacy::StringView layer_name(LayerView(layer).bytes(&LayerRecord::name));
         if (std::strcmp(layer_name.data(), name) == 0)
             return borrowed_layout;

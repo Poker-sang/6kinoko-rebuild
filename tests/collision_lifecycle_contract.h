@@ -20,7 +20,7 @@ static int test_collision_lifecycle(void) {
     layout[78] = PTR(layer);
     ((float*)layer)[36] = 15.25f; ((float*)layer)[37] = -6.5f;
     ((float*)proxy)[60] = 3.0f; ((float*)proxy)[61] = 8.0f;
-    CHECK(function_468620_this(PTR(state)) == PTR(b));
+    CHECK(kinoko_collision_refresh_abi(PTR(state)) == PTR(b));
     CHECK(((float*)proxy)[62] == 3.0f && ((float*)proxy)[63] == 8.0f);
     CHECK(((float*)proxy)[60] == 15.25f && ((float*)proxy)[61] == -6.5f);
     CHECK(state[21] == 2);
@@ -29,29 +29,29 @@ static int test_collision_lifecycle(void) {
     CHECK(*(int32_t*)(intptr_t)(control+4) == 1);
     int32_t capacity_end = state[18], candidate_owner = state[19];
     manager[29] = 1;
-    CHECK(function_468620_this(PTR(state)) == PTR(manager));
+    CHECK(kinoko_collision_refresh_abi(PTR(state)) == PTR(manager));
     CHECK(state[21] == 0 && state[18] == capacity_end && state[19] == candidate_owner);
     manager[29] = 0;
-    CHECK(function_468620_this(PTR(state)) == PTR(manager));
+    CHECK(kinoko_collision_refresh_abi(PTR(state)) == PTR(manager));
     /* Losing the strong owner destroys its slot. Never follow the stale layout. */
     kinoko_native_release_strong(control);
     CHECK(*(int32_t*)(intptr_t)(control+4) == 0);
     *(int32_t*)(intptr_t)state[1] = 1;
-    CHECK(function_468620_this(PTR(state)) == PTR(manager));
+    CHECK(kinoko_collision_refresh_abi(PTR(state)) == PTR(manager));
     int32_t weak_before = *(int32_t*)(intptr_t)(control+8);
     state[6] = 101; state[10] = 202; /* reset must preserve scratch ends */
-    CHECK(!function_468950_this(PTR(state), 0));
+    CHECK(!kinoko_collision_reset_abi(PTR(state), 0));
     CHECK(state[2] != state[1] && state[14] != state[13]);
-    CHECK(function_468950_this(PTR(state), PTR(replacement)));
+    CHECK(kinoko_collision_reset_abi(PTR(state), PTR(replacement)));
     CHECK(state[0] == PTR(replacement) && state[21] == 0);
     CHECK(state[2] == state[1] && state[14] == state[13]);
     CHECK(state[6] == 101 && state[10] == 202 && state[18] == capacity_end);
     CHECK(*(int32_t*)(intptr_t)(control+8) == weak_before-1);
-    CHECK(function_468950_this(PTR(state), PTR(replacement)));
+    CHECK(kinoko_collision_reset_abi(PTR(state), PTR(replacement)));
     CHECK(*(int32_t*)(intptr_t)(control+8) == weak_before-1);
     state[0] = 0; state[21] = 7;
-    CHECK(function_468620_this(PTR(state)) == 0 && state[21] == 0);
-    CHECK(function_468620_this(0) == 0 && !function_468950_this(0, PTR(manager)));
+    CHECK(kinoko_collision_refresh_abi(PTR(state)) == 0 && state[21] == 0);
+    CHECK(kinoko_collision_refresh_abi(0) == 0 && !kinoko_collision_reset_abi(0, PTR(manager)));
     kinoko_native_release_weak(control);
     kinoko_native_buffer_destroy(PTR(state)+4);
     kinoko_native_buffer_destroy(PTR(state)+52);

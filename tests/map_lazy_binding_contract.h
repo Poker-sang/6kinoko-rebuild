@@ -24,15 +24,15 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
     *(uint32_t*)data->chips[0].bytes = 4;
     *(int16_t*)(data->chips[0].bytes+12) = 16;
     *(int16_t*)(data->chips[0].bytes+14) = 16;
-    resource[0] = PTR(&g313); resource[1] = 42;
+    resource[0] = PTR(&kinoko_chip_resource_methods_storage); resource[1] = 42;
     resource[7] = resource[14] = resource[23] = 15;
     resource[16] = PTR(data);
     *(int32_t*)(intptr_t)(layer+96) = 42;
     *(int32_t*)(intptr_t)(layer+100) = PTR(resource);
     *(int32_t*)(intptr_t)(layer+104) = 9;
-    map[0] = PTR(&g327); map[1] = PTR(&g328); map[113] = -1;
+    map[0] = PTR(&kinoko_map_layout_methods_storage); map[1] = PTR(&kinoko_map_color_methods_storage); map[113] = -1;
     kinoko_native_buffer_replace(PTR(map)+264,records,sizeof(records));
-    key[0] = PTR(&g277); key[1] = PTR(map); key[7] = 15;
+    key[0] = PTR(&kinoko_act_key_methods_storage); key[1] = PTR(map); key[7] = 15;
     CHECK(retdec_act_append_list(layer+180,PTR(key)));
     *(int32_t*)(intptr_t)(layer+184) = 1;
     kinoko_act_array_append(PTR(source)+224,PTR(resource));
@@ -89,7 +89,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             CHECK(layout[79] == 0);
             *(int32_t*)(intptr_t)(cloned_layer+100) = cloned_resource;
         } else if (query == 1) {
-            int32_t klass[2] = {g483,g484}, instance[2] = {g483,g484};
+            int32_t klass[2] = {kinoko_null_object_type,kinoko_null_object_value}, instance[2] = {kinoko_null_object_type,kinoko_null_object_value};
             *(uint8_t*)(intptr_t)(cloned_layer+140) = 0;
             CHECK(retdec_publish_c2dmaplayout_class(vm,PTR(root),klass));
             CHECK(retdec_create_bound_instance(vm,root+2,"LazyMapProbe",klass,PTR(layout),instance));
@@ -108,7 +108,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), klass);
         }
         if (query == 2 || query == 3) {
-            int32_t runtime[48] = {0}, parent[2] = {g483,g484}, active = 0;
+            int32_t runtime[48] = {0}, parent[2] = {kinoko_null_object_type,kinoko_null_object_value}, active = 0;
             CHECK(*(int32_t*)(intptr_t)(cloned_layer+52) == 0);
             CHECK(*(int32_t*)(intptr_t)(cloned_layer+56) == 0);
             CHECK(retdec_publish_cact_layer_class(vm,PTR(root)));

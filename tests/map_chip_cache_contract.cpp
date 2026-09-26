@@ -13,7 +13,7 @@
 using namespace kinoko::map;
 using kinoko::legacy::address;
 extern "C" {
-unsigned char g25,g23,g327,g328;
+unsigned char kinoko_chip_quad_methods_storage,kinoko_color_methods_storage,kinoko_map_layout_methods_storage,kinoko_map_color_methods_storage;
 KinokoGraphics kinoko_graphics{};
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY]{};
 retdec_mcd_data *kinoko_map_cached_chip_data(KinokoActLayout *layout) {
@@ -33,10 +33,10 @@ retdec_mcd_texture *retdec_mcd_find_texture(retdec_mcd_data *data,uint32_t id) {
 void retdec_trace_i32(const char*,int32_t) {}
 const KinokoActHostSymbols *kinoko_act_host_symbols() {
     static KinokoActHostSymbols symbols{};
-    symbols.map_layout_vtable = &g327;
-    symbols.map_view_vtable = &g328;
-    symbols.color_vtable = &g23;
-    symbols.chip_quad_vtable = &g25;
+    symbols.map_layout_vtable = &kinoko_map_layout_methods_storage;
+    symbols.map_view_vtable = &kinoko_map_color_methods_storage;
+    symbols.color_vtable = &kinoko_color_methods_storage;
+    symbols.chip_quad_vtable = &kinoko_chip_quad_methods_storage;
     return &symbols;
 }
 int32_t kinoko_render_set_depth(int32_t,int32_t) { return 0; }

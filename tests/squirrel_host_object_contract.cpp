@@ -16,7 +16,7 @@ using namespace kinoko::script;
 // These are the game's narrow host services, not mocks for Squirrel. Every
 // object/VM operation below executes the actual vendored 2.2.2 implementation.
 extern "C" {
-char* g644 = nullptr;
+struct SQVM *kinoko_primary_vm = nullptr;
 int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
 int32_t kinoko_native_void_type(void) { return 0x13572468; }
 void retdec_trace(const char*) {}
@@ -30,21 +30,21 @@ void require(bool value, const char* message) {
     if (!value) throw std::runtime_error(message); // Runs in Release too.
 }
 int32_t exchange_vm(int32_t vm) {
-    const auto previous = address(g644);
-    g644 = pointer<char>(vm);
+    const auto previous = address(kinoko_primary_vm);
+    kinoko_primary_vm = pointer<SQVM>(vm);
     return previous;
 }
 class Machine final {
 public:
     Machine() : vm_(pointer<SQVM>(kinoko_sq_open(64))) {
         require(vm_ != nullptr, "open VM");
-        g644 = reinterpret_cast<char*>(vm_);
+        kinoko_primary_vm = reinterpret_cast<SQVM*>(vm_);
         kinoko_sq_set_context_exchange(exchange_vm);
     }
     ~Machine() {
         kinoko_sq_set_context_exchange(nullptr);
         sq_close(vm_);
-        g644 = nullptr;
+        kinoko_primary_vm = nullptr;
     }
     HSQUIRRELVM get() const { return vm_; }
     Machine(const Machine&) = delete;
@@ -232,7 +232,7 @@ void userdata_delegates_and_types(HSQUIRRELVM vm) {
 }
 
 SQInteger host_callback(HSQUIRRELVM vm) {
-    if (g644 != reinterpret_cast<char*>(vm)) return sq_throwerror(vm, "wrong host VM");
+    if (kinoko_primary_vm != reinterpret_cast<SQVM*>(vm)) return sq_throwerror(vm, "wrong host VM");
     HostObject table;
     table.table();
     if (kinoko_sqplus_object_set_index_string((void *)(intptr_t)(table.id()), 1, (const char *)("child")) != 1)
@@ -259,7 +259,7 @@ void threads(HSQUIRRELVM vm) {
     require(SQ_SUCCEEDED(kinoko_sq_call(address(child), 1, SQTrue, SQFalse)), "child invokes host wrapper on child VM");
     SQInteger result = 0;
     require(SQ_SUCCEEDED(sq_getinteger(child, -1, &result)) && result == 1, "child result");
-    require(g644 == reinterpret_cast<char*>(vm), "host receiver restored");
+    require(kinoko_primary_vm == reinterpret_cast<SQVM*>(vm), "host receiver restored");
     sq_settop(child, 0);
     // Exercise the old stack-reservation path while retaining the input thread.
     while (static_cast<SQUnsignedInteger>(vm->_top) < vm->_stack.size()) sq_pushinteger(vm, 17);

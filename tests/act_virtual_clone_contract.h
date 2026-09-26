@@ -52,7 +52,7 @@ static int test_act_virtual_clone(void) {
         ((uint8_t *)source)[201] = (uint8_t)compiled;
 
         int32_t *resource = (int32_t *)calloc(1, 100); CHECK(resource);
-        resource[0] = PTR(&g365); resource[1] = 42; resource[7] = resource[15] = 15;
+        resource[0] = PTR(&kinoko_texture_resource_methods_storage); resource[1] = 42; resource[7] = resource[15] = 15;
         kinoko_string_assign_cstr(resource + 2, "cloned resource");
         int32_t layer = retdec_act_make_layer(); CHECK(layer);
         *(int32_t *)(intptr_t)(layer + 96) = 42;
@@ -60,7 +60,7 @@ static int test_act_virtual_clone(void) {
         *(int32_t *)(intptr_t)(layer + 104) = 9;
         *(uint8_t *)(intptr_t)(layer + 305) = 1;
         int32_t *key = (int32_t *)calloc(1, 36); CHECK(key);
-        key[0] = PTR(&g277); key[7] = 15;
+        key[0] = PTR(&kinoko_act_key_methods_storage); key[7] = 15;
         key[1] = PTR(calloc(1, 316)); CHECK(key[1]);
         CHECK(retdec_construct_c2dlayout(key[1]));
         CHECK(retdec_act_append_list(layer + 180, PTR(key)));
@@ -70,31 +70,31 @@ static int test_act_virtual_clone(void) {
         kinoko_act_array_append(PTR(source) + 208, 0);
         kinoko_act_array_append(PTR(source) + 208, layer);
 
-        const struct vtable_4ec358_type layout_table = g299;
-        const struct vtable_4ec0b0_type key_table = g277;
+        const struct ActLayoutMethods layout_table = kinoko_act_layout_methods_storage;
+        const struct ActKeyMethods key_table = kinoko_act_key_methods_storage;
         /* Preserve actual table types without reproducing their layouts. */
-        const void *resource_clone = (const void *)g365.e9;
-        const void *layer_clone = (const void *)g252.e5;
-        const void *set_resource = (const void *)g252.e6;
-        g365.e9 = (int32_t (*)(void))probe_clone_resource;
-        g252.e5 = (int32_t (*)(void))probe_clone_layer;
-        g252.e6 = (int32_t (*)(int32_t))probe_clone_set_resource;
-        g277.e5 = (int32_t (*)(void))probe_clone_key;
-        g299.e5 = (int32_t (*)(void))probe_clone_layout;
-        g299.e6 = (int32_t (*)(int32_t))probe_clone_bind_layout;
+        const void *resource_clone = (const void *)kinoko_texture_resource_methods_storage.clone;
+        const void *layer_clone = (const void *)kinoko_act_layer_methods_storage.clone;
+        const void *set_resource = (const void *)kinoko_act_layer_methods_storage.associate;
+        kinoko_texture_resource_methods_storage.clone = (int32_t (*)(void))probe_clone_resource;
+        kinoko_act_layer_methods_storage.clone = (int32_t (*)(void))probe_clone_layer;
+        kinoko_act_layer_methods_storage.associate = (int32_t (*)(int32_t))probe_clone_set_resource;
+        kinoko_act_key_methods_storage.clone = (int32_t (*)(void))probe_clone_key;
+        kinoko_act_layout_methods_storage.clone = (int32_t (*)(void))probe_clone_layout;
+        kinoko_act_layout_methods_storage.associate = (int32_t (*)(int32_t))probe_clone_bind_layout;
         act_clone_event_count = 0; act_clone_bound_resource = 0;
         KinokoActDocument *copy = kinoko_act_clone((KinokoActDocument *)source, NULL);
-        g365.e9 = (int32_t (*)(void))resource_clone;
-        g252.e5 = (int32_t (*)(void))layer_clone;
-        g252.e6 = (int32_t (*)(int32_t))set_resource;
-        g277 = key_table; g299 = layout_table;
+        kinoko_texture_resource_methods_storage.clone = (int32_t (*)(void))resource_clone;
+        kinoko_act_layer_methods_storage.clone = (int32_t (*)(void))layer_clone;
+        kinoko_act_layer_methods_storage.associate = (int32_t (*)(int32_t))set_resource;
+        kinoko_act_key_methods_storage = key_table; kinoko_act_layout_methods_storage = layout_table;
 
         CHECK(copy);
         const int32_t *cloned = (const int32_t *)copy;
         CHECK(act_clone_event_count == 6 && memcmp(act_clone_events, "RLKOBA", 6) == 0);
         CHECK(act_clone_bound_resource == PTR(resource)); // bind before resource reassociation
         CHECK(cloned[53] - cloned[52] == 4 && cloned[57] - cloned[56] == 4);
-        CHECK(cloned[0] == PTR(&g285) && cloned[1] == 37 && cloned[2] == 900 && cloned[3] == 600);
+        CHECK(cloned[0] == PTR(&kinoko_act_document_methods_storage) && cloned[1] == 37 && cloned[2] == 900 && cloned[3] == 600);
         CHECK(strcmp(kinoko_string_data((const void*)(intptr_t)(PTR(copy) + 16)), kinoko_string_data((const void*)(intptr_t)(PTR(source) + 16))) == 0);
         CHECK(kinoko_string_data((const void*)(intptr_t)(PTR(copy) + 16)) != kinoko_string_data((const void*)(intptr_t)(PTR(source) + 16)));
         CHECK(kinoko_string_data((const void*)(intptr_t)(PTR(copy) + 44))[0] == 0);

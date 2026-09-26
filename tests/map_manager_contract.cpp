@@ -23,7 +23,7 @@ int32_t __fastcall delete_document(KinokoActDocument *source, void *, int32_t fl
 }
 }
 extern "C" {
-unsigned char g37;
+unsigned char kinoko_map_render_layer_methods_storage;
 void retdec_trace(const char *) {}
 void retdec_trace_i32(const char *, int32_t) {}
 void * kinoko_sqplus_object_initialize(void * ) { calls.push_back(0); return (void *)(intptr_t)(0); }

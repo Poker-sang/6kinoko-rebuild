@@ -11,7 +11,7 @@ static_assert(!noexcept(kinoko_script_load_file(nullptr, nullptr)), "SqPlus file
 static_assert(!noexcept(kinoko_script_compile_file_argument(0, 0, 0, 0, 0, 0)), "owning argument must unwind on file errors");
 
 extern "C" {
-char* g644 = nullptr;
+struct SQVM *kinoko_primary_vm = nullptr;
 char g560 = 0;
 int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
 int32_t kinoko_sqrat_object_vtable(void) { return 0x12121212; }
@@ -35,7 +35,7 @@ SQInteger release_native(SQUserPointer value, SQInteger) {
 SQInteger release_userdata(SQUserPointer, SQInteger) { ++releases; return 0; }
 HSQOBJECT empty() { HSQOBJECT value; sq_resetobject(&value); return value; }
 int32_t exchange_vm(int32_t value) {
-    const auto previous=address(g644); g644=pointer<char>(value); receiver=value; return previous;
+    const auto previous=address(kinoko_primary_vm); kinoko_primary_vm=pointer<SQVM>(value); receiver=value; return previous;
 }
 void destroy(Pair& value) {
     auto old=value.get(); sq_release(value.vm,&old); value.write(empty());
@@ -253,14 +253,14 @@ int main() {
     try {
         for(int pass=0;pass<8;++pass) {
             Machine machine; auto vm=machine.get();
-            g644=reinterpret_cast<char*>(vm); receiver=address(vm); kinoko_sq_set_context_exchange(exchange_vm);
+            kinoko_primary_vm=reinterpret_cast<SQVM*>(vm); receiver=address(vm); kinoko_sq_set_context_exchange(exchange_vm);
             constructors(vm); resource_roots(vm); callbacks(vm); embedded(vm); values(vm); callback_call(vm); text_scripts(vm);
             sq_newthread(vm,64); HSQUIRRELVM child=nullptr; sq_getthread(vm,-1,&child);
             embedded(child); callbacks(child);
-            require(g644==reinterpret_cast<char*>(vm),"child execution restores host VM");
+            require(kinoko_primary_vm==reinterpret_cast<SQVM*>(vm),"child execution restores host VM");
             sq_pop(vm,1); top(vm,0,"all root test operations balanced");
             std::printf("game objects pass %d: construction, bytecode, callback, strings, ownership OK\n",pass+1);
-            g644=nullptr;
+            kinoko_primary_vm=nullptr;
         }
         return 0;
     } catch(const std::exception& error) { std::fprintf(stderr,"FAIL: %s\n",error.what()); return 1; }

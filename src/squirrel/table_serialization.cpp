@@ -10,10 +10,10 @@
 #include <cstring>
 #include <memory>
 
-extern "C" char *g644;
+extern "C" struct SQVM *kinoko_primary_vm;
 // Savedata's SqPlus references require the live primary VM at each recursive
 // container boundary, distinct from the compiled LocalScript VM.
-namespace { HSQUIRRELVM serialization_vm() { return reinterpret_cast<HSQUIRRELVM>(g644); } }
+namespace { HSQUIRRELVM serialization_vm() { return reinterpret_cast<HSQUIRRELVM>(kinoko_primary_vm); } }
 
 extern "C" void retdec_trace(const char *);
 extern "C" void retdec_trace_i32(const char *, int32_t);

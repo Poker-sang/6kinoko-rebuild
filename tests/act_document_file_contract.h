@@ -26,15 +26,15 @@ static int act_file_write(const char *path, const void *bytes, DWORD size) {
 static int test_act_document_file_lifetime(void) {
     int32_t methods[6] = {0, 0, 0, PTR(script_io_transfer), 0, PTR(script_io_seek)};
     struct script_io_stream stream = {0}; stream.vtable = methods;
-    const unsigned char saved_compact = g673;
+    const unsigned char saved_compact = kinoko_compile_act_output;
     const int32_t saved_archives = kinoko_archive_count;
-    char *saved_vm = g644;
-    int32_t (*saved_delete)(unsigned char) = g285.e4;
+    char *saved_vm = kinoko_primary_vm;
+    int32_t (*saved_delete)(unsigned char) = kinoko_act_document_methods_storage.delete_object;
     const char *valid_path = "act-document-generated.bin";
     const char *short_path = "act-document-truncated.bin";
     unsigned char encoded[8192 + 19] = {0};
     const uint32_t header[] = {0x31544341u, 1u, 7u};
-    g673 = 0; kinoko_archive_count = 0; g644 = NULL;
+    kinoko_compile_act_output = 0; kinoko_archive_count = 0; kinoko_primary_vm = NULL;
     KinokoActDocument *source = kinoko_act_document_create();
     CHECK(source);
     const int32_t layer = retdec_act_make_layer();
@@ -67,16 +67,16 @@ static int test_act_document_file_lifetime(void) {
 
     /* Observe the real virtual deleting destructor, forwarding to its normal
        implementation. An exclusive file open proves the reader closed first. */
-    g285.e4 = (int32_t (*)(unsigned char))act_file_delete_probe;
+    kinoko_act_document_methods_storage.delete_object = (int32_t (*)(unsigned char))act_file_delete_probe;
     act_file_deletes = act_file_close_error = 0;
     act_file_probe_path = valid_path;
-    int32_t (*saved_set_layer)(int32_t) = g299.e6;
-    g299.e6 = (int32_t (*)(int32_t))act_file_set_layer_probe;
+    int32_t (*saved_set_layer)(int32_t) = kinoko_act_layout_methods_storage.associate;
+    kinoko_act_layout_methods_storage.associate = (int32_t (*)(int32_t))act_file_set_layer_probe;
     act_file_layout_binds = 0;
     KinokoActDocument *loaded = kinoko_act_document_create();
     CHECK(loaded && kinoko_act_document_load(loaded, valid_path));
     CHECK(act_file_layout_binds == 1); /* 41F8B9 only, no second document pass */
-    g299.e6 = saved_set_layer;
+    kinoko_act_layout_methods_storage.associate = saved_set_layer;
     const int32_t *loaded_layers = *(int32_t **)((char *)loaded + 208);
     CHECK(*(int32_t *)(intptr_t)(loaded_layers[0] + 88) == loaded_layers[1]);
     CHECK(*(int32_t *)(intptr_t)(loaded_layers[0] + 108) == 10);
@@ -90,7 +90,7 @@ static int test_act_document_file_lifetime(void) {
     loaded_layers = *(int32_t **)((char *)loaded + 208);
     CHECK(loaded_layers[0] == first_owned_layer);
     CHECK((*(int32_t *)((char *)loaded + 212) - *(int32_t *)((char *)loaded + 208)) / 4 == old_layer_count * 2);
-    CHECK(retdec_call_thiscall1_result(loaded, (void *)g285.e4, 1));
+    CHECK(retdec_call_thiscall1_result(loaded, (void *)kinoko_act_document_methods_storage.delete_object, 1));
     CHECK(act_file_deletes == 1 && !act_file_close_error);
 
     kinoko_stage_list_construct();
@@ -124,7 +124,7 @@ static int test_act_document_file_lifetime(void) {
     kinoko_stage_owner_destroy(unpublished);
     CHECK(act_file_deletes == before + 2 && !act_file_close_error);
     kinoko_stage_owner_destroy(NULL);
-    g285.e4 = saved_delete; g673 = saved_compact; kinoko_archive_count = saved_archives; g644 = saved_vm;
+    kinoko_act_document_methods_storage.delete_object = saved_delete; kinoko_compile_act_output = saved_compact; kinoko_archive_count = saved_archives; kinoko_primary_vm = saved_vm;
     printf("PASS: real ACT file/payload, %lu truncated prefixes, reader-before-document release, stage publication and caller ownership\n", (unsigned long)total);
     return 0;
 }

@@ -6,7 +6,7 @@
 #include "kinoko/squirrel_host_object.hpp"
 #include "kinoko/squirrel_variable_record.hpp"
 
-extern "C" { extern char* g644; }
+extern "C" { extern struct SQVM *kinoko_primary_vm; }
 
 namespace kinoko::script::binding {
 
@@ -26,7 +26,7 @@ template<class T> void store(void* data, const T& value) noexcept {
 template<class T> void store(int32_t data, const T& value) noexcept {
     store(pointer(data), value);
 }
-inline HSQUIRRELVM current_vm() noexcept { return reinterpret_cast<HSQUIRRELVM>(g644); }
+inline HSQUIRRELVM current_vm() noexcept { return reinterpret_cast<HSQUIRRELVM>(kinoko_primary_vm); }
 inline int32_t add_address(int32_t base, int32_t offset) noexcept {
     return static_cast<int32_t>(static_cast<uint32_t>(base) + static_cast<uint32_t>(offset));
 }

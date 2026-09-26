@@ -5,6 +5,8 @@ typedef struct KinokoActorPool KinokoActorPool;
 #ifdef __cplusplus
 extern "C" {
 #endif
+const void *kinoko_actor_pool_methods(void);
+const void *kinoko_actor_pool_base_methods(void);
 KinokoActor *kinoko_actor_pool_acquire(KinokoActorPool *pool, uint32_t *handle);
 int32_t kinoko_actor_pool_retire(KinokoActorPool *pool, uint32_t handle);
 /* The 80-byte host owns an opaque native container state at +4. No STL

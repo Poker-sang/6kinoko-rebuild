@@ -11,7 +11,7 @@ struct KinokoAudioHostSymbols {
 };
 const struct KinokoAudioHostSymbols* kinoko_audio_host_symbols(void);
 extern int32_t g637;
-extern char g874;
+extern char kinoko_packed_assets;
 extern int32_t g876;
 extern char* g877;
 extern int32_t g878;

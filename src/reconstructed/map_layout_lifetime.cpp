@@ -10,9 +10,9 @@
 #include <cstring>
 #include <memory>
 #include <new>
-extern "C" unsigned char g25;
+
 namespace {
-inline constexpr auto chip_sprite_vtable = &g25;
+
 using kinoko::legacy::field;
 using kinoko::legacy::address;
 using kinoko::legacy::pointer;
@@ -48,7 +48,7 @@ extern "C" int32_t __fastcall kinoko_clone_map_layout(int32_t source,void*) {
         const auto begin=address(buffers[i].data());
         for(uint32_t pos=0;pos<bytes;pos+=spec.width) {
             std::memcpy(pointer<void>(begin+pos),pointer<void>(in.begin+pos),spec.copy_bytes);
-            if(spec.width==232 || spec.width==288) field<int32_t>(begin+pos)=address(chip_sprite_vtable);
+            if(spec.width==232 || spec.width==288) field<int32_t>(begin+pos)=address(kinoko_act_host_symbols()->chip_quad_vtable);
         }
 
     }

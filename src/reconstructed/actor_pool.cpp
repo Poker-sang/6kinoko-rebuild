@@ -8,9 +8,9 @@
 #include <memory>
 #include <stdexcept>
 
-extern "C" { extern int32_t g29, g28; }
+
 namespace {
-inline auto actor_pool_vtable = &g28;
+
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 struct Pool {
@@ -49,7 +49,7 @@ extern "C" KinokoActorPool *kinoko_actor_pool_construct(KinokoActorPool *receive
     auto* manager = receiver;
     auto state = std::make_unique<Pool>();
     InitializeCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(host(manager).bytes(&PoolHost::lock)));
-    host(manager).set(&PoolHost::methods,static_cast<const void *>(&g29));
+    host(manager).set(&PoolHost::methods,static_cast<const void *>(kinoko_actor_pool_methods()));
     host(manager).set(&PoolHost::state,state.release());
     return receiver;
 }
@@ -114,7 +114,7 @@ extern "C" int32_t __fastcall kinoko_method_actor_pool_count(int32_t manager, vo
 }
 extern "C" int32_t __fastcall kinoko_method_actor_pool_base_delete(int32_t manager, void*, unsigned char flags) {
     auto* receiver = pointer<KinokoActorPool>(manager);
-    host(receiver).set(&PoolHost::methods,static_cast<const void *>(actor_pool_vtable));
+    host(receiver).set(&PoolHost::methods,static_cast<const void *>(kinoko_actor_pool_base_methods()));
     if (flags & 1) std::free(receiver);
     return manager;
 }
