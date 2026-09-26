@@ -28,9 +28,6 @@ public:
     }
     unsigned char* object() { return native.data() + 1; } // Unaligned on purpose.
     unsigned char* aliased() { return alias.data() + 1; }
-    void bind(const char* name, int32_t offset, Callback cb) {
-        require(kinoko_sqrat_set_offset_closure((struct SQVM *)(vm), methods.data(), name, offset, (void *)(intptr_t)(callback_address(cb))), "bind actual captured descriptor");
-    }
     void bind(const char* name, int32_t offset, SQFUNCTION cb) {
         require(kinoko_sqrat_set_offset_closure((struct SQVM *)(vm), methods.data(), name, offset, (void *)(intptr_t)(address(reinterpret_cast<void*>(cb)))), "bind typed SQFUNCTION without an original code address");
     }

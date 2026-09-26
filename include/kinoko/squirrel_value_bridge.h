@@ -16,7 +16,7 @@ int32_t kinoko_sq_set_native_name(SQVM* vm, int32_t index, const char *name);
 void kinoko_sq_assign_integer(SQObjectPtr* object, int32_t value);
 void kinoko_sq_assign_float(SQObjectPtr* object, float value);
 SQObjectPtr* kinoko_sq_pair_assign(SQObjectPtr* destination, SQObjectPtr* source);
-void kinoko_sq_stack_remove(int32_t vm, int32_t index);
+void kinoko_sq_stack_remove(SQVM* vm, int32_t index);
 void kinoko_sq_pair_destroy(SQObjectPtr* object);
 void kinoko_sq_closure_destroy(SQClosure* closure);
 void kinoko_sq_class_destroy(SQClass* klass);

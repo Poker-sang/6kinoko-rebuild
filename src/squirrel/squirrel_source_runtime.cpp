@@ -141,7 +141,7 @@ extern "C" void kinoko_sq_delete_shared_state(SQSharedState* state) {
     if (state) sq_delete(state, SQSharedState);
 }
 
-extern "C" int32_t kinoko_sq_noop_constructor(int32_t /* vm */) {
+extern "C" int32_t kinoko_sq_noop_constructor(SQVM* /* vm */) {
     // The original embedding registered 4A1760 for these classes; it neither
     // allocates state nor pushes a return value. This is not a new constructor.
     return 0;

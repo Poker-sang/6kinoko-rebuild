@@ -313,10 +313,10 @@ int32_t raise_formatted_error(HSQUIRRELVM machine, const char* format, va_list a
     return SQ_OK;
 }
 } // namespace
-extern "C" int32_t kinoko_sq_raise_formatted_error(int32_t receiver, const char *format, ...) {
+extern "C" int32_t kinoko_sq_raise_formatted_error(SQVM* receiver, const char *format, ...) {
     if (!receiver || !format) return SQ_ERROR;
     va_list args; va_start(args, format);
-    const int32_t result = raise_formatted_error(vm(receiver), format, args);
+    const int32_t result = raise_formatted_error(receiver, format, args);
     va_end(args);
     return result;
 }
@@ -347,12 +347,12 @@ extern "C" int32_t kinoko_gc_object_type(int32_t object_ptr) {
 }
 
 extern "C" void kinoko_gc_mark_value(const int32_t *value, int32_t *chain_head) {
-    kinoko_sq_mark_value(value, chain_head);
+    kinoko_sq_mark_value(reinterpret_cast<const HSQOBJECT*>(value), reinterpret_cast<SQCollectable**>(chain_head));
 }
 
 extern "C" void kinoko_gc_finalize_collectable(int32_t object_ptr,
                                             int32_t object_type) {
-    kinoko_sq_finalize_object(object_ptr, object_type);
+    kinoko_sq_finalize_object(ptr<SQCollectable>(object_ptr), object_type);
 }
 
 static void kinoko_sq_finalize_userdata(SQUserData* data) {

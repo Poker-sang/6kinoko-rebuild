@@ -10,3 +10,7 @@ typedef struct SQRefCounted SQRefCounted;
 typedef struct SQSharedState SQSharedState;
 typedef struct SQString SQString;
 typedef struct SQVM SQVM;
+typedef struct SQUserData SQUserData;
+typedef struct SQArray SQArray;
+typedef struct SQTable SQTable;
+typedef struct SQInstance SQInstance;

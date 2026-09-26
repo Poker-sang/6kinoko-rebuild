@@ -94,7 +94,6 @@
 #include "kinoko/actor_methods.h"
 #include "kinoko/actor_animation.h"
 #include "kinoko/actor_cleanup.h"
-#include "kinoko/squirrel_gc_bridge.h"
 #include "kinoko/act_resource.h"
 #include "kinoko/act_clone.h"
 #include "kinoko/script_callbacks.h"
@@ -132,18 +131,38 @@ uint32_t timeGetTime(void);
 
 typedef float float32_t;
 
+int32_t *kinoko_c2d_layout_type(void);
+int32_t *kinoko_chip_resource_type(void);
+int32_t *kinoko_map_layout_type(void);
+int32_t *kinoko_texture_resource_type(void);
+int32_t *kinoko_render_target_type(void);
+int32_t __fastcall kinoko_color_destroy(int32_t receiver, void* unused_edx, char flags);
+
+#ifdef __cplusplus
 struct SquirrelObjectMethods {
     decltype(&kinoko_squirrel_object_delete) destroy;
 };
+#else
+struct SquirrelObjectMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct ActorMethods {
     decltype(&kinoko_actor_delete_method) destroy;
 };
+#else
+struct ActorMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct ActorRenderLayerMethods {
     decltype(&kinoko_method_render_layer_update) update;
 };
+#else
+struct ActorRenderLayerMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct ActorPoolMethods {
     decltype(&kinoko_method_actor_pool_delete) destroy;
     decltype(&kinoko_method_actor_manager_top) top;
@@ -151,46 +170,78 @@ struct ActorPoolMethods {
     decltype(&kinoko_method_lookup_actor) lookup;
     decltype(&kinoko_method_actor_pool_count) count;
 };
+#else
+struct ActorPoolMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct ActorOwnerMethods {
     decltype(&kinoko_method_actor_owner_delete) destroy;
     decltype(&kinoko_method_actor_manager_push) push;
 };
+#else
+struct ActorOwnerMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct MapRenderLayerMethods {
     decltype(&kinoko_map_render_layer_entry) update;
 };
+#else
+struct MapRenderLayerMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct SqratObjectMethods {
     decltype(&kinoko_sqrat_delete_object) destroy;
     decltype(&kinoko_sqrat_object_reference) reference;
     decltype(&kinoko_sqrat_copy_object) copy;
 };
+#else
+struct SqratObjectMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct SqratRootMethods {
     decltype(&kinoko_sqrat_delete_object) destroy;
     decltype(&kinoko_sqrat_object_reference) reference;
     decltype(&kinoko_sqrat_copy_object) copy;
 };
+#else
+struct SqratRootMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct RendererMethods {
     decltype(&kinoko_renderer_before_reset) before_reset;
     decltype(&kinoko_renderer_after_reset) after_reset;
 };
+#else
+struct RendererMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct ActScriptMethods {
     decltype(&kinoko_method_write_act_script) write;
     decltype(&kinoko_method_read_act_script) read;
     decltype(&kinoko_method_query_serializable) query;
     decltype(&kinoko_method_delete_act_script) destroy;
 };
+#else
+struct ActScriptMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct ActLayerReferenceMethods {
     decltype(&kinoko_sqrat_delete_object) destroy;
     decltype(&kinoko_sqrat_object_reference) reference;
     decltype(&kinoko_sqrat_copy_object) copy;
 };
+#else
+struct ActLayerReferenceMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct ActLayerMethods {
     decltype(&kinoko_method_write_act_layer) write;
     decltype(&kinoko_method_read_act_layer) read;
@@ -202,13 +253,21 @@ struct ActLayerMethods {
     decltype(&kinoko_act_layer_world_position) world_position;
     decltype(&kinoko_method_register_act_layer) register_class;
 };
+#else
+struct ActLayerMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct ActLayerLayoutMethods {
     decltype(&kinoko_sqrat_delete_object) destroy;
     decltype(&kinoko_sqrat_object_reference) reference;
     decltype(&kinoko_sqrat_copy_object) copy;
 };
+#else
+struct ActLayerLayoutMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct ActKeyMethods {
     decltype(&kinoko_method_write_act_key) write;
     decltype(&kinoko_method_read_act_key) read;
@@ -217,7 +276,11 @@ struct ActKeyMethods {
     decltype(&kinoko_method_delete_act_key) delete_object;
     decltype(&kinoko_method_clone_act_key) clone;
 };
+#else
+struct ActKeyMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct ActDocumentMethods {
     decltype(&kinoko_method_write_act) write;
     decltype(&kinoko_method_read_act) read;
@@ -229,7 +292,11 @@ struct ActDocumentMethods {
     decltype(&kinoko_method_suspend_act_resources) suspend_resources;
     decltype(&kinoko_method_resume_act_resources) resume_resources;
 };
+#else
+struct ActDocumentMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct ActLayoutMethods {
     decltype(&kinoko_method_write_layout_properties) write;
     decltype(&kinoko_method_read_layout_properties) read;
@@ -242,7 +309,11 @@ struct ActLayoutMethods {
     decltype(&kinoko_method_layout_draw) draw;
     decltype(&kinoko_method_register_layout) register_class;
 };
+#else
+struct ActLayoutMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct ChipResourceMethods {
     decltype(&kinoko_method_write_chip_resource) write;
     decltype(&kinoko_method_read_chip_resource) read;
@@ -256,7 +327,11 @@ struct ChipResourceMethods {
     decltype(&kinoko_method_clone_chip_resource) clone;
     decltype(&kinoko_method_load_chip_resource) load;
 };
+#else
+struct ChipResourceMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct MapLayoutMethods {
     decltype(&kinoko_method_write_map_layout) write;
     decltype(&kinoko_method_read_map_layout) read;
@@ -270,14 +345,22 @@ struct MapLayoutMethods {
     decltype(&kinoko_method_register_map_layout) register_class;
     decltype(&kinoko_map_update_visible_entry) update_visible;
 };
+#else
+struct MapLayoutMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct QuadColorMethods {
     decltype(&kinoko_delete_layout_sprite) destroy;
     decltype(&kinoko_quad_set_color) set_color;
     decltype(&kinoko_quad_set_vertex_colors) set_vertex_colors;
     decltype(&kinoko_quad_modulate_color) modulate_color;
 };
+#else
+struct QuadColorMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct TextureResourceMethods {
     decltype(&kinoko_method_write_texture_resource) write;
     decltype(&kinoko_method_read_texture_resource) read;
@@ -292,7 +375,11 @@ struct TextureResourceMethods {
     decltype(&kinoko_method_load_resource_texture) load;
     decltype(&kinoko_method_unload_resource_texture) unload;
 };
+#else
+struct TextureResourceMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct RenderTargetMethods {
     decltype(&kinoko_method_write_render_target) write;
     decltype(&kinoko_method_read_render_target) read;
@@ -308,7 +395,11 @@ struct RenderTargetMethods {
     decltype(&kinoko_method_unload_resource_texture) unload;
     decltype(&kinoko_method_create_render_target) create;
 };
+#else
+struct RenderTargetMethods; // C fixtures use table identity only.
+#endif
 
+#ifdef __cplusplus
 struct SpriteMethods {
     decltype(&kinoko_color_destroy) destroy;
     decltype(&kinoko_quad_set_color) set_color;
@@ -321,6 +412,9 @@ struct SpriteMethods {
     decltype(&kinoko_sprite_draw_404bc0) draw_404bc0;
     decltype(&kinoko_sprite_draw_4049c0) draw_4049c0;
 };
+#else
+struct SpriteMethods; // C fixtures use table identity only.
+#endif
 
 void kinoko_host_free_allocation(int32_t * a1);
 
@@ -330,29 +424,29 @@ int32_t kinoko_host_construct_layer_abi(int32_t a1);
 
 int32_t kinoko_register_cact_layer_class(struct SQVM* a1);
 
-int32_t *kinoko_c2d_layout_type(void);
+
 
 int32_t kinoko_register_c2dlayout_class(struct SQVM* a1);
 
-int32_t *kinoko_chip_resource_type(void);
+
 
 int32_t kinoko_register_chip_resource_class(struct SQVM* a1);
 
-int32_t *kinoko_map_layout_type(void);
+
 
 int32_t kinoko_register_map_layout_class(struct SQVM* a1);
 
 int32_t kinoko_script_dprint_noop(void);
 
-int32_t *kinoko_texture_resource_type(void);
+
 
 int32_t kinoko_register_texture_resource_class(struct SQVM* a1);
 
-int32_t *kinoko_render_target_type(void);
+
 
 int32_t kinoko_register_render_target_class(struct SQVM* a1);
 
-int32_t __fastcall kinoko_color_destroy(int32_t receiver, void* unused_edx, char flags);
+
 
 int32_t kinoko_actor_register_script_class(void);
 
@@ -406,6 +500,7 @@ extern const char * kinoko_audio_error_text;
 
 extern struct QuadColorMethods kinoko_layout_color_methods_storage;
 
+#ifdef __cplusplus
 struct StringLayoutMethods {
     decltype(&kinoko_method_write_string_layout) write;
     decltype(&kinoko_method_read_string_layout) read;
@@ -419,6 +514,9 @@ struct StringLayoutMethods {
     decltype(&kinoko_method_register_string_layout) register_class;
     decltype(&kinoko_method_delete_string_layout) delete_object;
 };
+#else
+struct StringLayoutMethods; // C fixtures use table identity only.
+#endif
 extern struct StringLayoutMethods kinoko_string_layout_methods_storage;
 
 extern int32_t kinoko_null_object_type;

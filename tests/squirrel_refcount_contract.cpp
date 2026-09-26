@@ -46,7 +46,7 @@ void contracts() {
     require(((int32_t)(uintptr_t)kinoko_sq_shared_state((SQVM*)(uintptr_t)(address(child)))) == ((int32_t)(uintptr_t)kinoko_sq_shared_state((SQVM*)(uintptr_t)(address(vm)))),
         "thread must share parent state");
     const SQInteger top = sq_gettop(vm);
-    require(kinoko_sq_noop_constructor(address(vm)) == 0 && sq_gettop(vm) == top,
+    require(kinoko_sq_noop_constructor((SQVM*)(uintptr_t)(address(vm))) == 0 && sq_gettop(vm) == top,
         "embedding no-op constructor must leave the stack unchanged");
     sq_close(vm);
 }
