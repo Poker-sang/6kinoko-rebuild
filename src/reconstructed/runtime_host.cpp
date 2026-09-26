@@ -184,7 +184,7 @@ int32_t kinoko_layout_submit_impl(int32_t vertex_buffer,
 }
 
 static int32_t kinoko_register_act_script_objects(void* script, void* environment) {
-    return kinoko_register_act_script((int32_t)(intptr_t)script, (int32_t)(intptr_t)environment);
+    return kinoko_register_act_script((void*)(uintptr_t)((int32_t)(intptr_t)script), (void*)(uintptr_t)((int32_t)(intptr_t)environment));
 }
 
 int32_t kinoko_host_register_act_script_abi(int32_t script, int32_t environment) {

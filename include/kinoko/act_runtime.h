@@ -87,16 +87,16 @@ void kinoko_destroy_cact_key(void* key);
 void kinoko_destroy_cact_list(void* list_slot);
 void kinoko_destroy_cact_object(KinokoActDocument* object_ptr);
 void kinoko_destroy_cact_resource(KinokoActResource* resource);
-int32_t kinoko_register_act_script(int32_t script, int32_t object);
+int32_t kinoko_register_act_script(void* script, void* object);
 void kinoko_forget_act_script(void* script);
 void kinoko_destroy_cact_script(void* script_ptr);
 void* kinoko_destroy_cact_with_flags(KinokoActDocument* object_ptr,
                                                unsigned char flags);
-int32_t kinoko_execute_act_callback(int32_t script_ptr,
+int32_t kinoko_execute_act_callback(void* script_ptr,
                                             int32_t offset,
                                             const char *trace_label);
 int32_t kinoko_execute_act_source_script(
-    struct SQVM* vm, int32_t script_ptr, const int32_t *environment_pair);
+    struct SQVM* vm, void* script_ptr, const int32_t *environment_pair);
 int32_t kinoko_get_act_resource_class(struct SQVM* vm, int32_t resource, int32_t out[2]);
 int32_t kinoko_map_chip_count(struct SQVM* vm);
 struct kinoko_mcd_data *kinoko_map_chip_data(int32_t layout);
@@ -119,7 +119,7 @@ struct kinoko_mcd_texture *kinoko_mcd_find_texture(
 void kinoko_mcd_free(struct kinoko_mcd_data *data);
 int16_t kinoko_mcd_i16(const unsigned char *bytes);
 uint32_t kinoko_mcd_u32(const unsigned char *bytes);
-int32_t kinoko_prepare_cact_layer_objects(struct SQVM* vm, int32_t layer,
+int32_t kinoko_prepare_cact_layer_objects(struct SQVM* vm, KinokoActLayer* layer,
                                                  int32_t script_pair[2]);
 int32_t kinoko_publish_act_layers(struct SQVM* vm, int32_t act,
                                           int32_t resource_ptr,

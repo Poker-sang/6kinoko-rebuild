@@ -582,10 +582,10 @@ extern "C" int32_t kinoko_act_read_map_properties_typed(KinokoActLayout *layout,
     catch (...) { return 0; }
 }
 extern "C" int32_t __fastcall kinoko_method_read_act_layer(int32_t layer,void*,KinokoArchiveReader** holder,int32_t version) {
-    return layer && holder && version==1 ? kinoko_act_load_layer(layer, (KinokoArchiveReader*)(*holder), version) : 0;
+    return layer && holder && version==1 ? kinoko_act_load_layer(pointer<KinokoActLayer>(layer), (KinokoArchiveReader*)(*holder), version) : 0;
 }
 extern "C" int32_t __fastcall kinoko_method_read_act_key(int32_t key,void*,KinokoArchiveReader** holder,int32_t version) {
-    return key && holder && version==1 ? kinoko_act_load_key(key, (KinokoArchiveReader*)(*holder), version) : 0;
+    return key && holder && version==1 ? kinoko_act_load_key(pointer<KinokoActKey>(key), (KinokoArchiveReader*)(*holder), version) : 0;
 }
 extern "C" int32_t __fastcall kinoko_method_write_act_key(int32_t key,void*,KinokoArchiveReader* writer) {
     if (!key || !writer) return 0;

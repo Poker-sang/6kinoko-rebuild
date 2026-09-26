@@ -69,7 +69,7 @@ extern "C" int32_t __fastcall kinoko_method_begin_stage(int32_t receiver, void* 
 // function_450e30
 extern "C" int32_t __fastcall kinoko_method_root_table_construct(int32_t receiver,
     void* /* unused_edx */, int32_t vm, int32_t output) {
-    return kinoko_root_table_construct_this(receiver, vm, output);
+    return kinoko_root_table_construct_this(receiver, kinoko::legacy::pointer<SQVM>(vm), output);
 }
 
 // function_4514a0

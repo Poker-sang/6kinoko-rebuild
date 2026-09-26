@@ -1109,7 +1109,7 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
     layout = (int32_t)(intptr_t)(kinoko_sqplus_object_instance((void *)(intptr_t)(PTR(layout_object)), (void *)(intptr_t)(0)));
     CHECK(layout && kinoko_map_chip_data(layout));
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(layout_object))));
-    CHECK(kinoko_execute_act_callback(hidden + 204, 4, NULL) >= 0);
+    CHECK(kinoko_execute_act_callback((void*)(uintptr_t)(hidden + 204), 4, NULL) >= 0);
     CHECK(*(int32_t *)(intptr_t)(layout + 328) == 1);
     CHECK(execute_source(vm, root + 2,
         "player <- { left=2232.0, right=2264.0, top=800.0, bottom=832.0 };"));
@@ -2993,7 +2993,7 @@ static int test_compiler_receivers(int32_t vm, int32_t *root) {
         const char *text = "sameVmCompile <- CompilerSaved + CompilerEnum.first;";
         int32_t script[26] = {0};
         script[23] = PTR(text); script[24] = (int32_t)strlen(text);
-        CHECK(kinoko_execute_act_source_script((struct SQVM*)(uintptr_t)(vm), PTR(script), root+2));
+        CHECK(kinoko_execute_act_source_script((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(script)), root+2));
         CHECK(execute_source(vm, root+2, "if(sameVmCompile!=38) throw 125;\n"));
         const char *bad = "local =;";
         script[23] = PTR(bad); script[24] = (int32_t)strlen(bad);
@@ -3001,7 +3001,7 @@ static int test_compiler_receivers(int32_t vm, int32_t *root) {
         compile_error_source = "";
         compile_error_calls = compile_error_valid = 0;
         ((int32_t)(uintptr_t)kinoko_sq_set_compiler_error_handler(((SQVM*)(uintptr_t)(uint32_t)((vm))), (SQCOMPILERERROR)(((void*)(uintptr_t)(uint32_t)((PTR(compiler_test_error)))))));
-        CHECK(!kinoko_execute_act_source_script((struct SQVM*)(uintptr_t)(vm), PTR(script), root+2));
+        CHECK(!kinoko_execute_act_source_script((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(script)), root+2));
         CHECK(compile_error_calls == 1 && compile_error_valid);
         ((int32_t)(uintptr_t)kinoko_sq_set_compiler_error_handler(((SQVM*)(uintptr_t)(uint32_t)((vm))), (SQCOMPILERERROR)(((void*)(uintptr_t)(uint32_t)((previous_handler))))));
         compile_error_source = "callback source";
@@ -3026,7 +3026,7 @@ static int test_act_script_source_registration(int32_t vm, int32_t *root) {
     wrapper[0] = (int32_t)(intptr_t)kinoko_sqrat_object_vtable(); wrapper[1] = vm;
     wrapper[2] = environment[0]; wrapper[3] = environment[1];
     script[21] = 15;
-    CHECK(kinoko_register_act_script(PTR(script), PTR(wrapper)) == 0); /* No source yet. */
+    CHECK(kinoko_register_act_script((void*)(uintptr_t)(PTR(script)), (void*)(uintptr_t)(PTR(wrapper))) == 0); /* No source yet. */
     const char *initial = "counter <- 0;\n function Init() { counter += 1; }\n";
     script[23] = PTR(_strdup(initial)); script[24] = (int32_t)strlen(initial);
     ((unsigned char*)script)[100] = 1;
@@ -3041,7 +3041,7 @@ static int test_act_script_source_registration(int32_t vm, int32_t *root) {
     CHECK(fwrite(source,1,strlen(source),file) == strlen(source)); fclose(file);
     sprintf_s(command,sizeof(command),"if(!CompileFile(\"%s\", this)) throw 1;\n",requested);
     CHECK(execute_source(vm, environment, command));
-    CHECK(kinoko_execute_act_callback(PTR(script),4,"test:act-compile-file"));
+    CHECK(kinoko_execute_act_callback((void*)(uintptr_t)(PTR(script)), 4, "test:act-compile-file"));
     CHECK(execute_source(vm, environment,"if(counter!=30) throw 2;\n"));
     unsigned char *bytecode = NULL; int32_t bytecode_size = 0;
     const char *increment = "counter += 1;";
@@ -3765,7 +3765,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     act[52]=PTR(&moving_layer); act[53]=PTR(&moving_layer+1);
     CHECK(kinoko_publish_act_layers((struct SQVM*)(uintptr_t)(vm), PTR(act), PTR(resource), &active));
     CHECK(active==1);
-    CHECK(kinoko_execute_act_callback(moving_layer+204,24,NULL)>=0);
+    CHECK(kinoko_execute_act_callback((void*)(uintptr_t)(moving_layer+204), 24, NULL)>=0);
     CHECK(kinoko_collision_reset_abi(PTR(g_514300_storage),manager));
     int32_t support=kinoko_host_register_collision_map_abi(moving_layout);
     CHECK(support);
@@ -3781,7 +3781,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(rider));
     int failures=0, changes=0, previous_take=*(int32_t *)(intptr_t)(rider+208);
     for(int frame=0;frame<1500;++frame) {
-        CHECK(kinoko_execute_act_callback(moving_layer+204,24,NULL)>=0);
+        CHECK(kinoko_execute_act_callback((void*)(uintptr_t)(moving_layer+204), 24, NULL)>=0);
         kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(0));
         int hit=*(int32_t *)(intptr_t)(rider+296);
         int take=*(int32_t *)(intptr_t)(rider+208);
@@ -5540,7 +5540,7 @@ static int test_original_layer_constructor(int32_t vm) {
 
 static int test_layout_registration_entries(int32_t vm) {
     int32_t layer[87] = {0}, layout[100] = {0}, environment[2];
-    CHECK(kinoko_prepare_cact_layer_objects((struct SQVM*)(uintptr_t)(vm), PTR(layer), environment));
+    CHECK(kinoko_prepare_cact_layer_objects((struct SQVM*)(uintptr_t)(vm), (KinokoActLayer*)(uintptr_t)(PTR(layer)), environment));
     CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), layer+84));
     CHECK(kinoko_method_register_layout(PTR(layout), NULL) == (int32_t)E_FAIL);
     layout[76] = PTR(layer);

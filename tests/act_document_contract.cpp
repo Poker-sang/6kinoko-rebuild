@@ -183,7 +183,7 @@ extern "C" int32_t kinoko_reader_seek_relative(KinokoArchiveReader *reader, uint
 }
 extern "C" int32_t kinoko_act_load(KinokoActDocument* document, KinokoArchiveReader* reader, int32_t version) {
     valid_reader(address(reader)); ++state.payloads; state.events += 'P'; state.payload_position = archive.position;
-    require(document == address(state.document) && version == 1, "typed document handed to existing payload parser");
+    require(document == state.document && version == 1, "typed document handed to existing payload parser");
     DocumentView(state.document).set(&DocumentRecord::screen_width, int32_t{777});
     if (state.throw_payload) throw std::runtime_error("injected payload exception");
     return state.result;
