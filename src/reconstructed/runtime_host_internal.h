@@ -143,7 +143,10 @@ struct SquirrelObjectMethods {
     decltype(&kinoko_squirrel_object_delete) destroy;
 };
 #else
-struct SquirrelObjectMethods; // C fixtures use table identity only.
+struct SquirrelObjectMethods {
+    int32_t (__fastcall *destroy)(int32_t object, void *unused,
+                                                int32_t flags);
+};
 #endif
 
 #ifdef __cplusplus
@@ -151,7 +154,9 @@ struct ActorMethods {
     decltype(&kinoko_actor_delete_method) destroy;
 };
 #else
-struct ActorMethods; // C fixtures use table identity only.
+struct ActorMethods {
+    KinokoActor * (__fastcall *destroy)(KinokoActor *actor, void* unused_edx, unsigned char flags);
+};
 #endif
 
 #ifdef __cplusplus
@@ -159,7 +164,9 @@ struct ActorRenderLayerMethods {
     decltype(&kinoko_method_render_layer_update) update;
 };
 #else
-struct ActorRenderLayerMethods; // C fixtures use table identity only.
+struct ActorRenderLayerMethods {
+    int32_t (__fastcall *update)(int32_t receiver, void* unused_edx, int32_t argument);
+};
 #endif
 
 #ifdef __cplusplus
@@ -171,7 +178,13 @@ struct ActorPoolMethods {
     decltype(&kinoko_method_actor_pool_count) count;
 };
 #else
-struct ActorPoolMethods; // C fixtures use table identity only.
+struct ActorPoolMethods {
+    int32_t (__fastcall *destroy)(int32_t manager, void *unused, unsigned char flags);
+    int32_t (__fastcall *top)(int32_t receiver, void* unused_edx, int32_t output);
+    int32_t (__fastcall *remove)(int32_t receiver, void* unused_edx, uint32_t handle);
+    int32_t (__fastcall *lookup)(int32_t manager, void *unused, uint32_t handle);
+    int32_t (__fastcall *count)(int32_t manager, void *unused);
+};
 #endif
 
 #ifdef __cplusplus
@@ -180,7 +193,10 @@ struct ActorOwnerMethods {
     decltype(&kinoko_method_actor_manager_push) push;
 };
 #else
-struct ActorOwnerMethods; // C fixtures use table identity only.
+struct ActorOwnerMethods {
+    int32_t (__fastcall *destroy)(int32_t manager, void *unused, unsigned char flags);
+    int32_t (__fastcall *push)(int32_t receiver, void* unused_edx);
+};
 #endif
 
 #ifdef __cplusplus
@@ -188,7 +204,10 @@ struct MapRenderLayerMethods {
     decltype(&kinoko_map_render_layer_entry) update;
 };
 #else
-struct MapRenderLayerMethods; // C fixtures use table identity only.
+struct MapRenderLayerMethods {
+    int32_t (__fastcall *update)(int32_t layer, void *unused,
+    int32_t camera);
+};
 #endif
 
 #ifdef __cplusplus
@@ -198,7 +217,11 @@ struct SqratObjectMethods {
     decltype(&kinoko_sqrat_copy_object) copy;
 };
 #else
-struct SqratObjectMethods; // C fixtures use table identity only.
+struct SqratObjectMethods {
+    void * (__fastcall *destroy)(void * receiver, void *unused, int32_t flags);
+    void * (__fastcall *reference)(void * receiver, void *unused);
+    void * (__fastcall *copy)(void * receiver, void *unused, void * output);
+};
 #endif
 
 #ifdef __cplusplus
@@ -208,7 +231,11 @@ struct SqratRootMethods {
     decltype(&kinoko_sqrat_copy_object) copy;
 };
 #else
-struct SqratRootMethods; // C fixtures use table identity only.
+struct SqratRootMethods {
+    void * (__fastcall *destroy)(void * receiver, void *unused, int32_t flags);
+    void * (__fastcall *reference)(void * receiver, void *unused);
+    void * (__fastcall *copy)(void * receiver, void *unused, void * output);
+};
 #endif
 
 #ifdef __cplusplus
@@ -217,7 +244,10 @@ struct RendererMethods {
     decltype(&kinoko_renderer_after_reset) after_reset;
 };
 #else
-struct RendererMethods; // C fixtures use table identity only.
+struct RendererMethods {
+    int32_t (__fastcall *before_reset)(KinokoRenderer *object, void *unused);
+    int32_t (__fastcall *after_reset)(KinokoRenderer *object, void *unused);
+};
 #endif
 
 #ifdef __cplusplus
@@ -228,7 +258,12 @@ struct ActScriptMethods {
     decltype(&kinoko_method_delete_act_script) destroy;
 };
 #else
-struct ActScriptMethods; // C fixtures use table identity only.
+struct ActScriptMethods {
+    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
+    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
+    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
+    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
+};
 #endif
 
 #ifdef __cplusplus
@@ -238,7 +273,11 @@ struct ActLayerReferenceMethods {
     decltype(&kinoko_sqrat_copy_object) copy;
 };
 #else
-struct ActLayerReferenceMethods; // C fixtures use table identity only.
+struct ActLayerReferenceMethods {
+    void * (__fastcall *destroy)(void * receiver, void *unused, int32_t flags);
+    void * (__fastcall *reference)(void * receiver, void *unused);
+    void * (__fastcall *copy)(void * receiver, void *unused, void * output);
+};
 #endif
 
 #ifdef __cplusplus
@@ -254,7 +293,19 @@ struct ActLayerMethods {
     decltype(&kinoko_method_register_act_layer) register_class;
 };
 #else
-struct ActLayerMethods; // C fixtures use table identity only.
+struct ActLayerMethods {
+    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
+    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
+    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
+    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
+    int32_t (__fastcall *clone)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *associate)(
+    KinokoActLayer *layer, void *unused, KinokoActResource *resource);
+    KinokoActLayer * (__fastcall *world_position)(KinokoActLayer *layer,
+    void *unused, float *x, float *y, float *z);
+    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, int32_t parent, int32_t flags);
+};
 #endif
 
 #ifdef __cplusplus
@@ -264,7 +315,11 @@ struct ActLayerLayoutMethods {
     decltype(&kinoko_sqrat_copy_object) copy;
 };
 #else
-struct ActLayerLayoutMethods; // C fixtures use table identity only.
+struct ActLayerLayoutMethods {
+    void * (__fastcall *destroy)(void * receiver, void *unused, int32_t flags);
+    void * (__fastcall *reference)(void * receiver, void *unused);
+    void * (__fastcall *copy)(void * receiver, void *unused, void * output);
+};
 #endif
 
 #ifdef __cplusplus
@@ -277,7 +332,14 @@ struct ActKeyMethods {
     decltype(&kinoko_method_clone_act_key) clone;
 };
 #else
-struct ActKeyMethods; // C fixtures use table identity only.
+struct ActKeyMethods {
+    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
+    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
+    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
+    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
+    KinokoActKey* (__fastcall *clone)(KinokoActKey* receiver, void* unused_edx);
+};
 #endif
 
 #ifdef __cplusplus
@@ -293,7 +355,17 @@ struct ActDocumentMethods {
     decltype(&kinoko_method_resume_act_resources) resume_resources;
 };
 #else
-struct ActDocumentMethods; // C fixtures use table identity only.
+struct ActDocumentMethods {
+    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
+    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
+    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
+    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
+    KinokoActDocument * (__fastcall *clone)(KinokoActDocument *source, void *unused);
+    int32_t (__fastcall *load_resources)(KinokoActDocument *document, void *unused, const char *prefix);
+    int32_t (__fastcall *suspend_resources)(KinokoActDocument *document, void *unused);
+    int32_t (__fastcall *resume_resources)(KinokoActDocument *document, void *unused);
+};
 #endif
 
 #ifdef __cplusplus
@@ -310,7 +382,18 @@ struct ActLayoutMethods {
     decltype(&kinoko_method_register_layout) register_class;
 };
 #else
-struct ActLayoutMethods; // C fixtures use table identity only.
+struct ActLayoutMethods {
+    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
+    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
+    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
+    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
+    int32_t * (*type)(void);
+    KinokoActLayout* (__fastcall *clone)(KinokoActLayout* receiver, void* unused_edx);
+    int32_t (__fastcall *associate)(int32_t receiver, void* unused_edx, int32_t layer);
+    int32_t (__fastcall *update)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *draw)(int32_t receiver, void* unused_edx, float x, float y);
+    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx);
+};
 #endif
 
 #ifdef __cplusplus
@@ -328,7 +411,19 @@ struct ChipResourceMethods {
     decltype(&kinoko_method_load_chip_resource) load;
 };
 #else
-struct ChipResourceMethods; // C fixtures use table identity only.
+struct ChipResourceMethods {
+    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
+    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
+    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
+    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
+    int32_t * (*type)(void);
+    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, struct SQVM* vm);
+    int32_t (__fastcall *resource_42f800)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    int32_t (__fastcall *resource_42f6c0)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    KinokoActResource* (__fastcall *clone)(KinokoActResource* receiver, void* unused_edx);
+    int32_t (__fastcall *load)(int32_t receiver, void* unused_edx, const char* prefix);
+};
 #endif
 
 #ifdef __cplusplus
@@ -346,7 +441,21 @@ struct MapLayoutMethods {
     decltype(&kinoko_map_update_visible_entry) update_visible;
 };
 #else
-struct MapLayoutMethods; // C fixtures use table identity only.
+struct MapLayoutMethods {
+    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
+    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
+    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
+    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
+    int32_t * (*type)(void);
+    int32_t (__fastcall *clone)(int32_t source, void *unused);
+    int32_t (__fastcall *associate)(int32_t receiver, void* unused_edx, int32_t layer);
+    int32_t (__fastcall *update)(int32_t layout, void *unused);
+    int32_t (__fastcall *draw)(int32_t layout, void *unused,
+    float x, float y);
+    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *update_visible)(int32_t layout, void *unused,
+    int32_t left, int32_t top, int32_t right, int32_t bottom);
+};
 #endif
 
 #ifdef __cplusplus
@@ -357,7 +466,12 @@ struct QuadColorMethods {
     decltype(&kinoko_quad_modulate_color) modulate_color;
 };
 #else
-struct QuadColorMethods; // C fixtures use table identity only.
+struct QuadColorMethods {
+    int32_t (__fastcall *destroy)(int32_t sprite, void *unused, int32_t flags);
+    uint32_t (__fastcall *set_color)(KinokoColoredQuad *quad, void *unused, uint32_t color);
+    uint32_t (__fastcall *set_vertex_colors)(KinokoColoredQuad *quad, void *unused, const uint32_t *colors);
+    uint32_t (__fastcall *modulate_color)(KinokoColoredQuad *quad, void *unused, uint32_t color);
+};
 #endif
 
 #ifdef __cplusplus
@@ -376,7 +490,20 @@ struct TextureResourceMethods {
     decltype(&kinoko_method_unload_resource_texture) unload;
 };
 #else
-struct TextureResourceMethods; // C fixtures use table identity only.
+struct TextureResourceMethods {
+    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
+    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
+    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
+    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
+    int32_t * (*type)(void);
+    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, struct SQVM* vm);
+    int32_t (__fastcall *resource_446920)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    int32_t (__fastcall *resource_4467e0)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    KinokoActResource* (__fastcall *clone)(KinokoActResource* receiver, void* unused_edx);
+    int32_t (__fastcall *load)(int32_t receiver, void* unused_edx, const char* prefix);
+    int32_t (__fastcall *unload)(int32_t receiver, void* unused_edx);
+};
 #endif
 
 #ifdef __cplusplus
@@ -396,7 +523,22 @@ struct RenderTargetMethods {
     decltype(&kinoko_method_create_render_target) create;
 };
 #else
-struct RenderTargetMethods; // C fixtures use table identity only.
+struct RenderTargetMethods {
+    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
+    int32_t (__fastcall *read)(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
+    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
+    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *delete_object)(int32_t receiver, void* unused_edx, unsigned char flags);
+    int32_t * (*type)(void);
+    int32_t (__fastcall *register_class)(int32_t receiver, void* unused_edx, struct SQVM* vm);
+    int32_t (__fastcall *resource_4499a0)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    int32_t (__fastcall *resource_449860)(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+    KinokoActResource* (__fastcall *clone)(KinokoActResource* receiver, void* unused_edx);
+    int32_t (__fastcall *load)(int32_t receiver, void* unused_edx, const char* prefix);
+    int32_t (__fastcall *unload)(int32_t receiver, void* unused_edx);
+    int32_t (__fastcall *create)(KinokoActResource *resource, void *unused,
+                                                      int32_t width, int32_t height);
+};
 #endif
 
 #ifdef __cplusplus
@@ -413,7 +555,22 @@ struct SpriteMethods {
     decltype(&kinoko_sprite_draw_4049c0) draw_4049c0;
 };
 #else
-struct SpriteMethods; // C fixtures use table identity only.
+struct SpriteMethods {
+    int32_t (__fastcall *destroy)(int32_t receiver, void* unused_edx, char flags);
+    uint32_t (__fastcall *set_color)(KinokoColoredQuad *quad, void *unused, uint32_t color);
+    uint32_t (__fastcall *set_vertex_colors)(KinokoColoredQuad *quad, void *unused, const uint32_t *colors);
+    uint32_t (__fastcall *modulate_color)(KinokoColoredQuad *quad, void *unused, uint32_t color);
+    int32_t (__fastcall *set_rect_pivot)(KinokoSprite *sprite, void *unused,
+    int32_t texture, int32_t x, int32_t y, int32_t width, int32_t height,
+    int32_t pivot_x, int32_t pivot_y);
+    int32_t (__fastcall *set_rect)(KinokoSprite *sprite, void *unused,
+    int32_t texture, int32_t x, int32_t y, int32_t width, int32_t height);
+    int32_t (__fastcall *draw_bounds)(KinokoSprite *sprite, void *unused,
+    float left, float top, float right, float bottom);
+    int32_t (__fastcall *draw_404770)(KinokoSprite *sprite, void *unused, float x, float y);
+    int32_t (__fastcall *draw_404bc0)(KinokoSprite *sprite, void *unused, float x, float y);
+    int32_t (__fastcall *draw_4049c0)(KinokoSprite *sprite, void *unused, float x, float y);
+};
 #endif
 
 void kinoko_host_free_allocation(int32_t * a1);
@@ -515,7 +672,19 @@ struct StringLayoutMethods {
     decltype(&kinoko_method_delete_string_layout) delete_object;
 };
 #else
-struct StringLayoutMethods; // C fixtures use table identity only.
+struct StringLayoutMethods {
+    int32_t (__fastcall *write)(int32_t receiver, void* unused_edx, int32_t writer);
+    int32_t (__fastcall *read)(int32_t object, void *unused, int32_t holder, int32_t version);
+    int32_t (__fastcall *query)(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
+    int32_t (__fastcall *destroy)(int32_t object, void *unused);
+    int32_t (__fastcall *type)(int32_t object, void *unused);
+    int32_t (__fastcall *clone)(int32_t object, void *unused);
+    int32_t (__fastcall *set_layer)(int32_t object, void *unused, int32_t layer);
+    int32_t (__fastcall *update)(int32_t object, void *unused);
+    int32_t (__fastcall *draw)(int32_t object, void *unused, float x, float y);
+    int32_t (__fastcall *register_class)(int32_t object, void *unused);
+    int32_t (__fastcall *delete_object)(int32_t object, void *unused, unsigned char flags);
+};
 #endif
 extern struct StringLayoutMethods kinoko_string_layout_methods_storage;
 
