@@ -19,7 +19,7 @@ typedef struct KinokoRuntimeBootSymbols {
     KinokoMapManager *map;
     KinokoActorManager *actors;
     const void *renderer_methods;
-    int32_t *render_layer_owner_slot;
+    KinokoActorManager **render_layer_owner_slot;
 } KinokoRuntimeBootSymbols;
 const KinokoRuntimeBootSymbols *kinoko_runtime_boot_symbols(void);
 void kinoko_runtime_initialize_objects(const KinokoRuntimeBootSymbols *symbols);

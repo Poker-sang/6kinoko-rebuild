@@ -41,7 +41,7 @@ extern "C" void kinoko_runtime_initialize_objects(const KinokoRuntimeBootSymbols
     }
     if (!kinoko_actor_manager_construct(symbols->actors))
         kinoko_trace("actor-manager:construct-failed");
-    *symbols->render_layer_owner_slot = kinoko::legacy::address(symbols->actors);
+    *symbols->render_layer_owner_slot = symbols->actors;
     kinoko_actor_trace_render_layers(symbols->actors);
     initialized = true;
 }

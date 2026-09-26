@@ -312,11 +312,11 @@ act::Layout3DRecord *create_layout() {
 
 // 457A10: a controller owns its child vector, while the mesh manager owns
 // lookup handles. A handle borrows the object reached through its first word.
-extern "C" int32_t kinoko_mesh_manager_slot;
+extern "C" const void* kinoko_mesh_manager_methods;
 namespace {
 struct MeshChildRange {
     unsigned char prefix[156];
-    int32_t begin, end;
+    int32_t *begin, *end;
 };
 static_assert(offsetof(MeshChildRange, begin) == 156);
 static_assert(offsetof(MeshChildRange, end) == 160);
@@ -329,26 +329,28 @@ extern "C" int32_t kinoko_update_mesh_children(void *node, int32_t argument) {
     const kinoko::native::RecordView<MeshChildRange> children(node);
     const auto begin = children.get(&MeshChildRange::begin);
     const auto end = children.get(&MeshChildRange::end);
-    if (end - begin < static_cast<int32_t>(sizeof(int32_t))) return 0;
+    const auto byte_count = static_cast<int32_t>(reinterpret_cast<uintptr_t>(end) - reinterpret_cast<uintptr_t>(begin));
+    if (byte_count < static_cast<int32_t>(sizeof(int32_t))) return 0;
 
     int32_t result = 0;
-    for (uint32_t index = 0; index < static_cast<uint32_t>((end - begin) >> 2); ++index) {
-        const auto entry = field<int32_t>(begin + static_cast<int32_t>(sizeof(int32_t) * index));
+    for (uint32_t index = 0; index < static_cast<uint32_t>(byte_count >> 2); ++index) {
+        const auto entry = kinoko::legacy::load<int32_t>(begin + index);
         if (!entry) continue;
-        const auto manager = address(&kinoko_mesh_manager_slot);
-        const auto manager_methods = field<int32_t>(manager);
-        int32_t handle = 0;
-        if (manager_methods && field<int32_t>(manager_methods + 12)) {
-            handle = kinoko_call_thiscall2_result(pointer<void>(manager),
-                pointer<void>(field<int32_t>(manager_methods + 12)), entry, argument);
+        const auto* methods = static_cast<const unsigned char*>(kinoko_mesh_manager_methods);
+        using Lookup = void** (__thiscall*)(const void*, int32_t, int32_t);
+        void** handle = nullptr;
+        if (methods) {
+            const auto lookup = kinoko::legacy::load<Lookup>(methods + 3*sizeof(void*));
+            if (lookup) handle = lookup(&kinoko_mesh_manager_methods, entry, argument);
         }
         if (!handle) continue;
-        const auto object = field<int32_t>(handle);
+        auto* object = kinoko::legacy::load<void*>(handle);
         if (!object) continue;
-        const auto methods = field<int32_t>(object);
-        if (methods && field<int32_t>(methods)) {
-            result = kinoko_call_thiscall1_result(pointer<void>(object),
-                pointer<void>(field<int32_t>(methods)), argument);
+        const auto* object_methods = kinoko::legacy::load<const unsigned char*>(object);
+        using Update = int32_t (__thiscall*)(void*, int32_t);
+        if (object_methods) {
+            const auto update = kinoko::legacy::load<Update>(object_methods);
+            if (update) result = update(object, argument);
         }
     }
     return result;

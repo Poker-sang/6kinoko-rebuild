@@ -91,13 +91,13 @@ int32_t kinoko_actor_step_key_storage[3] = { 0, 0, 0 };
 
 int32_t kinoko_actor_class_storage[3] = { 0, 0, 0 };
 
-int32_t kinoko_stage_list_slot = 0;
+void* kinoko_stage_list_slot = 0;
 
 int32_t kinoko_stage_count = 0;
 
 int32_t kinoko_camera_class_storage[3] = { 0, 0, 0 };
 
-int32_t kinoko_render_layer_owner_slot = 0;
+KinokoActorManager* kinoko_render_layer_owner_slot = 0;
 
 int32_t kinoko_input_class_storage[3] = { 0, 0, 0 };
 
@@ -157,7 +157,7 @@ int32_t kinoko_texture_type_identity = 0;
 
 int32_t kinoko_render_target_type_identity = 0;
 
-int32_t kinoko_mesh_manager_slot = 0;
+const void* kinoko_mesh_manager_methods = 0;
 
 char kinoko_resource2d_class_published = 0;
 

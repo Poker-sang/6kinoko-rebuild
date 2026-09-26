@@ -71,7 +71,8 @@ void *operator new(std::size_t size) {
 void operator delete(void *p) noexcept { std::free(p); }
 void operator delete(void *p, std::size_t) noexcept { std::free(p); }
 extern "C" {
-int32_t kinoko_stage_list_slot = 0, kinoko_stage_count = 0, kinoko_sound_lookup_count = 0;
+void* kinoko_stage_list_slot = nullptr;
+int32_t kinoko_stage_count = 0, kinoko_sound_lookup_count = 0;
 KinokoIntegerMap* kinoko_sound_lookup = nullptr;
 struct SQVM *kinoko_primary_vm = nullptr;
 KinokoActDocument *kinoko_act_document_create() {

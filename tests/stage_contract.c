@@ -3301,10 +3301,10 @@ static int32_t __fastcall release_stage_owner(void *self, void *unused, int32_t 
 }
 
 static int test_global_stage_cleanup(void) {
-    int32_t saved_head = kinoko_stage_list_slot, saved_count = kinoko_stage_count;
+    void* saved_head = kinoko_stage_list_slot; int32_t saved_count = kinoko_stage_count;
     void *vtable[5] = {NULL, NULL, NULL, NULL, release_stage_owner};
     kinoko_stage_list_construct();
-    const int32_t identity=kinoko_stage_list_slot;
+    const int32_t identity=PTR(kinoko_stage_list_slot);
     CHECK(kinoko_stages_update()==identity);
     CHECK(kinoko_stages_prepare_draw()==identity);
     CHECK(kinoko_stages_draw()==identity);
@@ -3525,7 +3525,7 @@ static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     kinoko_input_devices_construct((KinokoInputManager *)(intptr_t)(input));
     kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(input + 196));
     kinoko_input_keys_construct((KinokoKeyTracker *)(intptr_t)(input + 392));
-    const int32_t saved_stages=kinoko_stage_list_slot,saved_stage_count=kinoko_stage_count;
+    void* const saved_stages=kinoko_stage_list_slot; const int32_t saved_stage_count=kinoko_stage_count;
     kinoko_stage_list_construct();
     CHECK(execute_source(vm, root + 2,
         "maskActors <- [];\n"

@@ -710,13 +710,13 @@ extern int32_t kinoko_actor_step_key_storage[3];
 
 extern int32_t kinoko_actor_class_storage[3];
 
-extern int32_t kinoko_stage_list_slot;
+extern void* kinoko_stage_list_slot;
 
 extern int32_t kinoko_stage_count;
 
 extern int32_t kinoko_camera_class_storage[3];
 
-extern int32_t kinoko_render_layer_owner_slot;
+extern KinokoActorManager* kinoko_render_layer_owner_slot;
 
 extern int32_t kinoko_input_class_storage[3];
 
@@ -774,7 +774,7 @@ extern int32_t kinoko_texture_type_identity;
 
 extern int32_t kinoko_render_target_type_identity;
 
-extern int32_t kinoko_mesh_manager_slot;
+extern const void* kinoko_mesh_manager_methods;
 
 extern char kinoko_resource2d_class_published;
 

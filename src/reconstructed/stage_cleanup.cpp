@@ -13,7 +13,8 @@
 #include "kinoko/legacy_memory.hpp"
 
 extern "C" {
-extern int32_t kinoko_stage_list_slot, kinoko_stage_count;
+extern void* kinoko_stage_list_slot;
+extern int32_t kinoko_stage_count;
 extern KinokoIntegerMap* kinoko_sound_lookup;
 extern int32_t kinoko_sound_lookup_count;
 int32_t kinoko_audio_shutdown_resources(void);
@@ -23,20 +24,20 @@ using StageList = std::list<KinokoStageNode>;
 struct KinokoStageNode { KinokoStageOwner *owner; StageList::iterator position; };
 
 namespace {
-inline int32_t& stage_list_slot = kinoko_stage_list_slot;
+inline void*& stage_list_slot = kinoko_stage_list_slot;
 inline int32_t& stage_count_slot = kinoko_stage_count;
 inline KinokoIntegerMap*& sound_lookup_slot = kinoko_sound_lookup;
 inline int32_t& sound_lookup_count_slot = kinoko_sound_lookup_count;
 // The C ABI slots are retained for original callers and contract fixtures.
 // Only this file owns the list allocation and sound lookup tree.
-int32_t& stage_list_word() { return stage_list_slot; }
+void*& stage_list_word() { return stage_list_slot; }
 int32_t& stage_list_count() { return stage_count_slot; }
 KinokoIntegerMap*& sound_lookup() { return sound_lookup_slot; }
 int32_t& sound_lookup_count() { return sound_lookup_count_slot; }
 using namespace kinoko::stage;
 using kinoko::native::RecordView;
 using kinoko::legacy::pointer;
-StageList* stages() { return kinoko::legacy::pointer<StageList>(stage_list_word()); }
+StageList* stages() { return static_cast<StageList*>(stage_list_word()); }
 void release_stage_list() {
     delete stages();stage_list_word()=0;stage_list_count()=0;
 }
@@ -90,7 +91,7 @@ extern "C" int32_t kinoko_register_sound_tree_cleanup() {
 extern "C" int32_t kinoko_clear_global_stages() {
     if(!stages()) return 0;
     for(auto& entry:*stages()) { kinoko_stage_owner_destroy(entry.owner);entry.owner=nullptr; }
-    stages()->clear();stage_list_count()=0;return stage_list_word();
+    stages()->clear();stage_list_count()=0;return kinoko::legacy::address(stage_list_word());
 }
 
 // 470890: the rebuilt sound manager owns buffers in its SE pool and BGM
@@ -103,10 +104,10 @@ extern "C" int32_t kinoko_clear_global_sound() {
     return 1;
 }
 
-extern "C" void kinoko_stage_list_construct() { stage_list_word()=kinoko::legacy::address(new StageList);stage_list_count()=0; }
+extern "C" void kinoko_stage_list_construct() { stage_list_word()=new StageList;stage_list_count()=0; }
 extern "C" void kinoko_stage_list_destroy() { release_stage_list(); }
 extern "C" KinokoStageNode *kinoko_stage_list_end() {
-    return pointer<KinokoStageNode>(stage_list_word());
+    return static_cast<KinokoStageNode*>(stage_list_word());
 }
 extern "C" KinokoStageNode *kinoko_stage_list_first() {
     return stages() && !stages()->empty() ? &stages()->front() : kinoko_stage_list_end();
