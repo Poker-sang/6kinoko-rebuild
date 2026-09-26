@@ -118,8 +118,9 @@ Schema map_schema{
     {"mapChipBottom", {0,0,offsetof(kinoko::map::LayoutRecord, chip_bottom)}}, {"alpha", {1,1,offsetof(kinoko::map::LayoutRecord, alpha)}}, {"scale", {1,1,offsetof(kinoko::map::LayoutRecord, scale)}}
 };
 using MapRecord = kinoko::map::Placement;
-uint32_t record_count(int32_t layout) {
-    const auto begin = field<uint32_t>(layout+264), end = field<uint32_t>(layout+268);
+uint32_t record_count(KinokoActLayout* layout) {
+    const auto range = kinoko::map::LayoutView(layout).get(&kinoko::map::LayoutRecord::placements);
+    const auto begin = reinterpret_cast<uintptr_t>(range.begin), end = reinterpret_cast<uintptr_t>(range.end);
     if (end < begin || (end-begin)%32 || (!begin && end) || (end-begin)/32 > 0x10000)
         throw std::bad_alloc();
     return (end-begin)/32;
@@ -220,13 +221,13 @@ extern "C" int32_t kinoko_act_read_texture_properties(KinokoActResource *resourc
     catch (...) { return 0; }
 }
 extern "C" int32_t __fastcall kinoko_method_read_texture_resource(
-    int32_t resource, void*, KinokoArchiveReader** holder, int32_t version) {
-    return kinoko_act_read_texture_properties(pointer<KinokoActResource>(resource), (KinokoArchiveReader**)(uintptr_t)(holder), version);
+    KinokoActResource* resource, void*, KinokoArchiveReader** holder, int32_t version) {
+    return kinoko_act_read_texture_properties(resource, (KinokoArchiveReader**)(uintptr_t)(holder), version);
 }
 extern "C" int32_t __fastcall kinoko_method_write_texture_resource(
-    int32_t resource, void*, KinokoArchiveReader* writer) {
+    KinokoActResource* resource, void*, KinokoArchiveReader* writer) {
     if (!resource || !writer) return 0;
-    try { return write(pointer<void>(resource), writer, texture_schema); }
+    try { return write(resource, writer, texture_schema); }
     catch (...) { return 0; }
 }
 
@@ -237,13 +238,13 @@ extern "C" int32_t kinoko_act_read_render_target_properties(KinokoActResource *r
     catch (...) { return 0; }
 }
 extern "C" int32_t __fastcall kinoko_method_read_render_target(
-    int32_t resource, void*, KinokoArchiveReader** holder, int32_t version) {
-    return kinoko_act_read_render_target_properties(pointer<KinokoActResource>(resource), (KinokoArchiveReader**)(uintptr_t)(holder), version);
+    KinokoActResource* resource, void*, KinokoArchiveReader** holder, int32_t version) {
+    return kinoko_act_read_render_target_properties(resource, (KinokoArchiveReader**)(uintptr_t)(holder), version);
 }
 extern "C" int32_t __fastcall kinoko_method_write_render_target(
-    int32_t resource, void*, KinokoArchiveReader* writer) {
+    KinokoActResource* resource, void*, KinokoArchiveReader* writer) {
     if (!resource || !writer) return 0;
-    try { return write(pointer<void>(resource), writer, render_target_schema); }
+    try { return write(resource, writer, render_target_schema); }
     catch (...) { return 0; }
 }
 
@@ -254,13 +255,13 @@ extern "C" int32_t kinoko_act_read_chip_properties(KinokoActResource *resource,
     catch (...) { return 0; }
 }
 extern "C" int32_t __fastcall kinoko_method_read_chip_resource(
-    int32_t resource, void*, KinokoArchiveReader** holder, int32_t version) {
-    return kinoko_act_read_chip_properties(pointer<KinokoActResource>(resource), (KinokoArchiveReader**)(uintptr_t)(holder), version);
+    KinokoActResource* resource, void*, KinokoArchiveReader** holder, int32_t version) {
+    return kinoko_act_read_chip_properties(resource, (KinokoArchiveReader**)(uintptr_t)(holder), version);
 }
 extern "C" int32_t __fastcall kinoko_method_write_chip_resource(
-    int32_t resource, void*, KinokoArchiveReader* writer) {
+    KinokoActResource* resource, void*, KinokoArchiveReader* writer) {
     if (!resource || !writer) return 0;
-    try { return write(pointer<void>(resource), writer, chip_schema); }
+    try { return write(resource, writer, chip_schema); }
     catch (...) { return 0; }
 }
 
@@ -276,13 +277,13 @@ extern "C" int32_t kinoko_act_read_layout2d_properties(KinokoActLayout *layout,
     } catch (...) { return 0; }
 }
 extern "C" int32_t __fastcall kinoko_method_read_layout_properties(
-    int32_t layout, void*, KinokoArchiveReader** holder, int32_t version) {
-    return kinoko_act_read_layout2d_properties(pointer<KinokoActLayout>(layout), (KinokoArchiveReader**)(uintptr_t)(holder), version);
+    KinokoActLayout* layout, void*, KinokoArchiveReader** holder, int32_t version) {
+    return kinoko_act_read_layout2d_properties(layout, (KinokoArchiveReader**)(uintptr_t)(holder), version);
 }
 extern "C" int32_t __fastcall kinoko_method_write_layout_properties(
-    int32_t layout, void*, KinokoArchiveReader* writer) {
+    KinokoActLayout* layout, void*, KinokoArchiveReader* writer) {
     if (!layout || !writer) return 0;
-    try { return write(pointer<void>(layout), writer, layout_schema); }
+    try { return write(layout, writer, layout_schema); }
     catch (...) { return 0; }
 }
 
@@ -293,9 +294,9 @@ extern "C" int32_t kinoko_act_read_layout3d_properties(KinokoActLayout *layout,
     catch (...) { return 0; }
 }
 
-extern "C" int32_t __fastcall kinoko_method_write_layout_3d(int32_t layout,void *,KinokoArchiveReader* writer) {
+extern "C" int32_t __fastcall kinoko_method_write_layout_3d(KinokoActLayout* layout,void *,KinokoArchiveReader* writer) {
     if(!layout || !writer) return 0;
-    try{return write(pointer<void>(layout),writer,layout3d_schema);}catch(...){return 0;}
+    try{return write(layout,writer,layout3d_schema);}catch(...){return 0;}
 }
 namespace kinoko::mesh {
 int32_t read_resource_properties(Resource *resource,KinokoArchiveReader** reader_holder,int32_t version) {
@@ -303,27 +304,27 @@ int32_t read_resource_properties(Resource *resource,KinokoArchiveReader** reader
     try{return read(resource,*reader_holder,mesh_schema,false);}catch(...){return 0;}
 }
 }
-extern "C" int32_t __fastcall kinoko_method_read_mesh_resource(int32_t resource,void *,KinokoArchiveReader** holder,int32_t version) {
-    return kinoko::mesh::read_resource_properties(pointer<kinoko::mesh::Resource>(resource),
+extern "C" int32_t __fastcall kinoko_method_read_mesh_resource(KinokoActResource* resource,void *,KinokoArchiveReader** holder,int32_t version) {
+    return kinoko::mesh::read_resource_properties(reinterpret_cast<kinoko::mesh::Resource*>(resource),
         holder,version);
 }
-extern "C" int32_t __fastcall kinoko_method_write_mesh_resource(int32_t resource,void *,KinokoArchiveReader* writer) {
+extern "C" int32_t __fastcall kinoko_method_write_mesh_resource(KinokoActResource* resource,void *,KinokoArchiveReader* writer) {
     if(!resource || !writer) return 0;
-    try{return write(pointer<void>(resource),writer,mesh_schema);}catch(...){return 0;}
+    try{return write(resource,writer,mesh_schema);}catch(...){return 0;}
 }
 
 extern "C" int32_t __fastcall kinoko_method_read_map_layout(
-    int32_t layout, void*, KinokoArchiveReader** holder, int32_t version) {
+    KinokoActLayout* layout, void*, KinokoArchiveReader** holder, int32_t version) {
     if (!layout || !holder || version != 1) return 0;
     try {
         const auto reader = *holder;
-        if (!read(pointer<void>(layout), reader, map_schema, false)) return 0;
+        if (!read(layout, reader, map_schema, false)) return 0;
         uint32_t count=0, size=0;
         if (!transfer(reader, count) || !transfer(reader, size) || count > 0x10000) return 0;
         const auto old_count = record_count(layout);
         if (count > 0x10000-old_count) return 0;
         std::vector<MapRecord> records;
-        const auto old = pointer<MapRecord>(field<int32_t>(layout+264));
+        const auto old = kinoko::map::LayoutView(layout).get(&kinoko::map::LayoutRecord::placements).begin;
         if (old_count) records.assign(old, old+old_count);
         for (uint32_t i=0; i<count; ++i) {
             MapRecord record{};
@@ -334,20 +335,20 @@ extern "C" int32_t __fastcall kinoko_method_read_map_layout(
             record.alpha = 1.0f;
             records.push_back(record);
         }
-        if (count) kinoko_native_buffer_replace((void*)(uintptr_t)(layout+264), records.data(), static_cast<uint32_t>(records.size()*32));
+        if (count) kinoko_native_buffer_replace(kinoko::map::LayoutView(layout).bytes(&kinoko::map::LayoutRecord::placements), records.data(), static_cast<uint32_t>(records.size()*32));
         return 1;
     } catch (...) { return 0; }
 }
 extern "C" int32_t __fastcall kinoko_method_write_map_layout(
-    int32_t layout, void*, KinokoArchiveReader* writer) {
+    KinokoActLayout* layout, void*, KinokoArchiveReader* writer) {
     if (!layout || !writer) return 0;
     try {
-        kinoko::map::prepare_placements(pointer<KinokoActLayout>(layout));
-        if (!write(pointer<void>(layout), writer, map_schema)) return 0;
+        kinoko::map::prepare_placements(layout);
+        if (!write(layout, writer, map_schema)) return 0;
         auto count = record_count(layout);
         uint32_t size = 12;
         if (!transfer(writer, count) || !transfer(writer, size)) return 0;
-        auto records = pointer<MapRecord>(field<int32_t>(layout+264));
+        auto records = kinoko::map::LayoutView(layout).get(&kinoko::map::LayoutRecord::placements).begin;
         for (uint32_t i=0; i<count; ++i)
             if (!transfer(writer, &records[i], size)) return 0;
         return 1;
@@ -355,13 +356,13 @@ extern "C" int32_t __fastcall kinoko_method_write_map_layout(
 }
 
 extern "C" int32_t __fastcall kinoko_method_map_set_layer(
-    int32_t layout, void*, int32_t layer) {
+    KinokoActLayout* layout, void*, KinokoActLayer* layer) {
     constexpr int32_t fail = static_cast<int32_t>(0x80004005u);
     if (!layout || !layer) return fail;
     try {
         using namespace kinoko::map;
-        const LayoutView map(pointer<KinokoActLayout>(layout));
-        auto *owner = pointer<KinokoActLayer>(layer);
+        const LayoutView map(layout);
+        auto *owner = layer;
         auto *resource = LayerView(owner).get(&LayerRecord::resource);
         map.set(&LayoutRecord::cached_chip_resource, static_cast<KinokoActResource *>(nullptr));
         if (!resource || map.get(&LayoutRecord::suppress_next_binding)) {
@@ -373,28 +374,32 @@ extern "C" int32_t __fastcall kinoko_method_map_set_layer(
             map.set(&LayoutRecord::cached_chip_resource, resource);
             // Source MCD loading already loads each texture once. The original
             // sorted/unique texture preload therefore needs no second acquire.
-            kinoko::map::rebuild_chip_index(pointer<KinokoActLayout>(layout));
+            kinoko::map::rebuild_chip_index(layout);
         }
         map.set(&LayoutRecord::owning_layer, owner);
-        field<int32_t>(layout+284) = field<int32_t>(layout+280);
+        auto chip_range = map.get(&LayoutRecord::chip_references);
+        chip_range.end = chip_range.begin;
+        map.set(&LayoutRecord::chip_references, chip_range);
         if (!map.get(&LayoutRecord::cached_chip_resource)) return 0;
         const auto count = record_count(layout);
         const auto data = ChipResourceView(resource).get(&ChipResourceRecord::data);
         if (!data && count) return fail;
-        auto records = pointer<MapRecord>(field<int32_t>(layout+264));
-        std::vector<int32_t> chip_refs, texture_refs;
+        auto records = kinoko::map::LayoutView(layout).get(&kinoko::map::LayoutRecord::placements).begin;
+        std::vector<const ChipDefinition*> chip_refs;
+        std::vector<kinoko_mcd_texture*> texture_refs;
         // 434380 clears only the chip-reference vector; texture refs append.
-        auto begin = field<uint32_t>(layout+296), end = field<uint32_t>(layout+300);
+        const auto textures = map.get(&LayoutRecord::texture_references);
+        auto begin = reinterpret_cast<uintptr_t>(textures.begin), end = reinterpret_cast<uintptr_t>(textures.end);
         if (end < begin || (end-begin)%4 || (end-begin)/4 > 0x10000 || (!begin && end)) return fail;
-        if (end != begin) texture_refs.assign(pointer<int32_t>(begin), pointer<int32_t>(end));
+        if (end != begin) texture_refs.assign(textures.begin, textures.end);
         for (uint32_t i=0; i<count; ++i) {
             auto chip = kinoko_mcd_find_chip(data, static_cast<uint32_t>(records[i].chip_id));
             auto texture = chip ? kinoko_mcd_find_texture(data, kinoko::legacy::load<uint32_t>(chip->bytes+4)) : nullptr;
-            chip_refs.push_back(chip ? address(chip->bytes) : 0);
-            texture_refs.push_back(address(texture));
+            chip_refs.push_back(chip ? reinterpret_cast<const ChipDefinition*>(chip->bytes) : nullptr);
+            texture_refs.push_back(texture);
         }
-        kinoko_native_buffer_replace((void*)(uintptr_t)(layout+280), chip_refs.data(), static_cast<uint32_t>(chip_refs.size()*4));
-        kinoko_native_buffer_replace((void*)(uintptr_t)(layout+296), texture_refs.data(), static_cast<uint32_t>(texture_refs.size()*4));
+        kinoko_native_buffer_replace(map.bytes(&LayoutRecord::chip_references), chip_refs.data(), static_cast<uint32_t>(chip_refs.size()*4));
+        kinoko_native_buffer_replace(map.bytes(&LayoutRecord::texture_references), texture_refs.data(), static_cast<uint32_t>(texture_refs.size()*4));
         return 0;
     } catch (...) { return fail; }
 }
@@ -514,53 +519,58 @@ uint32_t type_hash(const char* name,size_t length) {
 uint32_t type_hash(const char* name) { return type_hash(name,std::strlen(name)); }
 struct TypeName {
     unsigned char bytes[28]{};
-    TypeName() { field<uint32_t>(address(bytes)+20)=15; }
+    TypeName() { kinoko::native::RecordView<kinoko::legacy::StringRecord>(bytes).set(&kinoko::legacy::StringRecord::capacity, uint32_t{15}); }
     ~TypeName() {
         const kinoko::legacy::StringView text(bytes);
         text.destroy();
     }
 };
-bool object_hash(int32_t layout,uint32_t& hash,int32_t type_slot) {
-    const auto table=field<int32_t>(layout);
+bool object_hash(void* layout,uint32_t& hash,int32_t type_slot) {
+    const auto* table=kinoko::legacy::load<const unsigned char*>(layout);
     const auto* name=kinoko_act_serialized_type_name((const void*)(uintptr_t)(layout));
     if (name) { hash=type_hash(name); return true; }
     // Original 426740 obtains the remaining registered types through virtual
     // GetType/GetName. Keep this boundary until their registries are migrated;
     // do not confuse modern compiler RTTI spelling with the original raw name.
     if (!table) return false;
-    const auto binder=kinoko_call_thiscall0_result(pointer<void>(layout),field<void*>(table+type_slot));
-    if (!binder || !field<int32_t>(binder)) return false;
+    using GetType = void* (__thiscall*)(void*);
+    auto* binder=kinoko::legacy::load<GetType>(table+type_slot)(layout);
+    const auto* methods=binder ? kinoko::legacy::load<const unsigned char*>(binder) : nullptr;
+    if (!methods) return false;
     TypeName result;
-    kinoko_call_thiscall1_result(pointer<void>(binder), field<void*>(field<int32_t>(binder)+4), address(result.bytes));
+    using GetName = int32_t (__thiscall*)(void*, void*);
+    kinoko::legacy::load<GetName>(methods+sizeof(void*))(binder, result.bytes);
     const kinoko::legacy::StringView text(result.bytes);
     hash=type_hash(text.data(),text.length());
     return true;
 }
-bool write_layer_list(int32_t layer,int32_t offset,KinokoArchiveReader* writer,const char* type) {
-    auto count=field<uint32_t>(layer+offset+4);
-    const auto head=field<int32_t>(layer+offset);
-    if (count>0x10000 || !head || !transfer(writer,count)) return false;
-    auto node=field<int32_t>(head);
-    auto hash=type_hash(type);
-    for (uint32_t i=0;i<count;++i) {
-        if (!node || node==head || !transfer(writer,hash)) return false;
-        const auto object=field<int32_t>(node+8);
-        // Original 41F990 ignores each element writer's return value, but
-        // propagates failure to emit the list count/type and final script.
-        if (object) write_virtual(pointer<void>(object), field<void*>(field<int32_t>(object)), writer);
-        node=field<int32_t>(node);
+void* write_method(void* object) {
+    return kinoko::legacy::load<void*>(kinoko::legacy::load<const void*>(object));
+}
+bool write_layer_list(kinoko::act::LayerListView list, KinokoArchiveReader* writer, const char* type) {
+    using namespace kinoko::act;
+    auto count = static_cast<uint32_t>(list.get(&LayerListRecord::count));
+    auto* head = list.get(&LayerListRecord::head);
+    if (count > 0x10000 || !head || !transfer(writer, count)) return false;
+    auto* node = head->next;
+    auto hash = type_hash(type);
+    for (uint32_t i = 0; i < count; ++i) {
+        if (!node || node == head || !transfer(writer, hash)) return false;
+        auto* object = node->key;
+        if (object) write_virtual(object, write_method(object), writer);
+        node = node->next;
     }
-    return node==head;
+    return node == head;
 }
 }
-extern "C" int32_t __fastcall kinoko_method_write_act_layer(int32_t layer,void*,KinokoArchiveReader* writer) {
+extern "C" int32_t __fastcall kinoko_method_write_act_layer(KinokoActLayer* layer,void*,KinokoArchiveReader* writer) {
     if (!layer || !writer) return 0;
     try {
-        if (!write(pointer<void>(layer),writer,layer_schema) ||
-            !write_layer_list(layer,180,writer,".?AVCActKey@@") ||
-            !write_layer_list(layer,192,writer,".?AVCActTimeLine@@")) return 0;
-        const auto script=layer+204;
-        return (write_virtual(pointer<void>(script), field<void*>(field<int32_t>(script)), writer)&0xff)!=0;
+        if (!write(layer,writer,layer_schema) ||
+            !write_layer_list(kinoko::act::LayerStorageView(layer).view(&kinoko::act::LayerStorageRecord::keys),writer,".?AVCActKey@@") ||
+            !write_layer_list(kinoko::act::LayerStorageView(layer).view(&kinoko::act::LayerStorageRecord::timelines),writer,".?AVCActTimeLine@@")) return 0;
+        auto* script=kinoko::act::LayerStorageView(layer).bytes(&kinoko::act::LayerStorageRecord::script);
+        return (write_virtual(script, write_method(script), writer)&0xff)!=0;
     } catch (...) { return 0; }
 }
 extern "C" int32_t kinoko_act_read_layer_properties_typed(KinokoActLayer *layer,
@@ -581,28 +591,28 @@ extern "C" int32_t kinoko_act_read_map_properties_typed(KinokoActLayout *layout,
     try { return read(layout,reader,map_schema,false); }
     catch (...) { return 0; }
 }
-extern "C" int32_t __fastcall kinoko_method_read_act_layer(int32_t layer,void*,KinokoArchiveReader** holder,int32_t version) {
-    return layer && holder && version==1 ? kinoko_act_load_layer(pointer<KinokoActLayer>(layer), (KinokoArchiveReader*)(*holder), version) : 0;
+extern "C" int32_t __fastcall kinoko_method_read_act_layer(KinokoActLayer* layer,void*,KinokoArchiveReader** holder,int32_t version) {
+    return layer && holder && version==1 ? kinoko_act_load_layer(layer, (KinokoArchiveReader*)(*holder), version) : 0;
 }
-extern "C" int32_t __fastcall kinoko_method_read_act_key(int32_t key,void*,KinokoArchiveReader** holder,int32_t version) {
-    return key && holder && version==1 ? kinoko_act_load_key(pointer<KinokoActKey>(key), (KinokoArchiveReader*)(*holder), version) : 0;
+extern "C" int32_t __fastcall kinoko_method_read_act_key(KinokoActKey* key,void*,KinokoArchiveReader** holder,int32_t version) {
+    return key && holder && version==1 ? kinoko_act_load_key(key, (KinokoArchiveReader*)(*holder), version) : 0;
 }
-extern "C" int32_t __fastcall kinoko_method_write_act_key(int32_t key,void*,KinokoArchiveReader* writer) {
+extern "C" int32_t __fastcall kinoko_method_write_act_key(KinokoActKey* key,void*,KinokoArchiveReader* writer) {
     if (!key || !writer) return 0;
     try {
-        if (!write(pointer<void>(key),writer,key_schema)) return 0;
-        const auto layout=field<int32_t>(key+4);
+        if (!write(key,writer,key_schema)) return 0;
+        auto* layout=kinoko::act::KeyView(key).get(&kinoko::act::KeyRecord::layout);
         uint8_t present=layout!=0;
         if (!transfer(writer,present)) return 0;
         if (!layout) return 1;
         uint32_t hash=0;
         if (!object_hash(layout,hash,16) || !transfer(writer,hash)) return 0;
-        return (write_virtual(pointer<void>(layout), field<void*>(field<int32_t>(layout)), writer)&0xff)!=0;
+        return (write_virtual(layout, write_method(layout), writer)&0xff)!=0;
     } catch (...) { return 0; }
 }
-extern "C" int32_t __fastcall kinoko_method_write_string_layout(int32_t layout,void*,KinokoArchiveReader* writer) {
+extern "C" int32_t __fastcall kinoko_method_write_string_layout(KinokoStringLayout* layout,void*,KinokoArchiveReader* writer) {
     if (!layout || !writer) return 0;
-    try { return write(pointer<void>(layout),writer,string_layout_schema); }
+    try { return write(layout,writer,string_layout_schema); }
     catch (...) { return 0; }
 }
 extern "C" int32_t kinoko_string_read_properties(KinokoStringLayout *layout,
@@ -623,8 +633,8 @@ extern "C" int32_t kinoko_string_read_properties(KinokoStringLayout *layout,
         return 1;
     } catch(...) { return 0; }
 }
-extern "C" int32_t __fastcall kinoko_method_read_string_layout(int32_t layout,void*,KinokoArchiveReader** holder,int32_t version) {
-    return kinoko_string_read_properties(pointer<KinokoStringLayout>(layout), (KinokoArchiveReader**)(uintptr_t)(holder), version);
+extern "C" int32_t __fastcall kinoko_method_read_string_layout(KinokoStringLayout* layout,void*,KinokoArchiveReader** holder,int32_t version) {
+    return kinoko_string_read_properties(layout, (KinokoArchiveReader**)(uintptr_t)(holder), version);
 }
 
 extern "C" int32_t kinoko_act_read_document_properties_typed(KinokoActDocument *document,
@@ -633,43 +643,45 @@ extern "C" int32_t kinoko_act_read_document_properties_typed(KinokoActDocument *
     try { return read(document,reader,act_schema,false); }
     catch (...) { return 0; }
 }
-extern "C" int32_t __fastcall kinoko_method_read_act(int32_t act,void*,KinokoArchiveReader** holder,int32_t version) {
+extern "C" int32_t __fastcall kinoko_method_read_act(KinokoActDocument* act,void*,KinokoArchiveReader** holder,int32_t version) {
     return act && holder && version==1 ? kinoko_act_load((KinokoActDocument*)(uintptr_t)(act), (KinokoArchiveReader*)(*holder), version) : 0;
 }
 namespace {
-std::vector<int32_t> object_vector(int32_t slot) {
-    const auto begin=field<uint32_t>(slot),end=field<uint32_t>(slot+4);
-    if (end<begin || (end-begin)%4 || (!begin && end) || (end-begin)/4>0x10000)
+std::vector<void*> object_vector(const void* slot) {
+    struct Span { void** begin; void** end; };
+    const auto range = kinoko::legacy::load<Span>(slot);
+    const auto begin = reinterpret_cast<uintptr_t>(range.begin), end = reinterpret_cast<uintptr_t>(range.end);
+    if (end < begin || (end-begin)%sizeof(void*) || (!begin && end) || (end-begin)/sizeof(void*) > 0x10000)
         throw std::bad_alloc();
-    if (begin==end) return {};
-    return {pointer<int32_t>(begin),pointer<int32_t>(end)};
+    if (begin == end) return {};
+    return {range.begin, range.end};
 }
 }
-extern "C" int32_t __fastcall kinoko_method_write_act(int32_t act,void*,KinokoArchiveReader* writer) {
+extern "C" int32_t __fastcall kinoko_method_write_act(KinokoActDocument* act,void*,KinokoArchiveReader* writer) {
     if (!act || !writer) return 0;
     try {
-        if (!write(pointer<void>(act),writer,act_schema)) return 0;
-        const auto script=act+100;
-        if (!(write_virtual(pointer<void>(script), field<void*>(field<int32_t>(script)), writer)&0xff)) return 0;
-        auto layers=object_vector(act+208);
+        if (!write(act,writer,act_schema)) return 0;
+        auto* script=kinoko::act::DocumentView(act).bytes(&kinoko::act::DocumentRecord::script);
+        if (!(write_virtual(script, write_method(script), writer)&0xff)) return 0;
+        auto layers=object_vector(kinoko::act::DocumentView(act).bytes(&kinoko::act::DocumentRecord::layers));
         // 4287D9/428822 omit only debugOnly==1 when kinoko_act_script_output_compiled()!=0. Values other
         // than one are deliberately not treated as true by this filter.
         if (kinoko_act_script_output_compiled()!=0) layers.erase(std::remove_if(layers.begin(),layers.end(),[](auto layer) {
-            return layer && field<uint8_t>(layer+141)==1;
+            return layer && (kinoko::act::LayerStorageView(layer).get(&kinoko::act::LayerStorageRecord::visibility_flags) >> 8)==1;
         }),layers.end());
         auto count=static_cast<uint32_t>(layers.size());
         if (!transfer(writer,count)) return 0;
         auto hash=type_hash(".?AVCActLayer@@");
         for (auto layer:layers) {
             if (!transfer(writer,hash)) return 0;
-            if (layer) write_virtual(pointer<void>(layer), field<void*>(field<int32_t>(layer)), writer);
+            if (layer) write_virtual(layer, write_method(layer), writer);
         }
-        const auto resources=object_vector(act+224);
+        const auto resources=object_vector(kinoko::act::DocumentView(act).bytes(&kinoko::act::DocumentRecord::resources));
         count=static_cast<uint32_t>(resources.size());
         if (!transfer(writer,count)) return 0;
         for (auto resource:resources) {
             if (!resource || !object_hash(resource,hash,20) || !transfer(writer,hash)) return 0;
-            write_virtual(pointer<void>(resource), field<void*>(field<int32_t>(resource)), writer);
+            write_virtual(resource, write_method(resource), writer);
         }
         return 1;
     } catch (...) { return 0; }
