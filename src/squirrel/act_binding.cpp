@@ -1,3 +1,4 @@
+#include "kinoko/act_resource_records_io.hpp"
 #include "kinoko/act_key_records.hpp"
 #include "kinoko/act_layer_lifecycle.h"
 #include "kinoko/act_ownership.hpp"
@@ -1237,17 +1238,17 @@ extern "C" int32_t __fastcall kinoko_method_register_map_layout(KinokoActLayout*
 }
 
 int32_t kinoko_map_chip_count(SQVM* vm) {
-    int32_t layout = 0;
+    KinokoActLayout* layout = nullptr;
     if (sq_getinstanceup(vm, 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0)
         return 0;
-    sq_pushinteger(vm, kinoko::map::placement_count(pointer<KinokoActLayout>(layout)));
+    sq_pushinteger(vm, kinoko::map::placement_count(layout));
     return 1;
 }
 
 int32_t kinoko_map_get_chip_layout(SQVM* vm) {
-    int32_t layout = 0;
+    KinokoActLayout* layout = nullptr;
     int32_t index = -1;
-    int32_t begin;
+    kinoko::map::Placement* begin;
     int32_t count;
     kinoko::act::LayerObjectRecord root{};
     int32_t chip_class[2] = { static_cast<int32_t>(OT_NULL), 0 };
@@ -1255,8 +1256,8 @@ int32_t kinoko_map_get_chip_layout(SQVM* vm) {
     if (sq_getinstanceup(vm, 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0 ||
         sq_getinteger(vm, 2, (SQInteger*)(&index)) < 0)
         return 0;
-    begin = field<int32_t>(layout + 264);
-    count = (field<int32_t>(layout + 268) - begin) / 32;
+    begin = kinoko::map::LayoutView(layout).get(&kinoko::map::LayoutRecord::placements).begin;
+    count = kinoko::map::placement_count(layout);
     if (index < 0 || index >= count) {
         sq_pushnull(vm);
         return 1;
@@ -1264,7 +1265,7 @@ int32_t kinoko_map_get_chip_layout(SQVM* vm) {
     if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(&root), vm)))
         return 0;
     if (get_pair((void*)(uintptr_t)(address(&root)), "ChipLayout", chip_class) &&
-        kinoko_create_unbound_instance(vm, chip_class, (void*)(uintptr_t)(begin + 32 * index), instance))
+        kinoko_create_unbound_instance(vm, chip_class, begin + index, instance))
         sq_pushobject(vm, kinoko_borrowed_object(instance[0], instance[1]));
     else
         sq_pushnull(vm);
@@ -1274,43 +1275,38 @@ int32_t kinoko_map_get_chip_layout(SQVM* vm) {
     return 1;
 }
 
-int32_t kinoko_map_layout_argument(SQVM* vm, int32_t *index) {
-    int32_t layout = 0;
-    if (sq_getinstanceup(vm, 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0 ||
-        (index != nullptr && sq_getinteger(vm, 2, (SQInteger*)(index)) < 0))
-        return 0;
-    return layout;
+namespace {
+template<class T> T* native_instance_argument(SQVM* vm, int32_t* index = nullptr) {
+    void* value = nullptr;
+    if (SQ_FAILED(sq_getinstanceup(vm, 1, &value, nullptr)) || !value ||
+        (index && SQ_FAILED(sq_getinteger(vm, 2, index)))) return nullptr;
+    return static_cast<T*>(value);
 }
-
-int32_t kinoko_map_record_at(int32_t layout, int32_t index) {
-    return address(kinoko::map::placement_at(pointer<KinokoActLayout>(layout), index));
-}
-
-struct kinoko_mcd_data *kinoko_map_chip_data(int32_t layout) {
-    return kinoko_map_cached_chip_data(pointer<KinokoActLayout>(layout));
 }
 
 int32_t kinoko_map_get_chip_by_position(SQVM* vm) {
     int32_t x = 0, y = 0;
-    int32_t layout = kinoko_map_layout_argument(vm, &x);
+    auto* layout = native_instance_argument<KinokoActLayout>(vm, &x);
     // GetChipByPosition calls 435220, whose 435243..435265 prologue binds
     // an empty cache even for invisible event layers. Other chip-data users
     // (e.g. PreArrangement) do not have this lazy-binding contract.
     const bool valid_position = layout &&
         sq_getinteger(vm, 3, (SQInteger*)(&y)) >= 0;
     struct kinoko_mcd_data *data = valid_position
-        ? kinoko_map_query_chip_data(pointer<KinokoActLayout>(layout)) : nullptr;
+        ? kinoko_map_query_chip_data(layout) : nullptr;
     int32_t found = -1;
     if (valid_position && data != nullptr) {
-        int32_t layer = field<int32_t>(layout + 312);
-        for (int32_t index = 0, record; (record = kinoko_map_record_at(layout, index)) != 0; ++index) {
-            struct kinoko_mcd_chip *chip = kinoko_mcd_find_chip(data, field<uint32_t>(record));
-            int32_t left = field<int32_t>(record + 4);
-            int32_t top = field<int32_t>(record + 8);
-            field<float>(record + 12) = (float)left +
-                (layer ? field<float>(layer + 144) : 0.0f);
-            field<float>(record + 16) = (float)top +
-                (layer ? field<float>(layer + 148) : 0.0f);
+        auto* layer = kinoko::map::LayoutView(layout).get(&kinoko::map::LayoutRecord::owning_layer);
+        for (int32_t index = 0;; ++index) {
+            auto* record = kinoko::map::placement_at(layout, index);
+            if (!record) break;
+            struct kinoko_mcd_chip *chip = kinoko_mcd_find_chip(data, record->chip_id);
+            int32_t left = record->left;
+            int32_t top = record->top;
+            record->fractional_left = (float)left +
+                (layer ? kinoko::map::LayerView(layer).get(&kinoko::map::LayerRecord::position).x : 0.0f);
+            record->fractional_top = (float)top +
+                (layer ? kinoko::map::LayerView(layer).get(&kinoko::map::LayerRecord::position).y : 0.0f);
             if (chip != nullptr && left <= x && top <= y &&
                 (int64_t)left + kinoko_mcd_i16(chip->bytes + 12) > x &&
                 (int64_t)top + kinoko_mcd_i16(chip->bytes + 14) > y) {
@@ -1325,13 +1321,13 @@ int32_t kinoko_map_get_chip_by_position(SQVM* vm) {
 
 int32_t kinoko_map_set_chip_rect(SQVM* vm) {
     int32_t id = 0, rectangle[4];
-    int32_t layout = kinoko_map_layout_argument(vm, &id);
+    auto* layout = native_instance_argument<KinokoActLayout>(vm, &id);
     for (int32_t i=0;i<4;++i) {
         if (sq_getinteger(vm,i+3,(SQInteger*)(rectangle+i))<0) {
             sq_pushbool(vm,SQFalse);return 1;
         }
     }
-    const bool ok=kinoko::map::set_chip_rectangle(pointer<KinokoActLayout>(layout),id,
+    const bool ok=kinoko::map::set_chip_rectangle(layout,id,
         static_cast<int16_t>(rectangle[0]),static_cast<int16_t>(rectangle[1]),
         static_cast<int16_t>(rectangle[2]),static_cast<int16_t>(rectangle[3]));
     sq_pushbool(vm,ok ? SQTrue : SQFalse);
@@ -1340,13 +1336,13 @@ int32_t kinoko_map_set_chip_rect(SQVM* vm) {
 
 int32_t kinoko_map_set_chip_layout(SQVM* vm) {
     int32_t index = -1, left = 0, top = 0;
-    int32_t layout = kinoko_map_layout_argument(vm, &index);
-    int32_t record = kinoko_map_record_at(layout, index);
+    auto* layout = native_instance_argument<KinokoActLayout>(vm, &index);
+    auto* record = kinoko::map::placement_at(layout, index);
     int32_t ok = record != 0 && sq_getinteger(vm, 3, (SQInteger*)(&left)) >= 0 &&
                  sq_getinteger(vm, 4, (SQInteger*)(&top)) >= 0;
     if (ok) {
-        field<int32_t>(record + 4) = left;
-        field<int32_t>(record + 8) = top;
+        record->left = left;
+        record->top = top;
     }
     sq_pushbool(vm, ((ok) != 0));
     return 1;
@@ -1354,31 +1350,31 @@ int32_t kinoko_map_set_chip_layout(SQVM* vm) {
 
 int32_t kinoko_map_set_chip_id(SQVM* vm) {
     int32_t index = -1, id = 0;
-    int32_t layout = kinoko_map_layout_argument(vm, &index);
-    int32_t record = kinoko_map_record_at(layout, index);
+    auto* layout = native_instance_argument<KinokoActLayout>(vm, &index);
+    auto* record = kinoko::map::placement_at(layout, index);
     int32_t ok = record != 0 && sq_getinteger(vm, 3, (SQInteger*)(&id)) >= 0;
     if (ok)
-        field<int32_t>(record) = id;
+        record->chip_id = static_cast<uint32_t>(id);
     sq_pushbool(vm, ((ok) != 0));
     return 1;
 }
 
 int32_t kinoko_map_get_chip_id(SQVM* vm) {
     int32_t index = -1;
-    int32_t layout = kinoko_map_layout_argument(vm, &index);
-    int32_t record = kinoko_map_record_at(layout, index);
-    sq_pushinteger(vm, record ? field<int32_t>(record) : -1);
+    auto* layout = native_instance_argument<KinokoActLayout>(vm, &index);
+    auto* record = kinoko::map::placement_at(layout, index);
+    sq_pushinteger(vm, record ? static_cast<int32_t>(record->chip_id) : -1);
     return 1;
 }
 
 int32_t kinoko_map_prearrangement(SQVM* vm) {
-    int32_t layout = kinoko_map_layout_argument(vm, nullptr);
-    struct kinoko_mcd_data *data = kinoko_map_chip_data(layout);
+    auto* layout = native_instance_argument<KinokoActLayout>(vm, nullptr);
+    struct kinoko_mcd_data *data = kinoko_map_cached_chip_data(layout);
     if (layout == 0 || data == nullptr) {
         sq_pushinteger(vm, (int32_t)E_FAIL);
         return 1;
     }
-    kinoko::map::prepare_placements(pointer<KinokoActLayout>(layout));
+    kinoko::map::prepare_placements(layout);
     sq_pushinteger(vm, 0);
     return 1;
 }
@@ -1386,43 +1382,43 @@ int32_t kinoko_map_prearrangement(SQVM* vm) {
 // Original 433740 stores the fractional position and truncates it into left.
 // 433770 intentionally updates only f_top; preserve that asymmetry.
 int32_t kinoko_chip_set_fractional_left(SQVM* vm) {
-    const int32_t chip = kinoko_map_layout_argument(vm, nullptr);
+    auto* chip = native_instance_argument<kinoko::map::Placement>(vm);
     SQFloat value = 0;
     if (!chip || !kinoko::script::upstream::sqrat_float_argument(vm, 2, value)) return 0;
-    field<float>(chip + 12) = value;
+    chip->fractional_left = value;
     // __ftol2_sse produces a signed 64-bit integer; the caller keeps EAX.
     const int64_t truncated = std::isfinite(value) &&
         static_cast<double>(value) >= -9223372036854775808.0 &&
         static_cast<double>(value) < 9223372036854775808.0
         ? static_cast<int64_t>(value) : INT64_MIN;
-    field<int32_t>(chip + 4) = static_cast<int32_t>(truncated);
+    chip->left = static_cast<int32_t>(truncated);
     return 0;
 }
 
 int32_t kinoko_map_get_left(SQVM* vm) {
-    const int32_t layout = kinoko_map_layout_argument(vm, nullptr);
-    const int32_t first = kinoko_map_record_at(layout, 0);
-    sq_pushinteger(vm, first ? field<int32_t>(first + 4) : 0);
+    auto* layout = native_instance_argument<KinokoActLayout>(vm, nullptr);
+    auto* first = kinoko::map::placement_at(layout, 0);
+    sq_pushinteger(vm, first ? first->left : 0);
     return 1;
 }
 
 // Original 435F00 scans backwards only within maxChipWidth of the last left.
 int32_t kinoko_map_get_right(SQVM* vm) {
-    const int32_t layout = kinoko_map_layout_argument(vm, nullptr);
-    const int32_t begin = layout ? field<int32_t>(layout + 264) : 0;
-    const int32_t end = layout ? field<int32_t>(layout + 268) : 0;
-    int32_t right = end != begin ? field<int32_t>(end - 28) : 0;
-    auto *data = kinoko_map_chip_data(layout);
-    if (end != begin && data) {
-        const int32_t minimum = static_cast<int32_t>(
-            static_cast<uint32_t>(right) - field<uint32_t>(layout + 240));
-        for (int32_t record = end - 32; record >= begin; record -= 32) {
-            const int32_t left = field<int32_t>(record + 4);
+    using namespace kinoko::map;
+    auto* layout = native_instance_argument<KinokoActLayout>(vm);
+    const auto range = layout ? LayoutView(layout).get(&LayoutRecord::placements) : PlacementBuffer{};
+    int32_t right = range.end != range.begin ? range.end[-1].left : 0;
+    auto* data = kinoko_map_cached_chip_data(layout);
+    if (range.end != range.begin && data) {
+        const auto minimum = static_cast<int32_t>(static_cast<uint32_t>(right) -
+            static_cast<uint32_t>(LayoutView(layout).get(&LayoutRecord::max_chip_width)));
+        for (auto* record = range.end; record != range.begin;) {
+            --record;
+            const auto left = record->left;
             if (left < minimum) break;
-            auto *chip = kinoko_mcd_find_chip(data, field<uint32_t>(record));
+            auto* chip = kinoko_mcd_find_chip(data, record->chip_id);
             if (chip) {
-                const int32_t edge = static_cast<int32_t>(static_cast<uint32_t>(left) +
-                    kinoko_mcd_i16(chip->bytes + 12));
+                const auto edge = static_cast<int32_t>(static_cast<uint32_t>(left) + kinoko_mcd_i16(chip->bytes + 12));
                 if (edge >= right) right = edge;
             }
         }
@@ -1543,10 +1539,10 @@ int32_t kinoko_resource_get_chip_info(SQVM* vm) {
 }
 
 int32_t kinoko_resource_set_chip_flag(SQVM* vm) {
-    const int32_t resource = kinoko_map_layout_argument(vm, nullptr);
+    auto* resource = native_instance_argument<KinokoActResource>(vm);
     SQInteger id = 0, flag = -1;
     // Original 42FEF8/42FEFD accepts only bit zero, despite the 64-bit storage.
-    auto *data = resource ? field<kinoko_mcd_data *>(resource + 64) : nullptr;
+    auto *data = resource ? kinoko::act::ChipResourceFields(resource).get(&kinoko::act::ChipResourceRecord::data) : nullptr;
     auto *chip = data && kinoko::script::upstream::sqrat_integer_argument(vm, 2, id) &&
         kinoko::script::upstream::sqrat_integer_argument(vm, 3, flag) && flag == 0
         ? kinoko_mcd_find_chip(data, static_cast<uint32_t>(id)) : nullptr;

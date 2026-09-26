@@ -523,7 +523,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
                  item = *(int32_t *)(intptr_t)item) {
                 int32_t key = *(int32_t *)(intptr_t)(item + 8);
                 int32_t actual_layout = *(int32_t *)(intptr_t)(key + 4);
-                if (!kinoko_map_chip_data(actual_layout)) continue;
+                if (!kinoko_map_cached_chip_data((KinokoActLayout*)(uintptr_t)(actual_layout))) continue;
                 const char *layer_name = kinoko_string_data((const void*)(intptr_t)(actual_layer + 112));
                 if (strncmp(layer_name, "te", 2) == 0 || strncmp(layer_name, "wa", 2) == 0)
                     CHECK(kinoko_host_register_collision_map_abi(actual_layout));
@@ -533,7 +533,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
                     for (int32_t record = begin; record != end; record += 32) {
                         if (*(int32_t *)(intptr_t)record == 1) {
                             struct kinoko_mcd_chip *marker = kinoko_mcd_find_chip(
-                                kinoko_map_chip_data(actual_layout), 1);
+                                kinoko_map_cached_chip_data((KinokoActLayout*)(uintptr_t)(actual_layout)), 1);
                             CHECK(marker);
                             entry_x = *(int32_t *)(intptr_t)(record + 4) +
                                 *(int16_t *)(marker->bytes + 12) * 0.5f;
@@ -548,7 +548,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
                     *(int32_t *)(intptr_t)(actual_layout + 244));
                 for (int32_t record = begin; record < end && record < begin + 5 * 32; record += 32) {
                     struct kinoko_mcd_chip *actual_chip = kinoko_mcd_find_chip(
-                        kinoko_map_chip_data(actual_layout), *(uint32_t *)(intptr_t)record);
+                        kinoko_map_cached_chip_data((KinokoActLayout*)(uintptr_t)(actual_layout)), *(uint32_t *)(intptr_t)record);
                     printf("  id=%x xy=(%d,%d) size=(%d,%d) flags=%x shape=%d\n",
                         *(int32_t *)(intptr_t)record, *(int32_t *)(intptr_t)(record + 4),
                         *(int32_t *)(intptr_t)(record + 8),
@@ -1107,7 +1107,7 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
     int32_t layout_object[3];
     kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(script)), (void *)(intptr_t)(PTR(layout_object)), "layout");
     layout = (int32_t)(intptr_t)(kinoko_sqplus_object_instance((void *)(intptr_t)(PTR(layout_object)), (void *)(intptr_t)(0)));
-    CHECK(layout && kinoko_map_chip_data(layout));
+    CHECK(layout && kinoko_map_cached_chip_data((KinokoActLayout*)(uintptr_t)(layout)));
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(layout_object))));
     CHECK(kinoko_execute_act_callback((void*)(uintptr_t)(hidden + 204), 4, NULL) >= 0);
     CHECK(*(int32_t *)(intptr_t)(layout + 328) == 1);
@@ -2000,7 +2000,7 @@ static int test_branch_motion(int32_t manager) {
                  node = *(int32_t *)(intptr_t)node) {
                 int32_t key = *(int32_t *)(intptr_t)(node + 8);
                 int32_t layout = *(int32_t *)(intptr_t)(key + 4);
-                if (kinoko_map_chip_data(layout)) CHECK(kinoko_host_register_collision_map_abi(layout));
+                if (kinoko_map_cached_chip_data((KinokoActLayout*)(uintptr_t)(layout))) CHECK(kinoko_host_register_collision_map_abi(layout));
             }
         }
         for (int direction = -1; direction <= 1; direction += 2) {
@@ -3853,11 +3853,11 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
             for(int32_t node=*(int32_t *)(intptr_t)head;node!=head;node=*(int32_t *)(intptr_t)node) {
                 int32_t key=*(int32_t *)(intptr_t)(node+8);
                 int32_t layout=*(int32_t *)(intptr_t)(key+4);
-                if(!kinoko_map_chip_data(layout)) continue;
+                if(!kinoko_map_cached_chip_data((KinokoActLayout*)(uintptr_t)(layout))) continue;
                 for(int32_t record=*(int32_t *)(intptr_t)(layout+264);
                     record!=*(int32_t *)(intptr_t)(layout+268);record+=32) {
                     if(*(int32_t *)(intptr_t)record!=1207) continue;
-                    struct kinoko_mcd_chip *chip=kinoko_mcd_find_chip(kinoko_map_chip_data(layout),1207);
+                    struct kinoko_mcd_chip *chip=kinoko_mcd_find_chip(kinoko_map_cached_chip_data((KinokoActLayout*)(uintptr_t)(layout)),1207);
                     CHECK(chip);
                     green_x=(float)((double)*(int32_t *)(intptr_t)(record+4)+kinoko_mcd_i16(chip->bytes+12)*0.5+1.0);
                     green_y=(float)((double)*(int32_t *)(intptr_t)(record+8)+kinoko_mcd_i16(chip->bytes+14)*

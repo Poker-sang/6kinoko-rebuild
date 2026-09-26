@@ -82,14 +82,11 @@ int32_t kinoko_execute_act_source_script(
     struct SQVM* vm, void* script_ptr, const int32_t *environment_pair);
 int32_t kinoko_get_act_resource_class(struct SQVM* vm, int32_t resource, int32_t out[2]);
 int32_t kinoko_map_chip_count(struct SQVM* vm);
-struct kinoko_mcd_data *kinoko_map_chip_data(int32_t layout);
 int kinoko_map_compare_records(const void *a, const void *b);
 int32_t kinoko_map_get_chip_by_position(struct SQVM* vm);
 int32_t kinoko_map_get_chip_id(struct SQVM* vm);
 int32_t kinoko_map_get_chip_layout(struct SQVM* vm);
-int32_t kinoko_map_layout_argument(struct SQVM* vm, int32_t *index);
 int32_t kinoko_map_prearrangement(struct SQVM* vm);
-int32_t kinoko_map_record_at(int32_t layout, int32_t index);
 int32_t kinoko_map_set_chip_id(struct SQVM* vm);
 int32_t kinoko_map_set_chip_layout(struct SQVM* vm);
 int32_t kinoko_map_set_chip_rect(struct SQVM* vm);
