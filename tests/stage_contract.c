@@ -7,7 +7,7 @@
 #include "kinoko/input_devices.h"
 #include "kinoko/input_keys.h"
 /* Exercise the actual reconstructed functions without WinMain, graphics or DAT startup. */
-#include "../src/decompiled/6kinoko_rebuilt.c"
+#include "../src/reconstructed/runtime_host_internal.h"
 #include "stage_audio_contract.h"
 #include "kinoko/squirrel_vm_bootstrap.h"
 #include "kinoko/boost_hash.h"

@@ -158,7 +158,7 @@ target_link_libraries(kinoko_base_utilities PUBLIC kinoko_zlib)
 target_link_libraries(kinoko_native_methods PUBLIC kinoko_base_utilities)
 
 add_executable(kinoko_retdec_rebuild WIN32
-    src/decompiled/6kinoko_rebuilt.c
+    src/reconstructed/runtime_host.cpp
     src/decompiled/retdec_asm_stubs.c
     src/platform/windows_entry.cpp
     src/platform/resources/windows_resources.rc
@@ -439,6 +439,7 @@ add_test(
 
 add_executable(kinoko_stage_contract
     tests/stage_contract.c
+    src/reconstructed/runtime_host.cpp
     tests/stage_audio_contract.cpp
     tests/act_ownership_contract.cpp
     src/decompiled/retdec_asm_stubs.c
