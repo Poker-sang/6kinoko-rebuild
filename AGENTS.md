@@ -12,7 +12,7 @@ description: 6kinoko简单的逆向skill
 x32dbg/x64dbg 在 C:\Users\poker\AppData\Local\Microsoft\WinGet\Packages\x64dbg.x64dbg_Microsoft.Winget.Source_8wekyb3d8bbwe\release\x32\x32dbg.exe 里，使若丢失可以手动拉起进程。
 
 不要直接读取git更改，内容太多，有必要时截取少量读取或定向读取。
-每次有大量或重要修改告一段落后提交备份，可以清理无用的构建目录。
+每次有大量或重要修改告一段落后提交备份；按后续用户更新，所有构建产物和日志均保留。
 C:\WorkSpace下的其他项目是以前的失败尝试，参考意义不大。
 
 我随时可能给你提供一些6kinoko运行的主观线索，你可以作为参考去寻找bug，但不要为了迎合我的提示故意去写某些原版不存在的逻辑，而是恢复原版加载逻辑，让其自然而然呈现原版的行为。遇到的函数有必要（迁移后可读性更好，更好维护的话）可以继续迁移到c++
@@ -26,48 +26,19 @@ C:\WorkSpace下的其他项目是以前的失败尝试，参考意义不大。
 - 不要在仓库根目录新建构建树；需要新变体时放入 `build-runs\<build-tree>\`。
 - 以下命令中的 `<...>` 都替换为本次实际名称或路径，不代表固定目录名。
 
-变体构建命令（x86 Win32）：
+当前标准入口（先提交源码，每次使用新的构建名称）：
 
 ```powershell
-$BuildTree = "build-runs\<build-tree>"
-cmake -S $BuildTree `
-  -B "$BuildTree\out" `
-  -G "<generator>" -A Win32
-cmake --build "$BuildTree\out" `
-  --config "<configuration>" --parallel 4
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\build_staged.ps1 `
+  -Name <本批唯一名称> -SourceDir <原版资源目录> `
+  -Generator "Visual Studio 17 2022"
 ```
 
-当前诊断/兼容构建使用的预处理宏：
-
-```text
-WIN32_LEAN_AND_MEAN
-NOMINMAX
-RETDEC_CAPTURE_EVERY_10
-RETDEC_TRACE_FILTER
-RETDEC_DIAGNOSTIC_MAP_LAYERS_FRONT
-```
-
-当前诊断/兼容构建使用的 MSVC flag：
-
-```text
-/TC /Gy /O2 /wd4100 /wd4244 /wd4267 /wd4706
-/OPT:REF /OPT:ICF
-```
-
-链接库必须包含：`user32`、`gdi32`、`winmm`、`d3d9`、
-`third_party\d3dx9_33.lib`、`dinput8`、`dxguid`、`imm32`、`ole32`、
-`dbghelp`。
-
-标准顶层 CMake 构建使用：
-
-```powershell
-$BuildTree = "build-runs\<build-tree>"
-cmake -S . -B $BuildTree `
-  -G "<generator>" -A Win32 `
-  -DKINOKO_REFERENCE_DIR="<reference-dir>"
-cmake --build $BuildTree --config "<configuration>" --parallel 4
-ctest --test-dir $BuildTree -C "<configuration>" --output-on-failure
-```
+脚本配置 Win32 Release 无日志版，构建全部目标并复制校验三个 DAT；不执行游戏或测试。
+当前宿主使用 C++17；不得沿用旧 C 变体的 `/TC` 强制编译标志。
+需要手工配置时，以顶层 `CMakeLists.txt` 为准，明确设置
+`KINOKO_REFERENCE_DIR`、`KINOKO_RUNTIME_DIR` 和 `KINOKO_RETDEC_DISABLE_TRACE=ON`。
+构建目录与运行目录均须独立且不能覆盖旧产物。CTest 的执行由用户负责。
 
 顶层 CMake 可选诊断/实验开关：
 
@@ -76,8 +47,8 @@ ctest --test-dir $BuildTree -C "<configuration>" --output-on-failure
 - `-DKINOKO_RETDEC_DIAGNOSTIC_NO_BGM_SERVICE=ON`：诊断时停用 BGM 环形缓冲服务。
 - `-DKINOKO_RETDEC_DIAGNOSTIC_NO_BGM_WRITE=ON`：诊断时跳过 BGM 写入。
 - `-DKINOKO_RETDEC_MAP_FILE=<path>`：输出链接 map 文件。
-- `-DKINOKO_ENABLE_SQUIRREL_CPP_VM=ON`：兼容旧配置的选项。当前默认使用仓库内
-  `third_party\squirrel-2.2.2`，不需要相邻的旧源码目录。
+当前默认链接仓库内 `third_party\squirrel-2.2.2` 的源码 VM；
+`KINOKO_ENABLE_SQUIRREL_CPP_VM` 已不是顶层选项，不再用于选择运行模式。
 
 生成 EXE 后必须把原版的三个 DAT 复制到 EXE 同目录：
 
@@ -139,5 +110,12 @@ EXE。不得把参考目录作为 `WorkingDirectory`，也不得依赖 `-SourceD
 
 ## 用户更新：每批推送（2026-09-22）
 
-- 当前工作继续基于 PR #9 的分支推进。每个完整批次完成修改、提交、构建与 DAT 校验后，将源码及交接记录提交推送到对应 PR 分支，无需再次询问。
+- 历史批次基于 PR #9 分支推进；当前分支状态以最新交接为准。每个完整批次完成修改、提交、构建与 DAT 校验后，将源码及交接记录提交推送到对应 PR 分支，无需再次询问。
 - 推送不代表合并 PR；不把本地构建成功记作游戏运行或测试执行通过。
+
+## 当前合并状态（PR #13 收尾）
+
+- PR #13 已合并至 `master`，合并提交 `76443ccbcb15b93112fcb677f57b1c00c3615ac8`。
+- 用户已确认 `internal-types-59` 运行正常；记为用户反馈，不记为代理运行或 65 个 contract 执行通过。
+- 内部类型整理范围与保留项见 `docs/internal-types-20260926/README.md`。旧批次待办不自动代表当前缺口，不重复开启已经完成的 ACT 整体整理。
+- 平台后端和 x64 迁移属于后续范围。当前文档收尾已获用户授权直接推送主分支。

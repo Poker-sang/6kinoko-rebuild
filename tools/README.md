@@ -1,5 +1,13 @@
 # Game and development tools
 
+Current status and build instructions: [repository README](../README.md).
+PR #13 is merged; the user confirmed `internal-types-59` runs normally.
+The 65 contract programs were compiled, not executed by the agent.
+
+`build_staged.ps1` creates a fresh Win32 Release build, stages and hashes the
+three DAT files, and records the source commit in `artifacts.json`. It does
+not run the game or tests. Keep every build and its logs.
+
 `runtime-builds/<run-dir>/kinoko_retdec_rebuild.exe` is the only game executable.
 The C++ host is `src/reconstructed/runtime_host.cpp`; typed original virtual tables are in `src/reconstructed/runtime_method_tables.cpp`. The original decompilation remains evidence only in `src/decompiled/6kinoko.exe.c`.
 Stage the three original DAT files beside it with `stage_dat.ps1`, then launch
@@ -26,8 +34,9 @@ The runtime uses the included Squirrel 2.2.2 source tree at
 `third_party/squirrel-2.2.2` to compile original inline ACT scripts and for
 verified object/error ownership helpers. `KINOKO_SQUIRREL2_ROOT` can select
 the supplied external source tree for comparison.
-Compilation uses a separate C++ VM and transfers bytecode to the reconstructed
-VM; `KINOKO_ENABLE_SQUIRREL_CPP_VM` still controls only experimental execution.
+The production runtime links the source C++ VM.
+`KINOKO_ENABLE_SQUIRREL_CPP_VM` is no longer a top-level CMake option; do not
+use it to select an execution mode.
 zlib 1.2.3 is vendored and linked statically for original save-file compatibility.
 
 Ordinary builds do not write traces or take automatic screenshots. Set
@@ -44,13 +53,16 @@ explicitly requested. The original VM trace call sites remain in quiet builds.
 The window tool reports process exit status and window responsiveness, so a
 lost-focus input guard can be distinguished from a game exception.
 
-CTest also runs `kinoko_stage_contract.exe` and `kinoko_legacy_abi_contract.exe`.
+When explicitly invoked, CTest runs `kinoko_stage_contract.exe` and `kinoko_legacy_abi_contract.exe`.
 The latter checks original x86 virtual calls against a compiler-generated
 C++ vtable, including receiver, argument order, return values and stack cleanup.
 
 ## Examples
 
-Run these from the repository root; replace `<run-dir>` and `<build-tree>`.
+These are optional commands for user-directed inspection and testing. The
+current agent workflow does not execute the game, CTest, contracts or the
+original-process oracle. Run from the repository root; replace `<run-dir>`
+and `<build-tree>`.
 
 ```powershell
 runtime-builds/<run-dir>/tools/kinoko_archive_inspect.exe --all ../6kinoko/6kinoko_a.dat

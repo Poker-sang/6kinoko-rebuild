@@ -1,7 +1,7 @@
 # internal-types-59 交接
 
 - 构建源码：`8047e62c1c75a1aabc611a6bff812c5148ec3433`。
-- 分支：`codex/runtime-host-cpp`；PR：[#13](https://github.com/Poker-sang/6kinoko-rebuild/pull/13)；用户已要求合并收尾。
+- 分支：`codex/runtime-host-cpp`；PR：[#13](https://github.com/Poker-sang/6kinoko-rebuild/pull/13)；已合并至 `master`，合并提交 `76443ccbcb15b93112fcb677f57b1c00c3615ac8`。
 - 配置：Win32 Release，无日志。游戏及 **65 个 contract EXE 编译成功**。
 - EXE：`C:\Users\poker\.codex\worktrees\pr11-original-parity\6kinoko-rebuild\runtime-builds\internal-types-59\kinoko_retdec_rebuild.exe`。
 - `6kinoko_a.dat`、`6kinoko_b.dat`、`6kinoko_c.dat` 已放在上述 EXE 同目录，大小和 SHA256 校验成功；详见 [artifacts.json](artifacts.json)。
