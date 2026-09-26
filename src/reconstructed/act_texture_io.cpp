@@ -654,7 +654,9 @@ std::vector<void*> object_vector(const void* slot) {
     if (end < begin || (end-begin)%sizeof(void*) || (!begin && end) || (end-begin)/sizeof(void*) > 0x10000)
         throw std::bad_alloc();
     if (begin == end) return {};
-    return {range.begin, range.end};
+    // Select the iterator-range constructor: braces would store the two
+    // void** endpoints as void* elements instead of copying their pointees.
+    return std::vector<void*>(range.begin, range.end);
 }
 }
 extern "C" int32_t __fastcall kinoko_method_write_act(KinokoActDocument* act,void*,KinokoArchiveReader* writer) {

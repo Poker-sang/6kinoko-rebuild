@@ -22,7 +22,7 @@ LEX = re.compile(r'R"([A-Za-z0-9_]*)\([\s\S]*?\)\1"|//[^\n]*|/\*[\s\S]*?\*/|"(?:
 # Initializer lists, macros, operators and arbitrary C++ syntax remain outside
 # the guarantee. Markers outside these candidates are reported independently.
 SIGNATURE = re.compile(
-    r'^[ \t]*(?:[\w:<>,~]+[ \t]+|[*&]+[ \t]*)*'
+    r'^[ \t]*(?:[\w:<>,~]+(?:[ \t]+|(?=[*&]))|[*&]+[ \t]*)*'
     r'(?P<name>[A-Za-z_~][\w:~]*)\s*\([^;{}]*\)\s*'
     r'(?:const\s*)?(?:noexcept(?:\([^()]*\))?\s*)?'
     r'(?:(?:override|final)\s*)?\{', re.M)

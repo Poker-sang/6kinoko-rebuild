@@ -4766,7 +4766,6 @@ struct script_io_stream {
 };
 static int32_t __fastcall script_io_transfer(struct script_io_stream* self, void* unused, void* data, uint32_t size) {
     (void)unused;
-    fprintf(stderr,"stream pos=%u size=%u reading=%d\n",self->position,size,self->reading);
     if (size > sizeof(self->bytes)-self->position || (self->reading && size > self->size-self->position)) return 0;
     if (size) {
         if (self->reading) memcpy(data,self->bytes+self->position,size);
