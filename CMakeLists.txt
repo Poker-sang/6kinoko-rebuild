@@ -554,7 +554,7 @@ add_test(NAME upstream_bindings_contract COMMAND kinoko_upstream_bindings_contra
 set_tests_properties(upstream_bindings_contract PROPERTIES TIMEOUT 120)
 
 add_executable(kinoko_savedata_file_contract tests/savedata_file_contract.cpp
-    src/reconstructed/buffer_codec.cpp "${KINOKO_ZLIB_DIR}/uncompr.c")
+    src/reconstructed/buffer_codec.cpp)
 target_include_directories(kinoko_savedata_file_contract PRIVATE
     include "${KINOKO_SQUIRREL2_ROOT}/include")
 target_link_libraries(kinoko_savedata_file_contract PRIVATE kinoko_squirrel_cpp_vm)

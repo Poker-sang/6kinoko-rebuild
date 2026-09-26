@@ -98,8 +98,17 @@ void check_saved_wire(const std::string& path,const Bytes& expected) {
     const auto file=read_bytes(path); require(file.size()>=4,"saved length prefix");
     uint32_t length=0; for(unsigned i=0;i<4;++i) length|=uint32_t(file[i])<<(i*8);
     require(length==file.size()-4,"exact encoded file size");
-    Bytes plain(0x20000); uLongf size=static_cast<uLongf>(plain.size());
-    require(uncompress(plain.data(),&size,file.data()+4,length)==Z_OK,"saved zlib stream");
+    Bytes plain(0x20000);
+    z_stream stream{};
+    require(inflateInit(&stream)==Z_OK,"independent inflater initialization");
+    stream.next_in=const_cast<Bytef*>(file.data()+4); stream.avail_in=length;
+    stream.next_out=plain.data(); stream.avail_out=static_cast<uInt>(plain.size());
+    const int status=inflate(&stream,Z_FINISH);
+    const auto size=stream.total_out;
+    const bool consumed_all=stream.avail_in==0;
+    inflateEnd(&stream);
+    // Unlike the production compatibility wrapper, require an entire zlib stream.
+    require(status==Z_STREAM_END && consumed_all,"saved complete zlib stream");
     plain.resize(size); require(plain==expected,"saved tags/key/scalar/container terminator bytes");
 }
 }
