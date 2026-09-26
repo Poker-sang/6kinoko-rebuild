@@ -1,0 +1,85 @@
+{
+  "latest_source_commit": "2684809a19fa21311dd97ef5518f104b00a5f4e2",
+  "prior_user_validation": {
+    "source_commit": "7ca77b169ab649ba38795ac0ecf13c7d757d6a6b",
+    "result": "User reported normal; not agent smoke test"
+  },
+  "batches": [
+    {
+      "source_commit": "be172e81ece4790f69bf5d7b46554a0c5bdd1ab8",
+      "configuration": "Win32 Release, KINOKO_RETDEC_DISABLE_TRACE=ON",
+      "build_tree": "build-runs/object-scene-be172e8",
+      "full_build_succeeded": false,
+      "failure": "New isolated actor initialization fixture had missing namespace reference and a name collision; game and other targets built. Fixed by 2684809.",
+      "game": {
+        "path": "runtime-builds/object-scene-be172e8/kinoko_retdec_rebuild.exe",
+        "size": 912384,
+        "sha256": "34931DB9A5AF24BB552C91A2C7FEEF34539683A7C3C555CA54277C35F7DE92D1"
+      },
+      "contracts_compiled": 62,
+      "game_run": false,
+      "tests_run": false,
+      "dat_staging_verified": true,
+      "dat": [
+        {
+          "path": "runtime-builds/object-scene-be172e8/6kinoko_a.dat",
+          "size": 163424746,
+          "sha256": "DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64"
+        },
+        {
+          "path": "runtime-builds/object-scene-be172e8/6kinoko_b.dat",
+          "size": 44681244,
+          "sha256": "4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2"
+        },
+        {
+          "path": "runtime-builds/object-scene-be172e8/6kinoko_c.dat",
+          "size": 11796163,
+          "sha256": "80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E"
+        }
+      ],
+      "logs": [
+        "docs/object-scene-chain-20260926/configure-be172e8.log",
+        "docs/object-scene-chain-20260926/build-be172e8.log",
+        "docs/object-scene-chain-20260926/stage-dat-be172e8.log"
+      ]
+    },
+    {
+      "source_commit": "2684809a19fa21311dd97ef5518f104b00a5f4e2",
+      "configuration": "Win32 Release, KINOKO_RETDEC_DISABLE_TRACE=ON",
+      "build_tree": "build-runs/object-scene-2684809",
+      "full_build_succeeded": true,
+      "failure": null,
+      "game": {
+        "path": "runtime-builds/object-scene-2684809/kinoko_retdec_rebuild.exe",
+        "size": 912384,
+        "sha256": "9BE058E18DA1CB0BE0D3FE32497419A3A0F9177B0AA70F88FD4AB46BA4FE7B04"
+      },
+      "contracts_compiled": 63,
+      "game_run": false,
+      "tests_run": false,
+      "dat_staging_verified": true,
+      "dat": [
+        {
+          "path": "runtime-builds/object-scene-2684809/6kinoko_a.dat",
+          "size": 163424746,
+          "sha256": "DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64"
+        },
+        {
+          "path": "runtime-builds/object-scene-2684809/6kinoko_b.dat",
+          "size": 44681244,
+          "sha256": "4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2"
+        },
+        {
+          "path": "runtime-builds/object-scene-2684809/6kinoko_c.dat",
+          "size": 11796163,
+          "sha256": "80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E"
+        }
+      ],
+      "logs": [
+        "docs/object-scene-chain-20260926/configure-2684809.log",
+        "docs/object-scene-chain-20260926/build-2684809.log",
+        "docs/object-scene-chain-20260926/stage-dat-2684809.log"
+      ]
+    }
+  ]
+}
