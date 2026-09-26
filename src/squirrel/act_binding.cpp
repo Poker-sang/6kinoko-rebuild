@@ -1,3 +1,4 @@
+#include "kinoko/act_key_records.hpp"
 #include "kinoko/act_layer_lifecycle.h"
 #include "kinoko/act_ownership.hpp"
 #include "kinoko/act_document.h"
@@ -573,7 +574,7 @@ struct DynamicLayerDelete {
 };
 struct DynamicLayerLock {
     CRITICAL_SECTION* section;
-    explicit DynamicLayerLock(int32_t player) : section(pointer<CRITICAL_SECTION>(player+20)) {
+    explicit DynamicLayerLock(KinokoActRuntime* player) : section(reinterpret_cast<CRITICAL_SECTION*>(kinoko::native::RecordView<kinoko::act::RuntimeRecord>(player).bytes(&kinoko::act::RuntimeRecord::lock))) {
         EnterCriticalSection(section);
     }
     ~DynamicLayerLock() { LeaveCriticalSection(section); }
@@ -708,23 +709,27 @@ template<FindOperation operation> int32_t find_by_id_native(SQVM* vm) {
 
 // Original 4517C0. Native RAII replaces the old auto_ptr temporaries and the
 // source-backed Sqrat bridge replaces Object/GetSlot/RootTable emulation.
-template<bool string_layout> int32_t create_layer(int32_t player, const char* name) {
+template<bool string_layout> KinokoActLayer* create_layer(KinokoActRuntime* player, const char* name) {
     if (!player || !name) return 0;
     DynamicLayerLock lock(player);
-    if (!field<uint8_t>(player+8)) return 0;
-    const auto holder = field<int32_t>(player+16);
-    const auto act = holder ? field<int32_t>(holder) : 0;
-    const auto vm = field<SQVM*>(player+152);
+    using namespace kinoko::act;
+    const kinoko::native::RecordView<RuntimeRecord> runtime(player);
+    if (!runtime.get(&RuntimeRecord::stage_active)) return nullptr;
+    auto* holder = runtime.get(&RuntimeRecord::active_holder);
+    auto* act = holder ? holder->document : nullptr;
+    auto* vm = runtime.get(&RuntimeRecord::vm);
     if (!act || !vm) return 0;
     DynamicLayerParent parent(vm);
-    if (!get_pair((void*)(uintptr_t)(player+148), kinoko_string_data(pointer<const void>(player + 164)), parent.object.value.data()) ||
+    LayerObjectRecord root{nullptr, vm, runtime.get(&RuntimeRecord::environment), 0, {}};
+    if (!get_pair(&root, kinoko_string_data(runtime.bytes(&RuntimeRecord::name)), parent.object.value.data()) ||
         parent.object.value[0] != 0x0a000020) return 0;
     kinoko::legacy::Allocation<unsigned char> storage(static_cast<unsigned char*>(std::calloc(1,sizeof(kinoko::act::LayerStorageRecord))));
     if (!storage || !kinoko_act_layer_initialize(reinterpret_cast<KinokoActLayer*>(storage.get()), vm)) return 0;
     std::unique_ptr<unsigned char,DynamicLayerDelete> owned(storage.release());
-    const auto layer = address(owned.get());
-    kinoko::legacy::StringView(pointer<void>(layer+112)).assign(name, static_cast<uint32_t>(std::strlen(name)));
-    kinoko::legacy::Allocation<int32_t> key(static_cast<int32_t*>(std::calloc(1,36)));
+    auto* layer = reinterpret_cast<KinokoActLayer*>(owned.get());
+    const LayerStorageView record(layer);
+    kinoko::legacy::StringView(record.bytes(&LayerStorageRecord::name)).assign(name, static_cast<uint32_t>(std::strlen(name)));
+    kinoko::legacy::Allocation<KeyRecord> key(static_cast<KeyRecord*>(std::calloc(1,sizeof(KeyRecord))));
     const auto clear_layout=[](unsigned char* value) {
         if constexpr(string_layout) if(value) kinoko_clear_string_layout((KinokoStringLayout*)(value));
         std::free(value);
@@ -735,28 +740,30 @@ template<bool string_layout> int32_t create_layer(int32_t player, const char* na
     else (int32_t)(intptr_t)kinoko_construct_c2dlayout((KinokoActLayout*)(layout_storage));
     std::unique_ptr<unsigned char,decltype(clear_layout)> layout(layout_storage,clear_layout);
     if (!key) return 0;
-    key.get()[0] = address(kinoko_act_host_symbols()->key_vtable);
-    key.get()[7] = 15;
-    if (!kinoko_act_append_list((void*)(uintptr_t)(layer+180), (void*)(key.get()))) return 0;
-    key.get()[1] = address(layout.release());
-    const auto native_layout = key.get()[1];
+    key->methods = kinoko_act_host_symbols()->key_vtable;
+    key->script_name.capacity = 15;
+    if (!kinoko_act_append_list(record.bytes(&LayerStorageRecord::keys), (void*)(key.get()))) return 0;
+    key->layout = reinterpret_cast<KinokoActLayout*>(layout.release());
+    auto* native_layout = key->layout;
     key.release();
-    field<int32_t>(layer+184) = 1;
-    const auto begin = field<uint32_t>(act+208), end = field<uint32_t>(act+212);
+    record.view(&LayerStorageRecord::keys).set(&LayerListRecord::count, int32_t{1});
+    const DocumentView document(act);
+    const auto layers = document.get(&DocumentRecord::layers);
+    const auto begin = reinterpret_cast<uintptr_t>(layers.begin), end = reinterpret_cast<uintptr_t>(layers.end);
     if (end < begin || (end-begin)%4 || (!begin && end) || (end-begin)/4 >= 0x10000) return 0;
     const auto count = (end-begin)/4;
     int32_t maximum = -1;
     for (uint32_t i=0; i<count; ++i) {
-        const auto old_layer = field<int32_t>(begin+i*4);
-        if (old_layer) maximum = std::max(maximum, field<int32_t>(old_layer+104));
+        auto* old_layer = kinoko::legacy::load<KinokoActLayer*>(layers.begin+i);
+        if (old_layer) maximum = std::max(maximum, LayerStorageView(old_layer).view(&LayerStorageRecord::association).get(&LayerAssociationRecord::layer_id));
     }
-    field<int32_t>(layer+104) = maximum < 0 ? 1 : static_cast<int32_t>(static_cast<uint32_t>(maximum)+1);
-    kinoko_act_array_append((void*)(uintptr_t)(act+208), (void*)(uintptr_t)(layer));
+    record.view(&LayerStorageRecord::association).set(&LayerAssociationRecord::layer_id, maximum < 0 ? 1 : static_cast<int32_t>(static_cast<uint32_t>(maximum)+1));
+    kinoko_act_array_append(document.bytes(&DocumentRecord::layers), (void*)(uintptr_t)(layer));
     owned.release(); // ACT owns the layer before either publication callback.
-    if constexpr(string_layout) kinoko_method_set_string_layer((KinokoStringLayout*)(uintptr_t)(native_layout), nullptr, pointer<KinokoActLayer>(layer));
+    if constexpr(string_layout) kinoko_method_set_string_layer((KinokoStringLayout*)(uintptr_t)(native_layout), nullptr, layer);
     else kinoko_method_layout_set_layer((KinokoActLayout*)(uintptr_t)(native_layout), nullptr, (KinokoActLayer*)(uintptr_t)(layer));
     kinoko_method_register_act_layer((KinokoActLayer*)(uintptr_t)(layer), nullptr, (void*)(uintptr_t)(address(&parent.object)), 0);
-    if constexpr(string_layout) kinoko_method_register_string_layout(native_layout,nullptr);
+    if constexpr(string_layout) kinoko_method_register_string_layout(address(native_layout),nullptr);
     else kinoko_method_register_layout((KinokoActLayout*)(uintptr_t)(native_layout), nullptr);
     return layer;
 }
@@ -776,7 +783,7 @@ int32_t set_render_target_native(SQVM* vm) {
     return 1;
 }
 template<bool string_layout> int32_t create_layer_native(SQVM* vm) {
-    int32_t player = 0;
+    KinokoActRuntime* player = nullptr;
     const SQChar* name = nullptr;
     if (SQ_FAILED(sq_getinstanceup(vm,1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
         SQ_FAILED(sq_getstring(vm,2,&name))) return sq_throwerror(vm, "invalid CreateLayer arguments");
@@ -789,7 +796,7 @@ template<bool string_layout> int32_t create_layer_native(SQVM* vm) {
             return sq_throwerror(vm, "CActLayer class is unavailable");
         const auto layer = create_layer<string_layout>(player,name);
         const auto type = kinoko::legacy::load<HSQOBJECT>(klass.object.value.data());
-        if (!kinoko::script::upstream::sqrat_push_instance(vm,type,pointer<void>(layer)))
+        if (!kinoko::script::upstream::sqrat_push_instance(vm,type,layer))
             return sq_throwerror(vm, "CActLayer class is unavailable");
         return 1;
     } catch (...) { return sq_throwerror(vm, "CreateLayer allocation failed"); }
