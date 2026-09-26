@@ -349,8 +349,8 @@ int32_t kinoko_act_load_layer(int32_t layer, KinokoArchiveReader* reader_ptr,
             kinoko_trace_i32("act:unsupported-timeline", (int32_t)type);
             return 0;
         }
-        const auto timeline = kinoko_act_new_timeline();
-        if (!timeline || !kinoko_act_load_timeline(timeline, (KinokoArchiveReader*)(uintptr_t)(reader_ptr), version) ||
+        const auto timeline = (int32_t)(intptr_t)kinoko_act_new_timeline();
+        if (!timeline || !kinoko_act_load_timeline((KinokoActTimeline*)(uintptr_t)(timeline), (KinokoArchiveReader*)(uintptr_t)(reader_ptr), version) ||
             !kinoko_act_append_list(
                 address(layer_record.bytes(&kinoko::act::LayerKeys::timeline_head)), timeline)) {
             kinoko_destroy_cact_key(timeline);

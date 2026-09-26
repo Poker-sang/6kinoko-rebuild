@@ -401,97 +401,108 @@ extern "C" int32_t __fastcall kinoko_method_map_set_layer(
 
 
 namespace {
-using TimelinePair = std::array<int32_t,2>;
-std::vector<TimelinePair> timeline_pairs(int32_t timeline) {
-    const auto begin=field<uint32_t>(timeline+12),end=field<uint32_t>(timeline+16);
-    if (end<begin || (end-begin)%8 || (!begin && end) || (end-begin)/8>0x10000)
+using kinoko::act::TimelinePair;
+using kinoko::act::TimelineRecord;
+using TimelineView=kinoko::native::RecordView<TimelineRecord>;
+std::vector<TimelinePair> timeline_pairs(KinokoActTimeline* timeline) {
+    const auto range=TimelineView(timeline).get(&TimelineRecord::pairs);
+    const auto begin=reinterpret_cast<uintptr_t>(range.begin),end=reinterpret_cast<uintptr_t>(range.end);
+    if (end<begin || (end-begin)%sizeof(TimelinePair) || (!begin && end) || (end-begin)/sizeof(TimelinePair)>0x10000)
         throw std::bad_alloc();
     if (begin==end) return {};
-    return {pointer<TimelinePair>(begin),pointer<TimelinePair>(end)};
+    return {range.begin,range.end};
 }
-int32_t __fastcall read_timeline(int32_t timeline,void*,KinokoArchiveReader** holder,int32_t version) {
+int32_t __fastcall read_timeline(KinokoActTimeline* timeline,void*,KinokoArchiveReader** holder,int32_t version) {
     if (!timeline || !holder || version!=1) return 0;
     try {
         const auto reader=*holder;
-        if (!read(pointer<void>(timeline),reader,timeline_schema,false)) return 0;
+        if (!read(timeline,reader,timeline_schema,false)) return 0;
         uint32_t count=0;
         if (!transfer(reader,count) || count>0x10000) return 0;
         auto pairs=timeline_pairs(timeline);
         if (count>0x10000-pairs.size()) return 0;
         for (uint32_t i=0;i<count;++i) {
             TimelinePair pair{};
-            if (!transfer(reader,pair[0]) || !transfer(reader,pair[1])) return 0;
+            if (!transfer(reader,pair.begin) || !transfer(reader,pair.length)) return 0;
             pairs.push_back(pair);
         }
-        // 425420 appends; preserve existing records on a repeated read. Unlike
-        // the original partial append, a truncated batch leaves the vector intact.
-        if (count) kinoko_native_buffer_replace((void*)(uintptr_t)(timeline+12), pairs.data(), static_cast<uint32_t>(pairs.size()*sizeof(TimelinePair)));
+        // Existing compatibility behavior: append a successfully read batch;
+        // a truncated batch leaves the prior vector intact.
+        if (count) kinoko_native_buffer_replace(TimelineView(timeline).bytes(&TimelineRecord::pairs),pairs.data(),
+            static_cast<uint32_t>(pairs.size()*sizeof(TimelinePair)));
         return 1;
     } catch (...) { return 0; }
 }
-int32_t __fastcall write_timeline(int32_t timeline,void*,KinokoArchiveReader* writer) {
+int32_t __fastcall write_timeline(KinokoActTimeline* timeline,void*,KinokoArchiveReader* writer) {
     if (!timeline || !writer) return 0;
     try {
         const auto pairs=timeline_pairs(timeline);
-        if (!write(pointer<void>(timeline),writer,timeline_schema)) return 0;
+        if (!write(timeline,writer,timeline_schema)) return 0;
         auto count=static_cast<uint32_t>(pairs.size());
         if (!transfer(writer,count)) return 0;
         for (auto pair:pairs)
-            if (!transfer(writer,pair[0]) || !transfer(writer,pair[1])) return 0;
+            if (!transfer(writer,pair.begin) || !transfer(writer,pair.length)) return 0;
         return 1;
     } catch (...) { return 0; }
 }
-int32_t __fastcall query_timeline(int32_t timeline,void*,int32_t type,int32_t output) {
+int32_t __fastcall query_timeline(KinokoActTimeline* timeline,void*,const void* type,void* output) {
     if (!output) return 0;
-    const bool match=type && std::strcmp(pointer<const char>(type+9),"?AVCActTimeLine@@")==0;
-    field<int32_t>(output)=match?timeline:0;
+    // Original MSVC type descriptor prefix and leading '.' are skipped.
+    const bool match=type && std::strcmp(static_cast<const char*>(type)+9,"?AVCActTimeLine@@")==0;
+    kinoko::legacy::store(output,match?timeline:nullptr);
     return match;
 }
-void clear_timeline(int32_t timeline) {
-    kinoko_native_buffer_destroy((void*)(uintptr_t)(timeline+12));
-    std::memset(pointer<void>(timeline+12),0,12);
+void clear_timeline(KinokoActTimeline* timeline) {
+    const TimelineView record(timeline);
+    kinoko_native_buffer_destroy(record.bytes(&TimelineRecord::pairs));
+    record.set(&TimelineRecord::pairs,kinoko::act::TimelineBuffer{});
 }
-int32_t __fastcall delete_timeline(int32_t timeline,void*,int32_t flags) {
-    if (!timeline) return 0;
+void* __fastcall delete_timeline(KinokoActTimeline* timeline,void*,int32_t flags) {
+    if (!timeline) return nullptr;
+    auto* bytes=reinterpret_cast<unsigned char*>(timeline);
     if (flags&2) {
-        const auto count=field<uint32_t>(timeline-4);
-        for (auto i=count;i>0;--i) clear_timeline(timeline+(i-1)*28);
-        if (flags&1) std::free(pointer<void>(timeline-4));
-        return timeline-4;
+        auto* allocation=bytes-sizeof(uint32_t);
+        const auto count=kinoko::legacy::load<uint32_t>(allocation);
+        for (auto i=count;i>0;--i) clear_timeline(reinterpret_cast<KinokoActTimeline*>(bytes+(i-1)*sizeof(TimelineRecord)));
+        if (flags&1) std::free(allocation);
+        return allocation;
     }
     clear_timeline(timeline);
-    if (flags&1) std::free(pointer<void>(timeline));
+    if (flags&1) std::free(timeline);
     return timeline;
 }
-int32_t __fastcall destroy_timeline(int32_t timeline,void*) {
+void* __fastcall destroy_timeline(KinokoActTimeline* timeline,void*) {
     return delete_timeline(timeline,nullptr,1);
 }
-int32_t __fastcall clone_timeline(int32_t timeline,void*) {
-    if (!timeline) return 0;
+KinokoActTimeline* __fastcall clone_timeline(KinokoActTimeline* timeline,void*) {
+    if (!timeline) return nullptr;
     try {
         const auto pairs=timeline_pairs(timeline);
-        kinoko::legacy::Allocation<unsigned char> owner(pointer<unsigned char>(kinoko_act_new_timeline()));
-        if (!owner) return 0;
-        const auto result=address(owner.get());
-        field<int32_t>(result+4)=field<int32_t>(timeline+4);
-        field<int32_t>(result+8)=field<int32_t>(timeline+8);
-        kinoko_native_buffer_replace((void*)(uintptr_t)(result+12), pairs.data(), static_cast<uint32_t>(pairs.size()*sizeof(TimelinePair)));
-        return address(owner.release());
-    } catch (...) { return 0; }
+        kinoko::legacy::Allocation<KinokoActTimeline> owner(kinoko_act_new_timeline());
+        if (!owner) return nullptr;
+        const TimelineView result(owner.get()),source(timeline);
+        result.set(&TimelineRecord::begin_time,source.get(&TimelineRecord::begin_time));
+        result.set(&TimelineRecord::duration,source.get(&TimelineRecord::duration));
+        kinoko_native_buffer_replace(result.bytes(&TimelineRecord::pairs),pairs.data(),
+            static_cast<uint32_t>(pairs.size()*sizeof(TimelinePair)));
+        return owner.release();
+    } catch (...) { return nullptr; }
 }
-const void* const timeline_methods[]={
-    reinterpret_cast<const void*>(write_timeline),reinterpret_cast<const void*>(read_timeline),
-    reinterpret_cast<const void*>(query_timeline),reinterpret_cast<const void*>(destroy_timeline),
-    reinterpret_cast<const void*>(delete_timeline),reinterpret_cast<const void*>(clone_timeline)
+struct TimelineMethods {
+    decltype(&write_timeline) write; decltype(&read_timeline) read;
+    decltype(&query_timeline) query; decltype(&destroy_timeline) destroy;
+    decltype(&delete_timeline) delete_object; decltype(&clone_timeline) clone;
 };
+const TimelineMethods timeline_methods{write_timeline,read_timeline,query_timeline,destroy_timeline,delete_timeline,clone_timeline};
+static_assert(sizeof(TimelineMethods)==6*sizeof(void*));
 }
-extern "C" const void* kinoko_act_timeline_vtable(void) { return timeline_methods; }
-extern "C" int32_t kinoko_act_new_timeline(void) {
-    const auto result=address(std::calloc(1,28));
-    if (result) field<int32_t>(result)=address(timeline_methods);
+extern "C" const void* kinoko_act_timeline_vtable(void) { return &timeline_methods; }
+extern "C" KinokoActTimeline* kinoko_act_new_timeline(void) {
+    auto* result=static_cast<KinokoActTimeline*>(std::calloc(1,sizeof(TimelineRecord)));
+    if (result) TimelineView(result).set(&TimelineRecord::methods,static_cast<const void*>(&timeline_methods));
     return result;
 }
-extern "C" int32_t kinoko_act_load_timeline(int32_t timeline,KinokoArchiveReader* reader,int32_t version) {
+extern "C" int32_t kinoko_act_load_timeline(KinokoActTimeline* timeline,KinokoArchiveReader* reader,int32_t version) {
     return read_timeline(timeline,nullptr,&reader,version);
 }
 

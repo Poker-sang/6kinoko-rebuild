@@ -14,3 +14,5 @@ typedef struct KinokoActLayerHolder KinokoActLayerHolder;
 typedef struct KinokoActKeyHolder KinokoActKeyHolder;
 
 typedef struct KinokoMapManager KinokoMapManager;
+
+typedef struct KinokoActTimeline KinokoActTimeline;

@@ -1,3 +1,4 @@
+#include "kinoko/act_types.h"
 #include "kinoko/file_io.h"
 struct SQVM;
 #pragma once
@@ -49,8 +50,8 @@ int32_t kinoko_act_load_mcd(int32_t resource,
 int32_t kinoko_act_load_script(int32_t object_ptr, KinokoArchiveReader* reader_ptr);
 int32_t kinoko_act_make_key(KinokoArchiveReader* reader_ptr, int32_t version);
 const void* kinoko_act_timeline_vtable(void);
-int32_t kinoko_act_new_timeline(void);
-int32_t kinoko_act_load_timeline(int32_t timeline, KinokoArchiveReader*  reader, int32_t version);
+KinokoActTimeline* kinoko_act_new_timeline(void);
+int32_t kinoko_act_load_timeline(KinokoActTimeline* timeline, KinokoArchiveReader*  reader, int32_t version);
 int32_t kinoko_act_make_layer(void);
 int32_t kinoko_construct_cact_layer(int32_t layer, int32_t vm);
 int32_t kinoko_construct_c2dlayout(int32_t layout);
