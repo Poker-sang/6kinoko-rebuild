@@ -56,8 +56,8 @@ void kinoko_game_prepare_map(KinokoMapManager*,KinokoCamera*) { calls.push_back(
 void kinoko_draw_render_queue(struct KinokoCamera*) { calls.push_back(35); }
 int32_t kinoko_stages_prepare_draw() { calls.push_back(36); return 0; }
 int32_t kinoko_stages_draw() { calls.push_back(37); return 0; }
-int32_t kinoko_render_queue_identity() { return 0; }
-int32_t kinoko_render_queue_first() { return 0; }
+void* kinoko_render_queue_identity() { return 0; }
+void* kinoko_render_queue_first() { return 0; }
 int32_t kinoko_graphics_begin_scene() { calls.push_back(40); return begin_result; }
 int32_t kinoko_graphics_clear() { calls.push_back(41); return 0; }
 int32_t kinoko_graphics_end_scene() { calls.push_back(42); return 0; }

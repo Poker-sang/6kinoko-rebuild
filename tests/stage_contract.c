@@ -2934,7 +2934,7 @@ static int test_global_callback_destructor(int32_t vm) {
 struct compile_feed { const char *text; int offset; int32_t vm; };
 static int32_t compiler_test_feed(int32_t context) {
     struct compile_feed *feed=(struct compile_feed *)(intptr_t)context;
-    if(kinoko_stack_vm()!=feed->vm) return 0;
+    if(PTR(kinoko_stack_vm())!=feed->vm) return 0;
     return feed->text[feed->offset] ? feed->text[feed->offset++] : 0;
 }
 static int compile_error_calls, compile_error_valid;
@@ -2942,7 +2942,7 @@ static int32_t compile_error_vm;
 static const char *compile_error_source = "callback source";
 static void compiler_test_error(int32_t vm, const char *error, const char *source, int32_t line, int32_t column) {
     ++compile_error_calls;
-    compile_error_valid = vm == compile_error_vm && kinoko_stack_vm() == vm &&
+    compile_error_valid = vm == compile_error_vm && PTR(kinoko_stack_vm()) == vm &&
         error && *error && strcmp(source,compile_error_source)==0 && line>0 && column>0;
 }
 static int test_compiler_receivers(int32_t vm, int32_t *root) {
@@ -3171,7 +3171,7 @@ static int test_thread_receivers(int32_t vm, int32_t *root) {
         int32_t *error=(int32_t *)(intptr_t)(vm+64);
         fprintf(stderr,"thread failure type=%08x data=%08x top=%d base=%d frames=%d selected=%08x\n",
             error[0],error[1],kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm)))),*(int32_t *)(intptr_t)(vm+52),
-            *(int32_t *)(intptr_t)(vm+100),kinoko_host_explicit_vm());
+            *(int32_t *)(intptr_t)(vm+100),PTR(kinoko_host_explicit_vm()));
         if(error[0]==0x08000010) fprintf(stderr,"thread error: %s\n",(char *)(intptr_t)(error[1]+28));
     }
     CHECK(result);

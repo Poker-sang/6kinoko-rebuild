@@ -144,10 +144,10 @@ int main() {
     CHECK(kinoko_integer_vector_size((KinokoIntegerVector*)(&manager.textures))==0);
     CHECK(manager.iteration.end == manager.iteration.begin && manager.iteration.storage_owner == &iteration_owner_token);
     CHECK(!manager.cleanup_pending && manager.animations.count==0);
-    CHECK(kinoko_integer_map_size(manager.animation_lookup.owner)==0 && manager.actors.count==0);
+    CHECK(manager.animation_lookup.count==0 && !kinoko_animation_find(reinterpret_cast<KinokoActorManager*>(&manager),37) && manager.actors.count==0);
     kinoko_integer_vector_destroy((KinokoIntegerVector*)(&manager.textures));
     kinoko_animation_list_destroy((void*)(uintptr_t)(address(&manager.animations)));
-    kinoko_integer_map_destroy(manager.animation_lookup.owner);
+    kinoko_animation_lookup_destroy(reinterpret_cast<KinokoActorManager*>(&manager));
     kinoko_priority_destroy((void *)(intptr_t)(address(&manager.actors)));
     std::puts("PASS: typed Actor animation, original bounds/timing/clamps, deferred ownership and cleanup order");
 }

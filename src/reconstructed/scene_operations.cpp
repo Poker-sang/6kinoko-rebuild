@@ -85,7 +85,7 @@ extern "C" void* kinoko_scene_create_render_layer(const char* name) {
     static volatile LONG trace_count;
     if(InterlockedIncrement(&trace_count)<=16) {
         kinoko_trace("46a210:entry"); kinoko_trace_i32("46a210:value",address(layer));
-        kinoko_trace_i32("46a210:g613",kinoko_render_queue_identity());
+        kinoko_trace_i32("46a210:g613",(int32_t)(intptr_t)kinoko_render_queue_identity());
     }
     return kinoko_render_queue_append(layer); // append even duplicates, in script order
 }

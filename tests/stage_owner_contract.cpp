@@ -124,7 +124,7 @@ KinokoIntegerMap* kinoko_integer_map_create() { return 0; }
 void kinoko_integer_map_destroy(KinokoIntegerMap*) {}
 void kinoko_integer_map_clear(KinokoIntegerMap*) {}
 void kinoko_initialize_render_queue() {}
-int32_t kinoko_clear_render_queue() { return 0; }
+void* kinoko_clear_render_queue() { return 0; }
 int32_t kinoko_audio_shutdown_resources() { return 0; }
 }
 int main() {

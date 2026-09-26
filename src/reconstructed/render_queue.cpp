@@ -16,14 +16,14 @@ using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 }
 extern "C" void kinoko_initialize_render_queue(void) { layers.clear(); }
-extern "C" int32_t kinoko_render_queue_identity(void) { return address(&layers); }
-extern "C" int32_t kinoko_render_queue_first(void) {
-    return layers.empty() ? address(&layers) : address(&layers.front());
+extern "C" void* kinoko_render_queue_identity(void) { return &layers; }
+extern "C" void* kinoko_render_queue_first(void) {
+    return layers.empty() ? static_cast<void*>(&layers) : &layers.front();
 }
 extern "C" int32_t kinoko_render_queue_size(void) { return static_cast<int32_t>(layers.size()); }
-extern "C" int32_t kinoko_clear_render_queue(void) {
+extern "C" void* kinoko_clear_render_queue(void) {
     layers.clear();
-    return address(&layers);
+    return &layers;
 }
 extern "C" void *kinoko_render_queue_append(KinokoRenderLayer *object) {
     if(layers.size()==0x3ffffffeu) throw std::length_error("list<T> too long");

@@ -20,8 +20,8 @@ extern "C" {
 struct SQVM *kinoko_primary_vm = nullptr;
 char kinoko_sqrat_trace_enabled = 0;
 const void* kinoko_squirrel_object_vtable(void) { return reinterpret_cast<const void*>(0x12345678); }
-int32_t kinoko_actor_vtable(void) { return 0x14141414; }
-int32_t kinoko_actor_step_key(void) { return address(&step_key); }
+const void* kinoko_actor_vtable(void) { return reinterpret_cast<const void*>(0x14141414); }
+void* kinoko_actor_step_key(void) { return &step_key; }
 void kinoko_trace(const char*) {}
 void kinoko_trace_i32(const char*, int32_t) {}
 void kinoko_trace_squirrel_name(const char*, int32_t) {}
@@ -34,7 +34,7 @@ int32_t kinoko_actor_clear_script(KinokoActor *receiver_actor) {
     const auto actor=address(receiver_actor);
     require(ObjectView(actor + 56).value()._type == OT_NULL, "update reset before clear");
     require(ObjectView(actor + 68).value()._type == OT_NULL, "collision reset before clear");
-    require(load<int32_t>(pointer(actor))==kinoko_actor_vtable(), "base vtable restored before release hooks");
+    require(load<int32_t>(pointer(actor))==address(kinoko_actor_vtable()), "base vtable restored before release hooks");
     ++clears; return actor;
 }
 }
@@ -130,7 +130,7 @@ void lifecycle(HSQUIRRELVM vm) {
     require((int32_t)(intptr_t)(kinoko_actor_construct((KinokoActor *)(intptr_t)(0))) == 0 && (int32_t)(intptr_t)(kinoko_actor_dispose((KinokoActor *)(intptr_t)(0))) == 0, "null lifecycle");
     require((int32_t)(intptr_t)(kinoko_actor_construct((KinokoActor *)(intptr_t)(actor))) == actor, "construct unaligned Actor view");
     require(bytes.front() == 0xa7 && bytes.back() == 0xa7, "Actor allocation boundaries");
-    require(load<int32_t>(bytes.data() + 1) == kinoko_actor_vtable(), "original Actor vtable identity");
+    require(load<int32_t>(bytes.data() + 1) == address(kinoko_actor_vtable()), "original Actor vtable identity");
     require(load<int32_t>(bytes.data() + 9) == 1, "original Actor type");
     require(load<int32_t>(bytes.data() + 329) == actor + 376 && load<int32_t>(bytes.data() + 333) == actor + 340,
         "inline collision storage pointers");

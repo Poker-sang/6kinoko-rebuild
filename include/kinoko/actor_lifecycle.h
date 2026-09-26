@@ -27,8 +27,8 @@ KinokoActor *__fastcall kinoko_actor_dispose_method(KinokoActor *actor, void* un
 KinokoActor *__fastcall kinoko_actor_delete_method(KinokoActor *actor, void* unused_edx, unsigned char flags);
 int32_t __fastcall kinoko_actor_set_step_method(KinokoActor *actor, void* unused_edx, KinokoOwnedObjectWords object);
 /* Narrow legacy-data accessors avoid conflicting external declarations. */
-int32_t kinoko_actor_vtable(void);
-int32_t kinoko_actor_step_key(void);
+const void* kinoko_actor_vtable(void);
+void* kinoko_actor_step_key(void);
 #ifdef __cplusplus
 }
 #endif

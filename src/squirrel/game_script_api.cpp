@@ -66,7 +66,7 @@ extern "C" int32_t kinoko_script_load_map(const char* path) {
     return static_cast<uint8_t>(result)!=0; // 469856 tests AL, not the complete word.
 }
 extern "C" int32_t kinoko_script_release_map() { return kinoko_game_release_map_state(); }
-extern "C" int32_t kinoko_script_clear_render_layers() { return kinoko_clear_render_queue(); }
+extern "C" int32_t kinoko_script_clear_render_layers() { return (int32_t)(intptr_t)kinoko_clear_render_queue(); }
 extern "C" void* kinoko_script_create_render_layer(const char* name) { return kinoko_scene_create_render_layer(name); }
 
 extern "C" int32_t kinoko_script_set_global_update(KinokoOwnedObjectWords closure,KinokoOwnedObjectWords environment) {

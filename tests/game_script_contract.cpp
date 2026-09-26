@@ -88,7 +88,7 @@ int32_t kinoko_pat_load(KinokoActorManager* owner,const char*,const char* direct
 KinokoStageOwner* kinoko_stage_load(const char*) { return nullptr; }
 int32_t kinoko_game_load_map_file(const char*) { return map_result; }
 int32_t kinoko_game_release_map_state() { return 1; }
-int32_t kinoko_clear_render_queue() { return 0; }
+void* kinoko_clear_render_queue() { return 0; }
 void* kinoko_scene_create_render_layer(const char*) { return &layout_token; }
 }
 namespace {

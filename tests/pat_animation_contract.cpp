@@ -69,8 +69,9 @@ int main() {
     CHECK(loaded_path=="data/player\\sprite.png");
     CHECK(manager.animations.count==2 && manager.animation_lookup.count==2);
     const auto lookup=manager.animation_lookup.owner;
-    const auto head_address=*kinoko_integer_map_find(lookup,20);
-    CHECK(*kinoko_integer_map_find(lookup,10)==head_address);
+    const auto head_pointer=kinoko_animation_find(receiver,20);
+    const auto head_address=address(head_pointer);
+    CHECK(kinoko_animation_find(receiver,10)==head_pointer);
     const auto head=kinoko::native::RecordView<AnimationRecord>(pointer<void>(head_address)).load();
     CHECK(head.duration_total==1 && head.left==-2 && head.bottom==8 && head.has_bounds);
     CHECK(head.next && head.previous==nullptr);
@@ -93,12 +94,12 @@ int main() {
     }
     CHECK(!kinoko_pat_read_animations(&stream,receiver,1));
     CHECK(manager.animations.count==3);
-    CHECK(kinoko_integer_map_find(lookup,40)==nullptr);
-    kinoko_integer_map_clear(lookup);
+    CHECK(kinoko_animation_find(receiver,40)==nullptr);
+    kinoko_animation_lookup_clear(receiver);
     kinoko_clear_animation_list((void*)(uintptr_t)(address(&manager.animations)));
     CHECK(manager.animations.count==0);
     kinoko_clear_animation_list((void*)(uintptr_t)(address(&manager.animations)));
     kinoko_animation_list_destroy((void*)(uintptr_t)(address(&manager.animations)));
-    kinoko_integer_vector_destroy((KinokoIntegerVector*)(&manager.textures));kinoko_integer_map_destroy(lookup);
+    kinoko_integer_vector_destroy((KinokoIntegerVector*)(&manager.textures));kinoko_animation_lookup_destroy(receiver);
     std::puts("PASS: PAT byte alignment, resource base, aliases, linked takes, 3-axis signs and partial ownership");
 }

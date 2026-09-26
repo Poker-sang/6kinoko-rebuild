@@ -37,7 +37,7 @@ void raw_set_step(const ActorView& actor, const HSQOBJECT& step) {
     sq_rawset(vm, -3);
 }
 
-int32_t instance_pointer(const ObjectView& object) {
+void* instance_pointer(const ObjectView& object) {
     auto* vm = current_vm();
     StackTop restore(vm);
     object.push(vm);
@@ -47,7 +47,7 @@ int32_t instance_pointer(const ObjectView& object) {
         sq_reseterror(vm);
         return 0;
     }
-    return address(receiver);
+    return receiver;
 }
 } // namespace
 
@@ -70,7 +70,7 @@ extern "C" KinokoActor *kinoko_actor_construct(KinokoActor *actor) {
     view.set(&ActorRecord::bounds_anchor_y, 0.0f);
     view.set(&ActorRecord::unknown360, std::array<unsigned char,12>{});
     view.set(&ActorRecord::release_pending, uint8_t{0});
-    view.set(&ActorRecord::vtable, pointer<const void>(kinoko_actor_vtable()));
+    view.set(&ActorRecord::vtable, kinoko_actor_vtable());
     view.set(&ActorRecord::owner_references, int32_t{1});
     for (auto member : script_members)
         ObjectView(view.bytes(member)).initialize(kinoko_squirrel_object_vtable());
@@ -82,7 +82,7 @@ extern "C" KinokoActor *kinoko_actor_construct(KinokoActor *actor) {
 extern "C" KinokoActor *kinoko_actor_dispose(KinokoActor *actor) {
     if (!actor) return 0;
     const ActorView view(actor);
-    view.set(&ActorRecord::vtable, pointer<const void>(kinoko_actor_vtable()));
+    view.set(&ActorRecord::vtable, kinoko_actor_vtable());
     // Keep the established source-backed reset/destructor diagnostic boundary.
     // Do not compile away trace calls globally or clear VM internals.
     kinoko_sqplus_object_reset((void *)(view.bytes(&ActorRecord::initial_function)));
@@ -123,7 +123,7 @@ extern "C" int32_t kinoko_actor_set_step_owned(KinokoActor *actor, KinokoOwnedOb
         // Do not invent weakref dereferencing: retain sq_getinstanceup's result
         // and the old distinction between native bookkeeping and script value.
         if (const auto receiver = instance_pointer(object)) {
-            const ActorView target(pointer(receiver));
+            const ActorView target(receiver);
             view.set(&ActorRecord::step, target.get(&ActorRecord::owner));
             const auto next = target.get(&ActorRecord::owner_control);
             const auto previous = view.get(&ActorRecord::step_control);

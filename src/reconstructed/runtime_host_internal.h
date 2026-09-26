@@ -852,7 +852,7 @@ int32_t kinoko_script_bind_root_value(int32_t *object, int32_t *value, char *nam
 
 int32_t kinoko_script_bind_root_integer(int32_t *object, int32_t value, char *name);
 
-__declspec(noinline) int32_t kinoko_stack_vm(void);
+__declspec(noinline) struct SQVM* kinoko_stack_vm(void);
 
 
 int32_t kinoko_native_void_type(void);
@@ -875,7 +875,7 @@ extern KinokoActorPool* (__fastcall *kinoko_actor_pool_base_methods_storage)(Kin
 #ifdef __cplusplus
 extern "C" {
 #endif
-int32_t kinoko_host_explicit_vm(void);
+struct SQVM* kinoko_host_explicit_vm(void);
 #ifdef __cplusplus
 }
 #endif

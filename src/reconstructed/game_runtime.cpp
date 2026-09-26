@@ -103,8 +103,8 @@ extern "C" int32_t kinoko_game_draw(void) {
     static volatile LONG trace_count;
     const LONG trace_index=InterlockedIncrement(&trace_count);
     if (trace_index==1) {
-        kinoko_trace_i32("render:g613",kinoko_render_queue_identity());
-        kinoko_trace_i32("render:g613-first",kinoko_render_queue_first());
+        kinoko_trace_i32("render:g613",(int32_t)(intptr_t)kinoko_render_queue_identity());
+        kinoko_trace_i32("render:g613-first",(int32_t)(intptr_t)kinoko_render_queue_first());
     }
     render_defaults();
     if (trace_index<=3) kinoko_game_trace_map(objects.map,1);

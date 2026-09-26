@@ -256,7 +256,7 @@ static int32_t kinoko_append_render_item(int32_t *item) {
     if (trace_index <= 16) {
         kinoko_trace("46a210:entry");
         kinoko_trace_i32("46a210:value", item != NULL ? *item : 0);
-        kinoko_trace_i32("46a210:g613", kinoko_render_queue_identity());
+        kinoko_trace_i32("46a210:g613", (int32_t)(intptr_t)kinoko_render_queue_identity());
     }
     return item ? (int32_t)(intptr_t)kinoko_render_queue_append((KinokoRenderLayer*)(uintptr_t)(*item)) : 0;
 }
@@ -384,19 +384,19 @@ static SQVM* kinoko_exchange_source_receiver(SQVM* vm) {
     return previous;
 }
 
-__declspec(noinline) int32_t kinoko_stack_vm(void) {
+__declspec(noinline) struct SQVM* kinoko_stack_vm(void) {
     if (kinoko_explicit_vm != 0)
-        return (int32_t)(intptr_t)kinoko_explicit_vm;
+        return kinoko_explicit_vm;
     static int32_t null_stack_trace_count;
     
     if (kinoko_primary_vm != NULL) {
-        int32_t vm = (int32_t)(intptr_t)kinoko_primary_vm;
+        auto* vm = kinoko_primary_vm;
         const auto stack = kinoko_sq_stack_snapshot(kinoko_primary_vm);
         const uintptr_t stack_block = reinterpret_cast<uintptr_t>(stack.storage);
         if ((stack_block == 0 || stack_block < 0x02000000u ||
              stack_block >= 0x70000000u) &&
             null_stack_trace_count < 16) {
-            kinoko_trace_i32("stack-vm-invalid", vm);
+            kinoko_trace_i32("stack-vm-invalid", (int32_t)(intptr_t)vm);
             kinoko_trace_i32("stack-vm-block", (int32_t)stack_block);
             kinoko_trace_i32("stack-vm-top", stack.top);
             kinoko_trace_i32("stack-vm-base", stack.base);
@@ -407,7 +407,7 @@ __declspec(noinline) int32_t kinoko_stack_vm(void) {
         return vm;
     }
     if (kinoko_active_vm != 0)
-        return (int32_t)(intptr_t)kinoko_active_vm;
+        return kinoko_active_vm;
     return 0;
 }
 
@@ -496,9 +496,9 @@ const void* kinoko_sqrat_object_vtable(void) { return &kinoko_sqrat_object_metho
 
 const void* kinoko_sqrat_root_vtable(void) { return &kinoko_sqrat_root_methods_storage; }
 
-int32_t kinoko_actor_vtable(void) { return (int32_t)(intptr_t)&kinoko_actor_methods_storage; }
+const void* kinoko_actor_vtable(void) { return &kinoko_actor_methods_storage; }
 
-int32_t kinoko_actor_step_key(void) { return (int32_t)(intptr_t)&kinoko_actor_step_key_storage; }
+void* kinoko_actor_step_key(void) { return &kinoko_actor_step_key_storage; }
 
 const void* kinoko_squirrel_object_vtable(void) {
     return &kinoko_squirrel_object_methods_storage;
@@ -771,5 +771,5 @@ void kinoko_game_split_path(const char *path, char *directory) {
     kinoko_path_split(path, directory, NULL);
 }
 
-int32_t kinoko_host_explicit_vm(void) { return (int32_t)(intptr_t)kinoko_explicit_vm; }
+struct SQVM* kinoko_host_explicit_vm(void) { return kinoko_explicit_vm; }
 

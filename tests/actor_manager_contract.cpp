@@ -52,6 +52,7 @@ void kinoko_actor_owner_list_clear(KinokoActorManager *) {}
 KinokoActor *kinoko_actor_owner_list_acquire(KinokoActorManager *) { return nullptr; }
 KinokoIntegerMap* kinoko_integer_map_create(void) { return 0; }
 void kinoko_animation_list_construct(void*) {}
+void kinoko_animation_lookup_construct(KinokoActorManager*) {}
 void kinoko_integer_vector_construct(KinokoIntegerVector*) {}
 KinokoActor* kinoko_actor_set_init_data(KinokoActor* a,const void*) { return a; }
 int32_t kinoko_actor_initialize(KinokoActor *,KinokoActorManager *,const KinokoOwnedObjectWords *,float,float,float,const KinokoOwnedObjectWords *) { return initialize_ok; }
