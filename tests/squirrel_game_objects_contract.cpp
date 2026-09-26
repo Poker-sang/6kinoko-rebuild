@@ -215,8 +215,8 @@ void values(HSQUIRRELVM vm) {
     const char* text=nullptr; require(kinoko_squirrel_object_string(object.data(),&text) && std::string(text)=="ab","embedded NUL retains old string semantics");
     require(kinoko_squirrel_object_copy(copy.data(),object.data()),"construct owned copy");
     require(kinoko_squirrel_object_copy(copy.data(),copy.data()),"self-copy keeps owned value");
-    const auto slot=function_4029b0(address(vm),copy.data());
-    require(slot==((int32_t)(uintptr_t)kinoko_sq_get_up((SQVM*)(uintptr_t)(address(vm)), -1)) && get_string(vm)=="ab","push returns source slot address"); sq_pop(vm,1);
+    const auto slot=kinoko_push_script_object(vm, copy.data());
+    require(slot==kinoko_sq_get_up(vm, -1) && get_string(vm)=="ab","push returns source slot address"); sq_pop(vm,1);
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object.data())));
     require(kinoko_squirrel_object_string(copy.data(),&text) && std::string(text)=="ab","copy survives source destruction");
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(copy.data())));

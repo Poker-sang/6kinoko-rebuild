@@ -49,8 +49,8 @@ extern "C" int kinoko_test_act_ownership_chain() {
     REQUIRE(document);
     observed_document = reinterpret_cast<DocumentRecord *>(document);
     Payload layer{payload_methods,1}, resource{payload_methods,2};
-    kinoko_act_array_append(address(&observed_document->layers),address(&layer));
-    kinoko_act_array_append(address(&observed_document->resources),address(&resource));
+    kinoko_act_array_append((void*)(uintptr_t)(address(&observed_document->layers)), (void*)(uintptr_t)(address(&layer)));
+    kinoko_act_array_append((void*)(uintptr_t)(address(&observed_document->resources)), (void*)(uintptr_t)(address(&resource)));
     delete_document(document);
     observed_document=nullptr;
     REQUIRE((events==std::vector<int>{1,2}));
@@ -62,7 +62,7 @@ extern "C" int kinoko_test_act_ownership_chain() {
     Payload first{payload_methods,3},last{payload_methods,4};
     for(int i=0;i<2;++i) {
         kinoko_act_document_initialize(reinterpret_cast<KinokoActDocument *>(documents+i));
-        kinoko_act_array_append(address(&documents[i].layers),address(i?&last:&first));
+        kinoko_act_array_append((void*)(uintptr_t)(address(&documents[i].layers)), (void*)(uintptr_t)(address(i?&last:&first)));
     }
     kinoko_destroy_cact_with_flags(address(documents),3);
     REQUIRE((events==std::vector<int>{1,2,4,3}));

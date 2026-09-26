@@ -35,8 +35,8 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
     key[0] = PTR(&kinoko_act_key_methods_storage); key[1] = PTR(map); key[7] = 15;
     CHECK(kinoko_act_append_list(layer+180,PTR(key)));
     *(int32_t*)(intptr_t)(layer+184) = 1;
-    kinoko_act_array_append(PTR(source)+224,PTR(resource));
-    kinoko_act_array_append(PTR(source)+208,layer);
+    kinoko_act_array_append((void*)(uintptr_t)(PTR(source)+224), (void*)(uintptr_t)(PTR(resource)));
+    kinoko_act_array_append((void*)(uintptr_t)(PTR(source)+208), (void*)(uintptr_t)(layer));
 
     for (int query = 0; query != 5; ++query) {
         KinokoActDocument *copy = kinoko_act_clone((KinokoActDocument*)source,NULL);

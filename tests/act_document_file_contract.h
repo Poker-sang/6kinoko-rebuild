@@ -39,14 +39,14 @@ static int test_act_document_file_lifetime(void) {
     CHECK(source);
     const int32_t layer = kinoko_act_make_layer();
     CHECK(layer);
-    kinoko_act_array_append(PTR(source) + 208, layer);
+    kinoko_act_array_append((void*)(uintptr_t)(PTR(source) + 208), (void*)(uintptr_t)(layer));
     /* Forward parent reference: child is serialized before its parent. */
     *(int32_t *)(intptr_t)(layer + 104) = 20;
     *(int32_t *)(intptr_t)(layer + 108) = 10;
     const int32_t parent = kinoko_act_make_layer();
     CHECK(parent);
     *(int32_t *)(intptr_t)(parent + 104) = 10;
-    kinoko_act_array_append(PTR(source) + 208, parent);
+    kinoko_act_array_append((void*)(uintptr_t)(PTR(source) + 208), (void*)(uintptr_t)(parent));
     const int32_t key = PTR(calloc(1, 36));
     const int32_t layout = PTR(calloc(1, 316));
     CHECK(key && layout && kinoko_construct_c2dlayout(layout));

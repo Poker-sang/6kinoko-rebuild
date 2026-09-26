@@ -1,3 +1,4 @@
+#include "kinoko/savedata.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/stage_cleanup.h"
@@ -4141,7 +4142,7 @@ static int test_chip_shared_ownership(void) {
     kinoko_string_assign_cstr(resource+9,"data/very-long-chip-file.mcd");
     kinoko_string_assign_cstr(resource+18,"a long shared resource prefix/");
     resource[16]=PTR(data);
-    kinoko_act_array_append(PTR(source)+224,PTR(resource));
+    kinoko_act_array_append((void*)(uintptr_t)(PTR(source)+224), (void*)(uintptr_t)(PTR(resource)));
     int32_t virtual_copy=kinoko_call_thiscall0_result(resource,(void*)kinoko_chip_resource_methods_storage.clone);
     CHECK(virtual_copy && virtual_copy!=PTR(resource));
     CHECK(*(int32_t*)(intptr_t)(virtual_copy+64)==PTR(data));
@@ -4685,10 +4686,10 @@ static int test_table_serialization(int32_t vm, int32_t *root) {
     int32_t source[3], target[3], owned[3];
     kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(source)), "serializationSource");
     CHECK(kinoko_squirrel_object_copy(owned,source));
-    CHECK(function_472e50(PTR(path),owned[0],owned[1],owned[2]));
+    CHECK(kinoko_savedata_save_file_entry(path,owned[0],owned[1],owned[2]));
     kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(target)), "serializationTarget");
     CHECK(kinoko_squirrel_object_copy(owned,target));
-    CHECK(function_472c90(PTR(path),owned[0],owned[1],owned[2]));
+    CHECK(kinoko_savedata_load_file_entry(path,owned[0],owned[1],owned[2]));
     CHECK(execute_source(vm,root+2,
         "if(serializationTarget.n!=123 || serializationTarget.f!=1.25 || !serializationTarget.b || "
         "serializationTarget.s!=\"abc\" || serializationTarget.nested.value!=-9 || "
@@ -5093,7 +5094,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         "delete inactiveLayer; delete dynamicFirst; delete dynamicSecond; delete dynamicThird; delete dynamicFourth;\n"
         "delete dynamicFifth; delete dynamicSixth; delete dynamicHost; delete dynamicPlayer;"));
     for(int i=0;i<7;++i) { kinoko_destroy_cact_layer(layers[i]); free((void*)(intptr_t)layers[i]); }
-    kinoko_act_array_destroy(PTR(act)+208); kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), player_pair);
+    kinoko_act_array_destroy((void*)(uintptr_t)(PTR(act)+208)); kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), player_pair);
     DeleteCriticalSection((CRITICAL_SECTION*)(player+5));
     CHECK(sq_gettop(kinoko_vm(vm))==top);
     puts("PASS: dynamic 2D ownership, Sqrat aliases, layer order, ancestor rejection and subtree swaps");

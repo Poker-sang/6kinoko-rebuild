@@ -65,10 +65,10 @@ static int test_act_virtual_clone(void) {
         CHECK(kinoko_construct_c2dlayout(key[1]));
         CHECK(kinoko_act_append_list(layer + 180, PTR(key)));
         *(int32_t *)(intptr_t)(layer + 184) = 1;
-        kinoko_act_array_append(PTR(source) + 224, 0);
-        kinoko_act_array_append(PTR(source) + 224, PTR(resource));
-        kinoko_act_array_append(PTR(source) + 208, 0);
-        kinoko_act_array_append(PTR(source) + 208, layer);
+        kinoko_act_array_append((void*)(uintptr_t)(PTR(source) + 224), (void*)(uintptr_t)(0));
+        kinoko_act_array_append((void*)(uintptr_t)(PTR(source) + 224), (void*)(uintptr_t)(PTR(resource)));
+        kinoko_act_array_append((void*)(uintptr_t)(PTR(source) + 208), (void*)(uintptr_t)(0));
+        kinoko_act_array_append((void*)(uintptr_t)(PTR(source) + 208), (void*)(uintptr_t)(layer));
 
         const struct ActLayoutMethods layout_table = kinoko_act_layout_methods_storage;
         const struct ActKeyMethods key_table = kinoko_act_key_methods_storage;

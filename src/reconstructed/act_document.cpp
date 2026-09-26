@@ -714,7 +714,7 @@ int32_t kinoko_act_prepare_vector(int32_t object_ptr,
                                          uint32_t count)
 {
     if (end_offset!=begin_offset+4 || capacity_offset!=begin_offset+8) return 0;
-    return kinoko_act_array_prepare(object_ptr+begin_offset,count);
+    return kinoko_act_array_prepare((void*)(uintptr_t)(object_ptr+begin_offset), count);
 }
 
 int32_t kinoko_act_load(int32_t this_ptr, int32_t reader_ptr,
@@ -760,7 +760,7 @@ int32_t kinoko_act_load(int32_t this_ptr, int32_t reader_ptr,
         }
         // 4295D0 appends; replacing the backing span loses previously owned
         // objects on a second load and exposes reserved slots after failure.
-        kinoko_act_array_append(layer_slot, address(layer));
+        kinoko_act_array_append((void*)(uintptr_t)(layer_slot), (void*)(uintptr_t)(address(layer)));
         pending.release(); // document owns it even if association insertion throws
         associations.add_layer(layer);
         if (index < 8) {
@@ -789,7 +789,7 @@ int32_t kinoko_act_load(int32_t this_ptr, int32_t reader_ptr,
             pointer<KinokoActResource>(kinoko_act_make_resource(reader_ptr, type)));
         auto *resource = pending.get();
         if (!resource) return 0;
-        kinoko_act_array_append(resource_slot, address(resource));
+        kinoko_act_array_append((void*)(uintptr_t)(resource_slot), (void*)(uintptr_t)(address(resource)));
         pending.release();
         associations.add_resource(resource);
         if (index < 8) {

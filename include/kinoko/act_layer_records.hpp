@@ -50,8 +50,8 @@ inline int32_t layer_distance(const DocumentPointerSpan<KinokoActLayer>& layers)
         reinterpret_cast<uintptr_t>(layers.end) - reinterpret_cast<uintptr_t>(layers.begin));
     return kinoko::legacy::load<int32_t>(&bytes) / static_cast<int32_t>(sizeof(KinokoActLayer *));
 }
-// The upstream-compatible container still stores integer slots. Read a pointer
-// representation without treating that allocation as a C++ array of pointers.
+// The shared container stores void pointers. Read a borrowed typed pointer
+// representation without aliasing that allocation as an array of another type.
 inline KinokoActLayer *layer_at(const DocumentPointerSpan<KinokoActLayer>& layers, int32_t index) noexcept {
     const auto *slots = reinterpret_cast<const unsigned char *>(layers.begin);
     return kinoko::legacy::load<KinokoActLayer *>(slots + static_cast<size_t>(index) * sizeof(KinokoActLayer *));

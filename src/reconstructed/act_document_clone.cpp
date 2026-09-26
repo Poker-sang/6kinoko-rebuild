@@ -49,7 +49,7 @@ KinokoActDocument *clone_document(KinokoActDocument *source) {
         if (!resource) continue;
         std::unique_ptr<KinokoActResource, DeleteResource> copy(clone_virtual<KinokoActResource, 9>(resource));
         if (!copy) throw std::bad_alloc();
-        kinoko_act_array_append(address(output.bytes(&DocumentRecord::resources)), address(copy.get()));
+        kinoko_act_array_append((void*)(uintptr_t)(address(output.bytes(&DocumentRecord::resources))), (void*)(uintptr_t)(address(copy.get())));
         associations.add_resource(copy.release());
     }
     // 427BF0..427D05: layers dispatch +0x14; their key clones bind layouts.
@@ -60,7 +60,7 @@ KinokoActDocument *clone_document(KinokoActDocument *source) {
         if (!layer) continue;
         std::unique_ptr<KinokoActLayer, DeleteLayer> copy(clone_virtual<KinokoActLayer, 5>(layer));
         if (!copy) throw std::bad_alloc();
-        kinoko_act_array_append(address(output.bytes(&DocumentRecord::layers)), address(copy.get()));
+        kinoko_act_array_append((void*)(uintptr_t)(address(output.bytes(&DocumentRecord::layers))), (void*)(uintptr_t)(address(copy.get())));
         associations.add_layer(copy.release());
     }
     associations.bind(result.get());

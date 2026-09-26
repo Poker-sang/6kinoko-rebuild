@@ -173,8 +173,8 @@ void kinoko_destroy_cact_object(int32_t object_ptr)
         dispose_owned(kinoko::legacy::load<KinokoActResource *>(resource));
         ++resource;
     }
-    kinoko_act_array_destroy(address(document.bytes(&DocumentRecord::resources)));
-    kinoko_act_array_destroy(address(document.bytes(&DocumentRecord::layers)));
+    kinoko_act_array_destroy((void*)(uintptr_t)(address(document.bytes(&DocumentRecord::resources))));
+    kinoko_act_array_destroy((void*)(uintptr_t)(address(document.bytes(&DocumentRecord::layers))));
 
     kinoko_destroy_cact_script(address(document.bytes(&kinoko::act::DocumentRecord::script)));
     auto clear_string = [](unsigned char* storage) {

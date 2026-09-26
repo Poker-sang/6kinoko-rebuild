@@ -41,7 +41,7 @@ struct Layer {
         prefix.resource_id = 70; tail.fill(0xa5);
     }
     KinokoActLayer *get() { return reinterpret_cast<KinokoActLayer *>(this); }
-    ~Layer() { kinoko_act_array_destroy(address(&prefix.children)); }
+    ~Layer() { kinoko_act_array_destroy((void*)(uintptr_t)(address(&prefix.children))); }
 };
 int main() {
     std::array<void *, 7> table{};
@@ -94,8 +94,8 @@ int main() {
         clone_first(10, -1, table.data()), clone_duplicate(10, -1, table.data());
     clone_child.prefix.parent = source_parent.get();
     clone_first.prefix.parent = outside.get();
-    kinoko_act_array_append(address(&clone_child.prefix.children), address(source_child.get()));
-    kinoko_act_array_append(address(&clone_child.prefix.children), address(outside.get()));
+    kinoko_act_array_append((void*)(uintptr_t)(address(&clone_child.prefix.children)), (void*)(uintptr_t)(address(source_child.get())));
+    kinoko_act_array_append((void*)(uintptr_t)(address(&clone_child.prefix.children)), (void*)(uintptr_t)(address(outside.get())));
     clone_first.prefix.resource_id = 12345;
     clone_first.prefix.resource = reinterpret_cast<KinokoActResource *>(&duplicate_resource);
     KinokoActLayer *clone_slots[] = {clone_child.get(), clone_first.get(), clone_duplicate.get()};

@@ -18,6 +18,8 @@
 #include "kinoko/boost_hash.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/act_layout_records.hpp"
+#include "kinoko/act_key_records.hpp"
+#include "kinoko/act_layer_storage.hpp"
 #include <algorithm>
 #include <array>
 #include <climits>
@@ -57,62 +59,62 @@ Schema texture_schema = make_schema();
 // TUserData<CActRenderTarget> schema. Never let one class's header alter another.
 Schema render_target_schema = make_schema();
 // 42F2A0: chip resources serialize the base ID/name and the MCD filename.
-Schema chip_schema{{"resourceID", {0,0,4}}, {"stName", {3,3,8}},
-                   {"stChipFile", {3,3,36}}};
+Schema chip_schema{{"resourceID", {0,0,offsetof(kinoko::act::ChipResourceRecord, id)}}, {"stName", {3,3,offsetof(kinoko::act::ChipResourceRecord, name)}},
+                   {"stChipFile", {3,3,offsetof(kinoko::act::ChipResourceRecord, source_name)}}};
 // 44C2A0: independent Mesh property header; the path prefix is runtime state.
-Schema mesh_schema{{"resourceID",{0,0,4}},{"stName",{3,3,8}},{"stMeshName",{3,3,36}}};
+Schema mesh_schema{{"resourceID",{0,0,offsetof(kinoko::mesh::Resource, id)}},{"stName",{3,3,offsetof(kinoko::mesh::Resource, name)}},{"stMeshName",{3,3,offsetof(kinoko::mesh::Resource, mesh_name)}}};
 // 425350: CActTimeLine has two integers followed by a vector of integer pairs.
-Schema timeline_schema{{"beginTime", {0,0,4}}, {"timeLength", {0,0,8}}};
+Schema timeline_schema{{"beginTime", {0,0,offsetof(kinoko::act::TimelineRecord, begin_time)}}, {"timeLength", {0,0,offsetof(kinoko::act::TimelineRecord, duration)}}};
 // 41E790, including the two byte-sized booleans and previous-position fields.
 Schema layer_schema{
-    {"resourceID",{0,0,96}}, {"layerID",{0,0,104}}, {"parentID",{0,0,108}},
-    {"stName",{3,3,112}}, {"visible",{2,2,140}}, {"debugOnly",{2,2,141}},
-    {"dst_x",{1,1,144}}, {"dst_y",{1,1,148}}, {"dst_z",{1,1,152}},
-    {"ox",{1,1,156}}, {"oy",{1,1,160}}, {"oz",{1,1,164}},
-    {"prev_x",{1,1,168}}, {"prev_y",{1,1,172}}, {"prev_z",{1,1,176}}
+    {"resourceID",{0,0,offsetof(kinoko::act::LayerAssociationRecord, resource_id)}}, {"layerID",{0,0,offsetof(kinoko::act::LayerAssociationRecord, layer_id)}}, {"parentID",{0,0,offsetof(kinoko::act::LayerAssociationRecord, parent_id)}},
+    {"stName",{3,3,offsetof(kinoko::act::LayerStorageRecord, name)}}, {"visible",{2,2,offsetof(kinoko::act::LayerStorageRecord, visibility_flags)}}, {"debugOnly",{2,2,offsetof(kinoko::act::LayerStorageRecord, visibility_flags) + 1}},
+    {"dst_x",{1,1,offsetof(kinoko::act::LayerStorageRecord, position) + 0 * sizeof(float)}}, {"dst_y",{1,1,offsetof(kinoko::act::LayerStorageRecord, position) + 1 * sizeof(float)}}, {"dst_z",{1,1,offsetof(kinoko::act::LayerStorageRecord, position) + 2 * sizeof(float)}},
+    {"ox",{1,1,offsetof(kinoko::act::LayerStorageRecord, origin_bits) + 0 * sizeof(float)}}, {"oy",{1,1,offsetof(kinoko::act::LayerStorageRecord, origin_bits) + 1 * sizeof(float)}}, {"oz",{1,1,offsetof(kinoko::act::LayerStorageRecord, origin_bits) + 2 * sizeof(float)}},
+    {"prev_x",{1,1,offsetof(kinoko::act::LayerStorageRecord, previous_position) + 0 * sizeof(float)}}, {"prev_y",{1,1,offsetof(kinoko::act::LayerStorageRecord, previous_position) + 1 * sizeof(float)}}, {"prev_z",{1,1,offsetof(kinoko::act::LayerStorageRecord, previous_position) + 2 * sizeof(float)}}
 };
-Schema key_schema{{"scriptFunction",{3,3,8}}};
+Schema key_schema{{"scriptFunction",{3,3,offsetof(kinoko::act::KeyRecord, script_name)}}};
 // 427750: marginLeft/Top/Right/Bottom are +72/+76/+80/+84.
 Schema act_schema{
-    {"resolutionMs",{0,0,4}}, {"screenWidth",{0,0,8}}, {"screenHeight",{0,0,12}},
-    {"stName",{3,3,16}}, {"offsetX",{1,1,88}}, {"offsetY",{1,1,92}},
-    {"marginLeft",{0,0,72}}, {"marginTop",{0,0,76}},
-    {"marginRight",{0,0,80}}, {"marginBottom",{0,0,84}}, {"visible",{2,2,96}}
+    {"resolutionMs",{0,0,offsetof(kinoko::act::DocumentRecord, resolution_ms)}}, {"screenWidth",{0,0,offsetof(kinoko::act::DocumentRecord, screen_width)}}, {"screenHeight",{0,0,offsetof(kinoko::act::DocumentRecord, screen_height)}},
+    {"stName",{3,3,offsetof(kinoko::act::DocumentRecord, name)}}, {"offsetX",{1,1,offsetof(kinoko::act::DocumentRecord, offset_x)}}, {"offsetY",{1,1,offsetof(kinoko::act::DocumentRecord, offset_y)}},
+    {"marginLeft",{0,0,offsetof(kinoko::act::DocumentRecord, margin_left)}}, {"marginTop",{0,0,offsetof(kinoko::act::DocumentRecord, margin_top)}},
+    {"marginRight",{0,0,offsetof(kinoko::act::DocumentRecord, margin_right)}}, {"marginBottom",{0,0,offsetof(kinoko::act::DocumentRecord, margin_bottom)}}, {"visible",{2,2,offsetof(kinoko::act::DocumentRecord, visible)}}
 };
 // 43F770 registers alignment with the bool template 443CC0 AND offset 128,
 // aliasing addEdge (43F97D), despite the runtime integer living at 132.
 Schema string_layout_schema{
-    {"stText",{3,3,4}}, {"stBackQueue",{3,3,32}}, {"stFontFaceName",{3,3,60}},
-    {"fontHeight",{0,0,88}}, {"fontWeight",{0,0,92}},
-    {"colorR",{0,0,96}}, {"colorG",{0,0,100}}, {"colorB",{0,0,104}},
-    {"baseR",{0,0,108}}, {"baseG",{0,0,112}}, {"baseB",{0,0,116}},
-    {"charactorSpace",{0,0,120}}, {"lineSpace",{0,0,124}},
-    {"addEdge",{2,2,128}}, {"alignment",{2,2,128}},
-    {"scaleX",{1,1,136}}, {"scaleY",{1,1,140}}, {"wordBreakWidth",{0,0,144}},
-    {"alpha",{1,1,152}}, {"blend",{0,0,156}}
+    {"stText",{3,3,offsetof(kinoko::act::StringLayoutRecord, text)}}, {"stBackQueue",{3,3,offsetof(kinoko::act::StringLayoutRecord, pending)}}, {"stFontFaceName",{3,3,offsetof(kinoko::act::StringLayoutRecord, face)}},
+    {"fontHeight",{0,0,offsetof(kinoko::act::StringLayoutRecord, font_height)}}, {"fontWeight",{0,0,offsetof(kinoko::act::StringLayoutRecord, font_weight)}},
+    {"colorR",{0,0,offsetof(kinoko::act::StringLayoutRecord, red)}}, {"colorG",{0,0,offsetof(kinoko::act::StringLayoutRecord, green)}}, {"colorB",{0,0,offsetof(kinoko::act::StringLayoutRecord, blue)}},
+    {"baseR",{0,0,offsetof(kinoko::act::StringLayoutRecord, base_red)}}, {"baseG",{0,0,offsetof(kinoko::act::StringLayoutRecord, base_green)}}, {"baseB",{0,0,offsetof(kinoko::act::StringLayoutRecord, base_blue)}},
+    {"charactorSpace",{0,0,offsetof(kinoko::act::StringLayoutRecord, character_space)}}, {"lineSpace",{0,0,offsetof(kinoko::act::StringLayoutRecord, line_space)}},
+    {"addEdge",{2,2,offsetof(kinoko::act::StringLayoutRecord, edge)}}, {"alignment",{2,2,offsetof(kinoko::act::StringLayoutRecord, edge)}},
+    {"scaleX",{1,1,offsetof(kinoko::act::StringLayoutRecord, scale_x)}}, {"scaleY",{1,1,offsetof(kinoko::act::StringLayoutRecord, scale_y)}}, {"wordBreakWidth",{0,0,offsetof(kinoko::act::StringLayoutRecord, wrap_width)}},
+    {"alpha",{1,1,offsetof(kinoko::act::StringLayoutRecord, alpha)}}, {"blend",{0,0,offsetof(kinoko::act::StringLayoutRecord, blend)}}
 };
 // 42BD00 registers the 17 serialized C2DLayout members.
 Schema layout_schema{
-    {"roll.x", {1,1,236}}, {"roll.y", {1,1,240}}, {"roll.z", {1,1,244}},
-    {"cor_x", {1,1,248}}, {"cor_y", {1,1,252}}, {"cor_z", {1,1,256}},
-    {"scale.x", {1,1,260}}, {"scale.y", {1,1,264}}, {"scale.z", {1,1,268}},
-    {"cos_x", {1,1,272}}, {"cos_y", {1,1,276}}, {"cos_z", {1,1,280}},
-    {"alpha", {1,1,284}}, {"blend", {0,0,288}},
-    {"colorR", {0,0,292}}, {"colorG", {0,0,296}}, {"colorB", {0,0,300}}
+    {"roll.x", {1,1,offsetof(kinoko::act::Layout2DRecord, rotation) + offsetof(kinoko::act::Position3, x)}}, {"roll.y", {1,1,offsetof(kinoko::act::Layout2DRecord, rotation) + offsetof(kinoko::act::Position3, y)}}, {"roll.z", {1,1,offsetof(kinoko::act::Layout2DRecord, rotation) + offsetof(kinoko::act::Position3, z)}},
+    {"cor_x", {1,1,offsetof(kinoko::act::Layout2DRecord, rotation_pivot) + offsetof(kinoko::act::Position3, x)}}, {"cor_y", {1,1,offsetof(kinoko::act::Layout2DRecord, rotation_pivot) + offsetof(kinoko::act::Position3, y)}}, {"cor_z", {1,1,offsetof(kinoko::act::Layout2DRecord, rotation_pivot) + offsetof(kinoko::act::Position3, z)}},
+    {"scale.x", {1,1,offsetof(kinoko::act::Layout2DRecord, scale) + offsetof(kinoko::act::Position3, x)}}, {"scale.y", {1,1,offsetof(kinoko::act::Layout2DRecord, scale) + offsetof(kinoko::act::Position3, y)}}, {"scale.z", {1,1,offsetof(kinoko::act::Layout2DRecord, scale) + offsetof(kinoko::act::Position3, z)}},
+    {"cos_x", {1,1,offsetof(kinoko::act::Layout2DRecord, scale_pivot) + offsetof(kinoko::act::Position3, x)}}, {"cos_y", {1,1,offsetof(kinoko::act::Layout2DRecord, scale_pivot) + offsetof(kinoko::act::Position3, y)}}, {"cos_z", {1,1,offsetof(kinoko::act::Layout2DRecord, scale_pivot) + offsetof(kinoko::act::Position3, z)}},
+    {"alpha", {1,1,offsetof(kinoko::act::Layout2DRecord, alpha)}}, {"blend", {0,0,offsetof(kinoko::act::Layout2DRecord, blend)}},
+    {"colorR", {0,0,offsetof(kinoko::act::Layout2DRecord, red)}}, {"colorG", {0,0,offsetof(kinoko::act::Layout2DRecord, green)}}, {"colorB", {0,0,offsetof(kinoko::act::Layout2DRecord, blue)}}
 };
 // Original 43C6B0 registers trans.* and roll.* at the same offsets. Preserve
 // that alias instead of inferring a different layout from the property names.
 Schema layout3d_schema{
-    {"trans.x", {1,1,16}}, {"trans.y", {1,1,20}}, {"trans.z", {1,1,24}},
-    {"roll.x", {1,1,16}}, {"roll.y", {1,1,20}}, {"roll.z", {1,1,24}},
-    {"scale.x", {1,1,28}}, {"scale.y", {1,1,32}}, {"scale.z", {1,1,36}}
+    {"trans.x", {1,1,offsetof(kinoko::act::Layout3DRecord, rotation) + offsetof(kinoko::act::Position3, x)}}, {"trans.y", {1,1,offsetof(kinoko::act::Layout3DRecord, rotation) + offsetof(kinoko::act::Position3, y)}}, {"trans.z", {1,1,offsetof(kinoko::act::Layout3DRecord, rotation) + offsetof(kinoko::act::Position3, z)}},
+    {"roll.x", {1,1,offsetof(kinoko::act::Layout3DRecord, rotation) + offsetof(kinoko::act::Position3, x)}}, {"roll.y", {1,1,offsetof(kinoko::act::Layout3DRecord, rotation) + offsetof(kinoko::act::Position3, y)}}, {"roll.z", {1,1,offsetof(kinoko::act::Layout3DRecord, rotation) + offsetof(kinoko::act::Position3, z)}},
+    {"scale.x", {1,1,offsetof(kinoko::act::Layout3DRecord, scale) + offsetof(kinoko::act::Position3, x)}}, {"scale.y", {1,1,offsetof(kinoko::act::Layout3DRecord, scale) + offsetof(kinoko::act::Position3, y)}}, {"scale.z", {1,1,offsetof(kinoko::act::Layout3DRecord, scale) + offsetof(kinoko::act::Position3, z)}}
 };
 // 434760 registers nine fields; blend is runtime state, not a property here.
 Schema map_schema{
-    {"layerType", {0,0,236}}, {"maxChipWidth", {0,0,240}},
-    {"maxChipHeight", {0,0,244}}, {"mapChipLeft", {0,0,248}},
-    {"mapChipTop", {0,0,252}}, {"mapChipRight", {0,0,256}},
-    {"mapChipBottom", {0,0,260}}, {"alpha", {1,1,320}}, {"scale", {1,1,324}}
+    {"layerType", {0,0,offsetof(kinoko::map::LayoutRecord, layer_type)}}, {"maxChipWidth", {0,0,offsetof(kinoko::map::LayoutRecord, max_chip_width)}},
+    {"maxChipHeight", {0,0,offsetof(kinoko::map::LayoutRecord, max_chip_height)}}, {"mapChipLeft", {0,0,offsetof(kinoko::map::LayoutRecord, chip_left)}},
+    {"mapChipTop", {0,0,offsetof(kinoko::map::LayoutRecord, chip_top)}}, {"mapChipRight", {0,0,offsetof(kinoko::map::LayoutRecord, chip_right)}},
+    {"mapChipBottom", {0,0,offsetof(kinoko::map::LayoutRecord, chip_bottom)}}, {"alpha", {1,1,offsetof(kinoko::map::LayoutRecord, alpha)}}, {"scale", {1,1,offsetof(kinoko::map::LayoutRecord, scale)}}
 };
 using MapRecord = std::array<int32_t, 8>;
 uint32_t record_count(int32_t layout) {

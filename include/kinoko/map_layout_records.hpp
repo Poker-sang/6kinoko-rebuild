@@ -52,7 +52,7 @@ struct RenderLayerRecord { const void *methods; KinokoActLayout *layout; };
 struct LayoutRecord {
     const unsigned char *methods;
     std::array<uint8_t, 232> sprite_and_base;
-    uint32_t unknown236;
+    int32_t layer_type;
     int32_t max_chip_width, max_chip_height;
     int32_t chip_left, chip_top, chip_right, chip_bottom;
     PlacementBuffer placements;

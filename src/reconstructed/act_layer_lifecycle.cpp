@@ -128,7 +128,7 @@ extern "C" void kinoko_act_layer_clear(KinokoActLayer* layer)
     std::memcpy(name.bytes(&kinoko::legacy::StringRecord::characters), &empty_word, sizeof(empty_word));
     name.set(&kinoko::legacy::StringRecord::length, uint32_t{0});
     name.set(&kinoko::legacy::StringRecord::capacity, kinoko::legacy::StringView::inline_capacity);
-    kinoko_act_array_destroy(address(association.bytes(&LayerAssociationRecord::children)));
+    kinoko_act_array_destroy((void*)(uintptr_t)(address(association.bytes(&LayerAssociationRecord::children))));
     association.set(&LayerAssociationRecord::children, DocumentPointerSpan<KinokoActLayer>{});
 }
 

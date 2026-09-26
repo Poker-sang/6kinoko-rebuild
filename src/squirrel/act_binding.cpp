@@ -606,52 +606,56 @@ struct DynamicLayerParent {
 };
 
 // 451F30: inactive players return zero, while an absent layer returns -1.
-int32_t get_layer_order(int32_t player, int32_t layer) {
-    if (!player || !field<uint8_t>(player+8)) return 0;
-    const auto holder = field<int32_t>(player+16);
-    const auto act = holder ? field<int32_t>(holder) : 0;
+int32_t get_layer_order(KinokoActRuntime* player, KinokoActLayer* layer) {
+    if (!player || !kinoko::native::RecordView<kinoko::act::RuntimeRecord>(player).get(&kinoko::act::RuntimeRecord::stage_active)) return 0;
+    const auto holder = kinoko::native::RecordView<kinoko::act::RuntimeRecord>(player).get(&kinoko::act::RuntimeRecord::active_holder);
+    auto* act = holder ? holder->document : nullptr;
     if (!act) return -1;
-    const auto begin = field<uint32_t>(act+208), end = field<uint32_t>(act+212);
+    const auto span = kinoko::act::DocumentView(act).get(&kinoko::act::DocumentRecord::layers);
+    const auto begin = reinterpret_cast<uintptr_t>(span.begin), end = reinterpret_cast<uintptr_t>(span.end);
     for (auto slot=begin; slot<end; slot+=4)
-        if (field<int32_t>(slot)==layer) return static_cast<int32_t>((slot-begin)/4);
+        if (kinoko::legacy::load<KinokoActLayer*>(reinterpret_cast<const void*>(slot))==layer) return static_cast<int32_t>((slot-begin)/4);
     return -1;
 }
 
 // 451F80/455990/455A20/455C40. A swap rebuilds child vectors, then flattens
 // roots in preorder; exchanging only the two slots breaks hierarchy ordering.
-bool swap_layers(int32_t player, int32_t first, int32_t second) {
+bool swap_layers(KinokoActRuntime* player, int32_t first, int32_t second) {
     if (!player) return false;
-    DynamicLayerLock lock(player);
-    if (!field<uint8_t>(player+8)) return false;
-    const auto holder = field<int32_t>(player+16);
-    const auto act = holder ? field<int32_t>(holder) : 0;
+    kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION*>(kinoko::native::RecordView<kinoko::act::RuntimeRecord>(player).bytes(&kinoko::act::RuntimeRecord::lock)));
+    if (!kinoko::native::RecordView<kinoko::act::RuntimeRecord>(player).get(&kinoko::act::RuntimeRecord::stage_active)) return false;
+    const auto holder = kinoko::native::RecordView<kinoko::act::RuntimeRecord>(player).get(&kinoko::act::RuntimeRecord::active_holder);
+    auto* act = holder ? holder->document : nullptr;
     if (!act) return false;
-    const auto begin = field<uint32_t>(act+208), end = field<uint32_t>(act+212);
+    const auto span = kinoko::act::DocumentView(act).get(&kinoko::act::DocumentRecord::layers);
+    const auto begin = reinterpret_cast<uintptr_t>(span.begin), end = reinterpret_cast<uintptr_t>(span.end);
     if (end<begin || (end-begin)%4 || (!begin && end)) return false;
     const auto count = (end-begin)/4;
     if (first<0 || second<0 || static_cast<uint32_t>(first)>=count ||
         static_cast<uint32_t>(second)>=count || first==second) return false;
-    std::vector<int32_t> layers(pointer<int32_t>(begin),pointer<int32_t>(end));
-    std::map<int32_t,size_t> index;
+    std::vector<KinokoActLayer*> layers;
+    layers.reserve(count);
+    for (uint32_t i=0;i<count;++i) layers.push_back(kinoko::act::layer_at(span, i));
+    std::map<KinokoActLayer*,size_t> index;
     for (size_t i=0;i<layers.size();++i)
         if (!layers[i] || !index.emplace(layers[i],i).second) return false;
     // Bound malformed parent chains before traversing them. Valid ACT trees
     // preserve the original ancestor rejection in both directions.
     for (const auto layer: layers) {
-        auto parent = field<int32_t>(layer+88);
+        auto parent = kinoko::native::RecordView<kinoko::act::LayerAssociationRecord>(layer).get(&kinoko::act::LayerAssociationRecord::parent);
         size_t depth=0;
         while (parent) {
             if (!index.count(parent) || ++depth>layers.size()) return false;
             if ((layer==layers[first] && parent==layers[second]) ||
                 (layer==layers[second] && parent==layers[first])) return false;
-            parent=field<int32_t>(parent+88);
+            parent=kinoko::native::RecordView<kinoko::act::LayerAssociationRecord>(parent).get(&kinoko::act::LayerAssociationRecord::parent);
         }
     }
     std::swap(layers[first],layers[second]);
-    std::map<int32_t,std::vector<int32_t>> children;
-    std::vector<int32_t> roots, ordered, pending;
+    std::map<KinokoActLayer*,std::vector<KinokoActLayer*>> children;
+    std::vector<KinokoActLayer*> roots, ordered, pending;
     for (const auto layer: layers) {
-        const auto parent=field<int32_t>(layer+88);
+        const auto parent=kinoko::native::RecordView<kinoko::act::LayerAssociationRecord>(layer).get(&kinoko::act::LayerAssociationRecord::parent);
         if (parent) children[parent].push_back(layer);
         else roots.push_back(layer);
     }
@@ -665,16 +669,16 @@ bool swap_layers(int32_t player, int32_t first, int32_t second) {
             pending.insert(pending.end(),found->second.rbegin(),found->second.rend());
     }
     // Prepare every replacement before publishing any hierarchy mutation.
-    std::map<int32_t,std::unique_ptr<kinoko::ActArray>> replacements;
+    std::map<KinokoActLayer*,std::unique_ptr<kinoko::ActArray>> replacements;
     for (const auto layer: layers) {
         auto values=std::make_unique<kinoko::ActArray>();
         const auto found=children.find(layer);
-        if(found!=children.end()) *values=found->second;
+        if(found!=children.end()) values->assign(found->second.begin(), found->second.end());
         replacements.emplace(layer,std::move(values));
     }
     for(auto& entry:replacements)
-        kinoko::replace_act_array(entry.first+72,std::move(entry.second));
-    std::memcpy(pointer<void>(begin),ordered.data(),ordered.size()*4);
+        kinoko::replace_act_array(kinoko::native::RecordView<kinoko::act::LayerAssociationRecord>(entry.first).bytes(&kinoko::act::LayerAssociationRecord::children), std::move(entry.second));
+    std::memcpy(span.begin, ordered.data(), ordered.size()*sizeof(KinokoActLayer*));
     return true;
 }
 
@@ -683,7 +687,7 @@ int32_t get_layer_order_native(int32_t vm) {
     if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
         SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),2,reinterpret_cast<SQUserPointer*>(&layer),nullptr)))
         return sq_throwerror(kinoko_vm(vm),"invalid GetLayerOrder arguments");
-    sq_pushinteger(kinoko_vm(vm),get_layer_order(player,layer));
+    sq_pushinteger(kinoko_vm(vm),get_layer_order(pointer<KinokoActRuntime>(player), pointer<KinokoActLayer>(layer)));
     return 1;
 }
 int32_t swap_layers_native(int32_t vm) {
@@ -694,7 +698,7 @@ int32_t swap_layers_native(int32_t vm) {
         SQ_FAILED(sq_getinteger(kinoko_vm(vm),3,&second)))
         return sq_throwerror(kinoko_vm(vm),"invalid SwapLayer arguments");
     try {
-        sq_pushbool(kinoko_vm(vm),swap_layers(player,first,second));
+        sq_pushbool(kinoko_vm(vm),swap_layers(pointer<KinokoActRuntime>(player), first, second));
         return 1;
     } catch (...) { return sq_throwerror(kinoko_vm(vm),"SwapLayer allocation failed"); }
 }
@@ -768,7 +772,7 @@ template<bool string_layout> int32_t create_layer(int32_t player, const char* na
         if (old_layer) maximum = std::max(maximum, field<int32_t>(old_layer+104));
     }
     field<int32_t>(layer+104) = maximum < 0 ? 1 : static_cast<int32_t>(static_cast<uint32_t>(maximum)+1);
-    kinoko_act_array_append(act+208,layer);
+    kinoko_act_array_append((void*)(uintptr_t)(act+208), (void*)(uintptr_t)(layer));
     owned.release(); // ACT owns the layer before either publication callback.
     if constexpr(string_layout) kinoko_method_set_string_layer(native_layout,nullptr,layer);
     else kinoko_method_layout_set_layer(native_layout, nullptr, layer);

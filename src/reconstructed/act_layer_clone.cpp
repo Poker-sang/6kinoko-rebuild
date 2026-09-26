@@ -80,8 +80,7 @@ extern "C" int32_t __fastcall kinoko_method_clone_act_layer(int32_t source, void
         const auto target_links = destination.view(&LayerStorageRecord::association);
         const auto source_links = original.view(&LayerStorageRecord::association);
         target_links.set(&LayerAssociationRecord::property_aliases, source_links.get(&LayerAssociationRecord::property_aliases));
-        kinoko_act_array_clone(address(target_links.bytes(&LayerAssociationRecord::children)),
-                               address(source_links.bytes(&LayerAssociationRecord::children)));
+        kinoko_act_array_clone((void*)(uintptr_t)(address(target_links.bytes(&LayerAssociationRecord::children))), (const void*)(uintptr_t)(address(source_links.bytes(&LayerAssociationRecord::children))));
         target_links.set(&LayerAssociationRecord::parent, source_links.get(&LayerAssociationRecord::parent));
         *target_links.bytes(&LayerAssociationRecord::flags92) =
             *source_links.bytes(&LayerAssociationRecord::flags92);
