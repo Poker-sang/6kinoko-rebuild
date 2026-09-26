@@ -1632,7 +1632,7 @@ int32_t kinoko_bind_original_resource(int32_t resource, int32_t object,
     if (!registered) {
         kinoko_sqrat_release_pair(vm, klass);
         registered = kinoko_call_thiscall1_result(pointer<void>(resource),
-            field<void *>(field<int32_t>(resource) + 24), vm) >= 0 &&
+            field<void *>(field<int32_t>(resource) + 24), address(vm)) >= 0 &&
             get_pair(address(&root), class_name, klass) && klass[0] == 0x08004000;
     }
     bool ok = false;
@@ -1704,8 +1704,8 @@ struct StageTables {
         for (auto *object : {&resources, &global, &act})
             kinoko_sqrat_release_pair(vm, object->value.data());
     }
-    bool resolve(int32_t resource, const char *document_name = nullptr) {
-        const kinoko::native::RecordView<kinoko::act::RuntimeRecord> runtime(pointer<void>(resource));
+    bool resolve(KinokoActRuntime* resource, const char *document_name = nullptr) {
+        const kinoko::native::RecordView<kinoko::act::RuntimeRecord> runtime(resource);
         kinoko::act::LayerObjectRecord root{act.methods,vm,runtime.get(&kinoko::act::RuntimeRecord::environment),0,{}};
         const auto *name = document_name ? document_name : kinoko_string_data(runtime.bytes(&kinoko::act::RuntimeRecord::name));
         return name && *name && get_pair(address(&root), name, act.value.data()) &&
@@ -1714,9 +1714,9 @@ struct StageTables {
             get_pair(address(&act), "resource", resources.value.data()) && resources.value[0] == static_cast<int32_t>(OT_TABLE);
     }
 };
-int publish_stage_objects(int32_t act, int32_t runtime, StageTables &tables, int32_t *active_count) {
+int publish_stage_objects(KinokoActDocument* act, KinokoActRuntime* runtime, StageTables &tables, int32_t *active_count) {
     using namespace kinoko::act;
-    const DocumentView document(pointer<void>(act));
+    const DocumentView document(act);
     if (active_count) *active_count = 0;
     // Each virtual owns its own registration work. Ignore HRESULTs and re-read
     // the ranges after callbacks, rather than imposing a factory/rollback path.
@@ -1753,20 +1753,20 @@ int publish_stage_objects(int32_t act, int32_t runtime, StageTables &tables, int
     return 1;
 }
 }
-int32_t kinoko_publish_act_layers(SQVM* vm, int32_t act, int32_t runtime, int32_t *active_count) {
+int32_t kinoko_publish_act_layers(SQVM* vm, KinokoActDocument* act, KinokoActRuntime* runtime, int32_t *active_count) {
     if (active_count) *active_count = 0;
     if (!vm || !act || !runtime) return 0;
     StageTables tables((SQVM*)(uintptr_t)vm);
-    if (!tables.resolve(runtime, kinoko_act_document_name(pointer<KinokoActDocument>(act)))) return 0;
+    if (!tables.resolve(runtime, kinoko_act_document_name(act))) return 0;
     return publish_stage_objects(act, runtime, tables, active_count);
 }
 
-int32_t kinoko_bind_act_resource_object(int32_t resource_ptr)
+int32_t kinoko_bind_act_resource_object(KinokoActRuntime* resource_ptr)
 {
     using namespace kinoko::act;
-    kinoko_trace_i32("450950:bind-resource", resource_ptr);
+    kinoko_trace_i32("450950:bind-resource", address(resource_ptr));
     if (!resource_ptr) return 0;
-    const kinoko::native::RecordView<RuntimeRecord> runtime(pointer<void>(resource_ptr));
+    const kinoko::native::RecordView<RuntimeRecord> runtime(resource_ptr);
     auto *holder = runtime.get(&RuntimeRecord::source_holder);
     auto *source = holder ? holder->document : nullptr;
     if (!source) return 0;
@@ -1805,17 +1805,17 @@ int32_t kinoko_bind_act_resource_object(int32_t resource_ptr)
     return 1;
 }
 
-int32_t kinoko_register_runtime_act_script(SQVM* vm, int32_t resource_ptr,
-                                                 int32_t act)
+int32_t kinoko_register_runtime_act_script(SQVM* vm, KinokoActRuntime* resource_ptr,
+                                                 KinokoActDocument* act)
 {
     kinoko::act::LayerObjectRecord root{(const void*)(uintptr_t)(0), vm, {0, 0}, 0, {}};
     int32_t parent[2] = { static_cast<int32_t>(OT_NULL), 0 }, global[2] = { static_cast<int32_t>(OT_NULL), 0 };
     kinoko::act::LayerObjectRecord object{(const void*)(uintptr_t)(0), vm, {0, 0}, 0, {}};
-    int32_t script = act + 100, result = 0;
-    root.value[0] = field<int32_t>(resource_ptr + 156);
-    root.value[1] = field<int32_t>(resource_ptr + 160);
+    auto* script = ActPublicationView(act).bytes(&ActPublicationRecord::script);
+    int32_t result = 0;
+    root.value = kinoko::native::RecordView<kinoko::act::RuntimeRecord>(resource_ptr).get(&kinoko::act::RuntimeRecord::environment);
     do {
-    if (!get_pair(address(&root), kinoko_string_data(ActPublicationView(pointer<void>(act)).bytes(&ActPublicationRecord::name)), parent))
+    if (!get_pair(address(&root), kinoko_string_data(ActPublicationView(act).bytes(&ActPublicationRecord::name)), parent))
         break;
     object.value[0] = parent[0]; object.value[1] = parent[1];
     if (!get_pair(address(&object), "global", global))
@@ -1829,126 +1829,115 @@ int32_t kinoko_register_runtime_act_script(SQVM* vm, int32_t resource_ptr,
     return result;
 }
 
-int32_t kinoko_begin_stage_this(int32_t resource_ptr, int32_t stage)
-{
-    CRITICAL_SECTION *critical_section;
-    SQVM* vm;
-    int32_t result = -0x7fffbffb;
-
-    kinoko_trace_i32("450950:enter-resource", resource_ptr);
+int32_t kinoko_begin_stage_this(KinokoActRuntime* resource_ptr, int32_t stage) {
+    using namespace kinoko::act;
+    SQVM* vm = nullptr;
+    int32_t result = static_cast<int32_t>(E_FAIL);
+    kinoko_trace_i32("450950:enter-resource", address(resource_ptr));
     kinoko_trace_i32("450950:enter-stage", stage);
-    if (resource_ptr == 0)
-        return result;
-    critical_section = pointer<CRITICAL_SECTION>(resource_ptr + 20);
+    if (!resource_ptr) return result;
+    const kinoko::native::RecordView<RuntimeRecord> runtime(resource_ptr);
     {
-    kinoko::windows::CriticalLock lock(critical_section);
-    const auto source_holder = field<KinokoActSourceHolder *>(resource_ptr);
-    if (source_holder && source_holder->document) {
-        auto *source = source_holder->document;
-        const auto *methods = kinoko::legacy::load<const unsigned char *>(source);
-        using Resume = int32_t (__thiscall *)(KinokoActDocument *);
-        kinoko::legacy::load<Resume>(methods + 32)(source); // 45099D, result ignored
-    }
-    vm = field<SQVM*>(resource_ptr + 152);
-    StageTables tables((SQVM*)(uintptr_t)vm);
-    if (field<unsigned char>(resource_ptr + 8) != 1 && vm &&
-        field<int32_t>(resource_ptr + 156) != static_cast<int32_t>(OT_NULL) && tables.resolve(resource_ptr)) {
-        if (stage >= 0) field<int32_t>(resource_ptr + 4) = stage;
-        if (kinoko_bind_act_resource_object(resource_ptr)) {
-            field<unsigned char>(resource_ptr + 8) = 1;
-            result = 0;
-            const auto act = field<int32_t>(resource_ptr + 12);
-            int32_t layer_count = 0;
-            publish_stage_objects(act, resource_ptr, tables, &layer_count);
-            kinoko_trace_i32("450950:layer-count", layer_count);
-            kinoko_register_act_script((void*)(uintptr_t)(act + 100), (void*)(uintptr_t)(address(&tables.global))); // HRESULT ignored
-            const auto source = *field<int32_t *>(resource_ptr);
-            kinoko_execute_act_callback((void*)(uintptr_t)(source + 100), 4, "act:callback-init");
-            for (int32_t index = 0;; ++index) {
-                const auto active = field<int32_t>(resource_ptr + 12);
-                const ActPublicationView current(pointer<void>(active));
-                const auto layers = current.get(&ActPublicationRecord::layers);
-                if (!kinoko::act::ordered_layers(layers) ||
-                    index >= kinoko::act::layer_distance(layers)) break;
-                auto* layer = kinoko::act::layer_at(layers, index);
-                const auto script = layer ? address(kinoko::act::LayerStorageView(layer).bytes(
-                    &kinoko::act::LayerStorageRecord::script)) : 0;
-                kinoko_execute_act_callback((void*)(uintptr_t)(script), 4, "act:layer-callback-init");
-            } // callback failures do not roll back the active state or skip later layers
+        kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION*>(runtime.bytes(&RuntimeRecord::lock)));
+        auto* holder = runtime.get(&RuntimeRecord::source_holder);
+        if (holder && holder->document) {
+            auto* source = holder->document;
+            const auto* methods = kinoko::legacy::load<const unsigned char*>(source);
+            using Resume = int32_t (__thiscall*)(KinokoActDocument*);
+            kinoko::legacy::load<Resume>(methods + 32)(source);
+        }
+        vm = runtime.get(&RuntimeRecord::vm);
+        StageTables tables(vm);
+        if (runtime.get(&RuntimeRecord::stage_active) != 1 && vm &&
+            runtime.get(&RuntimeRecord::environment)[0] != static_cast<int32_t>(OT_NULL) && tables.resolve(resource_ptr)) {
+            if (stage >= 0) runtime.set(&RuntimeRecord::current_time, stage);
+            if (kinoko_bind_act_resource_object(resource_ptr)) {
+                runtime.set(&RuntimeRecord::stage_active, uint8_t{1});
+                result = 0;
+                auto* act = runtime.get(&RuntimeRecord::active_document);
+                int32_t layer_count = 0;
+                publish_stage_objects(act, resource_ptr, tables, &layer_count);
+                kinoko_trace_i32("450950:layer-count", layer_count);
+                kinoko_register_act_script(DocumentView(act).bytes(&DocumentRecord::script), &tables.global);
+                auto* source = runtime.get(&RuntimeRecord::source_holder)->document;
+                kinoko_execute_act_callback(DocumentView(source).bytes(&DocumentRecord::script), 4, "act:callback-init");
+                for (int32_t index = 0;; ++index) {
+                    const DocumentView current(runtime.get(&RuntimeRecord::active_document));
+                    const auto layers = current.get(&DocumentRecord::layers);
+                    if (!ordered_layers(layers) || index >= layer_distance(layers)) break;
+                    auto* layer = layer_at(layers, index);
+                    auto* script = layer ? LayerStorageView(layer).bytes(&LayerStorageRecord::script) : nullptr;
+                    kinoko_execute_act_callback(script, 4, "act:layer-callback-init");
+                }
+            }
         }
     }
-
-    } // release lock also on a native exception
-    {
-        int32_t act = field<int32_t>(resource_ptr + 12);
-        const char *act_name = act != 0
-            ? kinoko_string_data(ActPublicationView(pointer<void>(act)).bytes(&ActPublicationRecord::name)) : nullptr;
-        kinoko_trace_squirrel_name("450950:act-name",
-                                   address(act_name));
-        kinoko_trace_i32("450950:user", resource_ptr);
-    }
-    kinoko_trace_i32("450950:resource", resource_ptr);
+    auto* act = runtime.get(&RuntimeRecord::active_document);
+    const char* act_name = act ? kinoko_string_data(DocumentView(act).bytes(&DocumentRecord::name)) : nullptr;
+    kinoko_trace_squirrel_name("450950:act-name", address(act_name));
+    kinoko_trace_i32("450950:user", address(resource_ptr));
+    kinoko_trace_i32("450950:resource", address(resource_ptr));
     kinoko_trace_i32("450950:vm", address(vm));
     kinoko_trace_i32("450950:result", result);
     if (result == 0) {
-        kinoko_trace_i32("450950:act", field<int32_t>(resource_ptr));
-        kinoko_trace_i32("450950:active",
-                         field<int32_t>(resource_ptr + 8));
+        kinoko_trace_i32("450950:act", address(runtime.get(&RuntimeRecord::source_holder)));
+        // Trace originally reads the active byte together with the following padding.
+        kinoko_trace_i32("450950:active", kinoko::legacy::load<int32_t>(runtime.bytes(&RuntimeRecord::stage_active)));
     }
     return result;
 }
 
-int32_t kinoko_root_table_register_resource(int32_t root_object,
-                                                    int32_t resource_ptr)
+int32_t kinoko_root_table_register_resource(void* root_object,
+                                                    KinokoActRuntime* resource_ptr)
 {
     int32_t act_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t global_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t resource_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t player_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    int32_t holder;
-    int32_t act;
+    KinokoActSourceHolder* holder;
+    KinokoActDocument* act;
     ActPublicationView act_view(nullptr);
     const char *act_name;
     const char *script_path;
     kinoko::act::LayerObjectRecord global_object{(const void*)(uintptr_t)(0), (SQVM*)(uintptr_t)(0), {static_cast<int32_t>(OT_NULL), 0}, 1, {}};
-    int32_t script_ptr;
+    void* script_ptr;
     int32_t result = 0;
     SQVM* vm;
 
     if (root_object == 0 || resource_ptr == 0)
         return 0;
-    vm = field<SQVM*>(root_object + 4);
+    vm = kinoko::act::LayerObjectView(root_object).get(&kinoko::act::LayerObjectRecord::vm);
     if (vm == 0)
         return 0;
-    kinoko_trace_i32("450f30:root", root_object);
-    kinoko_trace_i32("450f30:resource", resource_ptr);
+    kinoko_trace_i32("450f30:root", address(root_object));
+    kinoko_trace_i32("450f30:resource", address(resource_ptr));
     kinoko_trace_i32("450f30:vm", address(vm));
 
     do {
-    if (!kinoko_bind_act_resource_root((void*)(uintptr_t)(resource_ptr), vm, pointer<const int32_t>(root_object + 8))) {
+    if (!kinoko_bind_act_resource_root((void*)(uintptr_t)(resource_ptr), vm, reinterpret_cast<const int32_t*>(kinoko::act::LayerObjectView(root_object).bytes(&kinoko::act::LayerObjectRecord::value)))) {
         kinoko_trace("450f30:root-bind-failed");
         break;
     }
-    if (!kinoko_publish_cact_resource2d_class(vm, root_object)) {
+    if (!kinoko_publish_cact_resource2d_class(vm, address(root_object))) {
         kinoko_trace("450f30:resource2d-class-failed");
         break;
     }
-    holder = field<int32_t>(resource_ptr);
-    act = holder != 0 ? field<int32_t>(holder) : 0;
+    holder = kinoko::native::RecordView<kinoko::act::RuntimeRecord>(resource_ptr).get(&kinoko::act::RuntimeRecord::source_holder);
+    act = holder ? holder->document : nullptr;
     if (act == 0)
         break;
-    act_view = ActPublicationView(pointer<void>(act));
+    act_view = ActPublicationView(act);
     act_name = kinoko_string_data(act_view.bytes(&ActPublicationRecord::name));
     if (act_name == nullptr || *act_name == 0)
         break;
     /* 451022..45104A retains the registration key for 4513F0 teardown. */
-    kinoko_string_assign_cstr(pointer<int32_t>(resource_ptr + 164), act_name);
+    kinoko_string_assign_cstr(reinterpret_cast<int32_t*>(kinoko::native::RecordView<kinoko::act::RuntimeRecord>(resource_ptr).bytes(&kinoko::act::RuntimeRecord::name)), act_name);
     kinoko_trace_squirrel_name("450f30:act-name", address(act_name));
 
-    if (!kinoko_publish_cact_layer_class(vm, root_object) ||
-        !kinoko_publish_acting_player_class(vm, root_object) ||
+    if (!kinoko_publish_cact_layer_class(vm, address(root_object)) ||
+        !kinoko_publish_acting_player_class(vm, address(root_object)) ||
         !kinoko_sqrat_new_table(vm, act_pair) ||
-        !kinoko_sqrat_set_pair(vm, pointer<const int32_t>(root_object + 8), act_name, act_pair) ||
+        !kinoko_sqrat_set_pair(vm, reinterpret_cast<const int32_t*>(kinoko::act::LayerObjectView(root_object).bytes(&kinoko::act::LayerObjectRecord::value)), act_name, act_pair) ||
         !kinoko_sqrat_new_table(vm, global_pair) ||
         !kinoko_sqrat_new_table(vm, resource_pair))
         break;
@@ -1980,15 +1969,15 @@ int32_t kinoko_root_table_register_resource(int32_t root_object,
         !kinoko_publish_act_script_constants(vm, global_pair))
         break;
 
-    if (!kinoko_publish_acting_player(vm, act_pair, "pl", resource_ptr, player_pair))
+    if (!kinoko_publish_acting_player(vm, act_pair, "pl", address(resource_ptr), player_pair))
         break;
     kinoko_sqrat_release_pair(vm, player_pair);
-    if (!kinoko_publish_acting_player(vm, act_pair, "player", resource_ptr, player_pair))
+    if (!kinoko_publish_acting_player(vm, act_pair, "player", address(resource_ptr), player_pair))
         break;
     kinoko_sqrat_release_pair(vm, player_pair);
 
-    script_ptr = address(act_view.bytes(&ActPublicationRecord::script));
-    script_path = kinoko_string_data(ScriptPublicationView(pointer<void>(script_ptr)).bytes(&ScriptPublicationRecord::path));
+    script_ptr = act_view.bytes(&ActPublicationRecord::script);
+    script_path = kinoko_string_data(ScriptPublicationView(script_ptr).bytes(&ScriptPublicationRecord::path));
     if (script_path && *script_path)
         kinoko_trace_squirrel_name("450f30:script-path", address(script_path));
     global_object.methods = kinoko_act_host_symbols()->sq_object_vtable;
@@ -2021,9 +2010,9 @@ int32_t kinoko_root_table_register_resource(int32_t root_object,
     return result;
 }
 
-int32_t kinoko_root_table_construct_this(int32_t resource_ptr,
+int32_t kinoko_root_table_construct_this(KinokoActRuntime* resource_ptr,
                                                  SQVM* vm,
-                                                 int32_t output_ptr)
+                                                 void* output_ptr)
 {
     kinoko::act::LayerObjectRecord root_object{(const void*)(uintptr_t)(0), (SQVM*)(uintptr_t)(0), {static_cast<int32_t>(OT_NULL), 0}, 0, {}};
     int32_t result;
@@ -2036,13 +2025,12 @@ int32_t kinoko_root_table_construct_this(int32_t resource_ptr,
     /* 450E30 accepts an optional pre-existing Sqrat object only to verify
        that it belongs to the same VM.  The normal loader passes nullptr. */
     if (output_ptr != 0 &&
-        field<SQVM*>(output_ptr + 4) != vm) {
+        kinoko::act::LayerObjectView(output_ptr).get(&kinoko::act::LayerObjectRecord::vm) != vm) {
         kinoko_sqrat_object_release((void *)(&root_object));
         return (int32_t)0x80070057u;
     }
 
-    result = kinoko_root_table_register_resource(
-        address(&root_object), resource_ptr);
+    result = kinoko_root_table_register_resource((void*)(uintptr_t)(address(&root_object)), (KinokoActRuntime*)(uintptr_t)(resource_ptr));
     kinoko_sqrat_object_release((void *)(&root_object));
     return result;
 }

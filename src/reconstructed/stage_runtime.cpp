@@ -156,7 +156,7 @@ extern "C" KinokoStageOwner *kinoko_stage_load(const char *file_name) {
     if (resource && kinoko_primary_vm) {
         // 466208 has a known callee and receiver. Call the existing explicit
         // host implementation directly, instead of casting a function to void*.
-        const auto result = kinoko_root_table_construct_this(address(resource), (struct SQVM*)(kinoko_primary_vm), 0);
+        const auto result = kinoko_root_table_construct_this((KinokoActRuntime*)(uintptr_t)(address(resource)), (struct SQVM*)(kinoko_primary_vm), (void*)(uintptr_t)(0));
         kinoko_trace_i32("466100:450e30-result", result);
     }
     if (stage_list_identity()) {

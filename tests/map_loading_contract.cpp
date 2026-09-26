@@ -52,8 +52,8 @@ KinokoActRuntime *kinoko_act_source_create_runtime(KinokoActSourceHolder *) {ret
 int32_t kinoko_act_source_layer_count(const KinokoActSourceHolder *) {return 0;}
 void kinoko_act_runtime_dispose(KinokoActRuntime *) {}
 KinokoActLayout *kinoko_act_layer_layout(KinokoActRuntime *,int32_t) {return nullptr;}
-int32_t kinoko_root_table_construct_this(int32_t p,struct SQVM*,int32_t) {CHECK(p==address(record.player));calls.push_back(2);return -1;}
-int32_t kinoko_begin_stage_this(int32_t p,int32_t) {CHECK(p==address(record.player));calls.push_back(3);return -2;}
+int32_t kinoko_root_table_construct_this(KinokoActRuntime* p,struct SQVM*,void*) {CHECK(p==record.player);calls.push_back(2);return -1;}
+int32_t kinoko_begin_stage_this(KinokoActRuntime* p,int32_t) {CHECK(p==record.player);calls.push_back(3);return -2;}
 void *kinoko_sqplus_object_assign(void *p,const void *v) {ObjectView(p).write(ObjectView(v).value());return p;}
 int32_t kinoko_sqplus_object_set_instance(void *,void *) {return 1;}
 int32_t kinoko_sqplus_object_raw_set_name(void *,const char *key,const void *) {

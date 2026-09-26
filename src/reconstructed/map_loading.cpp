@@ -105,8 +105,8 @@ extern "C" int32_t kinoko_map_manager_load(KinokoMapManager *storage, const char
     // Null allocation is a retained native boundary. Negative callback results
     // are NOT failure branches in 46F7EE/46F7F9; continue and re-read the player.
     if (!player) { kinoko_map_manager_clear(storage); return 0; }
-    kinoko_root_table_construct_this(address(player), (struct SQVM*)(vm), 0);
-    kinoko_begin_stage_this(address(manager.get(&ManagerRecord::player)), 0);
+    kinoko_root_table_construct_this((KinokoActRuntime*)(uintptr_t)(address(player)), (struct SQVM*)(vm), (void*)(uintptr_t)(0));
+    kinoko_begin_stage_this((KinokoActRuntime*)(uintptr_t)(address(manager.get(&ManagerRecord::player))), 0);
     source = manager.get(&ManagerRecord::source_act);
     manager.set(&ManagerRecord::width, kinoko_act_document_screen_width(source));
     manager.set(&ManagerRecord::height, kinoko_act_document_screen_height(source));

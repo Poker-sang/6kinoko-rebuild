@@ -67,8 +67,8 @@ int32_t kinoko_act_read_map_records(int32_t layout,
                                            KinokoArchiveReader* reader_ptr);
 int32_t kinoko_act_read_u32(KinokoArchiveReader* reader_ptr, uint32_t *value);
 int32_t kinoko_act_read_u8(KinokoArchiveReader* reader_ptr, uint8_t *value);
-int32_t kinoko_begin_stage_this(int32_t resource_ptr, int32_t stage);
-int32_t kinoko_bind_act_resource_object(int32_t resource_ptr);
+int32_t kinoko_begin_stage_this(KinokoActRuntime* resource_ptr, int32_t stage);
+int32_t kinoko_bind_act_resource_object(KinokoActRuntime* resource_ptr);
 int32_t kinoko_c2dlayout_draw_impl(int32_t layout,
                                            float x, float y);
 int32_t kinoko_c2dlayout_set_layer_impl(int32_t layout,
@@ -121,8 +121,8 @@ int16_t kinoko_mcd_i16(const unsigned char *bytes);
 uint32_t kinoko_mcd_u32(const unsigned char *bytes);
 int32_t kinoko_prepare_cact_layer_objects(struct SQVM* vm, KinokoActLayer* layer,
                                                  int32_t script_pair[2]);
-int32_t kinoko_publish_act_layers(struct SQVM* vm, int32_t act,
-                                          int32_t resource_ptr,
+int32_t kinoko_publish_act_layers(struct SQVM* vm, KinokoActDocument* act,
+                                          KinokoActRuntime* resource_ptr,
                                           int32_t *active_count);
 int32_t kinoko_publish_act_resource_pairs(
     struct SQVM* vm, const int32_t layer_pair[2],
@@ -155,14 +155,14 @@ int32_t kinoko_publish_cact_resource2d_class(struct SQVM* vm,
 int32_t kinoko_publish_map_view_class(struct SQVM* vm, int32_t root,
     const char *name, const struct kinoko_native_view_property *properties,
     int32_t property_count, int32_t is_map, int32_t out[2]);
-int32_t kinoko_register_runtime_act_script(struct SQVM* vm, int32_t resource_ptr,
-                                                 int32_t act);
+int32_t kinoko_register_runtime_act_script(struct SQVM* vm, KinokoActRuntime* resource_ptr,
+                                                 KinokoActDocument* act);
 int32_t kinoko_resource_get_chip_info(struct SQVM* vm);
-int32_t kinoko_root_table_construct_this(int32_t resource_ptr,
+int32_t kinoko_root_table_construct_this(KinokoActRuntime* resource_ptr,
                                                  struct SQVM* vm,
-                                                 int32_t output_ptr);
-int32_t kinoko_root_table_register_resource(int32_t root_object,
-                                                    int32_t resource_ptr);
+                                                 void* output_ptr);
+int32_t kinoko_root_table_register_resource(void* root_object,
+                                                    KinokoActRuntime* resource_ptr);
 #ifdef __cplusplus
 }
 #endif

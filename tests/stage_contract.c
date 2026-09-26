@@ -1094,7 +1094,7 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
     resource[40] = root[3];
     act[52] = PTR(&hidden);
     act[53] = PTR(&hidden + 1);
-    CHECK(kinoko_publish_act_layers((struct SQVM*)(uintptr_t)(vm), PTR(act), PTR(resource), &active));
+    CHECK(kinoko_publish_act_layers((struct SQVM*)(uintptr_t)(vm), (KinokoActDocument*)(uintptr_t)(PTR(act)), (KinokoActRuntime*)(uintptr_t)(PTR(resource)), &active));
     CHECK(vm_failures == failures && active == 1);
     CHECK(*(int32_t *)(intptr_t)(hidden + 220) == 0x08000100);
     CHECK(*(int32_t *)(intptr_t)(hidden + 240) == 0x08000100);
@@ -3763,7 +3763,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     CHECK(execute_source(vm,parent,"resource <- {}; global <- {};"));
     resource[39]=root[2]; resource[40]=root[3];
     act[52]=PTR(&moving_layer); act[53]=PTR(&moving_layer+1);
-    CHECK(kinoko_publish_act_layers((struct SQVM*)(uintptr_t)(vm), PTR(act), PTR(resource), &active));
+    CHECK(kinoko_publish_act_layers((struct SQVM*)(uintptr_t)(vm), (KinokoActDocument*)(uintptr_t)(PTR(act)), (KinokoActRuntime*)(uintptr_t)(PTR(resource)), &active));
     CHECK(active==1);
     CHECK(kinoko_execute_act_callback((void*)(uintptr_t)(moving_layer+204), 24, NULL)>=0);
     CHECK(kinoko_collision_reset_abi(PTR(g_514300_storage),manager));
@@ -4212,7 +4212,7 @@ static int test_act_reentry(const char *directory) {
         CHECK(kinoko_act_document_load((KinokoActDocument *)source,assets[asset]));
         runtime[0]=PTR(&holder);
         for(int visit=0;visit<3;++visit) {
-            CHECK(kinoko_bind_act_resource_object(PTR(runtime)));
+            CHECK(kinoko_bind_act_resource_object((KinokoActRuntime*)(uintptr_t)(PTR(runtime))));
             const int32_t active=runtime[3];
             CHECK(active!=PTR(source));
             CHECK(*(int32_t *)(intptr_t)(active+212)-*(int32_t *)(intptr_t)(active+208)==source[53]-source[52]);

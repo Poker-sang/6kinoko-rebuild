@@ -60,11 +60,11 @@ extern "C" int32_t kinoko_act_read_layout3d_properties(KinokoActLayout *receiver
         static_cast<uint32_t>(reinterpret_cast<uintptr_t>(source)), bits(mode)});
 }
 
-extern "C" int32_t kinoko_begin_stage_this(int32_t receiver, int32_t stage) {
+extern "C" int32_t kinoko_begin_stage_this(KinokoActRuntime* receiver, int32_t stage) {
     return record(6, {bits(receiver), bits(stage)});
 }
 
-extern "C" int32_t kinoko_root_table_construct_this(int32_t receiver, struct SQVM* vm, int32_t output) {
+extern "C" int32_t kinoko_root_table_construct_this(KinokoActRuntime* receiver, struct SQVM* vm, void* output) {
     return record(7, {bits(receiver), bits(vm), bits(output)});
 }
 

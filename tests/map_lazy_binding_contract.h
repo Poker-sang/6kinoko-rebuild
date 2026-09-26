@@ -119,7 +119,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             runtime[39] = root[2]; runtime[40] = root[3];
             /* Original 452040 excludes layers with timeline extras. */
             if (query == 3) *(int32_t*)(intptr_t)(cloned_layer+196) = 1;
-            CHECK(kinoko_publish_act_layers((struct SQVM*)(uintptr_t)(vm), PTR(copy), PTR(runtime), &active));
+            CHECK(kinoko_publish_act_layers((struct SQVM*)(uintptr_t)(vm), (KinokoActDocument*)(uintptr_t)(PTR(copy)), (KinokoActRuntime*)(uintptr_t)(PTR(runtime)), &active));
             CHECK(active == 1);
             if (query == 2) {
                 CHECK(*(int32_t*)(intptr_t)(cloned_layer+52) == PTR(layout)+320);

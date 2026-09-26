@@ -109,7 +109,7 @@ void kinoko_act_runtime_dispose(KinokoActRuntime *storage) {
     state.latest_runtime = nullptr;
     // production stage cleanup owns the raw runtime allocation
 }
-int32_t kinoko_root_table_construct_this(int32_t, struct SQVM*, int32_t) {
+int32_t kinoko_root_table_construct_this(KinokoActRuntime*, struct SQVM*, void*) {
     if (state.throw_publish) fail_next_new = true;
     return 1;
 }

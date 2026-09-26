@@ -98,7 +98,7 @@ extern "C" int kinoko_test_act_ownership_chain() {
     KinokoActSourceHolder holder{reinterpret_cast<KinokoActDocument *>(&source)};
     runtime.source_holder=&holder;
     runtime.active_document=reinterpret_cast<KinokoActDocument *>(&clone);
-    REQUIRE(kinoko_bind_act_resource_object(address(&runtime)));
+    REQUIRE(kinoko_bind_act_resource_object((KinokoActRuntime*)(uintptr_t)(address(&runtime))));
     REQUIRE(events[events.size()-2]==8 && events.back()==9);
     REQUIRE(runtime.active_document && runtime.active_document != holder.document);
     REQUIRE(runtime.active_holder->document==runtime.active_document);
