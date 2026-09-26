@@ -148,8 +148,8 @@ struct ChipResourceMethods kinoko_chip_resource_methods_storage = {
     kinoko_method_delete_act_resource,
     kinoko_chip_resource_type,
     kinoko_method_register_chip_resource,
-    kinoko_method_resource_42f800,
-    kinoko_method_resource_42f6c0,
+    kinoko_method_bind_chip_table,
+    kinoko_method_bind_chip_object,
     kinoko_method_clone_chip_resource,
     kinoko_method_load_chip_resource
 };
@@ -183,8 +183,8 @@ struct TextureResourceMethods kinoko_texture_resource_methods_storage = {
     kinoko_method_delete_act_resource,
     kinoko_texture_resource_type,
     kinoko_method_register_texture_resource,
-    kinoko_method_resource_446920,
-    kinoko_method_resource_4467e0,
+    kinoko_method_bind_texture_table,
+    kinoko_method_bind_texture_object,
     kinoko_method_clone_texture_resource,
     kinoko_method_load_resource_texture,
     kinoko_method_unload_resource_texture
@@ -198,8 +198,8 @@ struct RenderTargetMethods kinoko_render_target_methods_storage = {
     kinoko_method_delete_act_resource,
     kinoko_render_target_type,
     kinoko_method_register_render_target,
-    kinoko_method_resource_4499a0,
-    kinoko_method_resource_449860,
+    kinoko_method_bind_render_target_table,
+    kinoko_method_bind_render_target_object,
     kinoko_method_clone_render_target,
     kinoko_method_load_resource_texture,
     kinoko_method_unload_resource_texture,

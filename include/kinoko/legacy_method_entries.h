@@ -27,12 +27,12 @@ int32_t __fastcall kinoko_method_load_resource_texture(KinokoActResource* receiv
 int32_t __fastcall kinoko_method_unload_resource_texture(KinokoActResource* receiver, void* unused_edx);
 int32_t __fastcall kinoko_method_load_chip_resource(KinokoActResource* receiver, void* unused_edx, const char* prefix);
 
-int32_t __fastcall kinoko_method_resource_42f6c0(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
-int32_t __fastcall kinoko_method_resource_42f800(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
-int32_t __fastcall kinoko_method_resource_4467e0(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
-int32_t __fastcall kinoko_method_resource_446920(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
-int32_t __fastcall kinoko_method_resource_449860(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
-int32_t __fastcall kinoko_method_resource_4499a0(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+int32_t __fastcall kinoko_method_bind_chip_object(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+int32_t __fastcall kinoko_method_bind_chip_table(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+int32_t __fastcall kinoko_method_bind_texture_object(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+int32_t __fastcall kinoko_method_bind_texture_table(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+int32_t __fastcall kinoko_method_bind_render_target_object(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+int32_t __fastcall kinoko_method_bind_render_target_table(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
 
 int32_t __fastcall kinoko_method_register_layout(KinokoActLayout* receiver, void* unused_edx);
 int32_t __fastcall kinoko_method_register_map_layout(KinokoActLayout* receiver, void* unused_edx);

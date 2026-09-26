@@ -405,8 +405,8 @@ struct ChipResourceMethods {
     decltype(&kinoko_method_delete_act_resource) delete_object;
     decltype(&kinoko_chip_resource_type) type;
     decltype(&kinoko_method_register_chip_resource) register_class;
-    decltype(&kinoko_method_resource_42f800) resource_42f800;
-    decltype(&kinoko_method_resource_42f6c0) resource_42f6c0;
+    decltype(&kinoko_method_bind_chip_table) bind_table;
+    decltype(&kinoko_method_bind_chip_object) bind_object;
     decltype(&kinoko_method_clone_chip_resource) clone;
     decltype(&kinoko_method_load_chip_resource) load;
 };
@@ -419,8 +419,8 @@ struct ChipResourceMethods {
     void* (__fastcall *delete_object)(KinokoActResource* receiver, void* unused_edx, unsigned char flags);
     int32_t * (*type)(void);
     int32_t (__fastcall *register_class)(void* receiver, void* unused_edx, struct SQVM* vm);
-    int32_t (__fastcall *resource_42f800)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
-    int32_t (__fastcall *resource_42f6c0)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+    int32_t (__fastcall *bind_table)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+    int32_t (__fastcall *bind_object)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
     KinokoActResource* (__fastcall *clone)(KinokoActResource* receiver, void* unused_edx);
     int32_t (__fastcall *load)(KinokoActResource* receiver, void* unused_edx, const char* prefix);
 };
@@ -483,8 +483,8 @@ struct TextureResourceMethods {
     decltype(&kinoko_method_delete_act_resource) delete_object;
     decltype(&kinoko_texture_resource_type) type;
     decltype(&kinoko_method_register_texture_resource) register_class;
-    decltype(&kinoko_method_resource_446920) resource_446920;
-    decltype(&kinoko_method_resource_4467e0) resource_4467e0;
+    decltype(&kinoko_method_bind_texture_table) bind_table;
+    decltype(&kinoko_method_bind_texture_object) bind_object;
     decltype(&kinoko_method_clone_texture_resource) clone;
     decltype(&kinoko_method_load_resource_texture) load;
     decltype(&kinoko_method_unload_resource_texture) unload;
@@ -498,8 +498,8 @@ struct TextureResourceMethods {
     void* (__fastcall *delete_object)(KinokoActResource* receiver, void* unused_edx, unsigned char flags);
     int32_t * (*type)(void);
     int32_t (__fastcall *register_class)(void* receiver, void* unused_edx, struct SQVM* vm);
-    int32_t (__fastcall *resource_446920)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
-    int32_t (__fastcall *resource_4467e0)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+    int32_t (__fastcall *bind_table)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+    int32_t (__fastcall *bind_object)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
     KinokoActResource* (__fastcall *clone)(KinokoActResource* receiver, void* unused_edx);
     int32_t (__fastcall *load)(KinokoActResource* receiver, void* unused_edx, const char* prefix);
     int32_t (__fastcall *unload)(KinokoActResource* receiver, void* unused_edx);
@@ -515,8 +515,8 @@ struct RenderTargetMethods {
     decltype(&kinoko_method_delete_act_resource) delete_object;
     decltype(&kinoko_render_target_type) type;
     decltype(&kinoko_method_register_render_target) register_class;
-    decltype(&kinoko_method_resource_4499a0) resource_4499a0;
-    decltype(&kinoko_method_resource_449860) resource_449860;
+    decltype(&kinoko_method_bind_render_target_table) bind_table;
+    decltype(&kinoko_method_bind_render_target_object) bind_object;
     decltype(&kinoko_method_clone_render_target) clone;
     decltype(&kinoko_method_load_resource_texture) load;
     decltype(&kinoko_method_unload_resource_texture) unload;
@@ -531,8 +531,8 @@ struct RenderTargetMethods {
     void* (__fastcall *delete_object)(KinokoActResource* receiver, void* unused_edx, unsigned char flags);
     int32_t * (*type)(void);
     int32_t (__fastcall *register_class)(void* receiver, void* unused_edx, struct SQVM* vm);
-    int32_t (__fastcall *resource_4499a0)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
-    int32_t (__fastcall *resource_449860)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+    int32_t (__fastcall *bind_table)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+    int32_t (__fastcall *bind_object)(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
     KinokoActResource* (__fastcall *clone)(KinokoActResource* receiver, void* unused_edx);
     int32_t (__fastcall *load)(KinokoActResource* receiver, void* unused_edx, const char* prefix);
     int32_t (__fastcall *unload)(KinokoActResource* receiver, void* unused_edx);
@@ -614,7 +614,6 @@ void kinoko_camera_class_copy(void* a1, void* a2);
 int32_t kinoko_register_camera_binding(void);
 
 
-int32_t kinoko_host_append_render_item(int32_t * a1);
 
 
 int32_t kinoko_register_map_binding(void);

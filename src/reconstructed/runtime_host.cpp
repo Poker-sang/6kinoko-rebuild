@@ -250,21 +250,6 @@ void kinoko_camera_class_copy(void* a1, void* a2) {
         (KinokoCamera *)(intptr_t)a1, (KinokoCamera *)(intptr_t)a2);
 }
 
-static int32_t kinoko_append_render_item(int32_t *item) {
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 16) {
-        kinoko_trace("46a210:entry");
-        kinoko_trace_i32("46a210:value", item != NULL ? *item : 0);
-        kinoko_trace_i32("46a210:g613", (int32_t)(intptr_t)kinoko_render_queue_identity());
-    }
-    return item ? (int32_t)(intptr_t)kinoko_render_queue_append((KinokoRenderLayer*)(uintptr_t)(*item)) : 0;
-}
-
-int32_t kinoko_host_append_render_item(int32_t * a1) {
-    return kinoko_append_render_item(a1);
-}
-
 int32_t kinoko_host_clear_sound(void) {
     return kinoko_clear_global_sound();
 }

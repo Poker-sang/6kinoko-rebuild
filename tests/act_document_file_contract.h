@@ -8,13 +8,13 @@ static int32_t __fastcall act_file_set_layer_probe(int32_t layout, void *unused,
     ++act_file_layout_binds;
     return kinoko_method_layout_set_layer((KinokoActLayout*)(uintptr_t)(layout), unused, (KinokoActLayer*)(uintptr_t)(layer));
 }
-static int32_t __fastcall act_file_delete_probe(int32_t self, void *unused, unsigned char flags) {
+static void* __fastcall act_file_delete_probe(KinokoActDocument* self, void *unused, unsigned char flags) {
     HANDLE exclusive = CreateFileA(act_file_probe_path, GENERIC_READ | GENERIC_WRITE,
         0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     ++act_file_deletes;
     if (exclusive == INVALID_HANDLE_VALUE) act_file_close_error = 1;
     else CloseHandle(exclusive);
-    return (int32_t)(intptr_t)kinoko_method_destroy_act((KinokoActDocument*)(uintptr_t)(self), unused, flags);
+    return kinoko_method_destroy_act((KinokoActDocument*)(uintptr_t)(self), unused, flags);
 }
 static int act_file_write(const char *path, const void *bytes, DWORD size) {
     DWORD written = 0;
@@ -30,7 +30,7 @@ static int test_act_document_file_lifetime(void) {
     const unsigned char saved_compact = kinoko_compile_act_output;
     const int32_t saved_archives = kinoko_archive_count;
     struct SQVM *saved_vm = kinoko_primary_vm;
-    int32_t (__fastcall *saved_delete)(int32_t, void *, unsigned char) = kinoko_act_document_methods_storage.delete_object;
+    void* (__fastcall *saved_delete)(KinokoActDocument*, void *, unsigned char) = kinoko_act_document_methods_storage.delete_object;
     const char *valid_path = "act-document-generated.bin";
     const char *short_path = "act-document-truncated.bin";
     unsigned char encoded[8192 + 19] = {0};

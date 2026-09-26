@@ -2041,27 +2041,27 @@ int32_t kinoko_root_table_construct_this(KinokoActRuntime* resource_ptr,
     return result;
 }
 
-extern "C" int32_t __fastcall kinoko_method_resource_42f6c0(KinokoActResource* resource, void *, void* object, const char *name) {
+extern "C" int32_t __fastcall kinoko_method_bind_chip_object(KinokoActResource* resource, void *, void* object, const char *name) {
     return kinoko_bind_original_resource(resource, object, name, "CActResourceChip", false);
 }
 
-extern "C" int32_t __fastcall kinoko_method_resource_42f800(KinokoActResource* resource, void *, void* object, const char *name) {
+extern "C" int32_t __fastcall kinoko_method_bind_chip_table(KinokoActResource* resource, void *, void* object, const char *name) {
     return kinoko_bind_original_resource(resource, object, name, "CActResourceChip", true);
 }
 
-extern "C" int32_t __fastcall kinoko_method_resource_4467e0(KinokoActResource* resource, void *, void* object, const char *name) {
+extern "C" int32_t __fastcall kinoko_method_bind_texture_object(KinokoActResource* resource, void *, void* object, const char *name) {
     return kinoko_bind_original_resource(resource, object, name, "CActResource2D", false);
 }
 
-extern "C" int32_t __fastcall kinoko_method_resource_446920(KinokoActResource* resource, void *, void* object, const char *name) {
+extern "C" int32_t __fastcall kinoko_method_bind_texture_table(KinokoActResource* resource, void *, void* object, const char *name) {
     return kinoko_bind_original_resource(resource, object, name, "CActResource2D", true);
 }
 
-extern "C" int32_t __fastcall kinoko_method_resource_449860(KinokoActResource* resource, void *, void* object, const char *name) {
+extern "C" int32_t __fastcall kinoko_method_bind_render_target_object(KinokoActResource* resource, void *, void* object, const char *name) {
     return kinoko_bind_original_resource(resource, object, name, "CActRenderTarget", false);
 }
 
-extern "C" int32_t __fastcall kinoko_method_resource_4499a0(KinokoActResource* resource, void *, void* object, const char *name) {
+extern "C" int32_t __fastcall kinoko_method_bind_render_target_table(KinokoActResource* resource, void *, void* object, const char *name) {
     return kinoko_bind_original_resource(resource, object, name, "CActRenderTarget", true);
 }
 

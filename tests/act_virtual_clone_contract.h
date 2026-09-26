@@ -7,21 +7,21 @@ static void act_clone_event(char event) {
     if (act_clone_event_count < (int)sizeof(act_clone_events))
         act_clone_events[act_clone_event_count++] = event;
 }
-static int32_t __fastcall probe_clone_resource(int32_t self, void *unused) {
+static KinokoActResource* __fastcall probe_clone_resource(KinokoActResource* self, void *unused) {
     act_clone_event('R');
-    return (int32_t)(intptr_t)kinoko_method_clone_texture_resource((KinokoActResource*)(uintptr_t)(self), unused);
+    return kinoko_method_clone_texture_resource((KinokoActResource*)(uintptr_t)(self), unused);
 }
-static int32_t __fastcall probe_clone_layer(int32_t self, void *unused) {
+static KinokoActLayer* __fastcall probe_clone_layer(KinokoActLayer* self, void *unused) {
     act_clone_event('L');
-    return (int32_t)(intptr_t)kinoko_method_clone_act_layer((KinokoActLayer*)(uintptr_t)(self), unused);
+    return kinoko_method_clone_act_layer((KinokoActLayer*)(uintptr_t)(self), unused);
 }
-static int32_t __fastcall probe_clone_key(int32_t self, void *unused) {
+static KinokoActKey* __fastcall probe_clone_key(KinokoActKey* self, void *unused) {
     act_clone_event('K');
-    return (int32_t)(intptr_t)kinoko_method_clone_act_key((KinokoActKey*)(uintptr_t)(self), unused);
+    return kinoko_method_clone_act_key((KinokoActKey*)(uintptr_t)(self), unused);
 }
-static int32_t __fastcall probe_clone_layout(int32_t self, void *unused) {
+static KinokoActLayout* __fastcall probe_clone_layout(KinokoActLayout* self, void *unused) {
     act_clone_event('O');
-    return (int32_t)(intptr_t)kinoko_method_clone_c2d_layout((KinokoActLayout*)(uintptr_t)(self), unused);
+    return kinoko_method_clone_c2d_layout((KinokoActLayout*)(uintptr_t)(self), unused);
 }
 static int32_t __fastcall probe_clone_bind_layout(int32_t self, void *unused, int32_t layer) {
     (void)unused;
@@ -74,8 +74,8 @@ static int test_act_virtual_clone(void) {
         const struct ActLayoutMethods layout_table = kinoko_act_layout_methods_storage;
         const struct ActKeyMethods key_table = kinoko_act_key_methods_storage;
         /* Preserve actual table types without reproducing their layouts. */
-        int32_t (__fastcall *resource_clone)(int32_t, void *) = kinoko_texture_resource_methods_storage.clone;
-        int32_t (__fastcall *layer_clone)(int32_t, void *) = kinoko_act_layer_methods_storage.clone;
+        KinokoActResource* (__fastcall *resource_clone)(KinokoActResource*, void *) = kinoko_texture_resource_methods_storage.clone;
+        KinokoActLayer* (__fastcall *layer_clone)(KinokoActLayer*, void *) = kinoko_act_layer_methods_storage.clone;
         int32_t (__fastcall *set_resource)(KinokoActLayer *, void *, KinokoActResource *) = kinoko_act_layer_methods_storage.associate;
         kinoko_texture_resource_methods_storage.clone = probe_clone_resource;
         kinoko_act_layer_methods_storage.clone = probe_clone_layer;
