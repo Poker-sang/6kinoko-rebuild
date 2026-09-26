@@ -1,0 +1,36 @@
+{
+  "source_commit": "7caa3b8a525a4c18a8bd5a1c59e2f025632385fc",
+  "configuration": "Win32 Release",
+  "trace_disabled": true,
+  "source_directory": "C:\\Users\\poker\\.codex\\worktrees\\pr11-original-parity\\6kinoko-rebuild",
+  "build_directory": "C:\\Users\\poker\\.codex\\worktrees\\pr11-original-parity\\6kinoko-rebuild\\build-runs\\host-cpp-03",
+  "runtime_directory": "C:\\Users\\poker\\.codex\\worktrees\\pr11-original-parity\\6kinoko-rebuild\\runtime-builds\\host-cpp-03",
+  "generator": "Visual Studio 17 2022",
+  "full_build_succeeded": true,
+  "dat_staging_verified": true,
+  "contracts_compiled": 65,
+  "game_run": false,
+  "tests_run": false,
+  "files": [
+    {
+      "name": "kinoko_retdec_rebuild.exe",
+      "size": 905728,
+      "sha256": "2D5FF442E33C7226069EA26A6AEB1CD7FC66B4B95D6BFA2E457C53F2C6B7CD11"
+    },
+    {
+      "name": "6kinoko_a.dat",
+      "size": 163424746,
+      "sha256": "DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64"
+    },
+    {
+      "name": "6kinoko_b.dat",
+      "size": 44681244,
+      "sha256": "4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2"
+    },
+    {
+      "name": "6kinoko_c.dat",
+      "size": 11796163,
+      "sha256": "80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E"
+    }
+  ]
+}
