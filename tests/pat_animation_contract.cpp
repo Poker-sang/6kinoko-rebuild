@@ -52,7 +52,7 @@ void kinoko_trace_squirrel_name(const char *,int32_t) {}
 #define CHECK(x) do { if (!(x)) { std::fprintf(stderr,"PAT line %d: %s\n",__LINE__,#x);return 1; } } while(0)
 int main() {
     ManagerPrefix manager{};auto *receiver=reinterpret_cast<KinokoActorManager *>(&manager);
-    kinoko_animation_list_construct(address(&manager.animations));
+    kinoko_animation_list_construct((void*)(uintptr_t)(address(&manager.animations)));
     kinoko_integer_vector_construct((KinokoIntegerVector*)(&manager.textures));
     kinoko_integer_vector_append((KinokoIntegerVector*)(&manager.textures), 1);
     kinoko_texture_slots[1].width=64;kinoko_texture_slots[1].height=64;
@@ -95,10 +95,10 @@ int main() {
     CHECK(manager.animations.count==3);
     CHECK(kinoko_integer_map_find(lookup,40)==nullptr);
     kinoko_integer_map_clear(lookup);
-    kinoko_clear_animation_list(address(&manager.animations));
+    kinoko_clear_animation_list((void*)(uintptr_t)(address(&manager.animations)));
     CHECK(manager.animations.count==0);
-    kinoko_clear_animation_list(address(&manager.animations));
-    kinoko_animation_list_destroy(address(&manager.animations));
+    kinoko_clear_animation_list((void*)(uintptr_t)(address(&manager.animations)));
+    kinoko_animation_list_destroy((void*)(uintptr_t)(address(&manager.animations)));
     kinoko_integer_vector_destroy((KinokoIntegerVector*)(&manager.textures));kinoko_integer_map_destroy(lookup);
     std::puts("PASS: PAT byte alignment, resource base, aliases, linked takes, 3-axis signs and partial ownership");
 }

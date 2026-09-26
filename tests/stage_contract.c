@@ -2356,7 +2356,7 @@ static int test_shutdown_tree_cleanup(void) {
     }
     int32_t manager[40] = {0};
     int32_t textures[2] = {7, 13}, iteration[3] = {0};
-    kinoko_animation_list_construct(PTR(manager)+52);
+    kinoko_animation_list_construct((void*)(uintptr_t)(PTR(manager)+52));
     int32_t animation=kinoko_animation_create(2);
     kinoko_animation_adopt(PTR(manager)+52,animation);
     unsigned char *frames=*(unsigned char**)(intptr_t)(animation+8);
@@ -2383,7 +2383,7 @@ static int test_shutdown_tree_cleanup(void) {
         CHECK(manager[29] == 0 && ((unsigned char *)manager)[120] == 0);
     }
     kinoko_integer_vector_destroy((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68));
-    kinoko_animation_list_destroy(PTR(manager)+52);
+    kinoko_animation_list_destroy((void*)(uintptr_t)(PTR(manager)+52));
     kinoko_integer_map_destroy((KinokoIntegerMap*)(intptr_t)(manager[10]));
     kinoko_priority_destroy((void *)(intptr_t)(PTR(manager)+84));
     {

@@ -29,7 +29,7 @@ using Animations=std::list<std::unique_ptr<Animation>>;
 struct ListStorage { Animations *owner; uint32_t count; };
 static_assert(sizeof(ListStorage)==sizeof(ListIndex));
 using ListView=RecordView<ListStorage>;
-ListView view(int32_t list) { return ListView(pointer<void>(list)); }
+ListView view(void* list) { return ListView(list); }
 void adopt(const ListView list,Animation *animation) {
     auto *owner=list.get(&ListStorage::owner);
     if (!owner) {
@@ -72,18 +72,18 @@ extern "C" KinokoAnimation *kinoko_animation_find(KinokoActorManager *manager,in
 extern "C" void kinoko_animation_add_texture(KinokoActorManager *manager,int32_t handle) {
     kinoko_integer_vector_append((KinokoIntegerVector*)(ManagerView(manager).bytes(&ManagerPrefix::textures)), handle);
 }
-// Legacy container entry points retain their binary integer slots.
-extern "C" void kinoko_animation_list_construct(int32_t list) {
+// Container entry points receive the owner slot directly.
+extern "C" void kinoko_animation_list_construct(void* list) {
     view(list).set(&ListStorage::owner,new Animations);view(list).set(&ListStorage::count,uint32_t{0});
 }
-extern "C" void kinoko_animation_list_destroy(int32_t list) {
+extern "C" void kinoko_animation_list_destroy(void* list) {
     delete view(list).get(&ListStorage::owner);
     view(list).set(&ListStorage::owner,static_cast<Animations *>(nullptr));view(list).set(&ListStorage::count,uint32_t{0});
 }
 extern "C" int32_t kinoko_animation_create(uint32_t frames) { return address(kinoko_animation_allocate(frames)); }
 extern "C" void kinoko_animation_discard(int32_t animation) { kinoko_animation_release(pointer<KinokoAnimation>(animation)); }
-extern "C" void kinoko_animation_adopt(int32_t list,int32_t animation) { adopt(view(list),pointer<Animation>(animation)); }
-extern "C" int32_t kinoko_clear_animation_list(int32_t list) {
+extern "C" void kinoko_animation_adopt(int32_t list,int32_t animation) { adopt(view(pointer<void>(list)),pointer<Animation>(animation)); }
+extern "C" int32_t kinoko_clear_animation_list(void* list) {
     if (list) {
         if (auto *owner=view(list).get(&ListStorage::owner)) owner->clear();
         view(list).set(&ListStorage::count,uint32_t{0});

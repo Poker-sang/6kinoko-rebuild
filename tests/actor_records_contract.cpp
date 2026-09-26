@@ -130,7 +130,7 @@ int main() {
     CHECK(bytes.front() == 0xa7 && bytes.back() == 0xa7);
 
     kinoko_priority_construct((void *)(intptr_t)(address(&manager.actors)));
-    kinoko_animation_list_construct(address(&manager.animations));
+    kinoko_animation_list_construct((void*)(uintptr_t)(address(&manager.animations)));
     std::array<int32_t, 2> textures{27, 81};
     kinoko_integer_vector_construct((KinokoIntegerVector*)(&manager.textures));
     for(auto handle:textures) kinoko_integer_vector_append((KinokoIntegerVector*)(&manager.textures), handle);
@@ -146,7 +146,7 @@ int main() {
     CHECK(!manager.cleanup_pending && manager.animations.count==0);
     CHECK(kinoko_integer_map_size(manager.animation_lookup.owner)==0 && manager.actors.count==0);
     kinoko_integer_vector_destroy((KinokoIntegerVector*)(&manager.textures));
-    kinoko_animation_list_destroy(address(&manager.animations));
+    kinoko_animation_list_destroy((void*)(uintptr_t)(address(&manager.animations)));
     kinoko_integer_map_destroy(manager.animation_lookup.owner);
     kinoko_priority_destroy((void *)(intptr_t)(address(&manager.actors)));
     std::puts("PASS: typed Actor animation, original bounds/timing/clamps, deferred ownership and cleanup order");

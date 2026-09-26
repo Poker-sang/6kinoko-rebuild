@@ -18,7 +18,6 @@ struct KinokoAnimationFrame;
 struct SQVM;
 
 namespace kinoko::actor {
-using Address = std::uint32_t; // serialized native Win32 address, never an owner
 using ScriptStorage = std::array<unsigned char, 12>; // external refs: ObjectView
 using Bounds = kinoko::camera::Bounds;
 struct InitialData {
@@ -117,10 +116,10 @@ struct FrameRecord {
     FrameAppearance *owned_payload; // malloc-owned, released before frame storage
 };
 struct TreeIndex {
-    Address policy, head;
+    void *policy, *head;
     std::int32_t count;
 };
-struct ListIndex { Address head; std::uint32_t count; };
+struct ListIndex { void* head; std::uint32_t count; };
 using VectorIndex = KinokoIntegerVector;
 // Manager iteration storage is native_buffer-owned; entries borrow live Actors.
 struct ActorIterationBuffer { KinokoActor **begin, **end; void *storage_owner; };
