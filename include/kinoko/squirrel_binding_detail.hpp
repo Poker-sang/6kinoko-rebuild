@@ -10,6 +10,19 @@ extern "C" { extern struct SQVM *kinoko_primary_vm; }
 
 namespace kinoko::script::binding {
 
+struct ClassBindingStorage {
+    SQVM* vm;
+    const char* name;
+    ObjectStorage klass;
+    const char* parent;
+    ObjectStorage members;
+    ObjectStorage methods;
+};
+static_assert(sizeof(ClassBindingStorage) == 48);
+static_assert(offsetof(ClassBindingStorage, klass) == 8);
+static_assert(offsetof(ClassBindingStorage, members) == 24);
+static_assert(offsetof(ClassBindingStorage, methods) == 36);
+
 // Read/write all recovered records through memcpy; callers can be unaligned.
 struct Method { int32_t function; int32_t receiver_offset; };
 static_assert(sizeof(Method) == 8);

@@ -8,18 +8,7 @@ namespace {
 using namespace kinoko::script;
 using namespace kinoko::script::binding;
 
-struct ClassBindingStorage {
-    SQVM* vm;
-    const char* name;
-    ObjectStorage klass;
-    const char* parent;
-    ObjectStorage members;
-    ObjectStorage methods;
-};
-static_assert(sizeof(ClassBindingStorage) == 48);
-static_assert(offsetof(ClassBindingStorage, klass) == 8);
-static_assert(offsetof(ClassBindingStorage, members) == 24);
-static_assert(offsetof(ClassBindingStorage, methods) == 36);
+
 
 int32_t bind_variable(int32_t* object, int32_t* instance_type, int32_t offset,
                       const char* name, int32_t flags, int32_t category, int32_t size) {

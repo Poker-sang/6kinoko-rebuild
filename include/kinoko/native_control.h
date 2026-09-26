@@ -3,15 +3,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* Native Win32 control blocks, NOT Squirrel object references. Address words
-   exist only at the remaining generated-C boundary. The allocation is the
-   separately owned Actor* slot, never the borrowed Actor it points to. */
-int32_t kinoko_native_control_create(int32_t holder_address, int32_t allocation_address);
-int32_t* kinoko_native_weak_pair_lock(int32_t pair_address, int32_t* output_pair);
-void kinoko_native_add_strong(int32_t control_address);
-void kinoko_native_add_weak(int32_t control_address);
-void kinoko_native_release_weak(int32_t control_address);
-void kinoko_native_release_strong(int32_t control_address);
+/* These records borrow the control-owned allocation and its native control.
+   APIs accept byte storage so unaligned legacy fixtures remain valid. */
+typedef struct KinokoNativeReference { void* allocation; void* control; } KinokoNativeReference;
+void* kinoko_native_control_create(void* holder, void* allocation);
+void* kinoko_native_weak_pair_lock(const void* pair, void* output);
+void kinoko_native_add_strong(void* control);
+void kinoko_native_add_weak(void* control);
+void kinoko_native_release_weak(void* control);
+void kinoko_native_release_strong(void* control);
 #ifdef __cplusplus
 }
 #endif

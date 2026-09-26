@@ -131,7 +131,7 @@ static int execute_source(int32_t vm, const int32_t *environment, const char *so
         return 0;
     script[23] = PTR(bytes);
     script[24] = size;
-    result = kinoko_execute_embedded_act_script(vm, PTR(script), environment);
+    result = kinoko_execute_embedded_act_script((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(script)), environment);
     if (!result && !expected_vm_error && *(int32_t *)(intptr_t)(vm + 64) == 0x08000010)
         fprintf(stderr, "VM: %s\n", (char *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 68) + 28));
     free(bytes);
@@ -159,7 +159,7 @@ static int execute_file(int32_t vm, const int32_t *environment, const char *path
         for (long i = 0; i < size; ++i) bytes[i] ^= key;
         script[23] = PTR(bytes);
         script[24] = (int32_t)size;
-        result = kinoko_execute_embedded_act_script(vm, PTR(script), environment);
+        result = kinoko_execute_embedded_act_script((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(script)), environment);
     }
     free(bytes);
     return result;
@@ -179,7 +179,7 @@ static int execute_asset(int32_t vm, const int32_t *environment, const char *pat
     bytes = (unsigned char *)malloc((size_t)script[24]);
     result = bytes && kinoko_reader_read_exact_abi(reader, bytes, (uint32_t)script[24]);
     script[23] = PTR(bytes);
-    if (result) result = kinoko_execute_embedded_act_script(vm, PTR(script), environment);
+    if (result) result = kinoko_execute_embedded_act_script((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(script)), environment);
     kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     free(bytes);
     return result;
@@ -698,9 +698,9 @@ static int test_actor_reset(int32_t manager, int32_t vm, int32_t *root) {
             "if (resetProbe.x != 100 || resetProbe.y != 200 || resetProbe.direction != -1 || "
             "resetProbe.priority != 7 || resetProbe.user.generation != resetCalls) "
             "throw \"reset initializer not replayed\";"));
-        kinoko_native_weak_pair_lock(PTR(old_weak), locked);
+        kinoko_native_weak_pair_lock((const void*)(uintptr_t)(PTR(old_weak)), locked);
         CHECK(locked[0] == 0 && locked[1] == 0);
-        kinoko_native_release_weak(old_weak[1]);
+        kinoko_native_release_weak((void*)(uintptr_t)(old_weak[1]));
         CHECK(*(int32_t *)(intptr_t)(parent_control + 8) == parent_weak_count);
         CHECK(*(int32_t *)(intptr_t)(seed[2] + 4) == argument_refs);
         CHECK(*(int32_t *)(intptr_t)(actor + 12) == original_handle);
@@ -767,7 +767,7 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(bytes);
     CHECK(kinoko_reader_read_exact_abi(reader, bytes, (uint32_t)script[24]));
     script[23] = PTR(bytes);
-    CHECK(kinoko_execute_embedded_act_script(vm, PTR(script), scripts + 1));
+    CHECK(kinoko_execute_embedded_act_script((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(script)), scripts + 1));
     kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     free(bytes);
     kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(scripts)), (void *)(intptr_t)(PTR(init)), "InitStone");
@@ -821,7 +821,7 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
             CHECK(execute_source(vm, root + 2, "stoneProbe.Release();\nstoneProbe = null;"));
             CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 1);
             int32_t locked[2];
-            kinoko_native_weak_pair_lock(rider + 32, locked);
+            kinoko_native_weak_pair_lock((const void*)(uintptr_t)(rider + 32), locked);
             CHECK(locked[0] == 0 && locked[1] == 0);
             kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(rider));
             CHECK(*(float *)(intptr_t)(rider + 264) == 0);
@@ -2080,7 +2080,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
             int32_t previous_actor=**(int32_t **)(intptr_t)(manager+100);
             old_parent[0]=*(int32_t *)(intptr_t)(previous_actor+24);
             old_parent[1]=*(int32_t *)(intptr_t)(previous_actor+28);
-            kinoko_native_add_weak(old_parent[1]);
+            kinoko_native_add_weak((void*)(uintptr_t)(old_parent[1]));
         }
         fprintf(stderr,"map transition %s\n",paths[i]);
         CHECK(execute_source(vm,root+2,i==2 ? "LoadStage(\"w1-c01b.act\");" : "LoadStage(\"w1-c01a.act\");"));
@@ -2092,9 +2092,9 @@ static int test_map_transition(int32_t vm, int32_t *root) {
             CHECK(*(int32_t *)(intptr_t)(map_state+20)==previous_runtime);
         }
         if(i) {
-            kinoko_native_weak_pair_lock(PTR(old_parent),locked);
+            kinoko_native_weak_pair_lock((const void*)(uintptr_t)(PTR(old_parent)), locked);
             CHECK(!locked[0] && !locked[1]); // old native owners expire on every restart
-            kinoko_native_release_weak(old_parent[1]);
+            kinoko_native_release_weak((void*)(uintptr_t)(old_parent[1]));
         }
         fprintf(stderr,"map actors=%d layers=%d\n",kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(PTR(g_kinoko_actor_manager_state))),kinoko_render_queue_size());
         CHECK(execute_source(vm,root+2,
@@ -4505,7 +4505,7 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
     CHECK(kinoko_construct_string_layout(PTR(copy))==PTR(copy));
     int32_t top=kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm))));
     CHECK(kinoko_publish_string_layout_class(vm,PTR(root),klass));
-    CHECK(kinoko_create_bound_instance(vm,root+2,"StringProbe",klass,PTR(object),instance));
+    CHECK(kinoko_create_bound_instance((struct SQVM*)(uintptr_t)(vm), root+2, "StringProbe", klass, (void*)(uintptr_t)(PTR(object)), instance));
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), instance);
     CHECK(execute_source(vm,root+2,
         "StringProbe.fontHeight=999; StringProbe.fontWeight=-1; StringProbe.colorR=-3; StringProbe.baseB=999;\n"
@@ -5489,7 +5489,7 @@ static int test_script_serialization(int32_t vm, int32_t* root) {
         CHECK(*(uint16_t*)(stream.bytes+prefix+4)==0xfafa);
         int32_t compiled[26]={0};
         compiled[23]=PTR(stream.bytes+prefix+4); compiled[24]=stream.size-prefix-4;
-        CHECK(kinoko_execute_embedded_act_script(vm,PTR(compiled),root+2));
+        CHECK(kinoko_execute_embedded_act_script((struct SQVM*)(uintptr_t)(vm), (void*)(uintptr_t)(PTR(compiled)), root+2));
         CHECK(execute_source(vm,root+2,"if(ioCompiledValue!=42) throw \"serialized closure\";\n"
             "delete ioCompiledValue;\n"));
     }
@@ -6311,7 +6311,7 @@ int main(int argc, char **argv) {
         kinoko_script_clear_actors();
         CHECK(*(int32_t *)(intptr_t)(manager + 92) == 0);
         CHECK(*(int32_t *)(intptr_t)(control + 4) == 0);
-        kinoko_native_weak_pair_lock(g_514300_storage[13], pair);
+        kinoko_native_weak_pair_lock((const void*)(uintptr_t)(g_514300_storage[13]), pair);
         CHECK(pair[0] == 0 && pair[1] == 0);
         CHECK(VirtualProtect(retired_layout, 4096, PAGE_NOACCESS, &old_protection));
         kinoko_collision_refresh_abi(PTR(g_514300_storage));
@@ -6328,7 +6328,7 @@ int main(int argc, char **argv) {
                 CHECK(kinoko_map_create_actors((KinokoActorManager *)(intptr_t)manager, (KinokoActLayout *)layout, (const KinokoSquirrelObject *)environment) == 600);
                 CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 600);
                 CHECK(kinoko_method_actor_pool_count(pool, NULL) == pool_count);
-                kinoko_native_weak_pair_lock(g_514300_storage[13], pair);
+                kinoko_native_weak_pair_lock((const void*)(uintptr_t)(g_514300_storage[13]), pair);
                 CHECK(pair[0] == 0 && pair[1] == 0);
                 kinoko_collision_refresh_abi(PTR(g_514300_storage));
                 kinoko_script_clear_actors();
@@ -6837,10 +6837,10 @@ int main(int argc, char **argv) {
         CHECK(allocation != NULL);
         *allocation = PTR(source);
         source[6] = PTR(allocation);
-        kinoko_native_control_create(PTR(source + 7), PTR(allocation));
+        kinoko_native_control_create((void*)(uintptr_t)(PTR(source + 7)), (void*)(uintptr_t)(PTR(allocation)));
         CHECK(source[7] != 0);
         source[8] = PTR(allocation); source[9] = source[7];
-        kinoko_native_add_weak(source[9]);
+        kinoko_native_add_weak((void*)(uintptr_t)(source[9]));
         source[135] = 1234567;
         destination[93] = 98765; /* original copy skips Actor+372 */
         for (int i = 0; i < 7; ++i) {
@@ -6861,10 +6861,10 @@ int main(int argc, char **argv) {
             (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR((char*)destination + offsets[i]))));
             (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR((char*)source + offsets[i]))));
         }
-        kinoko_native_release_strong(destination[7]);
-        kinoko_native_release_weak(destination[9]);
-        kinoko_native_release_strong(source[7]);
-        kinoko_native_release_weak(source[9]);
+        kinoko_native_release_strong((void*)(uintptr_t)(destination[7]));
+        kinoko_native_release_weak((void*)(uintptr_t)(destination[9]));
+        kinoko_native_release_strong((void*)(uintptr_t)(source[7]));
+        kinoko_native_release_weak((void*)(uintptr_t)(source[9]));
     }
     {
         int32_t camera[128] = {0}, callback[3];

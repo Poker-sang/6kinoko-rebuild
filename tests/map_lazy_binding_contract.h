@@ -92,7 +92,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             int32_t klass[2] = {kinoko_null_object_type,kinoko_null_object_value}, instance[2] = {kinoko_null_object_type,kinoko_null_object_value};
             *(uint8_t*)(intptr_t)(cloned_layer+140) = 0;
             CHECK(kinoko_publish_c2dmaplayout_class(vm,PTR(root),klass));
-            CHECK(kinoko_create_bound_instance(vm,root+2,"LazyMapProbe",klass,PTR(layout),instance));
+            CHECK(kinoko_create_bound_instance((struct SQVM*)(uintptr_t)(vm), root+2, "LazyMapProbe", klass, (void*)(uintptr_t)(PTR(layout)), instance));
             CHECK(execute_source(vm,root+2,
                 "if (LazyMapProbe.GetChipByPosition(8,9) != 0) throw \"unbound event map\";\n"
                 "if (LazyMapProbe.GetChipByPosition(100,100) != -1) throw \"outside map\";"));

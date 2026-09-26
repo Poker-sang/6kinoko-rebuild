@@ -1,4 +1,6 @@
 #include "kinoko/squirrel_game_objects.h"
+#include "kinoko/act_layer_storage.hpp"
+#include "kinoko/act_resource_records.hpp"
 #include "kinoko/squirrel_host_object.hpp"
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/squirrel_source_runtime.h"
@@ -15,13 +17,13 @@ namespace {
 using namespace kinoko::script;
 // These are byte-copyable ABI records, not overlaid C++ objects.
 using MemoryReader = KinokoScriptMemoryReader;
-struct ActCallback { int32_t vm; HSQOBJECT environment; HSQOBJECT closure; };
-struct ResourceRoot { int32_t vm; HSQOBJECT root; };
+struct ActCallback { SQVM* vm; HSQOBJECT environment; HSQOBJECT closure; };
+struct ResourceRoot { SQVM* vm; HSQOBJECT root; };
 static_assert(sizeof(MemoryReader) == 12 && sizeof(ActCallback) == 20);
 static_assert(offsetof(ActCallback, closure) == 12 && sizeof(ResourceRoot) == 12);
-constexpr size_t resource_root_offset = 152;
-constexpr size_t script_data_offset = 92;
-constexpr size_t script_size_offset = 96;
+constexpr size_t resource_root_offset = offsetof(kinoko::act::RuntimeRecord, vm);
+constexpr size_t script_data_offset = offsetof(kinoko::act::ScriptStorageRecord, bytes);
+constexpr size_t script_size_offset = offsetof(kinoko::act::ScriptStorageRecord, size);
 
 template<class T> T read(const void* bytes) {
     T result; std::memcpy(&result, bytes, sizeof(result)); return result;
@@ -29,7 +31,7 @@ template<class T> T read(const void* bytes) {
 template<class T> void write(void* bytes, const T& value) {
     std::memcpy(bytes, &value, sizeof(value));
 }
-unsigned char* bytes(int32_t id) { return pointer<unsigned char>(id); }
+unsigned char* bytes(void* storage) { return static_cast<unsigned char*>(storage); }
 HSQOBJECT empty() { HSQOBJECT value; sq_resetobject(&value); return value; }
 class TrimStack final {
 public:
@@ -61,14 +63,11 @@ bool create_instance(HSQUIRRELVM vm, const HSQOBJECT& type, void* native,
 }
 }
 
-static int32_t kinoko_push_script_object(SQVM* machine, int32_t* object) {
+extern "C" void* kinoko_push_script_object(SQVM* machine, void* object) {
     if (!machine || !object) return 0;
     ObjectView(object).push(machine);
     // Return the pushed stack slot address, as in the original VM ABI.
-    return kinoko_sq_get_up(address(machine), -1);
-}
-extern "C" int32_t function_4029b0(int32_t id, int32_t* object) {
-    return kinoko_push_script_object(pointer<SQVM>(id), object);
+    return pointer<void>(kinoko_sq_get_up(address(machine), -1));
 }
 
 extern "C" int32_t kinoko_script_read_memory(void* stream, void* destination, int32_t requested) {
@@ -87,10 +86,9 @@ extern "C" int32_t kinoko_script_read_memory(void* stream, void* destination, in
     write(stream, state);
     return static_cast<int32_t>(count);
 }
-extern "C" int32_t kinoko_create_bound_instance(int32_t id, const int32_t* parent,
-    const char* name, const int32_t* type, int32_t native, int32_t* output) {
-    auto vm = pointer<SQVM>(id);
-    auto* native_pointer = pointer<void>(native);
+extern "C" int32_t kinoko_create_bound_instance(struct SQVM* id, const int32_t* parent, const char* name, const int32_t* type, void* native, int32_t* output) {
+    auto vm = id;
+    auto* native_pointer = native;
     if (!parent || !name || !valid_class(vm, type, native_pointer, output)) return 0;
     const auto parent_value = read<HSQOBJECT>(parent);
     const auto class_value = read<HSQOBJECT>(type);
@@ -107,10 +105,9 @@ extern "C" int32_t kinoko_create_bound_instance(int32_t id, const int32_t* paren
     write(output, result);
     return result._type == OT_INSTANCE && data_bits(result) != 0;
 }
-extern "C" int32_t kinoko_create_unbound_instance(int32_t id, const int32_t* type,
-    int32_t native, int32_t* output) {
-    auto vm = pointer<SQVM>(id);
-    auto* native_pointer = pointer<void>(native);
+extern "C" int32_t kinoko_create_unbound_instance(struct SQVM* id, const int32_t* type, void* native, int32_t* output) {
+    auto vm = id;
+    auto* native_pointer = native;
     if (!valid_class(vm, type, native_pointer, output)) return 0;
     const auto class_value = read<HSQOBJECT>(type);
     write(output, empty());
@@ -120,26 +117,25 @@ extern "C" int32_t kinoko_create_unbound_instance(int32_t id, const int32_t* typ
     write(output, result);
     return result._type == OT_INSTANCE && data_bits(result) != 0;
 }
-extern "C" void kinoko_release_act_callback(int32_t record) {
+extern "C" void kinoko_release_act_callback(void* record) {
     if (!record) return;
-    auto callback = read<ActCallback>(pointer(record));
+    auto callback = read<ActCallback>(record);
     if (callback.closure._type == OT_NULL) return;
-    if (callback.vm) upstream::sqrat_release_function(pointer<SQVM>(callback.vm),
+    if (callback.vm) upstream::sqrat_release_function(callback.vm,
         callback.environment, callback.closure);
     callback.environment = empty(); callback.closure = empty();
-    write(pointer(record), callback);
+    write(record, callback);
 }
-extern "C" void kinoko_copy_act_callback(int32_t id, int32_t script, int32_t offset,
-    int32_t global, const char* name) {
-    auto vm = pointer<SQVM>(id);
+extern "C" void kinoko_copy_act_callback(struct SQVM* id, void* script, int32_t offset, void* global, const char* name) {
+    auto vm = id;
     if (!vm || !script || !global || !name) return;
     auto* destination = bytes(script) + offset;
-    kinoko_release_act_callback(address(destination));
+    kinoko_release_act_callback(destination);
     auto callback = read<ActCallback>(destination);
     int32_t pair[2]; write(pair, empty());
     const auto found = kinoko_sqrat_get((void *)(intptr_t)(global), name, (void *)(pair));
     // Only metadata diagnostics: no additional scripted lookup or path dereference.
-    kinoko_trace_i32("act:copy-update-script", script);
+    kinoko_trace_i32("act:copy-update-script", address(script));
     kinoko_trace_i32("act:copy-update-result", found);
     if (found) {
         callback.vm = id;
@@ -150,12 +146,11 @@ extern "C" void kinoko_copy_act_callback(int32_t id, int32_t script, int32_t off
     }
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(id), pair);
 }
-extern "C" int32_t kinoko_bind_act_resource_root(int32_t resource, int32_t id,
-    const int32_t* pair) {
+extern "C" int32_t kinoko_bind_act_resource_root(void* resource, struct SQVM* id, const int32_t* pair) {
     if (!resource || !id || !pair) return 0;
     auto incoming = read<HSQOBJECT>(pair);
     if (incoming._type != OT_TABLE || !data_bits(incoming)) return 0;
-    auto vm = pointer<SQVM>(id);
+    auto vm = id;
     auto* storage = bytes(resource) + resource_root_offset;
     auto previous = read<ResourceRoot>(storage);
     // Snapshot and acquire BEFORE release: pair may be this resource's own root
@@ -164,19 +159,18 @@ extern "C" int32_t kinoko_bind_act_resource_root(int32_t resource, int32_t id,
     if ((previous.root._type & SQOBJECT_REF_COUNTED) && data_bits(previous.root))
         sq_release(vm, &previous.root);
     write(storage, ResourceRoot{id, incoming});
-    kinoko_trace_i32("450e30:root-resource", resource);
-    kinoko_trace_i32("450e30:root-vm", id);
+    kinoko_trace_i32("450e30:root-resource", address(resource));
+    kinoko_trace_i32("450e30:root-vm", address(id));
     return 1;
 }
-static int32_t execute_embedded_act_script(int32_t id, int32_t script,
-    const int32_t* environment, int runs) {
-    auto vm = pointer<SQVM>(id);
+static int32_t execute_embedded_act_script(struct SQVM* id, void* script, const int32_t* environment, int runs) {
+    auto vm = id;
     if (!vm || !script || !environment) return 0;
-    const auto data = read<uint32_t>(bytes(script) + script_data_offset);
+    const auto data = read<const unsigned char*>(bytes(script) + script_data_offset);
     const auto size = read<int32_t>(bytes(script) + script_size_offset);
-    if (!data || size < 2 || read<uint16_t>(pointer(static_cast<int32_t>(data))) != SQ_BYTECODE_STREAM_TAG)
+    if (!data || size < 2 || read<uint16_t>(data) != SQ_BYTECODE_STREAM_TAG)
         return 0;
-    MemoryReader reader{pointer<const unsigned char>(data), size, pointer<const unsigned char>(data)};
+    MemoryReader reader{data, size, data};
     TrimStack restore(vm);
     const auto load = sq_readclosure(vm, read_bytecode, &reader);
     kinoko_trace_i32("act-script:readclosure-result", load);
@@ -194,12 +188,10 @@ static int32_t execute_embedded_act_script(int32_t id, int32_t script,
     kinoko_trace_i32("act-script:execute-result", result ? SQ_OK : SQ_ERROR);
     return result;
 }
-extern "C" int32_t kinoko_execute_embedded_act_script(int32_t vm, int32_t script,
-    const int32_t* environment) {
+extern "C" int32_t kinoko_execute_embedded_act_script(struct SQVM* vm, void* script, const int32_t* environment) {
     return execute_embedded_act_script(vm, script, environment, 1);
 }
-extern "C" int32_t kinoko_execute_act_file_bytecode(int32_t vm, int32_t script,
-    const int32_t* environment) {
+extern "C" int32_t kinoko_execute_act_file_bytecode(struct SQVM* vm, void* script, const int32_t* environment) {
     // 416A8D calls the loaded closure, then 416AE8 calls LocalScript::Run on
     // that same closure. The first call's failure is not used as a branch.
     return execute_embedded_act_script(vm, script, environment, 2);

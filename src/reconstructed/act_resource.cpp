@@ -113,7 +113,7 @@ public:
         if (!storage_ || !record_.get(&RuntimeRecord::stage_active)) return E_FAIL;
         kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION *>(record_.bytes(&RuntimeRecord::lock)));
         record_.set(&RuntimeRecord::stage_active, uint8_t{0});
-        record_.set(&RuntimeRecord::stage_properties, StagePropertyAliases{});
+        record_.set(&RuntimeRecord::stage_properties, kinoko::act::StagePropertyAliases{});
         // 450DE9 clears command elements. Word 44 is now a vector owner,
         // so changing word 48 would not clear the native container.
         kinoko_act_commands_clear(storage_);

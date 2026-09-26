@@ -8,10 +8,10 @@ static int test_collision_lifecycle(void) {
     int32_t layouts[1] = {PTR(layout)}, pair[2];
     CHECK(slot);
     *slot = PTR(proxy);
-    CHECK(kinoko_native_control_create(PTR(&control), PTR(slot)) && control);
+    CHECK(kinoko_native_control_create((void*)(uintptr_t)(PTR(&control)), (void*)(uintptr_t)(PTR(slot))) && control);
     pair[0] = PTR(slot); pair[1] = control;
-    kinoko_native_add_weak(control); /* map owns one weak */
-    kinoko_native_add_weak(control); /* test witness survives expiry and reset */
+    kinoko_native_add_weak((void*)(uintptr_t)(control)); /* map owns one weak */
+    kinoko_native_add_weak((void*)(uintptr_t)(control)); /* test witness survives expiry and reset */
     kinoko_native_buffer_replace(PTR(state)+4, layouts, sizeof(layouts));
     kinoko_native_buffer_replace(PTR(state)+52, pair, sizeof(pair));
     state[0] = PTR(manager);
@@ -34,7 +34,7 @@ static int test_collision_lifecycle(void) {
     manager[29] = 0;
     CHECK(kinoko_collision_refresh_abi(PTR(state)) == PTR(manager));
     /* Losing the strong owner destroys its slot. Never follow the stale layout. */
-    kinoko_native_release_strong(control);
+    kinoko_native_release_strong((void*)(uintptr_t)(control));
     CHECK(*(int32_t*)(intptr_t)(control+4) == 0);
     *(int32_t*)(intptr_t)state[1] = 1;
     CHECK(kinoko_collision_refresh_abi(PTR(state)) == PTR(manager));
@@ -52,7 +52,7 @@ static int test_collision_lifecycle(void) {
     state[0] = 0; state[21] = 7;
     CHECK(kinoko_collision_refresh_abi(PTR(state)) == 0 && state[21] == 0);
     CHECK(kinoko_collision_refresh_abi(0) == 0 && !kinoko_collision_reset_abi(0, PTR(manager)));
-    kinoko_native_release_weak(control);
+    kinoko_native_release_weak((void*)(uintptr_t)(control));
     kinoko_native_buffer_destroy(PTR(state)+4);
     kinoko_native_buffer_destroy(PTR(state)+52);
     kinoko_native_buffer_destroy(PTR(state)+68);

@@ -86,22 +86,22 @@ void initialize_key(HSQUIRRELVM vm) {
 void controls() {
     ControlFixture custom(2, 2);
     auto old_disposes = disposes, old_destroys = destroys;
-    kinoko_native_release_strong(address(custom.data()));
+    kinoko_native_release_strong((void*)(uintptr_t)(address(custom.data())));
     require(custom[1] == 1 && disposes == old_disposes, "nonfinal strong release");
-    kinoko_native_release_strong(address(custom.data()));
+    kinoko_native_release_strong((void*)(uintptr_t)(address(custom.data())));
     require(custom[1] == 0 && custom[2] == 1 && disposes == old_disposes + 1 && destroys == old_destroys,
         "dispose before implicit weak release");
-    kinoko_native_release_weak(address(custom.data()));
+    kinoko_native_release_weak((void*)(uintptr_t)(address(custom.data())));
     require(custom[2] == 0 && destroys == old_destroys + 1, "last custom weak destruction");
     auto* allocation = std::malloc(4); require(allocation != nullptr, "owner-slot allocation");
     auto* control = kinoko::native::upstream::create_owner_control(allocation);
     require(control != nullptr, "source control allocation");
-    kinoko_native_add_weak(address(control));
-    kinoko_native_release_strong(address(control));
+    kinoko_native_add_weak((void*)(uintptr_t)(address(control)));
+    kinoko_native_release_strong((void*)(uintptr_t)(address(control)));
     require(control->use_count() == 0 && kinoko::native::upstream::allocation(control) == nullptr,
         "source control frees owned slot, not Actor");
-    kinoko_native_release_weak(address(control));
-    kinoko_native_release_weak(0); kinoko_native_release_strong(0);
+    kinoko_native_release_weak((void*)(uintptr_t)(address(control)));
+    kinoko_native_release_weak((void*)(uintptr_t)(0)); kinoko_native_release_strong((void*)(uintptr_t)(0));
 }
 void initialize_table(HSQUIRRELVM vm, int32_t actor) {
     sq_newtable(vm); sq_pushstring(vm, "step", -1); sq_pushnull(vm);

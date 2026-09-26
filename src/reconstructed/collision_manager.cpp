@@ -102,7 +102,7 @@ extern "C" int32_t kinoko_collision_reset(KinokoCollisionState *state, KinokoAct
     auto *begin = parents.get(&Buffer<ActorReference>::begin);
     auto *end = parents.get(&Buffer<ActorReference>::end);
     for (auto *cursor = begin; cursor != end; ++cursor)
-        kinoko_native_release_weak(address(ReferenceView(cursor).get(&ActorReference::control)));
+        kinoko_native_release_weak((void*)(uintptr_t)(address(ReferenceView(cursor).get(&ActorReference::control))));
     parents.set(&Buffer<ActorReference>::end, begin);
     collision.set(&StateRecord::manager, manager);
     collision.set(&StateRecord::actor_count, int32_t{0});
@@ -141,7 +141,7 @@ extern "C" KinokoActor *kinoko_collision_register_map(KinokoCollisionState *stat
     std::memmove(parent_records + 1, parent_records, count * sizeof(*parent_records));
     layout_records[0] = layout;
     parent_records[0] = ReferenceView(proxy.bytes(&ActorRecord::owner)).load();
-    kinoko_native_add_weak(address(parent_records[0].control));
+    kinoko_native_add_weak((void*)(uintptr_t)(address(parent_records[0].control)));
     layouts.set(&Buffer<KinokoActLayout *>::end, layout_records + required);
     parents.set(&Buffer<ActorReference>::end, parent_records + required);
     auto *hit_ends = ends.get(&Buffer<int32_t>::begin);

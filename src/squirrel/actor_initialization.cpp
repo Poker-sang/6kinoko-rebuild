@@ -81,17 +81,17 @@ extern "C" int32_t kinoko_actor_initialize(KinokoActor *actor,KinokoActorManager
 
     auto **slot=static_cast<KinokoActor **>(std::malloc(sizeof(KinokoActor *)));
     if (!slot) return 0;
-    int32_t control=0;
-    kinoko_native_control_create(address(&control),address(slot));
+    ControlRecord* control=nullptr;
+    kinoko_native_control_create(&control, slot);
     if (!control) { std::free(slot);return 0; }
     // Original shared owner assignment keeps the temporary strong reference
     // alive while releasing the outgoing control, then publishes the Actor.
-    kinoko_native_add_strong(control);
+    kinoko_native_add_strong((void*)(uintptr_t)(control));
     const auto old_control=view.get(&ActorRecord::owner_control);
     view.set(&ActorRecord::owner,slot);
-    view.set(&ActorRecord::owner_control,pointer<ControlRecord>(control));
-    kinoko_native_release_strong(address(old_control));
-    kinoko_native_release_strong(control);
+    view.set(&ActorRecord::owner_control,control);
+    kinoko_native_release_strong((void*)(uintptr_t)(address(old_control)));
+    kinoko_native_release_strong((void*)(uintptr_t)(control));
     *view.get(&ActorRecord::owner)=actor;
 
     view.set(&ActorRecord::active,static_cast<uint8_t>((view.get(&ActorRecord::initial).chip_flags&0x20000)==0));

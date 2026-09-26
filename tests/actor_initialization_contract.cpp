@@ -63,11 +63,11 @@ void *kinoko_sqplus_object_assign(void *out,const void *in) {
 void *kinoko_sqplus_object_destroy(void *p) { drop(read(p)); write(p,{1,OT_NULL,0}); return p; }
 int32_t kinoko_sqplus_object_type(void *p) { return read(p).type; }
 int32_t kinoko_sqplus_object_set_instance(void *p,void *native) { CHECK(read(p).value==3 && native==self()); return 1; }
-int32_t kinoko_native_control_create(int32_t out,int32_t) {
+void* kinoko_native_control_create(void* out,void*) {
     *reinterpret_cast<int32_t *>(out)=address(&control); strong=1; return out;
 }
-void kinoko_native_add_strong(int32_t p) { CHECK(p==address(&control)); ++strong; }
-void kinoko_native_release_strong(int32_t p) { if(p) { CHECK(p==address(&control)); --strong; } }
+void kinoko_native_add_strong(void* p) { CHECK(p==&control); ++strong; }
+void kinoko_native_release_strong(void* p) { if(p) { CHECK(p==&control); --strong; } }
 KinokoScriptCallback *kinoko_script_callback_construct(KinokoScriptCallback *out,const char *name) {
     CHECK(!name); out->vm=kinoko_actor_default_vm();
     kinoko_sqplus_object_initialize(&out->environment); kinoko_sqplus_object_initialize(&out->closure); return out;

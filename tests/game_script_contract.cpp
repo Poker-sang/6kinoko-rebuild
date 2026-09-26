@@ -55,7 +55,7 @@ int32_t  kinoko_sqplus_object_raw_set_name(void * table, const char* key, const 
     kinoko::script::ObjectView(table).push(vm); sq_pushstring(vm,key,-1); kinoko::script::ObjectView(object).push(vm);
     const auto result=sq_newslot(vm,-3,SQFalse); sq_pop(vm,1); return SQ_SUCCEEDED(result);
 }
-int32_t function_4029b0(int32_t id,int32_t* object) { require(pointer<SQVM>(id)==vm,"result VM"); kinoko::script::ObjectView(object).push(vm); return 1; }
+void* kinoko_push_script_object(SQVM* id,void* object) { require(id==vm,"result VM"); kinoko::script::ObjectView(object).push(vm); return object; }
 const KinokoGameObjects* kinoko_game_objects() { return &objects; }
 SQVM* kinoko_actor_default_vm() { return vm; }
 KinokoScriptCallback* kinoko_game_global_callback() { return &callback; }

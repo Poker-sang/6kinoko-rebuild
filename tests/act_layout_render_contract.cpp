@@ -48,7 +48,7 @@ int main() {
     device_methods.SetRenderState=set_state;device_methods.SetSamplerState=sampler;
     IDirect3DDevice9 device{&device_methods};kinoko_graphics.device=&device;kinoko_renderer.device=&device;
     struct ResourceMethods { void *prefix[2];decltype(&query) convert; } resource_methods{{},query};
-    TextureResourcePrefix resource{};resource.vtable=address(&resource_methods);
+    TextureResourcePrefix resource{};resource.vtable=&resource_methods;
     resource.texture=1;resource.width=64;resource.height=64;resource.source_width=16;resource.source_height=20;
     kinoko_texture_slots[1]={nullptr,64,64};
     struct LayerMethods { void *prefix[7];decltype(&position) position_method; } layer_methods{{},position};

@@ -91,18 +91,18 @@ extern "C" KinokoActor *kinoko_actor_dispose(KinokoActor *actor) {
     const auto parent_control = view.get(&ActorRecord::step_control);
     view.set(&ActorRecord::step, static_cast<KinokoActor **>(nullptr));
     view.set(&ActorRecord::step_control, static_cast<ControlRecord *>(nullptr));
-    kinoko_native_release_weak(address(parent_control));
+    kinoko_native_release_weak((void*)(uintptr_t)(address(parent_control)));
     const auto owner_control = view.get(&ActorRecord::owner_control);
     view.set(&ActorRecord::owner, static_cast<KinokoActor **>(nullptr));
     view.set(&ActorRecord::owner_control, static_cast<ControlRecord *>(nullptr));
-    kinoko_native_release_strong(address(owner_control));
+    kinoko_native_release_strong((void*)(uintptr_t)(address(owner_control)));
     for (auto member = script_members.rbegin(); member != script_members.rend(); ++member)
         kinoko_squirrel_object_destroy(address(view.bytes(*member)), address(current_vm()),
             kinoko_squirrel_object_vtable());
     // 45E56C/45E58A are member destructors after the explicit reset above.
     // Release hooks may have installed new links while wrappers were destroyed.
-    kinoko_native_release_weak(address(view.get(&ActorRecord::step_control)));
-    kinoko_native_release_strong(address(view.get(&ActorRecord::owner_control)));
+    kinoko_native_release_weak((void*)(uintptr_t)(address(view.get(&ActorRecord::step_control))));
+    kinoko_native_release_strong((void*)(uintptr_t)(address(view.get(&ActorRecord::owner_control))));
     return actor;
 }
 
@@ -115,7 +115,7 @@ extern "C" int32_t kinoko_actor_set_step_owned(KinokoActor *actor, KinokoOwnedOb
         view.set(&ActorRecord::step, static_cast<KinokoActor **>(nullptr));
         const auto previous = view.get(&ActorRecord::step_control);
         view.set(&ActorRecord::step_control, static_cast<ControlRecord *>(nullptr));
-        kinoko_native_release_weak(address(previous));
+        kinoko_native_release_weak((void*)(uintptr_t)(address(previous)));
         ObjectStorage empty{};
         ObjectView(&empty).initialize(kinoko_squirrel_object_vtable());
         raw_set_step(view, empty.value);
@@ -130,8 +130,8 @@ extern "C" int32_t kinoko_actor_set_step_owned(KinokoActor *actor, KinokoOwnedOb
             const auto next = target.get(&ActorRecord::owner_control);
             const auto previous = view.get(&ActorRecord::step_control);
             if (next != previous) {
-                kinoko_native_add_weak(address(next));
-                kinoko_native_release_weak(address(previous));
+                kinoko_native_add_weak((void*)(uintptr_t)(address(next)));
+                kinoko_native_release_weak((void*)(uintptr_t)(address(previous)));
                 view.set(&ActorRecord::step_control, next);
             }
         }

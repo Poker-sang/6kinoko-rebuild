@@ -289,7 +289,7 @@ int32_t save_file(const char *path, Object input) {
 } // namespace
 } // namespace kinoko::savedata
 
-// The original registration table still takes these four C ABI addresses.
+// Registration uses the named path entry; by-value object ownership is preserved.
 // All recursion, byte transfer and ownership live in named C++ routines above.
 int32_t kinoko_savedata_read_table_entry(int32_t *stream, int32_t vtable,
                                       int32_t type, int32_t data) {
@@ -298,10 +298,6 @@ int32_t kinoko_savedata_read_table_entry(int32_t *stream, int32_t vtable,
     view.publish(stream);
     return result;
 }
-extern "C" int32_t function_4722e0(int32_t *stream, int32_t vtable,
-                                      int32_t type, int32_t data) {
-    return kinoko_savedata_read_table_entry(stream, vtable, type, data);
-}
 int32_t kinoko_savedata_write_table_entry(int32_t *stream, int32_t vtable,
                                       int32_t type, int32_t data) {
     kinoko::savedata::TableStream view(stream);
@@ -309,27 +305,11 @@ int32_t kinoko_savedata_write_table_entry(int32_t *stream, int32_t vtable,
     view.publish(stream);
     return result;
 }
-extern "C" int32_t function_472820(int32_t *stream, int32_t vtable,
-                                      int32_t type, int32_t data) {
-    return kinoko_savedata_write_table_entry(stream, vtable, type, data);
-}
 int32_t kinoko_savedata_load_file_entry(const char* path, int32_t vtable,
                                       int32_t type, int32_t data) {
     return kinoko::savedata::load_file(path, {vtable, type, data});
 }
-extern "C" int32_t function_472c90(int32_t path, int32_t vtable,
-                                      int32_t type, int32_t data) {
-    return kinoko_savedata_load_file_entry(
-        reinterpret_cast<const char*>(static_cast<uintptr_t>(static_cast<uint32_t>(path))),
-        vtable, type, data);
-}
 int32_t kinoko_savedata_save_file_entry(const char* path, int32_t vtable,
                                       int32_t type, int32_t data) {
     return kinoko::savedata::save_file(path, {vtable, type, data});
-}
-extern "C" int32_t function_472e50(int32_t path, int32_t vtable,
-                                      int32_t type, int32_t data) {
-    return kinoko_savedata_save_file_entry(
-        reinterpret_cast<const char*>(static_cast<uintptr_t>(static_cast<uint32_t>(path))),
-        vtable, type, data);
 }
