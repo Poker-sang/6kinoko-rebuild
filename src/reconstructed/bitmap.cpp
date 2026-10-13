@@ -37,14 +37,17 @@ extern "C" int32_t kinoko_bitmap_load_cv2(KinokoBitmap* bitmap, const char* path
     bitmap->height = height;
     bitmap->row_width = row_width;
     bitmap->encoded_size = encoded_size;
-    uint32_t allocation_size;
-    if (encoded_size) allocation_size = encoded_size;
-    else if (depth < 24)
-        allocation_size = static_cast<uint32_t>(uint64_t(row_width) * height * depth / 8u);
-    else allocation_size = static_cast<uint32_t>(uint64_t(row_width) * height * 4u);
-    if (!allocation_size || allocation_size > 256u * 1024u * 1024u ||
+    if ((depth != 8 && depth != 16 && depth != 24 && depth != 32) ||
+        !width || !height || row_width < width ||
         uint64_t(width) * height > 64u * 1024u * 1024u)
         return 0;
+    // Bound the dimensions first so this multiplication fits uint64_t, then
+    // check the full byte count before narrowing to the reader's wire width.
+    // A huge row_width must not wrap into a small allocation and reach upload.
+    const uint64_t storage_bytes = encoded_size ? encoded_size :
+        uint64_t(row_width) * height * (depth < 24 ? depth / 8u : 4u);
+    if (!storage_bytes || storage_bytes > 256u * 1024u * 1024u) return 0;
+    const auto allocation_size = static_cast<uint32_t>(storage_bytes);
 
     // Preserve replacement timing: once the header is accepted, failed payload
     // allocation/read leaves no old pixels. Metadata and the borrowed palette

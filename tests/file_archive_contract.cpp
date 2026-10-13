@@ -11,7 +11,7 @@ namespace {
 struct TempFile {
     char path[MAX_PATH]{};
     TempFile() { char dir[MAX_PATH]{}; GetTempPathA(MAX_PATH,dir); GetTempFileNameA(dir,"kio",0,path); }
-    ~TempFile() { DeleteFileA(path); }
+    ~TempFile() { std::printf("Retained archive fixture: %s\n",path); }
 };
 void word(std::vector<uint8_t>& bytes,uint32_t value) {
     for (int i=0;i<4;++i) bytes.push_back(static_cast<uint8_t>(value>>(8*i)));
@@ -29,6 +29,29 @@ int main() {
     kinoko_reader_close(writer); writer=nullptr;
     // 410500 registers an opened DAT before its index is parsed.
     CHECK(!kinoko_archive_mount(truncated.path) && kinoko_archive_count==1);
+    kinoko_archive_initialize();
+    // A six-byte header must not allocate up to 4 GiB merely to discover that
+    // its declared index is absent. Failed mounts still publish their path.
+    const uint16_t no_entries=0;
+    for (const uint32_t declared_size : std::array<uint32_t,2>{1,UINT32_MAX}) {
+        TempFile missing_index;
+        CHECK(kinoko_writer_open(&writer,missing_index.path));
+        CHECK(kinoko_writer_write(writer,&no_entries,sizeof(no_entries)));
+        CHECK(kinoko_writer_write(writer,&declared_size,sizeof(declared_size)));
+        kinoko_reader_close(writer); writer=nullptr;
+        CHECK(!kinoko_archive_mount(missing_index.path) && kinoko_archive_count==1);
+        kinoko_archive_initialize();
+    }
+    // Count zero and unused trailing index bytes remain valid. The size guard
+    // accepts an index ending exactly at EOF, without inventing a count cap.
+    TempFile padded_index;
+    const uint32_t padding_size=1;
+    CHECK(kinoko_writer_open(&writer,padded_index.path));
+    CHECK(kinoko_writer_write(writer,&no_entries,sizeof(no_entries)));
+    CHECK(kinoko_writer_write(writer,&padding_size,sizeof(padding_size)));
+    CHECK(kinoko_writer_write(writer,"x",padding_size));
+    kinoko_reader_close(writer); writer=nullptr;
+    CHECK(kinoko_archive_mount(padded_index.path) && kinoko_archive_count==1);
     kinoko_archive_initialize();
     CHECK(kinoko_writer_open(&writer,ordinary.path));
     CHECK(kinoko_writer_write(writer,"ABCDE",5));

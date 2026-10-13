@@ -23,6 +23,9 @@ namespace kinoko::savedata {
 namespace {
 constexpr uint32_t kMaximumString = 0x1000000u;
 constexpr uint32_t kFileBufferSize = 0x20000u;
+// The wire format is a tree. Bound native recursion independently of its byte
+// budget; compact containers can otherwise exhaust the C++ and VM stacks.
+constexpr unsigned kMaximumNesting = 256;
 
 // Recovered stream prefix: borrowed buffer followed by cursor and limit.
 // memcpy permits the original unaligned callers without integer pointers.
@@ -105,11 +108,16 @@ bool write_string(TableStream &stream, Object &object) {
     return stream.write(length) && stream.write_bytes(text, length);
 }
 
-bool read_table(TableStream &stream, Object parent) {
+bool read_table(TableStream &stream, Object parent, unsigned nesting = 1) {
+    if (nesting > kMaximumNesting) {
+        parent.destroy();
+        return false;
+    }
     Object key, value;
     key.initialize();
     value.initialize();
     bool ok = stream.buffer && serialization_vm();
+    if (ok && nesting == 1) sq_reservestack(serialization_vm(), 8);
     while (ok) {
         uint32_t value_type = 0, key_type = 0;
         if (!stream.read(value_type)) { ok = false; break; }
@@ -143,7 +151,7 @@ bool read_table(TableStream &stream, Object parent) {
                     : kinoko_sqplus_object_new_table(value.raw());
                 ok = created && kinoko_sqplus_object_raw_set_object(
                     parent.raw(), key.raw(), value.raw()) && nested.copy_from(value);
-                if (ok) ok = read_table(stream, nested);
+                if (ok) ok = read_table(stream, nested, nesting + 1);
             }
         } else { ok = false; }
 
@@ -159,15 +167,39 @@ bool read_table(TableStream &stream, Object parent) {
     return ok;
 }
 
-bool write_table(TableStream &stream, Object input) {
+struct ContainerPath {
+    const ContainerPath* parent;
+    int32_t type;
+    int32_t data;
+    unsigned nesting;
+};
+
+bool write_table(TableStream &stream, Object input, const ContainerPath* ancestors = nullptr) {
+    const ContainerPath path{ancestors, input.type(), input.data(),
+        ancestors ? ancestors->nesting + 1 : 1};
+    if (path.nesting > kMaximumNesting) {
+        input.destroy();
+        return false;
+    }
+    // Only active ancestors form a cycle. A shared child in separate branches
+    // is still serialized twice, as required by the original tree format.
+    for (auto* ancestor = ancestors; ancestor; ancestor = ancestor->parent) {
+        if (ancestor->type == path.type && ancestor->data == path.data) {
+            input.destroy();
+            return false;
+        }
+    }
     Object container, key, value;
     container.initialize();
     key.initialize();
     value.initialize();
     bool ok = stream.buffer && serialization_vm();
+    // BeginIteration leaves two values per ancestor on the Squirrel 2.2 VM
+    // stack. Native API pushes do not grow that stack automatically.
+    if (ok && !ancestors) sq_reservestack(serialization_vm(), 2 * kMaximumNesting + 8);
     bool iterating = false;
     if (ok) ok = container.assign(input.type(), input.data());
-    if (ok && kinoko_sqplus_object_begin_iteration(container.raw())) iterating = true;
+    if (ok) ok = iterating = kinoko_sqplus_object_begin_iteration(container.raw()) != 0;
 
     while (ok && iterating && kinoko_sqplus_object_next(key.raw(), value.raw())) {
         const uint32_t value_type = static_cast<uint32_t>(value.type());
@@ -195,7 +227,7 @@ bool write_table(TableStream &stream, Object input) {
                 const int32_t count = kinoko_sqplus_object_size(value.raw());
                 ok = count >= 0 && stream.write(count);
             }
-            if (ok) ok = nested.copy_from(value) && write_table(stream, nested);
+            if (ok) ok = nested.copy_from(value) && write_table(stream, nested, &path);
         }
         value.destroy();
         key.destroy();
@@ -263,26 +295,26 @@ int32_t save_file(const char *path, Object input) {
     kinoko_trace("savedata:save-begin");
     kinoko_trace(path);
     int32_t result = 0;
-    {
-        File file(path, GENERIC_WRITE, 0, CREATE_ALWAYS);
-        if (file) {
-            auto raw = allocate_buffer();
-            auto encoded = allocate_buffer();
-            if (raw && encoded) {
-                TableStream stream(raw.get(), kFileBufferSize);
-                Object table;
-                if (table.assign(input.type(), input.data()) && write_table(stream, table)) {
-                    kinoko_trace_i32("savedata:raw-size", stream.position);
-                    const DWORD encoded_size = static_cast<DWORD>(kinoko_compress_buffer(
-                        raw.get(), stream.position, encoded.get(), kFileBufferSize));
-                    kinoko_trace_i32("savedata:encoded-size", static_cast<int32_t>(encoded_size));
-                    DWORD bytes_written = 0;
-                    if (encoded_size && encoded_size <= kFileBufferSize &&
-                        WriteFile(file.handle, &encoded_size, sizeof(encoded_size), &bytes_written, nullptr) &&
-                        bytes_written == sizeof(encoded_size) &&
-                        WriteFile(file.handle, encoded.get(), encoded_size, &bytes_written, nullptr) &&
-                        bytes_written == encoded_size) result = 1;
-                }
+    // Finish serialization before opening with CREATE_ALWAYS. A conversion or
+    // compression failure must not erase the previously saved file.
+    auto raw = allocate_buffer();
+    auto encoded = allocate_buffer();
+    if (raw && encoded) {
+        TableStream stream(raw.get(), kFileBufferSize);
+        Object table;
+        if (table.assign(input.type(), input.data()) && write_table(stream, table)) {
+            kinoko_trace_i32("savedata:raw-size", stream.position);
+            const DWORD encoded_size = static_cast<DWORD>(kinoko_compress_buffer(
+                raw.get(), stream.position, encoded.get(), kFileBufferSize));
+            kinoko_trace_i32("savedata:encoded-size", static_cast<int32_t>(encoded_size));
+            if (encoded_size && encoded_size <= kFileBufferSize) {
+                File file(path, GENERIC_WRITE, 0, CREATE_ALWAYS);
+                DWORD bytes_written = 0;
+                if (file &&
+                    WriteFile(file.handle, &encoded_size, sizeof(encoded_size), &bytes_written, nullptr) &&
+                    bytes_written == sizeof(encoded_size) &&
+                    WriteFile(file.handle, encoded.get(), encoded_size, &bytes_written, nullptr) &&
+                    bytes_written == encoded_size) result = 1;
             }
         }
     }

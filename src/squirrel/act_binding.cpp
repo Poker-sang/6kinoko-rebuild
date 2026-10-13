@@ -597,10 +597,7 @@ int32_t get_layer_order(KinokoActRuntime* player, KinokoActLayer* layer) {
     auto* act = holder ? holder->document : nullptr;
     if (!act) return -1;
     const auto span = kinoko::act::DocumentView(act).get(&kinoko::act::DocumentRecord::layers);
-    const auto begin = reinterpret_cast<uintptr_t>(span.begin), end = reinterpret_cast<uintptr_t>(span.end);
-    for (auto slot=begin; slot<end; slot+=4)
-        if (kinoko::legacy::load<KinokoActLayer*>(reinterpret_cast<const void*>(slot))==layer) return static_cast<int32_t>((slot-begin)/4);
-    return -1;
+    return kinoko::act::find_layer_order(span, layer);
 }
 
 // 451F80/455990/455A20/455C40. A swap rebuilds child vectors, then flattens
@@ -613,14 +610,13 @@ bool swap_layers(KinokoActRuntime* player, int32_t first, int32_t second) {
     auto* act = holder ? holder->document : nullptr;
     if (!act) return false;
     const auto span = kinoko::act::DocumentView(act).get(&kinoko::act::DocumentRecord::layers);
-    const auto begin = reinterpret_cast<uintptr_t>(span.begin), end = reinterpret_cast<uintptr_t>(span.end);
-    if (end<begin || (end-begin)%4 || (!begin && end)) return false;
-    const auto count = (end-begin)/4;
-    if (first<0 || second<0 || static_cast<uint32_t>(first)>=count ||
-        static_cast<uint32_t>(second)>=count || first==second) return false;
+    int32_t count = 0;
+    if (!kinoko::act::checked_layer_count(span, count)) return false;
+    if (first<0 || second<0 || first>=count ||
+        second>=count || first==second) return false;
     std::vector<KinokoActLayer*> layers;
     layers.reserve(count);
-    for (uint32_t i=0;i<count;++i) layers.push_back(kinoko::act::layer_at(span, i));
+    for (int32_t i=0;i<count;++i) layers.push_back(kinoko::act::layer_at(span, i));
     std::map<KinokoActLayer*,size_t> index;
     for (size_t i=0;i<layers.size();++i)
         if (!layers[i] || !index.emplace(layers[i],i).second) return false;
@@ -754,12 +750,11 @@ template<bool string_layout> KinokoActLayer* create_layer(KinokoActRuntime* play
     record.view(&LayerStorageRecord::keys).set(&LayerListRecord::count, int32_t{1});
     const DocumentView document(act);
     const auto layers = document.get(&DocumentRecord::layers);
-    const auto begin = reinterpret_cast<uintptr_t>(layers.begin), end = reinterpret_cast<uintptr_t>(layers.end);
-    if (end < begin || (end-begin)%4 || (!begin && end) || (end-begin)/4 >= 0x10000) return 0;
-    const auto count = (end-begin)/4;
+    int32_t count = 0;
+    if (!checked_layer_count(layers, count) || count >= 0x10000) return 0;
     int32_t maximum = -1;
-    for (uint32_t i=0; i<count; ++i) {
-        auto* old_layer = kinoko::legacy::load<KinokoActLayer*>(layers.begin+i);
+    for (int32_t i=0; i<count; ++i) {
+        auto* old_layer = layer_at(layers, i);
         if (old_layer) maximum = std::max(maximum, LayerStorageView(old_layer).view(&LayerStorageRecord::association).get(&LayerAssociationRecord::layer_id));
     }
     record.view(&LayerStorageRecord::association).set(&LayerAssociationRecord::layer_id, maximum < 0 ? 1 : static_cast<int32_t>(static_cast<uint32_t>(maximum)+1));

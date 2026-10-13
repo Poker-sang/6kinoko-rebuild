@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <type_traits>
+#include <array>
 
 #define CHECK(x) do { if (!(x)) { std::fprintf(stderr,"FAIL %d: %s\n",__LINE__,#x); return 1; } } while (0)
 struct KinokoArchiveReader { size_t position = 0; };
@@ -54,7 +55,28 @@ int main() {
     header(32,1,1,1,256u*1024u*1024u+1);
     CHECK(!kinoko_bitmap_load_cv2(bitmap,"limit") && bitmap->pixels==previous);
     CHECK(bitmap->encoded_size==256u*1024u*1024u+1 && opens==closes);
+    // These raw sizes used to wrap to 2/4 bytes before the allocation limit.
+    // Supply that short payload so a rejection cannot be attributed to EOF.
+    for (auto depth : {8,16,24,32}) {
+        const uint32_t row = depth < 24 ? 0x80000001u : 0x40000001u;
+        const uint32_t height = depth < 24 ? 2u : 1u;
+        header(static_cast<uint8_t>(depth),2,height,row,0);
+        input.resize(21,0x5a);
+        CHECK(!kinoko_bitmap_load_cv2(bitmap,"overflow") && bitmap->pixels==previous);
+        CHECK(bitmap->palette==palette && opens==closes);
+    }
+    for (const auto& dimensions : {std::array<uint32_t,3>{0,1,1}, {1,0,1}, {2,1,1}}) {
+        header(32,dimensions[0],dimensions[1],dimensions[2],0);
+        input.resize(25,0x5a);
+        CHECK(!kinoko_bitmap_load_cv2(bitmap,"invalid-dimensions") && bitmap->pixels==previous);
+    }
+    header(7,1,1,8,0); input.resize(24,0x5a);
+    CHECK(!kinoko_bitmap_load_cv2(bitmap,"invalid-depth") && bitmap->pixels==previous);
+    // Accepted dimensions also prevent uint64_t overflow in row storage.
+    header(32,0,UINT32_MAX,UINT32_MAX,0); input.resize(21,0x5a);
+    CHECK(!kinoko_bitmap_load_cv2(bitmap,"invalid-huge-dimensions") && bitmap->pixels==previous);
     kinoko_bitmap_release_pixels(bitmap); kinoko_bitmap_release_pixels(bitmap);
     CHECK(!bitmap->pixels && bitmap->palette==palette);
-    std::puts("PASS: CV2 header, row storage, encoded payload, replacement failure and reader ownership");
+    CHECK(opens==closes);
+    std::puts("PASS: CV2 header, checked row storage, encoded payload, replacement failure and reader ownership");
 }
