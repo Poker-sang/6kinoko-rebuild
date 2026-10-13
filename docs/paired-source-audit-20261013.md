@@ -75,3 +75,13 @@ execution must be recorded separately from local compilation and user gameplay.
 Build results, exact source commits, executable paths and hashes are recorded
 after compilation in `paired-source-audit-20261013-artifacts.json`.
 
+## Rebuild delivery
+
+Source `5f2414ba769266da6bcf3fcf4d634d1ab2f4496f` completed the full Windows x86
+Release build in `build-runs/paired-audit-rebuild-x86-01/`, including 66 contract
+executables. The game is
+`runtime-builds/paired-audit-rebuild-x86-01/kinoko_retdec_rebuild.exe`.
+All three DAT files beside it were copied from the original resource directory
+and verified by size and SHA256. Configure/build/DAT logs, source revision and
+the manifest remain in the build tree. Local tests and gameplay were not run.
+
