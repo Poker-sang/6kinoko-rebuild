@@ -2,6 +2,7 @@
 #include "kinoko/act_resource_records.hpp"
 #include "kinoko/act_document_records.hpp"
 #include "kinoko/legacy_memory.hpp"
+#include <limits>
 
 struct KinokoActLayerHolder { KinokoActLayer *layer; };
 struct KinokoActKeyHolder { KinokoActKey *key; };
@@ -55,6 +56,29 @@ inline int32_t layer_distance(const DocumentPointerSpan<KinokoActLayer>& layers)
 inline KinokoActLayer *layer_at(const DocumentPointerSpan<KinokoActLayer>& layers, int32_t index) noexcept {
     const auto *slots = reinterpret_cast<const unsigned char *>(layers.begin);
     return kinoko::legacy::load<KinokoActLayer *>(slots + static_cast<size_t>(index) * sizeof(KinokoActLayer *));
+}
+// Native pointer spans are not the four-byte indices stored in ACT files.
+// Validate their shape before a script can scan or reorder the layer slots.
+inline bool checked_layer_count(const DocumentPointerSpan<KinokoActLayer>& layers,
+                                int32_t& count) noexcept {
+    count = 0;
+    const auto begin = reinterpret_cast<uintptr_t>(layers.begin);
+    const auto end = reinterpret_cast<uintptr_t>(layers.end);
+    if (end < begin || (!begin && end)) return false;
+    const auto bytes = end - begin;
+    const auto size = bytes / sizeof(KinokoActLayer*);
+    if (bytes % sizeof(KinokoActLayer*) ||
+        size > static_cast<uintptr_t>(std::numeric_limits<int32_t>::max())) return false;
+    count = static_cast<int32_t>(size);
+    return true;
+}
+inline int32_t find_layer_order(const DocumentPointerSpan<KinokoActLayer>& layers,
+                                KinokoActLayer* layer) noexcept {
+    int32_t count = 0;
+    if (!checked_layer_count(layers, count)) return -1;
+    for (int32_t index = 0; index < count; ++index)
+        if (layer_at(layers, index) == layer) return index;
+    return -1;
 }
 inline bool ordered_layers(const DocumentPointerSpan<KinokoActLayer>& layers) noexcept {
     return layers.begin && kinoko::legacy::address(layers.end) >= kinoko::legacy::address(layers.begin);

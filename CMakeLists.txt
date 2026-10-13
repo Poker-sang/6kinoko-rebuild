@@ -268,6 +268,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/act_document_association.cpp
     src/reconstructed/act_script_io.cpp
     src/reconstructed/act_texture_io.cpp
+    src/reconstructed/map_layer_binding.cpp
     src/reconstructed/act_map.cpp
     src/reconstructed/act_layout.cpp
     src/squirrel/act_binding.cpp
@@ -637,6 +638,10 @@ target_include_directories(kinoko_act_layer_contract PRIVATE include)
 target_compile_options(kinoko_act_layer_contract PRIVATE /O2)
 add_test(NAME act_layer_contract COMMAND kinoko_act_layer_contract)
 
+add_executable(kinoko_act_layer_span_contract tests/act_layer_span_contract.cpp)
+target_include_directories(kinoko_act_layer_span_contract PRIVATE include)
+add_test(NAME act_layer_span_contract COMMAND kinoko_act_layer_span_contract)
+
 add_executable(kinoko_act_clock_contract tests/act_clock_contract.cpp)
 target_include_directories(kinoko_act_clock_contract PRIVATE include)
 target_compile_options(kinoko_act_clock_contract PRIVATE /O2)
@@ -655,6 +660,11 @@ target_include_directories(kinoko_act_resource_pass_contract PRIVATE include)
 target_link_libraries(kinoko_act_resource_pass_contract PRIVATE kinoko_legacy_string)
 target_compile_options(kinoko_act_resource_pass_contract PRIVATE /O2)
 add_test(NAME act_resource_pass_contract COMMAND kinoko_act_resource_pass_contract)
+
+add_executable(kinoko_map_layer_binding_contract tests/map_layer_binding_contract.cpp
+    src/reconstructed/map_layer_binding.cpp src/reconstructed/native_buffer.cpp)
+target_include_directories(kinoko_map_layer_binding_contract PRIVATE include)
+add_test(NAME map_layer_binding_contract COMMAND kinoko_map_layer_binding_contract)
 
 add_executable(kinoko_act_document_contract
     tests/act_document_contract.cpp
@@ -877,6 +887,7 @@ target_include_directories(kinoko_input_frame_contract PRIVATE include)
 add_test(NAME input_frame_contract COMMAND kinoko_input_frame_contract)
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_map_layer_binding_contract
     kinoko_map_loading_contract
     kinoko_input_frame_contract
     kinoko_input_copy_contract

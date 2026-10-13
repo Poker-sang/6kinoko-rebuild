@@ -1914,6 +1914,9 @@ int32_t kinoko_audio_initialize_playback(void) {
 }
 
 int32_t kinoko_audio_play_bgm(const char* path, int32_t a2, int32_t a3, int32_t a4) {
+    // Publishing the prepared track and scheduling its start are one command:
+    // the update worker must not start it before its requested delay is set.
+    CriticalLock lock(&audio_workers.lock);
     auto* manager = kinoko_audio_manager_this();
     std::uint32_t new_handle = 0;
 
@@ -1930,6 +1933,7 @@ int32_t kinoko_audio_play_bgm(const char* path, int32_t a2, int32_t a3, int32_t 
 
 int32_t kinoko_audio_play_bgm_margin(const char* path, int32_t a2, int32_t a3, int32_t a4,
                         int32_t a5) {
+    CriticalLock lock(&audio_workers.lock);
     auto* manager = kinoko_audio_manager_this();
     std::uint32_t new_handle = 0;
 
@@ -1943,6 +1947,7 @@ int32_t kinoko_audio_play_bgm_margin(const char* path, int32_t a2, int32_t a3, i
 }
 
 int32_t kinoko_audio_pause_bgm(void) {
+    CriticalLock lock(&audio_workers.lock);
     if (active_bgm_handle() != 0) {
         kinoko_bgm_toggle_pause((uint32_t)active_bgm_handle());
     }
@@ -1950,6 +1955,7 @@ int32_t kinoko_audio_pause_bgm(void) {
 }
 
 int32_t kinoko_audio_fade_bgm(int32_t a1, int32_t a2) {
+    CriticalLock lock(&audio_workers.lock);
     if (active_bgm_handle() != 0) {
         float target = (float)a2 / 100.0f;
         kinoko_bgm_begin_fade_for_handle((uint32_t)active_bgm_handle(),
@@ -1960,6 +1966,7 @@ int32_t kinoko_audio_fade_bgm(int32_t a1, int32_t a2) {
 }
 
 int32_t kinoko_audio_stop_bgm(void) {
+    CriticalLock lock(&audio_workers.lock);
     if (active_bgm_handle() != 0) {
         uint32_t handle = (uint32_t)active_bgm_handle();
         kinoko_bgm_stop_for_handle(handle);
