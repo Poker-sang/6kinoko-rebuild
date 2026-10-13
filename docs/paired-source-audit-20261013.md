@@ -85,3 +85,11 @@ All three DAT files beside it were copied from the original resource directory
 and verified by size and SHA256. Configure/build/DAT logs, source revision and
 the manifest remain in the build tree. Local tests and gameplay were not run.
 
+PR CI run [38349326792](https://github.com/Poker-sang/6kinoko-rebuild/actions/runs/38349326792)
+passed migration checks, the full Windows build and all 49 selected asset-free
+contracts, including savedata, bitmap, archive, layer-span and map binding.
+This execution belongs to CI, not the local delivery executables. The complete
+remote log and result JSON are retained as `ci.log` and `ci-result.json` in
+the build tree. The counterpart is
+[modern PR #2](https://github.com/Poker-sang/6kinoko-modern/pull/2).
+
